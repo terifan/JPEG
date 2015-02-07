@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import org.terifan.multimedia.jpeg.SOFMarkerSegment.ComponentInfo;
-import org.terifan.util.log.Log;
 
 
 public class JPEGImageReader extends JPEG
@@ -37,7 +36,7 @@ public class JPEGImageReader extends JPEG
 	private int mDensityY;
 
 
-	public JPEGImageReader(InputStream aInputStream) throws IOException
+	private JPEGImageReader(InputStream aInputStream) throws IOException
 	{
 		mPreviousDCValue = new int[MAX_CHANNELS];
 		mQuantizationTables = new DQTMarkerSegment[MAX_CHANNELS];
@@ -47,8 +46,14 @@ public class JPEGImageReader extends JPEG
 		mBitStream = new BitInputStream(aInputStream);
 	}
 
+	
+	public static JPEGImage read(InputStream aInputStream) throws IOException
+	{
+		return new JPEGImageReader(aInputStream).readImpl();
+	}
+	
 
-	public JPEGImage read() throws IOException
+	private JPEGImage readImpl() throws IOException
 	{
 		JPEGImage image = null;
 

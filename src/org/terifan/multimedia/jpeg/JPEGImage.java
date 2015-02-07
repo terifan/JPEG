@@ -2,7 +2,6 @@ package org.terifan.multimedia.jpeg;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import org.terifan.util.log.Log;
 
 
 public class JPEGImage extends BufferedImage
