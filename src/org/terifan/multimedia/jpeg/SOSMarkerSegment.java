@@ -44,16 +44,16 @@ class SOSMarkerSegment
 				String component;
 				switch (mComponents[i])
 				{
-					case SOFMarkerSegment.ComponentInfo.Y:
+					case ComponentInfo.Y:
 						component = "Y";
 						break;
-					case SOFMarkerSegment.ComponentInfo.Cb:
+					case ComponentInfo.Cb:
 						component = "Cb";
 						break;
-					case SOFMarkerSegment.ComponentInfo.Cr:
+					case ComponentInfo.Cr:
 						component = "Cr";
 						break;
-					case SOFMarkerSegment.ComponentInfo.I:
+					case ComponentInfo.I:
 						component = "I";
 						break;
 					default:

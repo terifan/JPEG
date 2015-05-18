@@ -11,7 +11,6 @@ class DHTMarkerSegment
 	private int mNumSymbols;
 	private int mType;
 	private int mIdentity;
-
 	private int [] mLookup;
 	private int mMaxLength;
 

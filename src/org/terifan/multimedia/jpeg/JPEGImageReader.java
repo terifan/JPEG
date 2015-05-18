@@ -1,9 +1,9 @@
 package org.terifan.multimedia.jpeg;
 
+import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import org.terifan.multimedia.jpeg.SOFMarkerSegment.ComponentInfo;
 
 
 public class JPEGImageReader extends JPEG
@@ -32,8 +32,7 @@ public class JPEGImageReader extends JPEG
 	private SOFMarkerSegment mFrameSegment;
 	private SOSMarkerSegment mScanSegment;
 	private int mDensitiesUnits;
-	private int mDensityX;
-	private int mDensityY;
+	private Point mDensity;
 
 
 	private JPEGImageReader(InputStream aInputStream) throws IOException
@@ -183,8 +182,7 @@ public class JPEGImageReader extends JPEG
 					throw new IOException("Error in JPEG stream; unsupported version: " + majorVersion + "." + minorVersion);
 				}
 				mDensitiesUnits = mBitStream.readByte();
-				mDensityX = mBitStream.readShort();
-				mDensityY = mBitStream.readShort();
+				mDensity = new Point(mBitStream.readShort(), mBitStream.readShort());
 				int thumbnailSize = mBitStream.readByte() * mBitStream.readByte() * 3; // thumbnailWidth, thumbnailHeight
 				if (segmentLength != 16 + thumbnailSize)
 				{
@@ -219,15 +217,15 @@ public class JPEGImageReader extends JPEG
 	private JPEGImage readRaster() throws IOException
 	{
 		IDCTFloat idct = new IDCTFloat();
-		int[] maxSampling = mFrameSegment.getMaxSampling();
+		Point maxSampling = mFrameSegment.getMaxSampling();
 		int[] dctCoefficients = mDCTCoefficients;
-		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSampling[0]));
-		int numVerMCU = (int)Math.ceil(mFrameSegment.getHeight() / (8.0 * maxSampling[1]));
+		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSampling.x));
+		int numVerMCU = (int)Math.ceil(mFrameSegment.getHeight() / (8.0 * maxSampling.y));
 		int numComponents = mFrameSegment.getComponentCount();
 		int restartMarkerIndex = 0;
 		int mcuCounter = 0;
 
-		JPEGImage image = new JPEGImage(mFrameSegment.getWidth(), mFrameSegment.getHeight(), maxSampling[0], maxSampling[1], mDensitiesUnits, mDensityX, mDensityY, mFrameSegment.getComponentCount());
+		JPEGImage image = new JPEGImage(mFrameSegment.getWidth(), mFrameSegment.getHeight(), maxSampling, mDensitiesUnits, mDensity, mFrameSegment.getComponentCount());
 
 		try
 		{
@@ -240,11 +238,11 @@ public class JPEGImageReader extends JPEG
 						ComponentInfo c = mFrameSegment.getComponent(component);
 //						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTable();
 						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableD();
-						int[] sampling = c.getSampling();
+						Point sampling = c.getSampling();
 
-						for (int cy = 0; cy < sampling[1]; cy++)
+						for (int cy = 0; cy < sampling.y; cy++)
 						{
-							for (int cx = 0; cx < sampling[0]; cx++)
+							for (int cx = 0; cx < sampling.x; cx++)
 							{
 								if (!readDCTCofficients(dctCoefficients, component))
 								{

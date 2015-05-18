@@ -1,5 +1,6 @@
 package org.terifan.multimedia.jpeg;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
@@ -39,13 +40,13 @@ public class JPEGImage extends BufferedImage
 //	}
 
 
-	JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aDensitiesUnits, int aDensityX, int aDensityY, int aComponents)
+	JPEGImage(int aWidth, int aHeight, Point aMaxSampling, int aDensitiesUnits, Point aDensity, int aComponents)
 	{
 		super(aWidth, aHeight, BufferedImage.TYPE_INT_RGB);
 
-		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
-		mMCUWidth = 8 * aMaxSamplingX;
-		mMCUHeight = 8 * aMaxSamplingY;
+		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSampling.x * aMaxSampling.y * 64];
+		mMCUWidth = 8 * aMaxSampling.x;
+		mMCUHeight = 8 * aMaxSampling.y;
 		mLastMCUPosition = new int[2];
 		mComponents = aComponents;
 		
@@ -111,7 +112,7 @@ public class JPEGImage extends BufferedImage
 	}
 
 
-	void setData(int cx, int cy, int[] aSampling, int aComponent, int[] aCoefficients)
+	void setData(int cx, int cy, Point aSampling, int aComponent, int[] aCoefficients)
 	{
 		int[] buffer = mBuffers[aComponent];
 
@@ -119,7 +120,7 @@ public class JPEGImage extends BufferedImage
 		{
 			System.arraycopy(aCoefficients, 0, buffer, 0, 64);
 		}
-		else if (mMCUWidth == 8 * aSampling[0] && mMCUHeight == 8 * aSampling[1])
+		else if (mMCUWidth == 8 * aSampling.x && mMCUHeight == 8 * aSampling.y)
 		{
 			copyBlock(aCoefficients, buffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
 		}
@@ -127,8 +128,8 @@ public class JPEGImage extends BufferedImage
 		{
 			int mcuWidth = mMCUWidth;
 			int mcuHeight = mMCUHeight;
-			int blockWidth = mMCUWidth / aSampling[0];
-			int blockHeight = mMCUHeight / aSampling[1];
+			int blockWidth = mMCUWidth / aSampling.x;
+			int blockHeight = mMCUHeight / aSampling.y;
 			int xShift = blockWidth == 8 ? 0 : blockWidth == 16 ? 1 : blockWidth == 32 ? 2 : 3;
 			int yShift = blockHeight == 8 ? 0 : blockHeight == 16 ? 1 : blockHeight == 32 ? 2 : 3;
 
