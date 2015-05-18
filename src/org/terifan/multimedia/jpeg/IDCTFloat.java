@@ -28,10 +28,12 @@ package org.terifan.multimedia.jpeg;
  */
 class IDCTFloat
 {
+	private final double[] aWorkspace = new double[64];
+	
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
 	 */
-	public static void transform(double[] aWorkspace, int[] aCoefficients, double[] aQuantizationTable)
+	public void transform(int[] aCoefficients, double[] aQuantizationTable)
 	{
 		// Pass 1: process columns from input, store into work array. 
 		for (int ctr = 0; ctr < 8; ctr++)

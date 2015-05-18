@@ -21,6 +21,7 @@ class DHTMarkerSegment
 		int temp = aInputStream.readByte();
 		mIdentity = temp & 0x07;
 		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
+
 		int[] counts = new int[16];
 
 		for (int i = 0; i < 16; i++)
@@ -89,13 +90,11 @@ class DHTMarkerSegment
 	{
 		int symbol = aBitStream.readBits(aLength);
 
-		if (symbol < (1 << (aLength - 1)))
+		if (symbol < 1 << (aLength - 1))
 		{
 			return symbol + (-1 << aLength) + 1;
 		}
-		else
-		{
-			return symbol;
-		}
+
+		return symbol;
 	}
 }

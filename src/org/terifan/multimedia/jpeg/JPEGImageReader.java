@@ -218,10 +218,9 @@ public class JPEGImageReader extends JPEG
 
 	private JPEGImage readRaster() throws IOException
 	{
+		IDCTFloat idct = new IDCTFloat();
 		int[] maxSampling = mFrameSegment.getMaxSampling();
 		int[] dctCoefficients = mDCTCoefficients;
-//		int[] workspace = new int[64];
-		double[] workspaceD = new double[64];
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSampling[0]));
 		int numVerMCU = (int)Math.ceil(mFrameSegment.getHeight() / (8.0 * maxSampling[1]));
 		int numComponents = mFrameSegment.getComponentCount();
@@ -240,7 +239,7 @@ public class JPEGImageReader extends JPEG
 					{
 						ComponentInfo c = mFrameSegment.getComponent(component);
 //						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTable();
-						double[] quantizationTableD = mQuantizationTables[c.getQuantizationTableId()].getTableD();
+						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableD();
 						int[] sampling = c.getSampling();
 
 						for (int cy = 0; cy < sampling[1]; cy++)
@@ -256,9 +255,8 @@ public class JPEGImageReader extends JPEG
 									image.setDamaged();
 									return image;
 								}
-								
-//								IDCTInteger.transform(workspace, dctCoefficients, quantizationTable);
-								IDCTFloat.transform(workspaceD, dctCoefficients, quantizationTableD);
+
+								idct.transform(dctCoefficients, quantizationTable);
 
 								image.setData(cx, cy, sampling, component, dctCoefficients);
 							}
@@ -320,6 +318,7 @@ public class JPEGImageReader extends JPEG
 		{
 			mPreviousDCValue[aComponent] += dcTable.readCoefficient(mBitStream, value);
 		}
+
 		aCoefficients[0] = mPreviousDCValue[aComponent];
 
 		for (int offset = 1; offset < 64; offset++)
