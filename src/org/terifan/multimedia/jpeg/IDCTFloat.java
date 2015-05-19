@@ -28,14 +28,14 @@ package org.terifan.multimedia.jpeg;
  */
 class IDCTFloat
 {
-	private final double[] aWorkspace = new double[64];
-	
+	private final double[] workspace = new double[64];
+
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
 	 */
 	public void transform(int[] aCoefficients, double[] aQuantizationTable)
 	{
-		// Pass 1: process columns from input, store into work array. 
+		// Pass 1: process columns from input, store into work array.
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
 			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0
@@ -44,14 +44,14 @@ class IDCTFloat
 				// AC terms all zero
 				double dcval = aCoefficients[ctr] * aQuantizationTable[ctr];
 
-				aWorkspace[     ctr] = dcval;
-				aWorkspace[ 8 + ctr] = dcval;
-				aWorkspace[16 + ctr] = dcval;
-				aWorkspace[24 + ctr] = dcval;
-				aWorkspace[32 + ctr] = dcval;
-				aWorkspace[40 + ctr] = dcval;
-				aWorkspace[48 + ctr] = dcval;
-				aWorkspace[56 + ctr] = dcval;
+				workspace[     ctr] = dcval;
+				workspace[ 8 + ctr] = dcval;
+				workspace[16 + ctr] = dcval;
+				workspace[24 + ctr] = dcval;
+				workspace[32 + ctr] = dcval;
+				workspace[40 + ctr] = dcval;
+				workspace[48 + ctr] = dcval;
+				workspace[56 + ctr] = dcval;
 
 				continue;
 			}
@@ -93,36 +93,34 @@ class IDCTFloat
 			tmp5 = tmp11 - tmp6;
 			tmp4 = tmp10 + tmp5;
 
-			aWorkspace[     ctr] = tmp0 + tmp7;
-			aWorkspace[ 8 + ctr] = tmp1 + tmp6;
-			aWorkspace[16 + ctr] = tmp2 + tmp5;
-			aWorkspace[24 + ctr] = tmp3 - tmp4;
-			aWorkspace[32 + ctr] = tmp3 + tmp4;
-			aWorkspace[40 + ctr] = tmp2 - tmp5;
-			aWorkspace[48 + ctr] = tmp1 - tmp6;
-			aWorkspace[56 + ctr] = tmp0 - tmp7;
+			workspace[     ctr] = tmp0 + tmp7;
+			workspace[ 8 + ctr] = tmp1 + tmp6;
+			workspace[16 + ctr] = tmp2 + tmp5;
+			workspace[24 + ctr] = tmp3 - tmp4;
+			workspace[32 + ctr] = tmp3 + tmp4;
+			workspace[40 + ctr] = tmp2 - tmp5;
+			workspace[48 + ctr] = tmp1 - tmp6;
+			workspace[56 + ctr] = tmp0 - tmp7;
 		}
 
-		// Pass 2: process rows from work array, store into output array. 
-		for (int ctr = 0; ctr < 8; ctr++)
+		// Pass 2: process rows from work array, store into output array.
+		for (int ctr = 0, offset = 0; ctr < 8; ctr++, offset+=8)
 		{
-			int offset = ctr * 8;
+			double tmp10 = workspace[offset] + workspace[offset + 4];
+			double tmp11 = workspace[offset] - workspace[offset + 4];
 
-			double tmp10 = aWorkspace[offset] + aWorkspace[offset + 4];
-			double tmp11 = aWorkspace[offset] - aWorkspace[offset + 4];
-
-			double tmp13 = aWorkspace[offset + 2] + aWorkspace[offset + 6];
-			double tmp12 = (aWorkspace[offset + 2] - aWorkspace[offset + 6]) * 1.414213562 - tmp13;
+			double tmp13 = workspace[offset + 2] + workspace[offset + 6];
+			double tmp12 = (workspace[offset + 2] - workspace[offset + 6]) * 1.414213562 - tmp13;
 
 			double tmp0 = tmp10 + tmp13;
 			double tmp3 = tmp10 - tmp13;
 			double tmp1 = tmp11 + tmp12;
 			double tmp2 = tmp11 - tmp12;
 
-			double z13 = aWorkspace[offset + 5] + aWorkspace[offset + 3];
-			double z10 = aWorkspace[offset + 5] - aWorkspace[offset + 3];
-			double z11 = aWorkspace[offset + 1] + aWorkspace[offset + 7];
-			double z12 = aWorkspace[offset + 1] - aWorkspace[offset + 7];
+			double z13 = workspace[offset + 5] + workspace[offset + 3];
+			double z10 = workspace[offset + 5] - workspace[offset + 3];
+			double z11 = workspace[offset + 1] + workspace[offset + 7];
+			double z12 = workspace[offset + 1] - workspace[offset + 7];
 
 			double tmp7 = z11 + z13;
 			tmp11 = (z11 - z13) * 1.414213562;
