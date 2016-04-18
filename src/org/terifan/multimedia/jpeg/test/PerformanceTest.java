@@ -14,7 +14,7 @@ public class PerformanceTest
 	{
 		try
 		{
-			byte[] imageData = Streams.fetch("d:/1107.jpg");
+			byte[] imageData = Streams.readAll("d:/1107.jpg");
 			for (;;)
 			{
 				Log.out.println(terifanImageReader(imageData) + "\t" + javaImageIO(imageData));
