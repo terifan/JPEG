@@ -4,11 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.terifan.multimedia.jpeg.JPEGImageReader;
-import org.terifan.ui.ImagePane;
-import org.terifan.util.StopWatch;
 
 
 public class Sample
@@ -22,18 +19,13 @@ public class Sample
 
 			if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 			{
-				StopWatch stopWatch = new StopWatch();
+				long t = System.currentTimeMillis();
 				BufferedInputStream input = new BufferedInputStream(new FileInputStream(chooser.getSelectedFile()));
 				BufferedImage image = JPEGImageReader.read(input);
-				stopWatch.stop();
+				t = System.currentTimeMillis() - t;
 
-				JFrame frame = new JFrame(chooser.getSelectedFile() + " [" + stopWatch + ", " + image.getWidth() + "x" + image.getHeight() + "]");
-				frame.add(new ImagePane(image));
-				frame.pack();
-				frame.setLocationRelativeTo(null);
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-				frame.setVisible(true);
+				ImagePane imagePane = new ImagePane().setImage(image);
+				imagePane.setTitle(chooser.getSelectedFile() + " [" + t + " ms, " + image.getWidth() + "x" + image.getHeight() + "]");
 			}
 		}
 		catch (Throwable e)

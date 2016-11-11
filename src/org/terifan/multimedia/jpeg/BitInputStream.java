@@ -2,7 +2,6 @@ package org.terifan.multimedia.jpeg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import org.terifan.util.log.Log;
 
 
 class BitInputStream
@@ -149,7 +148,7 @@ class BitInputStream
 				if (s <= 0)
 				{
 					IOException e = new IOException("Skip failed");
-					e.printStackTrace(Log.out);
+					e.printStackTrace(System.out);
 					throw e;
 				}
 				aByteCount -= s;

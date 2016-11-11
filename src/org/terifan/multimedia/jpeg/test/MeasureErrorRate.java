@@ -6,11 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
 import org.terifan.multimedia.jpeg.JPEGImageReader;
-import org.terifan.ui.ImagePane;
-import org.terifan.util.StopWatch;
-import org.terifan.util.log.Log;
 
 
 public class MeasureErrorRate
@@ -21,17 +17,11 @@ public class MeasureErrorRate
 		{
 			ImagePane canvas = new ImagePane();
 
-			JFrame frame = new JFrame();
-			frame.add(canvas);
-			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			frame.setVisible(true);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 			displayTest(canvas, "D:\\temp");
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace(Log.out);
+			e.printStackTrace(System.out);
 			System.exit(0);
 		}
 	}
@@ -44,37 +34,39 @@ public class MeasureErrorRate
 			BufferedImage image1;
 			try
 			{
-				StopWatch stopWatch = new StopWatch();
+				long t0 = System.currentTimeMillis();
 				image1 = JPEGImageReader.read(new BufferedInputStream(new FileInputStream(file)));
-				stopWatch.stop();
+				long t1 = System.currentTimeMillis();
 
 				aCanvas.setImage(image1);
 				aCanvas.repaint();
-				
+
 				BufferedImage image2 = ImageIO.read(file);
 				if (image2.getWidth() != image1.getWidth() || image2.getHeight() != image1.getHeight())
 				{
 					throw new IOException("Image size diff");
 				}
 
-				measureError(image1, image2, stopWatch, file);
+				long t2 = System.currentTimeMillis();
+
+				measureError(image1, image2, (t1-t0)+" / "+(t2-t1), file);
 			}
 			catch (IOException e)
 			{
 				if (e.toString().contains("Progressive images not supported."))
 				{
-					Log.out.println("Progressive images not supported: " + file);
+					System.out.println("Progressive images not supported: " + file);
 				}
 				else
 				{
-					Log.out.println(e.toString()+": " + file);
+					System.out.println(e.toString()+": " + file);
 				}
 			}
 		}
 	}
 
 
-	private static void measureError(BufferedImage aImage1, BufferedImage aImage2, StopWatch aStopWatch, File aFile)
+	private static void measureError(BufferedImage aImage1, BufferedImage aImage2, String aTime, File aFile)
 	{
 		int accumError = 0;
 		int critError = 0;
@@ -108,6 +100,6 @@ public class MeasureErrorRate
 
 		int errorPP = accumError / (aImage1.getWidth() * aImage1.getHeight());
 
-		Log.out.printf("%s %6d %6d %8d %12d %8d %8d %8d %8d  %s\n", aStopWatch, aImage1.getWidth(), aImage1.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
+		System.out.printf("%s %6d %6d %8d %12d %8d %8d %8d %8d  %s\n", aTime, aImage1.getWidth(), aImage1.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
 	}
 }

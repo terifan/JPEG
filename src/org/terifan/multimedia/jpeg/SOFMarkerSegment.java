@@ -2,7 +2,6 @@ package org.terifan.multimedia.jpeg;
 
 import java.awt.Point;
 import java.io.IOException;
-import org.terifan.util.log.Log;
 
 
 class SOFMarkerSegment
@@ -46,11 +45,11 @@ class SOFMarkerSegment
 
 		if (JPEGImageReader.VERBOSE)
 		{
-			Log.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
+			System.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
 
 			for (ComponentInfo mComponent : mComponents)
 			{
-				Log.out.println(mComponent);
+				System.out.println(mComponent);
 			}
 		}
 	}
