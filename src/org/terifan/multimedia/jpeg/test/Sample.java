@@ -19,13 +19,15 @@ public class Sample
 
 			if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 			{
-				long t = System.currentTimeMillis();
-				BufferedInputStream input = new BufferedInputStream(new FileInputStream(chooser.getSelectedFile()));
-				BufferedImage image = JPEGImageReader.read(input);
-				t = System.currentTimeMillis() - t;
+				try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(chooser.getSelectedFile())))
+				{
+					long t = System.currentTimeMillis();
+					BufferedImage image = JPEGImageReader.read(input);
+					t = System.currentTimeMillis() - t;
 
-				ImagePane imagePane = new ImagePane().setImage(image);
-				imagePane.setTitle(chooser.getSelectedFile() + " [" + t + " ms, " + image.getWidth() + "x" + image.getHeight() + "]");
+					ImagePane imagePane = new ImagePane().setImage(image);
+					imagePane.setTitle(chooser.getSelectedFile() + " [" + t + " ms, " + image.getWidth() + "x" + image.getHeight() + "]");
+				}
 			}
 		}
 		catch (Throwable e)
