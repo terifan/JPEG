@@ -164,12 +164,13 @@ public class JPEGImage
 		}
 		else
 		{
-			for (int py = aY * mWidth, k = 0; py < height; py += mWidth, k += mMCUWidth)
+			for (int py = 0; py < height; py++)
 			{
-				for (int px = 0, i = k, j = aX + py; px < width; px++, i++, j++)
+				for (int px = 0, p = py * mMCUWidth, q = (aY + py) * mWidth + aX; px < width; px++, q++, p++)
 				{
-					int lu = clamp(yComponent[i]);
-					mRaster[j] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
+					int lu = clamp(yComponent[p]);
+
+					mRaster[q] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
 				}
 			}
 		}
