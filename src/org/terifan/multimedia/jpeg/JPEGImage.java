@@ -5,14 +5,18 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
 
-public class JPEGImage extends BufferedImage
+public class JPEGImage
 {
+	private final int mWidth;
+	private final int mHeight;
+	private final int[][] mBuffers;
+	private final int mMCUWidth;
+	private final int mMCUHeight;
+	private final int mComponents;
+	private final Point mLastMCUPosition;
+	private int [] mRaster;
 	private boolean mIsDamaged;
-	private int[][] mBuffers;
-	private int[] mLastMCUPosition;
-	private int mMCUWidth;
-	private int mMCUHeight;
-	private int mComponents;
+	private BufferedImage mImage;
 
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
@@ -21,57 +25,44 @@ public class JPEGImage extends BufferedImage
 	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
 	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
 
-//	private final static int[] ycbcrConversionCR = new int[256 + 128];
-//	private final static int[] ycbcrConversionCB = new int[256 + 128];
-//	private final static int[] ycbcrConversionCBCR = new int[(256 + 128) * (256 + 128)];
-//
-//
-//	static
-//	{
-//		for (int i = 0; i < 256; i++)
-//		{
-//			ycbcrConversionCR[i + 64] = (int)Math.round(1.402 * (i - 128));
-//			ycbcrConversionCB[i + 64] = (int)Math.round(1.772 * (i - 128));
-//			for (int j = 0; j < 256; j++)
-//			{
-//				ycbcrConversionCBCR[((i + 64) << 8) + (j + 64)] = (int)Math.round(-0.34414 * (i - 128) - 0.71414 * (j - 128));
-//			}
-//		}
-//	}
-
 
 	JPEGImage(int aWidth, int aHeight, Point aMaxSampling, int aDensitiesUnits, Point aDensity, int aComponents)
 	{
-		super(aWidth, aHeight, BufferedImage.TYPE_INT_RGB);
-
+		mWidth = aWidth;
+		mHeight = aHeight;
 		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSampling.x * aMaxSampling.y * 64];
 		mMCUWidth = 8 * aMaxSampling.x;
 		mMCUHeight = 8 * aMaxSampling.y;
-		mLastMCUPosition = new int[2];
+		mLastMCUPosition = new Point();
 		mComponents = aComponents;
-		
-//		Log.out.println(mMCUWidth+" "+mMCUHeight);
+		mImage = new BufferedImage(mWidth, mHeight, BufferedImage.TYPE_INT_RGB);
+		mRaster = ((DataBufferInt)mImage.getRaster().getDataBuffer()).getData();
+	}
+
+
+	BufferedImage getImage()
+	{
+		return mImage;
 	}
 
 
 	void setDamaged()
 	{
 		mIsDamaged = true;
-		int [] pixels = ((DataBufferInt)getRaster().getDataBuffer()).getData();
 
-		int w = mLastMCUPosition[0] + mMCUWidth;
-		for (int y = mLastMCUPosition[1], yy = y * getWidth(); y < getHeight(); y++, yy += getWidth())
+		int w = mLastMCUPosition.x + mMCUWidth;
+		for (int y = mLastMCUPosition.y, yy = y * mWidth; y < mHeight; y++, yy += mWidth)
 		{
-			for (int x = w; x < getWidth(); x++)
+			for (int x = w; x < mWidth; x++)
 			{
-				pixels[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
+				mRaster[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
 			}
 		}
-		for (int y = mLastMCUPosition[1] + mMCUHeight, yy = y * getWidth(); y < getHeight(); y++, yy += getWidth())
+		for (int y = mLastMCUPosition.y + mMCUHeight, yy = y * mWidth; y < mHeight; y++, yy += mWidth)
 		{
 			for (int x = 0; x < w; x++)
 			{
-				pixels[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
+				mRaster[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
 			}
 		}
 	}
@@ -138,70 +129,53 @@ public class JPEGImage extends BufferedImage
 	}
 
 
-	void flushMCU(int x, int y)
+	void flushMCU(int aX, int aY)
 	{
-		x *= mMCUWidth;
-		y *= mMCUHeight;
+		aX *= mMCUWidth;
+		aY *= mMCUHeight;
 
-		mLastMCUPosition[0] = x;
-		mLastMCUPosition[1] = y;
+		mLastMCUPosition.x = aX;
+		mLastMCUPosition.y = aY;
 
 		int[] yComponent = mBuffers[0];
 		int[] cbComponent = mBuffers[1];
 		int[] crComponent = mBuffers[2];
 
-		int [] raster = ((DataBufferInt)getRaster().getDataBuffer()).getData();
-		int height = Math.min(y + mMCUHeight, getHeight()) * getWidth();
-		int px0 = Math.min(mMCUWidth, getWidth() - x);
+		int width = Math.min(mMCUWidth, mWidth - aX);
+		int height = Math.min(aY + mMCUHeight, mHeight) * mWidth;
 
-		if (mComponents == 1)
+		if (mComponents != 1)
 		{
-			for (int py = y * getWidth(), k = 0; py < height; py += getWidth(), k += mMCUWidth)
+			for (int py = 0; py < height; py++)
 			{
-				for (int px = 0, i = k, j = x + py; px < px0; px++, i++, j++)
+				for (int px = 0, p = py * mMCUWidth, q = (aY + py) * mWidth + aX; px < width; px++, q++, p++)
 				{
-					int lu = clamp(yComponent[i]);
-					raster[j] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
-				}
-			}
-		}
-		else
-		{
-			for (int py = y * getWidth(), k = 0; py < height; py += getWidth(), k += mMCUWidth)
-			{
-				for (int px = 0, i = k, j = x + py; px < px0; px++, i++, j++)
-				{
-					int lu = yComponent[i];
-					int cb = cbComponent[i] - 128;
-					int cr = crComponent[i] - 128;
+					int lu = yComponent[p];
+					int cb = cbComponent[p] - 128;
+					int cr = crComponent[p] - 128;
 
 					int r = clamp(lu + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
 					int g = clamp(lu - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
 					int b = clamp(lu + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
 
-					raster[j] = 0xff000000 | (r << 16) + (g << 8) + b;
+					mRaster[q] = 0xff000000 | (r << 16) + (g << 8) + b;
 				}
 			}
 		}
-
-//		for (int py = y * imageWidth, k = 0; py < height; py += imageWidth, k += mMCUWidth)
-//		{
-//			for (int px = pxStart - x, i = k, j = x + py; --px >= 0; i++, j++)
-//			{
-//				int lu = clamp(yComponent[i]);
-//				int cb = cbComponent[i] + 64;
-//				int cr = crComponent[i] + 64;
-//
-//				int r = clamp(lu + ycbcrConversionCR[cr]);
-//				int g = clamp(lu + ycbcrConversionCBCR[(cb << 8) + cr]);
-//				int b = clamp(lu + ycbcrConversionCB[cb]);
-//
-//				raster[j] = 0xff000000 | (r << 16) + (g << 8) + b;
-//			}
-//		}
+		else
+		{
+			for (int py = aY * mWidth, k = 0; py < height; py += mWidth, k += mMCUWidth)
+			{
+				for (int px = 0, i = k, j = aX + py; px < width; px++, i++, j++)
+				{
+					int lu = clamp(yComponent[i]);
+					mRaster[j] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
+				}
+			}
+		}
 	}
-	
-	
+
+
 	private int clamp(int aValue)
 	{
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;

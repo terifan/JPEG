@@ -1,7 +1,6 @@
 package org.terifan.multimedia.jpeg.test;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +15,7 @@ public class MeasureErrorRate
 	{
 		try
 		{
-			displayTest("D:\\Pictures\\Wallpapers");
+			test("D:\\Pictures\\Wallpapers");
 		}
 		catch (Exception e)
 		{
@@ -25,8 +24,11 @@ public class MeasureErrorRate
 	}
 
 
-	private static void displayTest(String aPath) throws Exception
+	private static void test(String aPath) throws Exception
 	{
+		long sumTimeThis = 0;
+		long sumTimeJava = 0;
+
 		for (File file : new File(aPath).listFiles(f->f.getName().endsWith(".jpg")))
 		{
 			try
@@ -49,6 +51,9 @@ public class MeasureErrorRate
 				{
 					throw new IOException("Image size diff");
 				}
+
+				sumTimeThis += t1-t0;
+				sumTimeJava += t2-t1;
 			}
 			catch (IOException e)
 			{
@@ -62,6 +67,9 @@ public class MeasureErrorRate
 				}
 			}
 		}
+
+		System.out.println();
+		System.out.printf("%.1f / %.1f\n", sumTimeThis/1000000.0, sumTimeJava/1000000.0);
 	}
 
 

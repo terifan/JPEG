@@ -1,6 +1,7 @@
 package org.terifan.multimedia.jpeg;
 
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ public class JPEGImageReader extends JPEG
 		58, 59, 52, 45, 38, 31, 39, 46,
 		53, 60, 61, 54, 47, 55, 62, 63
 	};
-	
+
 	private BitInputStream mBitStream;
 	private final DHTMarkerSegment[][] mHuffmanTables;
 	private final DQTMarkerSegment[] mQuantizationTables;
@@ -45,14 +46,14 @@ public class JPEGImageReader extends JPEG
 		mBitStream = new BitInputStream(aInputStream);
 	}
 
-	
-	public static JPEGImage read(InputStream aInputStream) throws IOException
+
+	public static BufferedImage read(InputStream aInputStream) throws IOException
 	{
 		return new JPEGImageReader(aInputStream).readImpl();
 	}
-	
 
-	private JPEGImage readImpl() throws IOException
+
+	private BufferedImage readImpl() throws IOException
 	{
 		JPEGImage image = null;
 
@@ -130,7 +131,7 @@ public class JPEGImageReader extends JPEG
 						image = readRaster();
 						if (image.isDamaged())
 						{
-							return image;
+							return image.getImage();
 						}
 						break;
 					}
@@ -158,7 +159,7 @@ public class JPEGImageReader extends JPEG
 			mBitStream = null;
 		}
 
-		return image;
+		return image == null ? null : image.getImage();
 	}
 
 
