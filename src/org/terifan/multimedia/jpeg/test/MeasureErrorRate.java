@@ -2,6 +2,7 @@ package org.terifan.multimedia.jpeg.test;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,41 +16,39 @@ public class MeasureErrorRate
 	{
 		try
 		{
-			ImagePane canvas = new ImagePane();
-
-			displayTest(canvas, "D:\\temp");
+			displayTest("D:\\Pictures\\Wallpapers");
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace(System.out);
-			System.exit(0);
 		}
 	}
 
 
-	private static void displayTest(ImagePane aCanvas, String aPath) throws Exception
+	private static void displayTest(String aPath) throws Exception
 	{
-		for (File file : new File(aPath).listFiles((f)->f.getName().endsWith(".jpg")))
+		for (File file : new File(aPath).listFiles(f->f.getName().endsWith(".jpg")))
 		{
-			BufferedImage image1;
 			try
 			{
-				long t0 = System.currentTimeMillis();
-				image1 = JPEGImageReader.read(new BufferedInputStream(new FileInputStream(file)));
-				long t1 = System.currentTimeMillis();
+				byte[] buffer = new byte[(int)file.length()];
+				try (FileInputStream fis = new FileInputStream(file))
+				{
+					fis.read(buffer);
+				}
 
-				aCanvas.setImage(image1);
-				aCanvas.repaint();
+				long t0 = System.nanoTime();
+				BufferedImage imageThis = JPEGImageReader.read(new ByteArrayInputStream(buffer));
+				long t1 = System.nanoTime();
+				BufferedImage imageJava = ImageIO.read(new ByteArrayInputStream(buffer));
+				long t2 = System.nanoTime();
 
-				BufferedImage image2 = ImageIO.read(file);
-				if (image2.getWidth() != image1.getWidth() || image2.getHeight() != image1.getHeight())
+				measureError(imageThis, imageJava, t1-t0, t2-t1, file);
+
+				if (imageThis.getWidth() != imageJava.getWidth() || imageThis.getHeight() != imageJava.getHeight())
 				{
 					throw new IOException("Image size diff");
 				}
-
-				long t2 = System.currentTimeMillis();
-
-				measureError(image1, image2, (t1-t0)+" / "+(t2-t1), file);
 			}
 			catch (IOException e)
 			{
@@ -66,19 +65,19 @@ public class MeasureErrorRate
 	}
 
 
-	private static void measureError(BufferedImage aImage1, BufferedImage aImage2, String aTime, File aFile)
+	private static void measureError(BufferedImage aImageThis, BufferedImage aImageJava, long aTimeThis, long aTimeJava, File aFile)
 	{
 		int accumError = 0;
 		int critError = 0;
 		int minDiv = 1000;
 		int maxDiv = -1000;
 
-		for (int y = 0; y < aImage1.getHeight(); y++)
+		for (int y = 0; y < aImageThis.getHeight(); y++)
 		{
-			for (int x = 0; x < aImage1.getWidth(); x++)
+			for (int x = 0; x < aImageThis.getWidth(); x++)
 			{
-				int c0 = aImage1.getRGB(x, y);
-				int c1 = aImage2.getRGB(x, y);
+				int c0 = aImageThis.getRGB(x, y);
+				int c1 = aImageJava.getRGB(x, y);
 				int r0 = 255 & (c0 >> 16);
 				int g0 = 255 & (c0 >> 8);
 				int b0 = 255 & (c0);
@@ -98,8 +97,8 @@ public class MeasureErrorRate
 			}
 		}
 
-		int errorPP = accumError / (aImage1.getWidth() * aImage1.getHeight());
+		int errorPP = accumError / (aImageThis.getWidth() * aImageThis.getHeight());
 
-		System.out.printf("%s %6d %6d %8d %12d %8d %8d %8d %8d  %s\n", aTime, aImage1.getWidth(), aImage1.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
+		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d ae=%-12d epp=%-8d ce=%-8d mind=%-8d maxd=%-8d  %s\n", aTimeThis/1000000.0, aTimeJava/1000000.0, aImageThis.getWidth()+"x"+aImageThis.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
 	}
 }
