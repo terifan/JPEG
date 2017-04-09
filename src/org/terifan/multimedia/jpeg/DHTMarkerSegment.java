@@ -17,7 +17,7 @@ class DHTMarkerSegment
 
 	public DHTMarkerSegment(BitInputStream aInputStream) throws IOException
 	{
-		int temp = aInputStream.readByte();
+		int temp = aInputStream.readInt8();
 		mIdentity = temp & 0x07;
 		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
 
@@ -25,7 +25,7 @@ class DHTMarkerSegment
 
 		for (int i = 0; i < 16; i++)
 		{
-			counts[i] = aInputStream.readByte();
+			counts[i] = aInputStream.readInt8();
 			mNumSymbols += counts[i];
 			if (counts[i] > 0)
 			{
@@ -40,7 +40,7 @@ class DHTMarkerSegment
 			for (int j = 0; j < counts[i]; j++)
 			{
 				int length = i + 1;
-				int value = aInputStream.readByte();
+				int value = aInputStream.readInt8();
 
 				for (int k = 0, sz = 1 << (mMaxLength - length); k < sz; k++)
 				{

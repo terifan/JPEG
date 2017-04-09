@@ -59,7 +59,7 @@ public class JPEGImageReader extends JPEG
 
 		try
 		{
-			int nextSegment = mBitStream.readShort();
+			int nextSegment = mBitStream.readInt16();
 
 			if (VERBOSE)
 			{
@@ -73,7 +73,12 @@ public class JPEGImageReader extends JPEG
 
 			do
 			{
-				nextSegment = mBitStream.readShort();
+				nextSegment = mBitStream.readInt16();
+
+				while ((nextSegment & 0xFF00) == 0)
+				{
+					nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
+				}
 
 				if (VERBOSE)
 				{
@@ -92,7 +97,7 @@ public class JPEGImageReader extends JPEG
 						break;
 					case DQT:
 					{
-						int segmentLength = mBitStream.readShort() - 2;
+						int segmentLength = mBitStream.readInt16() - 2;
 						do
 						{
 							DQTMarkerSegment temp = new DQTMarkerSegment(mBitStream);
@@ -108,7 +113,7 @@ public class JPEGImageReader extends JPEG
 					}
 					case DHT:
 					{
-						int segmentLength = mBitStream.readShort() - 2;
+						int segmentLength = mBitStream.readInt16() - 2;
 						do
 						{
 							DHTMarkerSegment temp = new DHTMarkerSegment(mBitStream);
@@ -136,18 +141,18 @@ public class JPEGImageReader extends JPEG
 						break;
 					}
 					case DRI:
-						mBitStream.skip(2); // skip length
-						mRestartInterval = mBitStream.readShort();
+						mBitStream.skipBytes(2); // skip length
+						mRestartInterval = mBitStream.readInt16();
 						break;
 					case COM:
-						mBitStream.skip(mBitStream.readShort() - 2);
+						mBitStream.skipBytes(mBitStream.readInt16() - 2);
 						break;
 					case EOI:
 						break;
 					case SOF2:
 						throw new IOException("Progressive images not supported.");
 					default:
-						mBitStream.skip(mBitStream.readShort() - 2);
+						mBitStream.skipBytes(mBitStream.readInt16() - 2);
 						break;
 				}
 			}
@@ -165,10 +170,10 @@ public class JPEGImageReader extends JPEG
 
 	private void readAPPSegmentMarker() throws IOException
 	{
-		int segmentLength = mBitStream.readShort();
+		int segmentLength = mBitStream.readInt16();
 
 		StringBuilder segmentType = new StringBuilder();
-		for (int c; (c = mBitStream.readByte()) != 0;)
+		for (int c; (c = mBitStream.readInt8()) != 0;)
 		{
 			segmentType.append((char)c);
 		}
@@ -176,34 +181,34 @@ public class JPEGImageReader extends JPEG
 		switch (segmentType.toString())
 		{
 			case "JFIF":
-				int majorVersion = mBitStream.readByte();
-				int minorVersion = mBitStream.readByte();
+				int majorVersion = mBitStream.readInt8();
+				int minorVersion = mBitStream.readInt8();
 				if (majorVersion != 1)
 				{
 					throw new IOException("Error in JPEG stream; unsupported version: " + majorVersion + "." + minorVersion);
 				}
-				mDensitiesUnits = mBitStream.readByte();
-				mDensity = new Point(mBitStream.readShort(), mBitStream.readShort());
-				int thumbnailSize = mBitStream.readByte() * mBitStream.readByte() * 3; // thumbnailWidth, thumbnailHeight
+				mDensitiesUnits = mBitStream.readInt8();
+				mDensity = new Point(mBitStream.readInt16(), mBitStream.readInt16());
+				int thumbnailSize = mBitStream.readInt8() * mBitStream.readInt8() * 3; // thumbnailWidth, thumbnailHeight
 				if (segmentLength != 16 + thumbnailSize)
 				{
 					throw new IOException("Error in JPEG stream; illegal APP0 segment size.");
 				}
-				mBitStream.skip(thumbnailSize); // uncompressed 24-bit thumbnail raster
+				mBitStream.skipBytes(thumbnailSize); // uncompressed 24-bit thumbnail raster
 				if (VERBOSE)
 				{
 					System.out.println("Ignoring thumbnail " + thumbnailSize + " bytes");
 				}
 				break;
 			case "JFXX":
-				int extensionCode = mBitStream.readByte();
+				int extensionCode = mBitStream.readInt8();
 				switch (extensionCode)
 				{
 					case 0x10: // jpeg encoded
 					case 0x11: // 8-bit palette
 					case 0x13: // 24-bit RGB
 				}
-				mBitStream.skip(segmentLength - 8);
+				mBitStream.skipBytes(segmentLength - 8);
 				if (VERBOSE)
 				{
 					System.out.println("Ignoring thumbnail " + (segmentLength-8) + " bytes");
@@ -271,7 +276,7 @@ public class JPEGImageReader extends JPEG
 						{
 							mBitStream.align();
 
-							int restartMarker = mBitStream.readShort();
+							int restartMarker = mBitStream.readInt16();
 							if (restartMarker != 0xFFD0 + restartMarkerIndex)
 							{
 								throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + restartMarkerIndex));

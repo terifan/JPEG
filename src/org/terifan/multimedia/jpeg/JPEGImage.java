@@ -16,6 +16,7 @@ public class JPEGImage
 	private final Point mLastMCUPosition;
 	private int [] mRaster;
 	private boolean mIsDamaged;
+	private boolean mDecodingErrors;
 	private BufferedImage mImage;
 
 	private final static int FP_SCALEBITS = 16;
@@ -37,6 +38,17 @@ public class JPEGImage
 		mComponents = aComponents;
 		mImage = new BufferedImage(mWidth, mHeight, BufferedImage.TYPE_INT_RGB);
 		mRaster = ((DataBufferInt)mImage.getRaster().getDataBuffer()).getData();
+	}
+
+	public boolean isDamaged()
+	{
+		return mIsDamaged;
+	}
+
+
+	public boolean isDecodingErrors()
+	{
+		return mDecodingErrors;
 	}
 
 
@@ -131,48 +143,55 @@ public class JPEGImage
 
 	void flushMCU(int aX, int aY)
 	{
-		aX *= mMCUWidth;
-		aY *= mMCUHeight;
-
-		mLastMCUPosition.x = aX;
-		mLastMCUPosition.y = aY;
-
-		int[] yComponent = mBuffers[0];
-		int[] cbComponent = mBuffers[1];
-		int[] crComponent = mBuffers[2];
-
-		int width = Math.min(mMCUWidth, mWidth - aX);
-		int height = Math.min(aY + mMCUHeight, mHeight) * mWidth;
-
-		if (mComponents != 1)
+		try
 		{
-			for (int py = 0; py < height; py++)
+			aX *= mMCUWidth;
+			aY *= mMCUHeight;
+
+			mLastMCUPosition.x = aX;
+			mLastMCUPosition.y = aY;
+
+			int[] yComponent = mBuffers[0];
+			int[] cbComponent = mBuffers[1];
+			int[] crComponent = mBuffers[2];
+
+			int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
+			int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
+
+			if (mComponents != 1)
 			{
-				for (int px = 0, p = py * mMCUWidth, q = (aY + py) * mWidth + aX; px < width; px++, q++, p++)
+				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
 				{
-					int lu = yComponent[p];
-					int cb = cbComponent[p] - 128;
-					int cr = crComponent[p] - 128;
+					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+					{
+						int lu = yComponent[src];
+						int cb = cbComponent[src] - 128;
+						int cr = crComponent[src] - 128;
 
-					int r = clamp(lu + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
-					int g = clamp(lu - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
-					int b = clamp(lu + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
+						int r = clamp(lu + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
+						int g = clamp(lu - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
+						int b = clamp(lu + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
 
-					mRaster[q] = 0xff000000 | (r << 16) + (g << 8) + b;
+						mRaster[dst] = 0xff000000 | (r << 16) + (g << 8) + b;
+					}
+				}
+			}
+			else
+			{
+				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
+				{
+					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+					{
+						int lu = clamp(yComponent[src]);
+
+						mRaster[dst] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
+					}
 				}
 			}
 		}
-		else
+		catch (Exception e)
 		{
-			for (int py = 0; py < height; py++)
-			{
-				for (int px = 0, p = py * mMCUWidth, q = (aY + py) * mWidth + aX; px < width; px++, q++, p++)
-				{
-					int lu = clamp(yComponent[p]);
-
-					mRaster[q] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
-				}
-			}
+			mDecodingErrors = true;
 		}
 	}
 
@@ -182,9 +201,4 @@ public class JPEGImage
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 
-
-	public boolean isDamaged()
-	{
-		return mIsDamaged;
-	}
 }

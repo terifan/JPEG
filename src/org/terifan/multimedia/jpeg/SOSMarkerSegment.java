@@ -13,9 +13,9 @@ class SOSMarkerSegment
 
 	public SOSMarkerSegment(BitInputStream aInputStream) throws IOException
 	{
-		int segmentLength = aInputStream.readShort();
+		int segmentLength = aInputStream.readInt16();
 
-		mNumComponents = aInputStream.readByte();
+		mNumComponents = aInputStream.readInt8();
 
 		if (6 + 2 * mNumComponents != segmentLength)
 		{
@@ -28,13 +28,13 @@ class SOSMarkerSegment
 
 		for (int i = 0; i < mNumComponents; i++)
 		{
-			mComponents[i] = aInputStream.readByte();
-			int temp = aInputStream.readByte();
+			mComponents[i] = aInputStream.readInt8();
+			int temp = aInputStream.readInt8();
 			mHuffmanTableAC[i] = temp & 15;
 			mHuffmanTableDC[i] = temp >> 4;
 		}
 
-		aInputStream.skip(3);
+		aInputStream.skipBytes(3);
 
 		if (JPEGImageReader.VERBOSE)
 		{

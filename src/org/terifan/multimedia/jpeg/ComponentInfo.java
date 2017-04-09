@@ -21,10 +21,10 @@ class ComponentInfo
 	{
 		ComponentInfo ci = new ComponentInfo();
 
-		ci.mComponent = aInputStream.readByte();
-		int temp = aInputStream.readByte();
+		ci.mComponent = aInputStream.readInt8();
+		int temp = aInputStream.readInt8();
 		ci.mSampling = new Point(temp >> 4, temp & 0x0f);
-		ci.mQuantizationTableId = aInputStream.readByte();
+		ci.mQuantizationTableId = aInputStream.readInt8();
 
 		if (ci.mComponent < 1 || ci.mComponent > 5)
 		{

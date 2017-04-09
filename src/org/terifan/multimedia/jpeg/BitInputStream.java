@@ -17,10 +17,7 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Reads the next byte of data from the input stream.
-	 */
-	public int readByte() throws IOException
+	public int readInt8() throws IOException
 	{
 		if (mBitBufferLength != 0)
 		{
@@ -33,10 +30,7 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Reads two unsigned bytes from the input stream.
-	 */
-	public int readShort() throws IOException
+	public int readInt16() throws IOException
 	{
 		if (mBitBufferLength != 0)
 		{
@@ -55,9 +49,6 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Skips aLength bits.
-	 */
 	public void skipBits(int aLength) throws IOException
 	{
 		while (aLength > 24)
@@ -76,9 +67,6 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Returns a number of bits.
-	 */
 	public int readBits(int aLength) throws IOException
 	{
 		int value = peekBits(aLength);
@@ -87,9 +75,6 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Returns aLength bits without removing them from the stream.
-	 */
 	public int peekBits(int aLength) throws IOException
 	{
 		assert aLength > 0 && aLength <= 24;
@@ -131,10 +116,7 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Skips a number of bytes.
-	 */
-	public void skip(int aByteCount) throws IOException
+	public void skipBytes(int aByteCount) throws IOException
 	{
 		if (mBitBufferLength != 0)
 		{
@@ -167,9 +149,6 @@ class BitInputStream
 	}
 
 
-	/**
-	 * Closing this and the underlying stream.
-	 */
 	public void close() throws IOException
 	{
 		if (mInputStream != null)

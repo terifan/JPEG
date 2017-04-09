@@ -15,17 +15,17 @@ class SOFMarkerSegment
 
 	public SOFMarkerSegment(BitInputStream aInputStream) throws IOException
 	{
-		int segmentLength = aInputStream.readShort();
+		int segmentLength = aInputStream.readInt16();
 
 		if (segmentLength != 11 && segmentLength != 17)
 		{
 			throw new IOException("segmentLength illegal value: " + segmentLength);
 		}
 
-		mPrecision = aInputStream.readByte();
-		mHeight = aInputStream.readShort();
-		mWidth = aInputStream.readShort();
-		mComponents = new ComponentInfo[aInputStream.readByte()];
+		mPrecision = aInputStream.readInt8();
+		mHeight = aInputStream.readInt16();
+		mWidth = aInputStream.readInt16();
+		mComponents = new ComponentInfo[aInputStream.readInt8()];
 
 		if (mPrecision != 8)
 		{

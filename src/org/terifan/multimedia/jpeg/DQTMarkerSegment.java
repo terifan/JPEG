@@ -17,7 +17,7 @@ class DQTMarkerSegment
 
 	public DQTMarkerSegment(BitInputStream aInputStream) throws IOException
 	{
-		int temp = aInputStream.readByte();
+		int temp = aInputStream.readInt8();
 		mIdentity = temp & 0x07;
 		mPrecision = (temp >> 3) == 0 ? PRECISION_8_BITS : PRECISION_16_BITS;
 
@@ -25,11 +25,11 @@ class DQTMarkerSegment
 		{
 			if (mPrecision == PRECISION_8_BITS)
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readByte() / 255.0;
+				mTableD[ZIGZAG[i]] = aInputStream.readInt8() / 255.0;
 			}
 			else
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readShort() / 65535.0;
+				mTableD[ZIGZAG[i]] = aInputStream.readInt16() / 65535.0;
 			}
 		}
 
