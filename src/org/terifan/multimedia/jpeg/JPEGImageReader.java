@@ -245,7 +245,7 @@ public class JPEGImageReader extends JPEG
 					{
 						ComponentInfo c = mFrameSegment.getComponent(component);
 //						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTable();
-						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableD();
+						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTable();
 						int samplingX = c.getSamplingX();
 						int samplingY = c.getSamplingY();
 

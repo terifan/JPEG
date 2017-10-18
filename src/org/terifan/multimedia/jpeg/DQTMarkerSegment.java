@@ -10,7 +10,7 @@ class DQTMarkerSegment
 	public final static int PRECISION_16_BITS = 2;
 
 	private double[] mTableD = new double[64];
-	private int[] mTableI = new int[64];
+//	private int[] mTableI = new int[64];
 	private int mPrecision;
 	private int mIdentity;
 
@@ -33,20 +33,17 @@ class DQTMarkerSegment
 			}
 		}
 
-		double[] scaleFactors = new double[]
+		double[] scaleFactors =
 		{
-			16, 22.19263752, 20.90500744, 18.814009632, 16, 12.571119328, 8.6591376, 4.414390064
-
-//			1.0, 1.387039845, 1.306562965, 1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379
+			1.0, 1.387039845, 1.306562965, 1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379
 		};
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-//				mTableD[i] *= scaleFactors[row] * scaleFactors[col] * 16 * 16;
-				mTableD[i] *= scaleFactors[row] * scaleFactors[col];
-				mTableI[i] = (int)Math.round(255 * mTableD[i]);
+				mTableD[i] *= scaleFactors[row] * scaleFactors[col] * 16 * 16;
+//				mTableI[i] = (int)Math.round(255 * mTableD[i]);
 			}
 		}
 
@@ -69,13 +66,13 @@ class DQTMarkerSegment
 	}
 
 
-	public int[] getTable()
-	{
-		return mTableI;
-	}
+//	public int[] getTable()
+//	{
+//		return mTableI;
+//	}
 
 
-	public double[] getTableD()
+	public double[] getTable()
 	{
 		return mTableD;
 	}

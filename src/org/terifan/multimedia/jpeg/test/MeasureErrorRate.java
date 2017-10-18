@@ -73,7 +73,7 @@ public class MeasureErrorRate
 	}
 
 
-	private static void measureError(BufferedImage aImageThis, BufferedImage aImageJava, long aTimeThis, long aTimeJava, File aFile)
+	static void measureError(BufferedImage aImageThis, BufferedImage aImageJava, long aTimeThis, long aTimeJava, File aFile)
 	{
 		int accumError = 0;
 		int critError = 0;
@@ -107,6 +107,6 @@ public class MeasureErrorRate
 
 		int errorPP = accumError / (aImageThis.getWidth() * aImageThis.getHeight());
 
-		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d ae=%-12d epp=%-8d ce=%-8d mind=%-8d maxd=%-8d  %s\n", aTimeThis/1000000.0, aTimeJava/1000000.0, aImageThis.getWidth()+"x"+aImageThis.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
+		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d accumErr=%-12d errPerPixel=%-8d critErr=%-8d minDiv=%-8d maxDiv=%-8d  %s\n", aTimeThis/1000000.0, aTimeJava/1000000.0, aImageThis.getWidth()+"x"+aImageThis.getHeight(), aFile.length(), accumError, errorPP, critError, minDiv, maxDiv, aFile);
 	}
 }

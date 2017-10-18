@@ -94,22 +94,41 @@ public class JPEGImage
 	 4x4 2x2 2x2
 	 */
 
-	private void copyBlock(int[] dctCoefficients, int[] buffer, int w, int dst)
+	private void copyBlock(int[] aDctCoefficients, int[] aBuffer, int aWidth, int aDst)
 	{
-		for (int src = 0; src < 64; dst += w, src += 8)
+		for (int src = 0; src < 64; aDst += aWidth, src += 8)
 		{
-			System.arraycopy(dctCoefficients, src, buffer, dst, 8);
+			System.arraycopy(aDctCoefficients, src, aBuffer, aDst, 8);
 		}
 	}
 
 
-	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int q, int mcuWidth, int mcuHeight, int xShift, int yShift)
+	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
 	{
-		for (int y = 0; y < mcuHeight; y++, q += mcuWidth)
+//		int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
+//		int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
+//
+//		for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
+//		{
+//			for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
+//			{
+//				aBuffer[dst] = aCoefficients[(x >> xShift) + src];
+//			}
+//		}
+
+		for (int y = 0; y < aMcuHeight; y+=2)
 		{
-			for (int x = 0, dst = q, src = (y >> yShift) * 8; x < mcuWidth; x++, dst++)
+			for (int x = 0; x < aMcuWidth; x+=2)
 			{
-				aBuffer[dst] = aCoefficients[(x >> xShift) + src];
+				int c00 = aCoefficients[Math.min(x / 2 + 0, 7) + Math.min(y / 2 + 0, 7) * aMcuWidth / 2];
+				int c10 = aCoefficients[Math.min(x / 2 + 1, 7) + Math.min(y / 2 + 0, 7) * aMcuWidth / 2];
+				int c11 = aCoefficients[Math.min(x / 2 + 1, 7) + Math.min(y / 2 + 1, 7) * aMcuWidth / 2];
+				int c01 = aCoefficients[Math.min(x / 2 + 0, 7) + Math.min(y / 2 + 1, 7) * aMcuWidth / 2];
+
+				aBuffer[aOffset + x + y * aMcuWidth] = c00;
+				aBuffer[aOffset + x + y * aMcuWidth+1] = (c00+c10)/2;
+				aBuffer[aOffset + x + y * aMcuWidth+1+aMcuWidth] = (c00+c10+c01+c11)/4;
+				aBuffer[aOffset + x + y * aMcuWidth+aMcuWidth] = (c00+c01)/2;
 			}
 		}
 	}
@@ -117,26 +136,17 @@ public class JPEGImage
 
 	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int aComponent, int[] aCoefficients)
 	{
-		int[] buffer = mBuffers[aComponent];
-
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
-			System.arraycopy(aCoefficients, 0, buffer, 0, 64);
+			System.arraycopy(aCoefficients, 0, mBuffers[aComponent], 0, 64);
 		}
 		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
-			copyBlock(aCoefficients, buffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
+			copyBlock(aCoefficients, mBuffers[aComponent], mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
 		}
 		else
 		{
-			int mcuWidth = mMCUWidth;
-			int mcuHeight = mMCUHeight;
-			int blockWidth = mMCUWidth / aSamplingX;
-			int blockHeight = mMCUHeight / aSamplingY;
-			int xShift = blockWidth == 8 ? 0 : blockWidth == 16 ? 1 : blockWidth == 32 ? 2 : 3;
-			int yShift = blockHeight == 8 ? 0 : blockHeight == 16 ? 1 : blockHeight == 32 ? 2 : 3;
-
-			scaleBlock(aCoefficients, buffer, (cx * 8) + (cy * 8) * mcuWidth, mcuWidth, mcuHeight, xShift, yShift);
+			scaleBlock(aCoefficients, mBuffers[aComponent], cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
 		}
 	}
 
@@ -200,5 +210,4 @@ public class JPEGImage
 	{
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
-
 }
