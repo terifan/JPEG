@@ -47,10 +47,10 @@ class SOSMarkerSegment
 					case ComponentInfo.Y:
 						component = "Y";
 						break;
-					case ComponentInfo.Cb:
+					case ComponentInfo.CB:
 						component = "Cb";
 						break;
-					case ComponentInfo.Cr:
+					case ComponentInfo.CR:
 						component = "Cr";
 						break;
 					case ComponentInfo.I:

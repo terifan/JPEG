@@ -7,6 +7,13 @@ import java.awt.image.DataBufferInt;
 
 public class JPEGImage
 {
+	private final static int FP_SCALEBITS = 16;
+	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
+	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
+	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.34414);
+	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
+	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
+
 	private final int mWidth;
 	private final int mHeight;
 	private final int[][] mBuffers;
@@ -19,21 +26,14 @@ public class JPEGImage
 	private boolean mDecodingErrors;
 	private BufferedImage mImage;
 
-	private final static int FP_SCALEBITS = 16;
-	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
-	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
-	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.34414);
-	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
-	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
 
-
-	JPEGImage(int aWidth, int aHeight, Point aMaxSampling, int aDensitiesUnits, Point aDensity, int aComponents)
+	JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aDensitiesUnits, int aDensityX, int aDensityY, int aComponents)
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
-		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSampling.x * aMaxSampling.y * 64];
-		mMCUWidth = 8 * aMaxSampling.x;
-		mMCUHeight = 8 * aMaxSampling.y;
+		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
+		mMCUWidth = 8 * aMaxSamplingX;
+		mMCUHeight = 8 * aMaxSamplingY;
 		mLastMCUPosition = new Point();
 		mComponents = aComponents;
 		mImage = new BufferedImage(mWidth, mHeight, BufferedImage.TYPE_INT_RGB);
@@ -115,7 +115,7 @@ public class JPEGImage
 	}
 
 
-	void setData(int cx, int cy, Point aSampling, int aComponent, int[] aCoefficients)
+	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int aComponent, int[] aCoefficients)
 	{
 		int[] buffer = mBuffers[aComponent];
 
@@ -123,7 +123,7 @@ public class JPEGImage
 		{
 			System.arraycopy(aCoefficients, 0, buffer, 0, 64);
 		}
-		else if (mMCUWidth == 8 * aSampling.x && mMCUHeight == 8 * aSampling.y)
+		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
 			copyBlock(aCoefficients, buffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
 		}
@@ -131,8 +131,8 @@ public class JPEGImage
 		{
 			int mcuWidth = mMCUWidth;
 			int mcuHeight = mMCUHeight;
-			int blockWidth = mMCUWidth / aSampling.x;
-			int blockHeight = mMCUHeight / aSampling.y;
+			int blockWidth = mMCUWidth / aSamplingX;
+			int blockHeight = mMCUHeight / aSamplingY;
 			int xShift = blockWidth == 8 ? 0 : blockWidth == 16 ? 1 : blockWidth == 32 ? 2 : 3;
 			int yShift = blockHeight == 8 ? 0 : blockHeight == 16 ? 1 : blockHeight == 32 ? 2 : 3;
 

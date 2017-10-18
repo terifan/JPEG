@@ -1,6 +1,5 @@
 package org.terifan.multimedia.jpeg;
 
-import java.awt.Point;
 import java.io.IOException;
 
 
@@ -10,7 +9,8 @@ class SOFMarkerSegment
 	private int mHeight;
 	private int mWidth;
 	private ComponentInfo[] mComponents;
-	private Point mMaxSampling;
+	private int mMaxSamplingX;
+	private int mMaxSamplingY;
 
 
 	public SOFMarkerSegment(BitInputStream aInputStream) throws IOException
@@ -32,15 +32,12 @@ class SOFMarkerSegment
 			throw new IOException("mPrecision illegal value: " + mPrecision);
 		}
 
-		mMaxSampling = new Point();
-
 		for (int i = 0; i < mComponents.length; i++)
 		{
 			mComponents[i] = ComponentInfo.read(aInputStream);
 
-			Point sampling = mComponents[i].getSampling();
-			mMaxSampling.x = Math.max(mMaxSampling.x, sampling.x);
-			mMaxSampling.y = Math.max(mMaxSampling.y, sampling.y);
+			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getSamplingX());
+			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getSamplingY());
 		}
 
 		if (JPEGImageReader.VERBOSE)
@@ -55,9 +52,15 @@ class SOFMarkerSegment
 	}
 
 
-	public Point getMaxSampling()
+	public int getMaxSamplingX()
 	{
-		return mMaxSampling;
+		return mMaxSamplingX;
+	}
+
+
+	public int getMaxSamplingY()
+	{
+		return mMaxSamplingY;
 	}
 
 
