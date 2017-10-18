@@ -126,9 +126,9 @@ public class JPEGImage
 				int c01 = aCoefficients[Math.min(x / 2 + 0, 7) + Math.min(y / 2 + 1, 7) * aMcuWidth / 2];
 
 				aBuffer[aOffset + x + y * aMcuWidth] = c00;
-				aBuffer[aOffset + x + y * aMcuWidth+1] = (c00+c10)/2;
-				aBuffer[aOffset + x + y * aMcuWidth+1+aMcuWidth] = (c00+c10+c01+c11)/4;
-				aBuffer[aOffset + x + y * aMcuWidth+aMcuWidth] = (c00+c01)/2;
+				aBuffer[aOffset + x + y * aMcuWidth+1] = (c00+c10+1)/2;
+				aBuffer[aOffset + x + y * aMcuWidth+1+aMcuWidth] = (c00+c10+c01+c11+3)/4;
+				aBuffer[aOffset + x + y * aMcuWidth+aMcuWidth] = (c00+c01+1)/2;
 			}
 		}
 	}
