@@ -13,15 +13,13 @@ public class PerformanceTest
 	{
 		try
 		{
-			File file = new File("d:\\pictures\\DSC_3781.JPG");
+			File file = new File(Test.class.getResource("beautiful-river-hd-1080p-wallpapers-download.jpg").getPath());
+
 			byte[] imageData = new byte[(int)file.length()];
 			try (FileInputStream in = new FileInputStream(file))
 			{
 				in.read(imageData);
 			}
-			
-			// 504 / 350
-			// 464 / 350
 
 			long a = 0;
 			long b = 0;

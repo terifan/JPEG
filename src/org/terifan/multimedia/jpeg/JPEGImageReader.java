@@ -223,8 +223,8 @@ public class JPEGImageReader extends JPEG
 
 	private JPEGImage readRaster() throws IOException
 	{
-//		IDCTFloat idct = new IDCTFloat();
-		IDCTInteger idct = new IDCTInteger();
+		IDCTFloat idct = new IDCTFloat();
+//		IDCTInteger idct = new IDCTInteger();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
 		int[] dctCoefficients = mDCTCoefficients;
@@ -245,8 +245,8 @@ public class JPEGImageReader extends JPEG
 					for (int component = 0; component < numComponents; component++)
 					{
 						ComponentInfo c = mFrameSegment.getComponent(component);
-						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableInt();
-//						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableDbl();
+//						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableInt();
+						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableDbl();
 						int samplingX = c.getSamplingX();
 						int samplingY = c.getSamplingY();
 

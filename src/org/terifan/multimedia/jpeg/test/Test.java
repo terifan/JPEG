@@ -23,20 +23,22 @@ public class Test
 
 				BufferedImage javaImage = ImageIO.read(file);
 
-				BufferedImage diff = new BufferedImage(myImage.getWidth(), myImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-				for (int y = 0; y < diff.getHeight(); y++)
-				{
-					for (int x = 0; x < diff.getWidth(); x++)
-					{
-						int s = 1;
-						int r = 128 + s * ((255 & (myImage.getRGB(x, y) >> 16)) - (255 & (javaImage.getRGB(x, y) >> 16)));
-						int g = 128 + s * ((255 & (myImage.getRGB(x, y) >> 8)) - (255 & (javaImage.getRGB(x, y) >> 8)));
-						int b = 128 + s * ((255 & (myImage.getRGB(x, y))) - (255 & (javaImage.getRGB(x, y))));
-						diff.setRGB(x, y, (r << 16) + (g << 8) + b);
-					}
-				}
-
-				ImageFrame imagePane = new ImageFrame(diff);
+//				BufferedImage diff = new BufferedImage(myImage.getWidth(), myImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+//				for (int y = 0; y < diff.getHeight(); y++)
+//				{
+//					for (int x = 0; x < diff.getWidth(); x++)
+//					{
+//						int s = 1;
+//						int r = 128 + s * ((255 & (myImage.getRGB(x, y) >> 16)) - (255 & (javaImage.getRGB(x, y) >> 16)));
+//						int g = 128 + s * ((255 & (myImage.getRGB(x, y) >> 8)) - (255 & (javaImage.getRGB(x, y) >> 8)));
+//						int b = 128 + s * ((255 & (myImage.getRGB(x, y))) - (255 & (javaImage.getRGB(x, y))));
+//						diff.setRGB(x, y, (r << 16) + (g << 8) + b);
+//					}
+//				}
+//
+//				ImageFrame imagePane = new ImageFrame(diff);
+				
+				ImageFrame imagePane = new ImageFrame(myImage);
 
 				System.out.println(PSNR.calculate(myImage, javaImage));
 				MeasureErrorRate.measureError(myImage, javaImage, 0, 0, file);

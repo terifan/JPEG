@@ -7,13 +7,6 @@ import java.awt.image.DataBufferInt;
 
 public class JPEGImage
 {
-	private final static int FP_SCALEBITS = 16;
-	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
-	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
-	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.34414);
-	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
-	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
-
 	private final int mWidth;
 	private final int mHeight;
 	private final int[][] mBuffers;
@@ -147,61 +140,22 @@ public class JPEGImage
 
 	void flushMCU(int aX, int aY)
 	{
-		try
+		aX *= mMCUWidth;
+		aY *= mMCUHeight;
+
+		int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
+		int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
+
+		int[] y = mBuffers[0];
+		int[] cb = mBuffers[1];
+		int[] cr = mBuffers[2];
+
+		for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
 		{
-			aX *= mMCUWidth;
-			aY *= mMCUHeight;
-
-			mLastMCUPosition.x = aX;
-			mLastMCUPosition.y = aY;
-
-			int[] yComponent = mBuffers[0];
-			int[] cbComponent = mBuffers[1];
-			int[] crComponent = mBuffers[2];
-
-			int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
-			int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
-
-			if (mComponents != 1)
+			for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
 			{
-				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
-				{
-					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
-					{
-						int lu = yComponent[src];
-						int cb = cbComponent[src] - 128;
-						int cr = crComponent[src] - 128;
-
-						int r = clamp(lu + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
-						int g = clamp(lu - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
-						int b = clamp(lu + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
-
-						mRaster[dst] = 0xff000000 | (r << 16) + (g << 8) + b;
-					}
-				}
-			}
-			else
-			{
-				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
-				{
-					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
-					{
-						int lu = clamp(yComponent[src]);
-
-						mRaster[dst] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
-					}
-				}
+				mRaster[dst] = ColorSpace.yuvToRgb(y, cb, cr, mComponents, src);
 			}
 		}
-		catch (Exception e)
-		{
-			mDecodingErrors = true;
-		}
-	}
-
-
-	private int clamp(int aValue)
-	{
-		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 }

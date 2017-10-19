@@ -25,11 +25,11 @@ class DQTMarkerSegment
 		{
 			if (mPrecision == PRECISION_8_BITS)
 			{
-				mTableDbl[ZIGZAG[i]] = aInputStream.readInt8() / 255.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt8();
 			}
 			else
 			{
-				mTableDbl[ZIGZAG[i]] = aInputStream.readInt16() / 65535.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt16() / 256.0;
 			}
 		}
 
@@ -43,12 +43,12 @@ class DQTMarkerSegment
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				mTableDbl[i] *= 256 * scaleFactors[row] * scaleFactors[col];
+				mTableDbl[i] *= scaleFactors[row] * scaleFactors[col];
 				mTableInt[i] = (int)(256 * mTableDbl[i]);
 			}
 		}
 
-		if (JPEGImageReader.VERBOSE)
+//		if (JPEGImageReader.VERBOSE)
 		{
 			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
 
