@@ -15,7 +15,7 @@ public class Test
 		try
 		{
 //			File file = new File("d:\\pictures\\aliens3.jpg");
-			File file = new File(Test.class.getResource("DSC_4099.jpg").getPath());
+			File file = new File(Test.class.getResource("SolarFarm_ROW5751321560_1920x1080.jpg").getPath());
 
 			try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(file)))
 			{

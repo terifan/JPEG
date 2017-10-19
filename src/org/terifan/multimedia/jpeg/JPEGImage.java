@@ -86,20 +86,21 @@ public class JPEGImage
 	{
 		try
 		{
-			if (aMcuHeight == 8)
+			if (aMcuHeight == 8 && aMcuWidth == 16)
 			{
-				int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
-				int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
-
-				for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
+				for (int y = 0; y < 8; y++)
 				{
-					for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
+					for (int x = 0; x < 8; x++)
 					{
-						aBuffer[dst] = aCoefficients[(x >> xShift) + src];
+						int c0 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 0, 7) * 8];
+						int c1 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
+
+						aBuffer[aOffset + 2 * x + y * aMcuWidth] = c0;
+						aBuffer[aOffset + 2 * x + y * aMcuWidth + 1] = (c0 + c1 + 1) / 2;
 					}
 				}
 			}
-			else
+			else if (aMcuHeight == 16 && aMcuWidth == 16)
 			{
 				for (int y = 0; y < 8; y++)
 				{
@@ -114,6 +115,19 @@ public class JPEGImage
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
+					}
+				}
+			}
+			else
+			{
+				int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
+				int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
+
+				for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
+				{
+					for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
+					{
+						aBuffer[dst] = aCoefficients[(x >> xShift) + src];
 					}
 				}
 			}
