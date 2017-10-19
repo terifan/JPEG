@@ -9,8 +9,8 @@ class DQTMarkerSegment
 	public final static int PRECISION_8_BITS = 1;
 	public final static int PRECISION_16_BITS = 2;
 
-	private double[] mTableD = new double[64];
-//	private int[] mTableI = new int[64];
+	private double[] mTableDbl = new double[64];
+	private int[] mTableInt = new int[64];
 	private int mPrecision;
 	private int mIdentity;
 
@@ -25,31 +25,42 @@ class DQTMarkerSegment
 		{
 			if (mPrecision == PRECISION_8_BITS)
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readInt8() / 255.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt8() / 255.0;
 			}
 			else
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readInt16() / 65535.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt16() / 65535.0;
 			}
 		}
 
 		double[] scaleFactors =
 		{
-			1.0, 1.387039845, 1.306562965, 1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379
+			1.0, 1.387039845, 1.306562965, 1.175875602,
+			1.0, 0.785694958, 0.541196100, 0.275899379
 		};
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				mTableD[i] *= scaleFactors[row] * scaleFactors[col] * 16 * 16;
-//				mTableI[i] = (int)Math.round(255 * mTableD[i]);
+				mTableDbl[i] *= 256 * scaleFactors[row] * scaleFactors[col];
+				mTableInt[i] = (int)(256 * mTableDbl[i]);
 			}
 		}
 
 		if (JPEGImageReader.VERBOSE)
 		{
-			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? "8bit" : "16bit") + "]");
+			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
+
+			for (int row = 0, i = 0; row < 8; row++)
+			{
+				System.out.print(" ");
+				for (int col = 0; col < 8; col++, i++)
+				{
+					System.out.printf("%7.3f ", mTableDbl[i]);
+				}
+				System.out.println();
+			}
 		}
 	}
 
@@ -66,14 +77,14 @@ class DQTMarkerSegment
 	}
 
 
-//	public int[] getTable()
-//	{
-//		return mTableI;
-//	}
-
-
-	public double[] getTable()
+	public int[] getTableInt()
 	{
-		return mTableD;
+		return mTableInt;
+	}
+
+
+	public double[] getTableDbl()
+	{
+		return mTableDbl;
 	}
 }

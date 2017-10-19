@@ -79,20 +79,6 @@ public class JPEGImage
 		}
 	}
 
-	/*
-	 1x1 1x1 1x1
-	 2x1 1x1 1x1
-	 1x2 1x1 1x1
-	 2x2 1x1 1x1
-	 2x2 2x1 2x1
-	 4x2 1x1 1x1
-	 2x4 1x1 1x1
-	 4x1 1x1 1x1
-	 1x4 1x1 1x1
-	 4x1 2x1 2x1
-	 1x4 1x2 1x2
-	 4x4 2x2 2x2
-	 */
 
 	private void copyBlock(int[] aDctCoefficients, int[] aBuffer, int aWidth, int aDst)
 	{
@@ -105,31 +91,39 @@ public class JPEGImage
 
 	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
 	{
-//		int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
-//		int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
-//
-//		for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
-//		{
-//			for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
-//			{
-//				aBuffer[dst] = aCoefficients[(x >> xShift) + src];
-//			}
-//		}
-
-		for (int y = 0; y < aMcuHeight; y+=2)
+		try
 		{
-			for (int x = 0; x < aMcuWidth; x+=2)
-			{
-				int c00 = aCoefficients[Math.min(x / 2 + 0, 7) + Math.min(y / 2 + 0, 7) * aMcuWidth / 2];
-				int c10 = aCoefficients[Math.min(x / 2 + 1, 7) + Math.min(y / 2 + 0, 7) * aMcuWidth / 2];
-				int c11 = aCoefficients[Math.min(x / 2 + 1, 7) + Math.min(y / 2 + 1, 7) * aMcuWidth / 2];
-				int c01 = aCoefficients[Math.min(x / 2 + 0, 7) + Math.min(y / 2 + 1, 7) * aMcuWidth / 2];
+//			int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
+//			int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
+//
+//			for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
+//			{
+//				for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
+//				{
+//					aBuffer[dst] = aCoefficients[(x >> xShift) + src];
+//				}
+//			}
 
-				aBuffer[aOffset + x + y * aMcuWidth] = c00;
-				aBuffer[aOffset + x + y * aMcuWidth+1] = (c00+c10+1)/2;
-				aBuffer[aOffset + x + y * aMcuWidth+1+aMcuWidth] = (c00+c10+c01+c11+3)/4;
-				aBuffer[aOffset + x + y * aMcuWidth+aMcuWidth] = (c00+c01+1)/2;
+			for (int y = 0; y < 8; y++)
+			{
+				for (int x = 0; x < 8; x++)
+				{
+					int c00 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 0, 7) * 8];
+					int c10 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
+					int c11 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 1, 7) * 8];
+					int c01 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 1, 7) * 8];
+
+					aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
+					aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
+					aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
+					aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
+				}
 			}
+		}
+		catch (Exception e)
+		{
+			System.out.println(aMcuWidth+" "+aMcuHeight+" "+aSamplingX+" "+aSamplingY);
+			throw e;
 		}
 	}
 
