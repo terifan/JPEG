@@ -95,9 +95,10 @@ public class MeasureErrorRate
 				int er = Math.abs(r0 - r1);
 				int eg = Math.abs(g0 - g1);
 				int eb = Math.abs(b0 - b1);
-				maxError = Math.max(Math.max(maxError, er), Math.max(eg, eb));
+				int max = Math.max(er, Math.max(eg, eb));
+				maxError = Math.max(maxError, max);
 				accumError += er + eg + eb;
-				if (er > 10 || eg > 10 || eb > 10)
+				if (max > 10)
 				{
 					critError++;
 				}
