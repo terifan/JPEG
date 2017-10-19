@@ -48,7 +48,7 @@ class DQTMarkerSegment
 			}
 		}
 
-//		if (JPEGImageReader.VERBOSE)
+		if (JPEGImageReader.VERBOSE)
 		{
 			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
 

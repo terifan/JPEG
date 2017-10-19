@@ -78,7 +78,7 @@ public class MeasureErrorRate
 	{
 		int accumError = 0;
 		int critError = 0;
-		int maxErr = 0;
+		int maxError = 0;
 
 		for (int y = 0; y < aImage.getHeight(); y++)
 		{
@@ -95,7 +95,7 @@ public class MeasureErrorRate
 				int er = Math.abs(r0 - r1);
 				int eg = Math.abs(g0 - g1);
 				int eb = Math.abs(b0 - b1);
-				maxErr = Math.max(Math.max(maxErr, er), Math.max(eg, eb));
+				maxError = Math.max(Math.max(maxError, er), Math.max(eg, eb));
 				accumError += er + eg + eb;
 				if (er > 10 || eg > 10 || eb > 10)
 				{
@@ -106,6 +106,6 @@ public class MeasureErrorRate
 
 		double errorPP = accumError / (double)(aImage.getWidth() * aImage.getHeight());
 
-		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d accumErr=%-12d errPerPixel=%-6.1f critErr=%-8d maxErr=%-8d  %s\n", aTimeThis / 1000000.0, aTimeJava / 1000000.0, aImage.getWidth() + "x" + aImage.getHeight(), aFile.length(), accumError, errorPP, critError, maxErr, aFile);
+		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d accumErr=%-12d errPerPixel=%-6.1f critErr=%-8d maxErr=%-8d  %s\n", aTimeThis / 1000000.0, aTimeJava / 1000000.0, aImage.getWidth() + "x" + aImage.getHeight(), aFile.length(), accumError, errorPP, critError, maxError, aFile);
 	}
 }
