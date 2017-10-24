@@ -43,7 +43,7 @@ class DQTMarkerSegment
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				mTableDbl[i] *= scaleFactors[row] * scaleFactors[col];
+				mTableDbl[i] *= scaleFactors[row] * scaleFactors[col] / 8.0;
 				mTableInt[i] = (int)(256 * mTableDbl[i]);
 			}
 		}

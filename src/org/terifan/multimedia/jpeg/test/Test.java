@@ -1,9 +1,9 @@
 package org.terifan.multimedia.jpeg.test;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import org.terifan.multimedia.jpeg.JPEGImageReader;
 
@@ -14,14 +14,14 @@ public class Test
 	{
 		try
 		{
-//			File file = new File("d:\\pictures\\aliens3.jpg");
-			File file = new File(Test.class.getResource("SolarFarm_ROW5751321560_1920x1080.jpg").getPath());
+			URL jpegResource = Test.class.getResource("Swallowtail.jpg");
 
-			try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(file)))
+			BufferedImage orgImage = ImageIO.read(Test.class.getResource("Swallowtail.png"));
+			BufferedImage javaImage = ImageIO.read(jpegResource);
+
+			try (InputStream input = jpegResource.openStream())
 			{
 				BufferedImage myImage = JPEGImageReader.read(input);
-
-				BufferedImage javaImage = ImageIO.read(file);
 
 //				BufferedImage diff = new BufferedImage(myImage.getWidth(), myImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 //				for (int y = 0; y < diff.getHeight(); y++)
@@ -37,11 +37,16 @@ public class Test
 //				}
 //
 //				ImageFrame imagePane = new ImageFrame(diff);
-				
+
 				ImageFrame imagePane = new ImageFrame(myImage);
 
-				System.out.println(PSNR.calculate(myImage, javaImage));
-				MeasureErrorRate.measureError(myImage, javaImage, 0, 0, file);
+				System.out.println(PSNR.calculate(myImage, orgImage));
+				MeasureErrorRate.measureError(myImage, orgImage, 0, 0, null);
+				System.out.println("------------------------");
+
+				System.out.println(PSNR.calculate(javaImage, orgImage));
+				MeasureErrorRate.measureError(javaImage, orgImage, 0, 0, null);
+				System.out.println("------------------------");
 			}
 		}
 		catch (Throwable e)

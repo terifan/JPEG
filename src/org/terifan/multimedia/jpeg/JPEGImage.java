@@ -96,7 +96,7 @@ public class JPEGImage
 						int c1 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
 
 						aBuffer[aOffset + 2 * x + y * aMcuWidth] = c0;
-						aBuffer[aOffset + 2 * x + y * aMcuWidth + 1] = (c0 + c1 + 1) / 2;
+						aBuffer[aOffset + 2 * x + y * aMcuWidth + 1] = (c0 + c1) / 2;
 					}
 				}
 			}
@@ -112,9 +112,9 @@ public class JPEGImage
 						int c01 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 1, 7) * 8];
 
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10) / 2;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c01 + c10 + c11) / 4;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01) / 2;
 					}
 				}
 			}

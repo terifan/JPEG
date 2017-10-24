@@ -107,6 +107,6 @@ public class MeasureErrorRate
 
 		double errorPP = accumError / (double)(aImage.getWidth() * aImage.getHeight());
 
-		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d accumErr=%-12d errPerPixel=%-6.1f critErr=%-8d maxErr=%-8d  %s\n", aTimeThis / 1000000.0, aTimeJava / 1000000.0, aImage.getWidth() + "x" + aImage.getHeight(), aFile.length(), accumError, errorPP, critError, maxError, aFile);
+		System.out.printf("tT=%-6.1f tJ=%-6.1f sz=%9s L=%-7d accumErr=%-12d errPerPixel=%-6.1f critErr=%-8d maxErr=%-8d  %s\n", aTimeThis / 1000000.0, aTimeJava / 1000000.0, aImage.getWidth() + "x" + aImage.getHeight(), aFile==null?0:aFile.length(), accumError, errorPP, critError, maxError, aFile);
 	}
 }
