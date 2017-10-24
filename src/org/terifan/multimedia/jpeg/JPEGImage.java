@@ -113,7 +113,7 @@ public class JPEGImage
 
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10) / 2;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c01 + c10 + c11) / 4;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11) / 4;
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01) / 2;
 					}
 				}
