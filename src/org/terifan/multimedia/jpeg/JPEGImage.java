@@ -114,9 +114,9 @@ public class JPEGImage
 						int c01 =         aCoefficients[x +     z * 8];
 
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10) / 2;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11) / 4;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01) / 2;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
 					}
 				}
 			}
@@ -136,7 +136,7 @@ public class JPEGImage
 		}
 		catch (Exception e)
 		{
-			System.out.println(aMcuWidth+" "+aMcuHeight+" "+aSamplingX+" "+aSamplingY);
+			System.out.println(aMcuWidth + " " + aMcuHeight + " " + aSamplingX + " " + aSamplingY);
 			throw e;
 		}
 	}

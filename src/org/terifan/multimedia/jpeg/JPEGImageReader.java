@@ -222,6 +222,7 @@ public class JPEGImageReader extends JPEG
 	private JPEGImage readRaster() throws IOException
 	{
 		IDCT idct = new IDCTFloat();
+//		IDCT idct = new IDCTInteger();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
@@ -282,6 +283,16 @@ public class JPEGImageReader extends JPEG
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
 							}
 						}
+					}
+				}
+
+				for (int x = 0; x < numHorMCU; x++)
+				{
+					for (int component = 0; component < numComponents; component++)
+					{
+						ComponentInfo comp = mFrameSegment.getComponent(component);
+						int samplingX = comp.getSamplingX();
+						int samplingY = comp.getSamplingY();
 
 						for (int cy = 0; cy < samplingY; cy++)
 						{

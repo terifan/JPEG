@@ -19,6 +19,8 @@ public class Test
 			BufferedImage orgImage = ImageIO.read(Test.class.getResource("Swallowtail.png"));
 			BufferedImage javaImage = ImageIO.read(jpegResource);
 
+			BufferedImage orgImagePaintNet = ImageIO.read(Test.class.getResource("Swallowtail_paintnet.png"));
+
 			try (InputStream input = jpegResource.openStream())
 			{
 				BufferedImage myImage = JPEGImageReader.read(input);
@@ -42,11 +44,16 @@ public class Test
 
 				System.out.println(PSNR.calculate(myImage, orgImage));
 				MeasureErrorRate.measureError(myImage, orgImage, 0, 0, null);
+
 				System.out.println("------------------------");
 
 				System.out.println(PSNR.calculate(javaImage, orgImage));
 				MeasureErrorRate.measureError(javaImage, orgImage, 0, 0, null);
+
 				System.out.println("------------------------");
+
+				System.out.println(PSNR.calculate(orgImagePaintNet, orgImage));
+				MeasureErrorRate.measureError(orgImagePaintNet, orgImage, 0, 0, null);
 			}
 		}
 		catch (Throwable e)
