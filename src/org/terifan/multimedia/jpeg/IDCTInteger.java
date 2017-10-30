@@ -16,7 +16,7 @@ package org.terifan.multimedia.jpeg;
  * values. The smaller the quantization table entry, the less precise the scaled value, so this implementation does worse with high-
  * quality-setting files than with low-quality ones.
  */
-class IDCTInteger
+class IDCTInteger implements IDCT
 {
 	private final int[] mWorkspace = new int[64];
 
@@ -24,15 +24,18 @@ class IDCTInteger
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
 	 */
-	public void transform(int[] aCoefficients, int[] aQuantizationTable)
+	@Override
+	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
+		int[] quantizationTable = aQuantizationTable.getTableInt();
+
 		// Pass 1: process columns from input, store into work array.
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
 			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
 			{
 				// AC terms all zero
-				int dcval = aCoefficients[ctr] * aQuantizationTable[ctr];
+				int dcval = aCoefficients[ctr] * quantizationTable[ctr];
 
 				mWorkspace[ctr] = dcval;
 				mWorkspace[8 + ctr] = dcval;
@@ -46,10 +49,10 @@ class IDCTInteger
 				continue;
 			}
 
-			int tmp0 = aCoefficients[ctr] * aQuantizationTable[ctr];
-			int tmp1 = aCoefficients[16 + ctr] * aQuantizationTable[16 + ctr];
-			int tmp2 = aCoefficients[32 + ctr] * aQuantizationTable[32 + ctr];
-			int tmp3 = aCoefficients[48 + ctr] * aQuantizationTable[48 + ctr];
+			int tmp0 = aCoefficients[ctr] * quantizationTable[ctr];
+			int tmp1 = aCoefficients[16 + ctr] * quantizationTable[16 + ctr];
+			int tmp2 = aCoefficients[32 + ctr] * quantizationTable[32 + ctr];
+			int tmp3 = aCoefficients[48 + ctr] * quantizationTable[48 + ctr];
 
 			int tmp10 = tmp0 + tmp2;
 			int tmp11 = tmp0 - tmp2;
@@ -62,10 +65,10 @@ class IDCTInteger
 			tmp1 = tmp11 + tmp12;
 			tmp2 = tmp11 - tmp12;
 
-			int tmp4 = aCoefficients[8 + ctr] * aQuantizationTable[8 + ctr];
-			int tmp5 = aCoefficients[24 + ctr] * aQuantizationTable[24 + ctr];
-			int tmp6 = aCoefficients[40 + ctr] * aQuantizationTable[40 + ctr];
-			int tmp7 = aCoefficients[56 + ctr] * aQuantizationTable[56 + ctr];
+			int tmp4 = aCoefficients[8 + ctr] * quantizationTable[8 + ctr];
+			int tmp5 = aCoefficients[24 + ctr] * quantizationTable[24 + ctr];
+			int tmp6 = aCoefficients[40 + ctr] * quantizationTable[40 + ctr];
+			int tmp7 = aCoefficients[56 + ctr] * quantizationTable[56 + ctr];
 
 			int z13 = tmp6 + tmp5;
 			int z10 = tmp6 - tmp5;

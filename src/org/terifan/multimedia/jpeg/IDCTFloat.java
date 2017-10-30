@@ -15,7 +15,7 @@ package org.terifan.multimedia.jpeg;
  * in the DCT itself. The primary disadvantage of this method is that with a fixed-point implementation, accuracy is lost due to imprecise
  * representation of the scaled quantization values. However, that problem does not arise if we use floating point arithmetic.
  */
-class IDCTFloat
+class IDCTFloat implements IDCT
 {
 	private final double[] mWorkspace = new double[64];
 
@@ -23,15 +23,18 @@ class IDCTFloat
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
 	 */
-	public void transform(int[] aCoefficients, double[] aQuantizationTable)
+	@Override
+	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
+		double[] quantizationTable = aQuantizationTable.getTableDbl();
+
 		// Pass 1: process columns from input, store into work array.
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
 			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
 			{
 				// AC terms all zero
-				double dcval = aCoefficients[ctr] * aQuantizationTable[ctr];
+				double dcval = aCoefficients[ctr] * quantizationTable[ctr];
 
 				mWorkspace[8 * 0 + ctr] = dcval;
 				mWorkspace[8 * 1 + ctr] = dcval;
@@ -45,10 +48,10 @@ class IDCTFloat
 				continue;
 			}
 
-			double tmp0 = aCoefficients[8 * 0 + ctr] * aQuantizationTable[8 * 0 + ctr];
-			double tmp1 = aCoefficients[8 * 2 + ctr] * aQuantizationTable[8 * 2 + ctr];
-			double tmp2 = aCoefficients[8 * 4 + ctr] * aQuantizationTable[8 * 4 + ctr];
-			double tmp3 = aCoefficients[8 * 6 + ctr] * aQuantizationTable[8 * 6 + ctr];
+			double tmp0 = aCoefficients[8 * 0 + ctr] * quantizationTable[8 * 0 + ctr];
+			double tmp1 = aCoefficients[8 * 2 + ctr] * quantizationTable[8 * 2 + ctr];
+			double tmp2 = aCoefficients[8 * 4 + ctr] * quantizationTable[8 * 4 + ctr];
+			double tmp3 = aCoefficients[8 * 6 + ctr] * quantizationTable[8 * 6 + ctr];
 
 			double tmp10 = tmp0 + tmp2;
 			double tmp11 = tmp0 - tmp2;
@@ -61,10 +64,10 @@ class IDCTFloat
 			tmp1 = tmp11 + tmp12;
 			tmp2 = tmp11 - tmp12;
 
-			double tmp4 = aCoefficients[8 * 1 + ctr] * aQuantizationTable[8 * 1 + ctr];
-			double tmp5 = aCoefficients[8 * 3 + ctr] * aQuantizationTable[8 * 3 + ctr];
-			double tmp6 = aCoefficients[8 * 5 + ctr] * aQuantizationTable[8 * 5 + ctr];
-			double tmp7 = aCoefficients[8 * 7 + ctr] * aQuantizationTable[8 * 7 + ctr];
+			double tmp4 = aCoefficients[8 * 1 + ctr] * quantizationTable[8 * 1 + ctr];
+			double tmp5 = aCoefficients[8 * 3 + ctr] * quantizationTable[8 * 3 + ctr];
+			double tmp6 = aCoefficients[8 * 5 + ctr] * quantizationTable[8 * 5 + ctr];
+			double tmp7 = aCoefficients[8 * 7 + ctr] * quantizationTable[8 * 7 + ctr];
 
 			double z13 = tmp6 + tmp5;
 			double z10 = tmp6 - tmp5;

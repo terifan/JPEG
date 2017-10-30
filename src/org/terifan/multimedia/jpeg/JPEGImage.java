@@ -9,7 +9,7 @@ public class JPEGImage
 {
 	private final int mWidth;
 	private final int mHeight;
-	private final int[][] mBuffers;
+//	private final int[][] mBuffers;
 	private final int mMCUWidth;
 	private final int mMCUHeight;
 	private final int mComponents;
@@ -24,7 +24,7 @@ public class JPEGImage
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
-		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
+//		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
 		mMCUWidth = 8 * aMaxSamplingX;
 		mMCUHeight = 8 * aMaxSamplingY;
 		mLastMCUPosition = new Point();
@@ -82,7 +82,7 @@ public class JPEGImage
 	}
 
 
-	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
+	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY, int[] aCoefficients2)
 	{
 		try
 		{
@@ -104,12 +104,14 @@ public class JPEGImage
 			{
 				for (int y = 0; y < 8; y++)
 				{
+					int z = Math.min(y + 1, 7);
+
 					for (int x = 0; x < 8; x++)
 					{
-						int c00 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 0, 7) * 8];
-						int c10 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
-						int c11 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 1, 7) * 8];
-						int c01 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 1, 7) * 8];
+						int c00 =         aCoefficients[x +     y * 8];
+						int c10 = x < 7 ? aCoefficients[x + 1 + y * 8] : aCoefficients2[y * 8];
+						int c11 = x < 7 ? aCoefficients[x + 1 + z * 8] : aCoefficients2[z * 8];
+						int c01 =         aCoefficients[x +     z * 8];
 
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
 						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10) / 2;
@@ -140,24 +142,24 @@ public class JPEGImage
 	}
 
 
-	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int aComponent, int[] aCoefficients)
+	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffers, int[] aCoefficients, int[] aCoefficients2)
 	{
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
-			System.arraycopy(aCoefficients, 0, mBuffers[aComponent], 0, 64);
+			System.arraycopy(aCoefficients, 0, aBuffers, 0, 64);
 		}
 		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
-			copyBlock(aCoefficients, mBuffers[aComponent], mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
+			copyBlock(aCoefficients, aBuffers, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
 		}
 		else
 		{
-			scaleBlock(aCoefficients, mBuffers[aComponent], cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
+			scaleBlock(aCoefficients, aBuffers, cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY, aCoefficients2);
 		}
 	}
 
 
-	void flushMCU(int aX, int aY)
+	void flushMCU(int aX, int aY, int[][] aBuffers)
 	{
 		aX *= mMCUWidth;
 		aY *= mMCUHeight;
@@ -165,9 +167,9 @@ public class JPEGImage
 		int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
 		int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
 
-		int[] y = mBuffers[0];
-		int[] cb = mBuffers[1];
-		int[] cr = mBuffers[2];
+		int[] y = aBuffers[0];
+		int[] cb = aBuffers[1];
+		int[] cr = aBuffers[2];
 
 		for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
 		{
