@@ -101,7 +101,7 @@ class IDCTInteger
 			if (mWorkspace[offset + 1] == 0 && mWorkspace[offset + 2] == 0 && mWorkspace[offset + 3] == 0 && mWorkspace[offset + 4] == 0 && mWorkspace[offset + 5] == 0 && mWorkspace[offset + 6] == 0 && mWorkspace[offset + 7] == 0)
 			{
 				// AC terms all zero
-				int dcval = (mWorkspace[offset] >> 11) + 128;
+				int dcval = clamp(mWorkspace[offset]);
 
 				aCoefficients[offset + 0] = dcval;
 				aCoefficients[offset + 1] = dcval;
@@ -143,14 +143,22 @@ class IDCTInteger
 			int tmp4 = tmp10 + tmp5;
 
 			// Final output stage: scale down by a factor of 8
-			aCoefficients[offset + 0] = ((tmp0 + tmp7) >> 11) + 128;
-			aCoefficients[offset + 1] = ((tmp1 + tmp6) >> 11) + 128;
-			aCoefficients[offset + 2] = ((tmp2 + tmp5) >> 11) + 128;
-			aCoefficients[offset + 3] = ((tmp3 - tmp4) >> 11) + 128;
-			aCoefficients[offset + 4] = ((tmp3 + tmp4) >> 11) + 128;
-			aCoefficients[offset + 5] = ((tmp2 - tmp5) >> 11) + 128;
-			aCoefficients[offset + 6] = ((tmp1 - tmp6) >> 11) + 128;
-			aCoefficients[offset + 7] = ((tmp0 - tmp7) >> 11) + 128;
+			aCoefficients[offset + 0] = clamp(tmp0 + tmp7);
+			aCoefficients[offset + 1] = clamp(tmp1 + tmp6);
+			aCoefficients[offset + 2] = clamp(tmp2 + tmp5);
+			aCoefficients[offset + 3] = clamp(tmp3 - tmp4);
+			aCoefficients[offset + 4] = clamp(tmp3 + tmp4);
+			aCoefficients[offset + 5] = clamp(tmp2 - tmp5);
+			aCoefficients[offset + 6] = clamp(tmp1 - tmp6);
+			aCoefficients[offset + 7] = clamp(tmp0 - tmp7);
 		}
+	}
+
+
+	private static int clamp(int aValue)
+	{
+		aValue = 128 + ((aValue + 128) >> 8);
+
+		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 }

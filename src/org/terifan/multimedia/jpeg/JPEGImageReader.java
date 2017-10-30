@@ -26,7 +26,6 @@ public class JPEGImageReader extends JPEG
 	private BitInputStream mBitStream;
 	private final DHTMarkerSegment[][] mHuffmanTables;
 	private final DQTMarkerSegment[] mQuantizationTables;
-	private final int[] mDCTCoefficients;
 	private final int[] mPreviousDCValue;
 	private int mRestartInterval;
 	private SOFMarkerSegment mFrameSegment;
@@ -41,7 +40,6 @@ public class JPEGImageReader extends JPEG
 		mPreviousDCValue = new int[MAX_CHANNELS];
 		mQuantizationTables = new DQTMarkerSegment[MAX_CHANNELS];
 		mHuffmanTables = new DHTMarkerSegment[MAX_CHANNELS][2];
-		mDCTCoefficients = new int[64];
 
 		mBitStream = new BitInputStream(aInputStream);
 	}
@@ -227,12 +225,12 @@ public class JPEGImageReader extends JPEG
 //		IDCTInteger idct = new IDCTInteger();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
-		int[] dctCoefficients = mDCTCoefficients;
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
 		int numVerMCU = (int)Math.ceil(mFrameSegment.getHeight() / (8.0 * maxSamplingY));
 		int numComponents = mFrameSegment.getComponentCount();
 		int restartMarkerIndex = 0;
 		int mcuCounter = 0;
+		int[][] dctCoefficients = new int[maxSamplingX][64];
 
 		JPEGImage image = new JPEGImage(mFrameSegment.getWidth(), mFrameSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mFrameSegment.getComponentCount());
 
@@ -254,7 +252,7 @@ public class JPEGImageReader extends JPEG
 						{
 							for (int cx = 0; cx < samplingX; cx++)
 							{
-								if (!readDCTCofficients(dctCoefficients, component))
+								if (!readDCTCofficients(dctCoefficients[cx], component))
 								{
 									if (mcuCounter == 0)
 									{
@@ -263,10 +261,16 @@ public class JPEGImageReader extends JPEG
 									image.setDamaged();
 									return image;
 								}
+							}
 
-								idct.transform(dctCoefficients, quantizationTable);
+							for (int cx = 0; cx < samplingX; cx++)
+							{
+								idct.transform(dctCoefficients[cx], quantizationTable);
+							}
 
-								image.setData(cx, cy, samplingX, samplingY, component, dctCoefficients);
+							for (int cx = 0; cx < samplingX; cx++)
+							{
+								image.setData(cx, cy, samplingX, samplingY, component, dctCoefficients[cx]);
 							}
 						}
 					}
