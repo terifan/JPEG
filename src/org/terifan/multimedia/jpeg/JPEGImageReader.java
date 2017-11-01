@@ -221,8 +221,8 @@ public class JPEGImageReader extends JPEG
 
 	private JPEGImage readRaster() throws IOException
 	{
-		IDCT idct = new IDCTFloat();
-//		IDCT idct = new IDCTInteger();
+//		IDCT idct = new IDCTFloat();
+		IDCT idct = new IDCTInteger();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
