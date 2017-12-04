@@ -383,7 +383,7 @@ public class JPEGImageReader extends JPEGConstants
 			mPreviousDCValue[aComponent] += dcTable.readCoefficient(mBitStream, value);
 		}
 
-		aCoefficients[0] = mPreviousDCValue[aComponent];
+		aCoefficients[ZIGZAG_ORDER[0]] = mPreviousDCValue[aComponent];
 
 		for (int offset = 1; offset < 64; offset++)
 		{
@@ -401,7 +401,7 @@ public class JPEGImageReader extends JPEGConstants
 
 			if (codeLength > 0)
 			{
-				aCoefficients[ZIGZAG[offset]] = acTable.readCoefficient(mBitStream, codeLength);
+				aCoefficients[ZIGZAG_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
 			}
 			else if (zeroCount == 0)
 			{

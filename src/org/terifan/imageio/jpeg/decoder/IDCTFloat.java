@@ -17,7 +17,7 @@ import org.terifan.imageio.jpeg.DQTMarkerSegment;
  * in the DCT itself. The primary disadvantage of this method is that with a fixed-point implementation, accuracy is lost due to imprecise
  * representation of the scaled quantization values. However, that problem does not arise if we use floating point arithmetic.
  */
-class IDCTFloat implements IDCT
+public class IDCTFloat implements IDCT
 {
 	private final double[] mWorkspace = new double[64];
 

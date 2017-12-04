@@ -1,12 +1,13 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
 public class IDCTInteger implements IDCT
 {
 	private final static int CONST_BITS = 13;
-	private final static int PASS1_BITS = 1;
+	private final static int PASS1_BITS = 2;
 
 	private final static int FIX_0_298631336 = 2446;
 	private final static int FIX_0_390180644 = 3196;
@@ -28,35 +29,35 @@ public class IDCTInteger implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		int[] wsptr = new int[64];
+		int[] workspace = new int[64];
 		int[] quantptr = aQuantizationTable.getTableInt();
 
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
-			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
+			if (aCoefficients[1*8 + ctr] == 0 && aCoefficients[2*8 + ctr] == 0 && aCoefficients[3*8 + ctr] == 0 && aCoefficients[4*8 + ctr] == 0 && aCoefficients[5*8 + ctr] == 0 && aCoefficients[6*8 + ctr] == 0 && aCoefficients[7*8 + ctr] == 0)
 			{
 				int dcval = (aCoefficients[ctr] * quantptr[ctr]) << PASS1_BITS;
 
-				wsptr[ctr] = dcval;
-				wsptr[8 + ctr] = dcval;
-				wsptr[16 + ctr] = dcval;
-				wsptr[24 + ctr] = dcval;
-				wsptr[32 + ctr] = dcval;
-				wsptr[40 + ctr] = dcval;
-				wsptr[48 + ctr] = dcval;
-				wsptr[56 + ctr] = dcval;
+				workspace[0*8 + ctr] = dcval;
+				workspace[1*8 + ctr] = dcval;
+				workspace[2*8 + ctr] = dcval;
+				workspace[3*8 + ctr] = dcval;
+				workspace[4*8 + ctr] = dcval;
+				workspace[5*8 + ctr] = dcval;
+				workspace[6*8 + ctr] = dcval;
+				workspace[7*8 + ctr] = dcval;
 				continue;
 			}
 
-			int z2 = DEQUANTIZE(aCoefficients[16 + ctr], quantptr[16 + ctr]);
-			int z3 = DEQUANTIZE(aCoefficients[48 + ctr], quantptr[48 + ctr]);
+			int z2 = DEQUANTIZE(aCoefficients[2*8 + ctr], quantptr[2*8 + ctr]);
+			int z3 = DEQUANTIZE(aCoefficients[6*8 + ctr], quantptr[6*8 + ctr]);
 
 			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
 			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
 			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
 
-			z2 = DEQUANTIZE(aCoefficients[ctr], quantptr[ctr]);
-			z3 = DEQUANTIZE(aCoefficients[32 + ctr], quantptr[32 + ctr]);
+			z2 = DEQUANTIZE(aCoefficients[0*8 + ctr], quantptr[0*8 + ctr]);
+			z3 = DEQUANTIZE(aCoefficients[4*8 + ctr], quantptr[4*8 + ctr]);
 			z2 <<= CONST_BITS;
 			z3 <<= CONST_BITS;
 			z2 += 1 << (CONST_BITS - PASS1_BITS - 1);
@@ -69,10 +70,10 @@ public class IDCTInteger implements IDCT
 			int tmp11 = tmp1 + tmp3;
 			int tmp12 = tmp1 - tmp3;
 
-			tmp0 = DEQUANTIZE(aCoefficients[56 + ctr], quantptr[56 + ctr]);
-			tmp1 = DEQUANTIZE(aCoefficients[40 + ctr], quantptr[40 + ctr]);
-			tmp2 = DEQUANTIZE(aCoefficients[24 + ctr], quantptr[24 + ctr]);
-			tmp3 = DEQUANTIZE(aCoefficients[8 + ctr], quantptr[8 + ctr]);
+			tmp0 = DEQUANTIZE(aCoefficients[7*8 + ctr], quantptr[7*8 + ctr]);
+			tmp1 = DEQUANTIZE(aCoefficients[5*8 + ctr], quantptr[5*8 + ctr]);
+			tmp2 = DEQUANTIZE(aCoefficients[3*8 + ctr], quantptr[3*8 + ctr]);
+			tmp3 = DEQUANTIZE(aCoefficients[1*8 + ctr], quantptr[1*8 + ctr]);
 
 			z2 = tmp0 + tmp2;
 			z3 = tmp1 + tmp3;
@@ -95,21 +96,21 @@ public class IDCTInteger implements IDCT
 			tmp1 += z1 + z3;
 			tmp2 += z1 + z2;
 
-			wsptr[ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
-			wsptr[56 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
-			wsptr[8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
-			wsptr[48 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
-			wsptr[16 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
-			wsptr[40 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
-			wsptr[24 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
-			wsptr[32 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
+			workspace[0*8 + ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
+			workspace[7*8 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
+			workspace[1*8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
+			workspace[6*8 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
+			workspace[2*8 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
+			workspace[5*8 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
+			workspace[3*8 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
+			workspace[4*8 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
 		}
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			if (wsptr[1 + ctr] == 0 && wsptr[2 + ctr] == 0 && wsptr[3 + ctr] == 0 && wsptr[4 + ctr] == 0 && wsptr[5 + ctr] == 0 && wsptr[6 + ctr] == 0 && wsptr[7 + ctr] == 0)
+			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
 			{
-				int dcval = clamp(DESCALE(wsptr[ctr], PASS1_BITS + 3));
+				int dcval = clamp(DESCALE(workspace[ctr], PASS1_BITS + 3));
 
 				aCoefficients[0 + ctr] = dcval;
 				aCoefficients[1 + ctr] = dcval;
@@ -122,15 +123,15 @@ public class IDCTInteger implements IDCT
 				continue;
 			}
 
-			int z2 = wsptr[2 + ctr];
-			int z3 = wsptr[6 + ctr];
+			int z2 = workspace[2 + ctr];
+			int z3 = workspace[6 + ctr];
 
 			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
 			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
 			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
 
-			z2 = wsptr[0 + ctr] + (1 << (PASS1_BITS + 2));
-			z3 = wsptr[4 + ctr];
+			z2 = workspace[0 + ctr] + (1 << (PASS1_BITS + 2));
+			z3 = workspace[4 + ctr];
 
 			int tmp0 = (z2 + z3) << CONST_BITS;
 			int tmp1 = (z2 - z3) << CONST_BITS;
@@ -140,10 +141,10 @@ public class IDCTInteger implements IDCT
 			int tmp11 = tmp1 + tmp3;
 			int tmp12 = tmp1 - tmp3;
 
-			tmp0 = wsptr[7 + ctr];
-			tmp1 = wsptr[5 + ctr];
-			tmp2 = wsptr[3 + ctr];
-			tmp3 = wsptr[1 + ctr];
+			tmp0 = workspace[7 + ctr];
+			tmp1 = workspace[5 + ctr];
+			tmp2 = workspace[3 + ctr];
+			tmp3 = workspace[1 + ctr];
 
 			z2 = tmp0 + tmp2;
 			z3 = tmp1 + tmp3;
@@ -177,11 +178,32 @@ public class IDCTInteger implements IDCT
 		}
 	}
 
+//	private final static int[] RANGE_LIMIT = new int[1024];
+//	
+//	static
+//	{
+//		for (int i = 0; i < 256; i++)
+//		{
+//			RANGE_LIMIT[i] = 128;
+//		}
+//		for (int i = 256, j = 128; i < 512; i++)
+//		{
+//			RANGE_LIMIT[i] = j++;
+//		}
+//		for (int i = 512; i < 1024; i++)
+//		{
+//			RANGE_LIMIT[i] = 128 + 255;
+//		}
+//		
+//		for (int i : RANGE_LIMIT)System.out.print(i+",");
+//	}
 
 	private static int clamp(int aValue)
 	{
-		aValue = 128 + (aValue >> 5);
+//		aValue = 128 + (aValue >> 5);
 
+		aValue = 128 + aValue/32;
+		
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 

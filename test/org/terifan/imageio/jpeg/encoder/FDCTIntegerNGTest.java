@@ -2,6 +2,7 @@ package org.terifan.imageio.jpeg.encoder;
 
 import java.util.Random;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTInteger;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
@@ -19,13 +20,12 @@ public class FDCTIntegerNGTest
 			block[i] = (i/8+(i%8))*255/14; //rnd.nextInt(256);
 		}
 
-		DQTMarkerSegment dqt = QuantizationTable.buildQuantTable(20, 8, 8, 0);
+		DQTMarkerSegment dqt = QuantizationTable.buildQuantTable(100, 8, 8, 0);
 		int[] quantTable = dqt.getTableInt();
-//		int[] quantTable = {64,44,42,75,96,126,104,62,44,62,116,104,133,244,168,86,84,116,109,147,209,230,181,81,75,104,147,133,226,255,204,73,64,133,167,255,255,255,208,79,75,139,230,237,251,237,190,76,104,192,204,204,208,204,131,57,79,135,127,125,115,83,57,29};
 
 		int[] original = block.clone();
 
-		new FDCTInteger().forward(block);
+		new FDCTFloat().forward(block);
 
 		int[] transformed = block.clone();
 
@@ -41,8 +41,9 @@ public class FDCTIntegerNGTest
 //			block[i] *= quantTable[i];
 //		}
 
-		new IDCTInteger().transform(block, dqt);
-		new FDCTInteger().inverse(block);
+		new IDCTFloat().transform(block, dqt);
+//		new IDCTInteger().transform(block, dqt);
+//		new FDCTInteger().inverse(block);
 
 		printTables(new int[][]{quantTable, original, transformed, quantizised, block});
 

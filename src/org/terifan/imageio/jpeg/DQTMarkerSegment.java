@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
-import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG;
+import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG_ORDER;
 
 
 public class DQTMarkerSegment
@@ -41,11 +41,11 @@ public class DQTMarkerSegment
 		{
 			if (mPrecision == PRECISION_8_BITS)
 			{
-				mTableDbl[ZIGZAG[i]] = aInputStream.readInt8();
+				mTableDbl[ZIGZAG_ORDER[i]] = aInputStream.readInt8();
 			}
 			else
 			{
-				mTableDbl[ZIGZAG[i]] = aInputStream.readInt16() / 256.0;
+				mTableDbl[ZIGZAG_ORDER[i]] = aInputStream.readInt16() / 256.0;
 			}
 		}
 
