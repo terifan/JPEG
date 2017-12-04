@@ -9,8 +9,52 @@ class DQTMarkerSegment
 	public final static int PRECISION_8_BITS = 1;
 	public final static int PRECISION_16_BITS = 2;
 
-	private double[] mTableD = new double[64];
-	private int[] mTableI = new int[64];
+    private static final int[] k1 = {
+        16,  11,  10,  16,  24,  40,  51,  61,
+        12,  12,  14,  19,  26,  58,  60,  55,
+        14,  13,  16,  24,  40,  57,  69,  56,
+        14,  17,  22,  29,  51,  87,  80,  62,
+        18,  22,  37,  56,  68,  109, 103, 77,
+        24,  35,  55,  64,  81,  104, 113, 92,
+        49,  64,  78,  87,  103, 121, 120, 101,
+        72,  92,  95,  98,  112, 100, 103, 99,
+    };
+
+    private static final int[] k1div2 = {
+        8,   6,   5,   8,   12,  20,  26,  31,
+        6,   6,   7,   10,  13,  29,  30,  28,
+        7,   7,   8,   12,  20,  29,  35,  28,
+        7,   9,   11,  15,  26,  44,  40,  31,
+        9,   11,  19,  28,  34,  55,  52,  39,
+        12,  18,  28,  32,  41,  52,  57,  46,
+        25,  32,  39,  44,  52,  61,  60,  51,
+        36,  46,  48,  49,  56,  50,  52,  50,
+    };
+
+    private static final int[] k2 = {
+        17,  18,  24,  47,  99,  99,  99,  99,
+        18,  21,  26,  66,  99,  99,  99,  99,
+        24,  26,  56,  99,  99,  99,  99,  99,
+        47,  66,  99,  99,  99,  99,  99,  99,
+        99,  99,  99,  99,  99,  99,  99,  99,
+        99,  99,  99,  99,  99,  99,  99,  99,
+        99,  99,  99,  99,  99,  99,  99,  99,
+        99,  99,  99,  99,  99,  99,  99,  99,
+    };
+
+    private static final int[] k2div2 = {
+        9,   9,   12,  24,  50,  50,  50,  50,
+        9,   11,  13,  33,  50,  50,  50,  50,
+        12,  13,  28,  50,  50,  50,  50,  50,
+        24,  33,  50,  50,  50,  50,  50,  50,
+        50,  50,  50,  50,  50,  50,  50,  50,
+        50,  50,  50,  50,  50,  50,  50,  50,
+        50,  50,  50,  50,  50,  50,  50,  50,
+        50,  50,  50,  50,  50,  50,  50,  50,
+    };
+
+	private double[] mTableDbl = new double[64];
+	private int[] mTableInt = new int[64];
 	private int mPrecision;
 	private int mIdentity;
 
@@ -25,34 +69,42 @@ class DQTMarkerSegment
 		{
 			if (mPrecision == PRECISION_8_BITS)
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readInt8() / 255.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt8();
 			}
 			else
 			{
-				mTableD[ZIGZAG[i]] = aInputStream.readInt16() / 65535.0;
+				mTableDbl[ZIGZAG[i]] = aInputStream.readInt16() / 256.0;
 			}
 		}
 
-		double[] scaleFactors = new double[]
+		double[] scaleFactors =
 		{
-			16, 22.19263752, 20.90500744, 18.814009632, 16, 12.571119328, 8.6591376, 4.414390064
-
-//			1.0, 1.387039845, 1.306562965, 1.175875602, 1.0, 0.785694958, 0.541196100, 0.275899379
+			1.0, 1.387039845, 1.306562965, 1.175875602,
+			1.0, 0.785694958, 0.541196100, 0.275899379
 		};
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-//				mTableD[i] *= scaleFactors[row] * scaleFactors[col] * 16 * 16;
-				mTableD[i] *= scaleFactors[row] * scaleFactors[col];
-				mTableI[i] = (int)Math.round(255 * mTableD[i]);
+				mTableDbl[i] *= scaleFactors[row] * scaleFactors[col] / 8.0;
+				mTableInt[i] = Math.min(Math.max((int)(256 * mTableDbl[i] + 0.5), 1), 255);
 			}
 		}
 
 		if (JPEGImageReader.VERBOSE)
 		{
-			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? "8bit" : "16bit") + "]");
+			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
+
+			for (int row = 0, i = 0; row < 8; row++)
+			{
+				System.out.print(" ");
+				for (int col = 0; col < 8; col++, i++)
+				{
+					System.out.printf("%7.3f ", mTableDbl[i]);
+				}
+				System.out.println();
+			}
 		}
 	}
 
@@ -69,14 +121,14 @@ class DQTMarkerSegment
 	}
 
 
-	public int[] getTable()
+	public int[] getTableInt()
 	{
-		return mTableI;
+		return mTableInt;
 	}
 
 
-	public double[] getTableD()
+	public double[] getTableDbl()
 	{
-		return mTableD;
+		return mTableDbl;
 	}
 }

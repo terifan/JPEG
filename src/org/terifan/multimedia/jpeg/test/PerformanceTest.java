@@ -13,16 +13,23 @@ public class PerformanceTest
 	{
 		try
 		{
-			File file = new File("d:/1107.jpg");
+			File file = new File(Test.class.getResource("beautiful-river-hd-1080p-wallpapers-download.jpg").getPath());
+
 			byte[] imageData = new byte[(int)file.length()];
 			try (FileInputStream in = new FileInputStream(file))
 			{
 				in.read(imageData);
 			}
 
-			for (;;)
+			long a = 0;
+			long b = 0;
+			for (int n = 0;;)
 			{
-				System.out.println(terifanImageReader(imageData) + "\t" + javaImageIO(imageData));
+				a += terifanImageReader(imageData);
+				b += javaImageIO(imageData);
+				n++;
+				
+				System.out.println(a/n + "\t" + b/n);
 			}
 		}
 		catch (Exception e)

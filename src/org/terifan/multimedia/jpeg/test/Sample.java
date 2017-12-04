@@ -25,7 +25,7 @@ public class Sample
 					BufferedImage image = JPEGImageReader.read(input);
 					t = System.currentTimeMillis() - t;
 
-					ImagePane imagePane = new ImagePane().setImage(image);
+					ImageFrame imagePane = new ImageFrame().setImage(image);
 					imagePane.setTitle(chooser.getSelectedFile() + " [" + t + " ms, " + image.getWidth() + "x" + image.getHeight() + "]");
 				}
 			}

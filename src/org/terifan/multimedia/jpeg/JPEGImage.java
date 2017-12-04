@@ -7,16 +7,9 @@ import java.awt.image.DataBufferInt;
 
 public class JPEGImage
 {
-	private final static int FP_SCALEBITS = 16;
-	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
-	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
-	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.34414);
-	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
-	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
-
 	private final int mWidth;
 	private final int mHeight;
-	private final int[][] mBuffers;
+//	private final int[][] mBuffers;
 	private final int mMCUWidth;
 	private final int mMCUHeight;
 	private final int mComponents;
@@ -31,7 +24,7 @@ public class JPEGImage
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
-		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
+//		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
 		mMCUWidth = 8 * aMaxSamplingX;
 		mMCUHeight = 8 * aMaxSamplingY;
 		mLastMCUPosition = new Point();
@@ -79,126 +72,111 @@ public class JPEGImage
 		}
 	}
 
-	/*
-	 1x1 1x1 1x1
-	 2x1 1x1 1x1
-	 1x2 1x1 1x1
-	 2x2 1x1 1x1
-	 2x2 2x1 2x1
-	 4x2 1x1 1x1
-	 2x4 1x1 1x1
-	 4x1 1x1 1x1
-	 1x4 1x1 1x1
-	 4x1 2x1 2x1
-	 1x4 1x2 1x2
-	 4x4 2x2 2x2
-	 */
 
-	private void copyBlock(int[] dctCoefficients, int[] buffer, int w, int dst)
+	private void copyBlock(int[] aDctCoefficients, int[] aBuffer, int aWidth, int aDst)
 	{
-		for (int src = 0; src < 64; dst += w, src += 8)
+		for (int src = 0; src < 64; aDst += aWidth, src += 8)
 		{
-			System.arraycopy(dctCoefficients, src, buffer, dst, 8);
+			System.arraycopy(aDctCoefficients, src, aBuffer, aDst, 8);
 		}
 	}
 
 
-	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int q, int mcuWidth, int mcuHeight, int xShift, int yShift)
-	{
-		for (int y = 0; y < mcuHeight; y++, q += mcuWidth)
-		{
-			for (int x = 0, dst = q, src = (y >> yShift) * 8; x < mcuWidth; x++, dst++)
-			{
-				aBuffer[dst] = aCoefficients[(x >> xShift) + src];
-			}
-		}
-	}
-
-
-	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int aComponent, int[] aCoefficients)
-	{
-		int[] buffer = mBuffers[aComponent];
-
-		if (mMCUWidth == 8 && mMCUHeight == 8)
-		{
-			System.arraycopy(aCoefficients, 0, buffer, 0, 64);
-		}
-		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
-		{
-			copyBlock(aCoefficients, buffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
-		}
-		else
-		{
-			int mcuWidth = mMCUWidth;
-			int mcuHeight = mMCUHeight;
-			int blockWidth = mMCUWidth / aSamplingX;
-			int blockHeight = mMCUHeight / aSamplingY;
-			int xShift = blockWidth == 8 ? 0 : blockWidth == 16 ? 1 : blockWidth == 32 ? 2 : 3;
-			int yShift = blockHeight == 8 ? 0 : blockHeight == 16 ? 1 : blockHeight == 32 ? 2 : 3;
-
-			scaleBlock(aCoefficients, buffer, (cx * 8) + (cy * 8) * mcuWidth, mcuWidth, mcuHeight, xShift, yShift);
-		}
-	}
-
-
-	void flushMCU(int aX, int aY)
+	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY, int[] aCoefficients2)
 	{
 		try
 		{
-			aX *= mMCUWidth;
-			aY *= mMCUHeight;
-
-			mLastMCUPosition.x = aX;
-			mLastMCUPosition.y = aY;
-
-			int[] yComponent = mBuffers[0];
-			int[] cbComponent = mBuffers[1];
-			int[] crComponent = mBuffers[2];
-
-			int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
-			int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
-
-			if (mComponents != 1)
+			if (aMcuHeight == 8 && aMcuWidth == 16)
 			{
-				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
+				for (int y = 0; y < 8; y++)
 				{
-					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+					for (int x = 0; x < 8; x++)
 					{
-						int lu = yComponent[src];
-						int cb = cbComponent[src] - 128;
-						int cr = crComponent[src] - 128;
+						int c0 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 0, 7) * 8];
+						int c1 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
 
-						int r = clamp(lu + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
-						int g = clamp(lu - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
-						int b = clamp(lu + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
+						aBuffer[aOffset + 2 * x + y * aMcuWidth] = c0;
+						aBuffer[aOffset + 2 * x + y * aMcuWidth + 1] = (c0 + c1) / 2;
+					}
+				}
+			}
+			else if (aMcuHeight == 16 && aMcuWidth == 16)
+			{
+				for (int y = 0; y < 8; y++)
+				{
+					int z = Math.min(y + 1, 7);
 
-						mRaster[dst] = 0xff000000 | (r << 16) + (g << 8) + b;
+					for (int x = 0; x < 8; x++)
+					{
+						int c00 =         aCoefficients[x +     y * 8];
+						int c10 = x < 7 ? aCoefficients[x + 1 + y * 8] : aCoefficients2[y * 8];
+						int c11 = x < 7 ? aCoefficients[x + 1 + z * 8] : aCoefficients2[z * 8];
+						int c01 =         aCoefficients[x +     z * 8];
+
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
+						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
 					}
 				}
 			}
 			else
 			{
-				for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
-				{
-					for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
-					{
-						int lu = clamp(yComponent[src]);
+				int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
+				int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
 
-						mRaster[dst] = 0xff000000 | (lu << 16) + (lu << 8) + lu;
+				for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
+				{
+					for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
+					{
+						aBuffer[dst] = aCoefficients[(x >> xShift) + src];
 					}
 				}
 			}
 		}
 		catch (Exception e)
 		{
-			mDecodingErrors = true;
+			System.out.println(aMcuWidth + " " + aMcuHeight + " " + aSamplingX + " " + aSamplingY);
+			throw e;
 		}
 	}
 
 
-	private int clamp(int aValue)
+	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffers, int[] aCoefficients, int[] aCoefficients2)
 	{
-		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
+		if (mMCUWidth == 8 && mMCUHeight == 8)
+		{
+			System.arraycopy(aCoefficients, 0, aBuffers, 0, 64);
+		}
+		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
+		{
+			copyBlock(aCoefficients, aBuffers, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
+		}
+		else
+		{
+			scaleBlock(aCoefficients, aBuffers, cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY, aCoefficients2);
+		}
 	}
 
+
+	void flushMCU(int aX, int aY, int[][] aBuffers)
+	{
+		aX *= mMCUWidth;
+		aY *= mMCUHeight;
+
+		int mcuWidth = Math.min(mMCUWidth, mWidth - aX);
+		int mcuHeight = Math.min(mMCUHeight, mHeight - aY);
+
+		int[] y = aBuffers[0];
+		int[] cb = aBuffers[1];
+		int[] cr = aBuffers[2];
+
+		for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
+		{
+			for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+			{
+				mRaster[dst] = ColorSpace.yuvToRgb(y, cb, cr, mComponents, src);
+			}
+		}
+	}
 }

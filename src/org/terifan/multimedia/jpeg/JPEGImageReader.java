@@ -26,7 +26,6 @@ public class JPEGImageReader extends JPEG
 	private BitInputStream mBitStream;
 	private final DHTMarkerSegment[][] mHuffmanTables;
 	private final DQTMarkerSegment[] mQuantizationTables;
-	private final int[] mDCTCoefficients;
 	private final int[] mPreviousDCValue;
 	private int mRestartInterval;
 	private SOFMarkerSegment mFrameSegment;
@@ -41,7 +40,6 @@ public class JPEGImageReader extends JPEG
 		mPreviousDCValue = new int[MAX_CHANNELS];
 		mQuantizationTables = new DQTMarkerSegment[MAX_CHANNELS];
 		mHuffmanTables = new DHTMarkerSegment[MAX_CHANNELS][2];
-		mDCTCoefficients = new int[64];
 
 		mBitStream = new BitInputStream(aInputStream);
 	}
@@ -223,15 +221,17 @@ public class JPEGImageReader extends JPEG
 
 	private JPEGImage readRaster() throws IOException
 	{
-		IDCTFloat idct = new IDCTFloat();
+//		IDCT idct = new IDCTFloat();
+		IDCT idct = new IDCTInteger();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
-		int[] dctCoefficients = mDCTCoefficients;
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
 		int numVerMCU = (int)Math.ceil(mFrameSegment.getHeight() / (8.0 * maxSamplingY));
 		int numComponents = mFrameSegment.getComponentCount();
 		int restartMarkerIndex = 0;
 		int mcuCounter = 0;
+
+		int[][][][][] dctCoefficients = new int[numHorMCU][maxSamplingY][maxSamplingX][3][64];
 
 		JPEGImage image = new JPEGImage(mFrameSegment.getWidth(), mFrameSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mFrameSegment.getComponentCount());
 
@@ -239,21 +239,19 @@ public class JPEGImageReader extends JPEG
 		{
 			for (int y = 0, index = 0; y < numVerMCU; y++)
 			{
-				for (int x = 0; x < numHorMCU; x++, index++)
+				for (int x = 0; x < numHorMCU; x++)
 				{
 					for (int component = 0; component < numComponents; component++)
 					{
-						ComponentInfo c = mFrameSegment.getComponent(component);
-//						int[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTable();
-						double[] quantizationTable = mQuantizationTables[c.getQuantizationTableId()].getTableD();
-						int samplingX = c.getSamplingX();
-						int samplingY = c.getSamplingY();
+						ComponentInfo comp = mFrameSegment.getComponent(component);
+						int samplingX = comp.getSamplingX();
+						int samplingY = comp.getSamplingY();
 
 						for (int cy = 0; cy < samplingY; cy++)
 						{
 							for (int cx = 0; cx < samplingX; cx++)
 							{
-								if (!readDCTCofficients(dctCoefficients, component))
+								if (!readDCTCofficients(dctCoefficients[x][cy][cx][component], component))
 								{
 									if (mcuCounter == 0)
 									{
@@ -262,15 +260,70 @@ public class JPEGImageReader extends JPEG
 									image.setDamaged();
 									return image;
 								}
-
-								idct.transform(dctCoefficients, quantizationTable);
-
-								image.setData(cx, cy, samplingX, samplingY, component, dctCoefficients);
 							}
 						}
 					}
+				}
 
-					image.flushMCU(x, y);
+				int[][][] buffers = new int[numHorMCU][3][maxSamplingX * maxSamplingY * 8 * 8];
+
+				for (int x = 0; x < numHorMCU; x++)
+				{
+					for (int component = 0; component < numComponents; component++)
+					{
+						ComponentInfo comp = mFrameSegment.getComponent(component);
+						DQTMarkerSegment quantizationTable = mQuantizationTables[comp.getQuantizationTableId()];
+						int samplingX = comp.getSamplingX();
+						int samplingY = comp.getSamplingY();
+
+						for (int cy = 0; cy < samplingY; cy++)
+						{
+							for (int cx = 0; cx < samplingX; cx++)
+							{
+								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
+							}
+						}
+					}
+				}
+
+				for (int x = 0; x < numHorMCU; x++)
+				{
+					for (int component = 0; component < numComponents; component++)
+					{
+						ComponentInfo comp = mFrameSegment.getComponent(component);
+						int samplingX = comp.getSamplingX();
+						int samplingY = comp.getSamplingY();
+
+						for (int cy = 0; cy < samplingY; cy++)
+						{
+							for (int cx = 0; cx < samplingX; cx++)
+							{
+								int a, b;
+								if (cx == samplingX - 1 && x == numHorMCU - 1)
+								{
+									a = numHorMCU - 1;
+									b = samplingX - 1;
+								}
+								else if (cx == samplingX - 1)
+								{
+									a = x + 1;
+									b = 0;
+								}
+								else
+								{
+									a = x;
+									b = cx + 1;
+								}
+
+								image.setData(cx, cy, samplingX, samplingY, buffers[x][component], dctCoefficients[x][cy][cx][component], dctCoefficients[a][cy][b][component]);
+							}
+						}
+					}
+				}
+
+				for (int x = 0; x < numHorMCU; x++, index++)
+				{
+					image.flushMCU(x, y, buffers[x]);
 					mcuCounter++;
 
 					if (mRestartInterval > 0 && (((index + 1) % mRestartInterval) == 0))
