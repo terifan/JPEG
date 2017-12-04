@@ -3,24 +3,23 @@ package org.terifan.imageio.jpeg.decoder;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
-/**
- * This file contains a fast, not so accurate integer implementation of the inverse DCT (Discrete Cosine Transform).
- *
- * A 2-D IDCT can be done by 1-D IDCT on each column followed by 1-D IDCT on each row (or vice versa, but it's more convenient to emit a row
- * at a time). Direct algorithms are also available, but they are much more complex and seem not to be any faster when reduced to code.
- *
- * This implementation is based on Arai, Agui, and Nakajima's algorithm for scaled DCT. Their original paper (Trans. IEICE E-71(11):1095) is
- * in Japanese, but the algorithm is described in the Pennebaker & Mitchell JPEG textbook. The following code is based directly on figure
- * 4-8 in P&M. While an 8-point DCT cannot be done in less than 11 multiplies, it is possible to arrange the computation so that many of the
- * multiplies are simple scalings of the final outputs. These multiplies can then be folded into the multiplications or divisions by the
- * JPEG quantization table entries. The AA&N method leaves only 5 multiplies and 29 adds to be done in the DCT itself. The primary
- * disadvantage of this method is that with fixed-point math, accuracy is lost due to imprecise representation of the scaled quantization
- * values. The smaller the quantization table entry, the less precise the scaled value, so this implementation does worse with high-
- * quality-setting files than with low-quality ones.
- */
-class IDCTInteger implements IDCT
+public class IDCTInteger implements IDCT
 {
-	private final int[] mWorkspace = new int[64];
+	private final static int CONST_BITS = 13;
+	private final static int PASS1_BITS = 1;
+
+	private final static int FIX_0_298631336 = 2446;
+	private final static int FIX_0_390180644 = 3196;
+	private final static int FIX_0_541196100 = 4433;
+	private final static int FIX_0_765366865 = 6270;
+	private final static int FIX_0_899976223 = 7373;
+	private final static int FIX_1_175875602 = 9633;
+	private final static int FIX_1_501321110 = 12299;
+	private final static int FIX_1_847759065 = 15137;
+	private final static int FIX_1_961570560 = 16069;
+	private final static int FIX_2_053119869 = 16819;
+	private final static int FIX_2_562915447 = 20995;
+	private final static int FIX_3_072711026 = 25172;
 
 
 	/**
@@ -29,141 +28,184 @@ class IDCTInteger implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		int[] quantizationTable = aQuantizationTable.getTableInt();
+		int[] wsptr = new int[64];
+		int[] quantptr = aQuantizationTable.getTableInt();
 
-		// Pass 1: process columns from input, store into work array.
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
 			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
 			{
-				// AC terms all zero
-				int dcval = aCoefficients[ctr] * quantizationTable[ctr];
+				int dcval = (aCoefficients[ctr] * quantptr[ctr]) << PASS1_BITS;
 
-				mWorkspace[ctr] = dcval;
-				mWorkspace[8 + ctr] = dcval;
-				mWorkspace[16 + ctr] = dcval;
-				mWorkspace[24 + ctr] = dcval;
-				mWorkspace[32 + ctr] = dcval;
-				mWorkspace[40 + ctr] = dcval;
-				mWorkspace[48 + ctr] = dcval;
-				mWorkspace[56 + ctr] = dcval;
-
+				wsptr[ctr] = dcval;
+				wsptr[8 + ctr] = dcval;
+				wsptr[16 + ctr] = dcval;
+				wsptr[24 + ctr] = dcval;
+				wsptr[32 + ctr] = dcval;
+				wsptr[40 + ctr] = dcval;
+				wsptr[48 + ctr] = dcval;
+				wsptr[56 + ctr] = dcval;
 				continue;
 			}
 
-			int tmp0 = aCoefficients[ctr] * quantizationTable[ctr];
-			int tmp1 = aCoefficients[16 + ctr] * quantizationTable[16 + ctr];
-			int tmp2 = aCoefficients[32 + ctr] * quantizationTable[32 + ctr];
-			int tmp3 = aCoefficients[48 + ctr] * quantizationTable[48 + ctr];
+			int z2 = DEQUANTIZE(aCoefficients[16 + ctr], quantptr[16 + ctr]);
+			int z3 = DEQUANTIZE(aCoefficients[48 + ctr], quantptr[48 + ctr]);
+
+			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
+			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
+			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
+
+			z2 = DEQUANTIZE(aCoefficients[ctr], quantptr[ctr]);
+			z3 = DEQUANTIZE(aCoefficients[32 + ctr], quantptr[32 + ctr]);
+			z2 <<= CONST_BITS;
+			z3 <<= CONST_BITS;
+			z2 += 1 << (CONST_BITS - PASS1_BITS - 1);
+
+			int tmp0 = z2 + z3;
+			int tmp1 = z2 - z3;
 
 			int tmp10 = tmp0 + tmp2;
-			int tmp11 = tmp0 - tmp2;
+			int tmp13 = tmp0 - tmp2;
+			int tmp11 = tmp1 + tmp3;
+			int tmp12 = tmp1 - tmp3;
 
-			int tmp13 = tmp1 + tmp3;
-			int tmp12 = (((tmp1 - tmp3) * 362) >> 8) - tmp13;
+			tmp0 = DEQUANTIZE(aCoefficients[56 + ctr], quantptr[56 + ctr]);
+			tmp1 = DEQUANTIZE(aCoefficients[40 + ctr], quantptr[40 + ctr]);
+			tmp2 = DEQUANTIZE(aCoefficients[24 + ctr], quantptr[24 + ctr]);
+			tmp3 = DEQUANTIZE(aCoefficients[8 + ctr], quantptr[8 + ctr]);
 
-			tmp0 = tmp10 + tmp13;
-			tmp3 = tmp10 - tmp13;
-			tmp1 = tmp11 + tmp12;
-			tmp2 = tmp11 - tmp12;
+			z2 = tmp0 + tmp2;
+			z3 = tmp1 + tmp3;
 
-			int tmp4 = aCoefficients[8 + ctr] * quantizationTable[8 + ctr];
-			int tmp5 = aCoefficients[24 + ctr] * quantizationTable[24 + ctr];
-			int tmp6 = aCoefficients[40 + ctr] * quantizationTable[40 + ctr];
-			int tmp7 = aCoefficients[56 + ctr] * quantizationTable[56 + ctr];
+			z1 = MULTIPLY(z2 + z3, FIX_1_175875602);
+			z2 = MULTIPLY(z2, -FIX_1_961570560);
+			z3 = MULTIPLY(z3, -FIX_0_390180644);
+			z2 += z1;
+			z3 += z1;
 
-			int z13 = tmp6 + tmp5;
-			int z10 = tmp6 - tmp5;
-			int z11 = tmp4 + tmp7;
-			int z12 = tmp4 - tmp7;
+			z1 = MULTIPLY(tmp0 + tmp3, -FIX_0_899976223);
+			tmp0 = MULTIPLY(tmp0, FIX_0_298631336);
+			tmp3 = MULTIPLY(tmp3, FIX_1_501321110);
+			tmp0 += z1 + z2;
+			tmp3 += z1 + z3;
 
-			tmp7 = z11 + z13;
-			tmp11 = ((z11 - z13) * 362) >> 8;
+			z1 = MULTIPLY(tmp1 + tmp2, -FIX_2_562915447);
+			tmp1 = MULTIPLY(tmp1, FIX_2_053119869);
+			tmp2 = MULTIPLY(tmp2, FIX_3_072711026);
+			tmp1 += z1 + z3;
+			tmp2 += z1 + z2;
 
-			int z5 = ((z10 + z12) * 473) >> 8;
-			tmp10 = ((z12 * 277) >> 8) - z5;
-			tmp12 = ((z10 * -669) >> 8) + z5;
-
-			tmp6 = tmp12 - tmp7;
-			tmp5 = tmp11 - tmp6;
-			tmp4 = tmp10 + tmp5;
-
-			mWorkspace[ctr] = tmp0 + tmp7;
-			mWorkspace[8 + ctr] = tmp1 + tmp6;
-			mWorkspace[16 + ctr] = tmp2 + tmp5;
-			mWorkspace[24 + ctr] = tmp3 - tmp4;
-			mWorkspace[32 + ctr] = tmp3 + tmp4;
-			mWorkspace[40 + ctr] = tmp2 - tmp5;
-			mWorkspace[48 + ctr] = tmp1 - tmp6;
-			mWorkspace[56 + ctr] = tmp0 - tmp7;
+			wsptr[ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
+			wsptr[56 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
+			wsptr[8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
+			wsptr[48 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
+			wsptr[16 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
+			wsptr[40 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
+			wsptr[24 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
+			wsptr[32 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
 		}
 
-		// Pass 2: process rows from work array, store into output array.
-		for (int ctr = 0; ctr < 8; ctr++)
+		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			int offset = ctr * 8;
-
-			if (mWorkspace[offset + 1] == 0 && mWorkspace[offset + 2] == 0 && mWorkspace[offset + 3] == 0 && mWorkspace[offset + 4] == 0 && mWorkspace[offset + 5] == 0 && mWorkspace[offset + 6] == 0 && mWorkspace[offset + 7] == 0)
+			if (wsptr[1 + ctr] == 0 && wsptr[2 + ctr] == 0 && wsptr[3 + ctr] == 0 && wsptr[4 + ctr] == 0 && wsptr[5 + ctr] == 0 && wsptr[6 + ctr] == 0 && wsptr[7 + ctr] == 0)
 			{
-				// AC terms all zero
-				int dcval = clamp(mWorkspace[offset]);
+				int dcval = clamp(DESCALE(wsptr[ctr], PASS1_BITS + 3));
 
-				aCoefficients[offset + 0] = dcval;
-				aCoefficients[offset + 1] = dcval;
-				aCoefficients[offset + 2] = dcval;
-				aCoefficients[offset + 3] = dcval;
-				aCoefficients[offset + 4] = dcval;
-				aCoefficients[offset + 5] = dcval;
-				aCoefficients[offset + 6] = dcval;
-				aCoefficients[offset + 7] = dcval;
-
+				aCoefficients[0 + ctr] = dcval;
+				aCoefficients[1 + ctr] = dcval;
+				aCoefficients[2 + ctr] = dcval;
+				aCoefficients[3 + ctr] = dcval;
+				aCoefficients[4 + ctr] = dcval;
+				aCoefficients[5 + ctr] = dcval;
+				aCoefficients[6 + ctr] = dcval;
+				aCoefficients[7 + ctr] = dcval;
 				continue;
 			}
 
-			int tmp10 = mWorkspace[offset] + mWorkspace[offset + 4];
-			int tmp11 = mWorkspace[offset] - mWorkspace[offset + 4];
+			int z2 = wsptr[2 + ctr];
+			int z3 = wsptr[6 + ctr];
 
-			int tmp13 = mWorkspace[offset + 2] + mWorkspace[offset + 6];
-			int tmp12 = (((mWorkspace[offset + 2] - mWorkspace[offset + 6]) * 362) >> 8) - tmp13;
+			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
+			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
+			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
 
-			int tmp0 = tmp10 + tmp13;
-			int tmp3 = tmp10 - tmp13;
-			int tmp1 = tmp11 + tmp12;
-			int tmp2 = tmp11 - tmp12;
+			z2 = wsptr[0 + ctr] + (1 << (PASS1_BITS + 2));
+			z3 = wsptr[4 + ctr];
 
-			int z13 = mWorkspace[offset + 5] + mWorkspace[offset + 3];
-			int z10 = mWorkspace[offset + 5] - mWorkspace[offset + 3];
-			int z11 = mWorkspace[offset + 1] + mWorkspace[offset + 7];
-			int z12 = mWorkspace[offset + 1] - mWorkspace[offset + 7];
+			int tmp0 = (z2 + z3) << CONST_BITS;
+			int tmp1 = (z2 - z3) << CONST_BITS;
 
-			int tmp7 = z11 + z13;
-			tmp11 = ((z11 - z13) * 362) >> 8;
+			int tmp10 = tmp0 + tmp2;
+			int tmp13 = tmp0 - tmp2;
+			int tmp11 = tmp1 + tmp3;
+			int tmp12 = tmp1 - tmp3;
 
-			int z5 = ((z10 + z12) * 473) >> 8;
-			tmp10 = ((z12 * 277) >> 8) - z5;
-			tmp12 = ((z10 * -669) >> 8) + z5;
+			tmp0 = wsptr[7 + ctr];
+			tmp1 = wsptr[5 + ctr];
+			tmp2 = wsptr[3 + ctr];
+			tmp3 = wsptr[1 + ctr];
 
-			int tmp6 = tmp12 - tmp7;
-			int tmp5 = tmp11 - tmp6;
-			int tmp4 = tmp10 + tmp5;
+			z2 = tmp0 + tmp2;
+			z3 = tmp1 + tmp3;
 
-			// Final output stage: scale down by a factor of 8
-			aCoefficients[offset + 0] = clamp(tmp0 + tmp7);
-			aCoefficients[offset + 1] = clamp(tmp1 + tmp6);
-			aCoefficients[offset + 2] = clamp(tmp2 + tmp5);
-			aCoefficients[offset + 3] = clamp(tmp3 - tmp4);
-			aCoefficients[offset + 4] = clamp(tmp3 + tmp4);
-			aCoefficients[offset + 5] = clamp(tmp2 - tmp5);
-			aCoefficients[offset + 6] = clamp(tmp1 - tmp6);
-			aCoefficients[offset + 7] = clamp(tmp0 - tmp7);
+			z1 = MULTIPLY(z2 + z3, FIX_1_175875602);
+			z2 = MULTIPLY(z2, -FIX_1_961570560);
+			z3 = MULTIPLY(z3, -FIX_0_390180644);
+			z2 += z1;
+			z3 += z1;
+
+			z1 = MULTIPLY(tmp0 + tmp3, -FIX_0_899976223);
+			tmp0 = MULTIPLY(tmp0, FIX_0_298631336);
+			tmp3 = MULTIPLY(tmp3, FIX_1_501321110);
+			tmp0 += z1 + z2;
+			tmp3 += z1 + z3;
+
+			z1 = MULTIPLY(tmp1 + tmp2, -FIX_2_562915447);
+			tmp1 = MULTIPLY(tmp1, FIX_2_053119869);
+			tmp2 = MULTIPLY(tmp2, FIX_3_072711026);
+			tmp1 += z1 + z3;
+			tmp2 += z1 + z2;
+
+			aCoefficients[0 + ctr] = clamp(RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[7 + ctr] = clamp(RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[1 + ctr] = clamp(RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[6 + ctr] = clamp(RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[2 + ctr] = clamp(RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[5 + ctr] = clamp(RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[3 + ctr] = clamp(RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[4 + ctr] = clamp(RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3));
 		}
 	}
 
 
 	private static int clamp(int aValue)
 	{
-		aValue = 128 + ((aValue + 128) >> 8);
+		aValue = 128 + (aValue >> 5);
 
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
+	}
+
+
+	private final static int DEQUANTIZE(int v, int q)
+	{
+		return v * q;
+	}
+
+
+	private final static int MULTIPLY(int v, int q)
+	{
+		return v * q;
+	}
+
+
+	private final static int RIGHT_SHIFT(int v, int q)
+	{
+		return v >> q;
+	}
+
+
+	private static int DESCALE(int x, int n)
+	{
+		return (x + (1 << (n - 1))) >> n;
 	}
 }

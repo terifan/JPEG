@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG;
@@ -15,6 +16,19 @@ public class DQTMarkerSegment
 	private int[] mTableInt = new int[64];
 	private int mPrecision;
 	private int mIdentity;
+
+
+	public DQTMarkerSegment(int[] aQuantizationTable, int aIdentity)
+	{
+		mIdentity = aIdentity;
+		mPrecision = PRECISION_8_BITS;
+
+		for (int i = 0; i < 64; i++)
+		{
+			mTableInt[i] = aQuantizationTable[i];
+			mTableDbl[i] = aQuantizationTable[i];
+		}
+	}
 
 
 	public DQTMarkerSegment(BitInputStream aInputStream) throws IOException
@@ -59,7 +73,7 @@ public class DQTMarkerSegment
 				System.out.print(" ");
 				for (int col = 0; col < 8; col++, i++)
 				{
-					System.out.printf("%7.3f ", mTableDbl[i]);
+					System.out.printf("%7d ", mTableInt[i]);
 				}
 				System.out.println();
 			}

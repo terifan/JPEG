@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
+import org.terifan.imageio.jpeg.encoder.FDCTInteger;
 
 
 public class JPEGImageReader extends JPEGConstants
@@ -218,6 +219,7 @@ public class JPEGImageReader extends JPEGConstants
 	{
 //		IDCT idct = new IDCTFloat();
 		IDCT idct = new IDCTInteger();
+//		IDCT idct = new IDCTIntegerFast();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
@@ -275,6 +277,13 @@ public class JPEGImageReader extends JPEGConstants
 						{
 							for (int cx = 0; cx < samplingX; cx++)
 							{
+//								for (int i = 0; i < 64; i++)
+//								{
+//									dctCoefficients[x][cy][cx][component][i] *= quantizationTable.getTableInt()[i];
+//								}
+//
+//								new FDCTInteger().inverse(dctCoefficients[x][cy][cx][component]);
+
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
 							}
 						}
