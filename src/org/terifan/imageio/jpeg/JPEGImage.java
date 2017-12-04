@@ -171,12 +171,19 @@ public class JPEGImage
 		int[] cb = aBuffers[1];
 		int[] cr = aBuffers[2];
 
-		for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
+		if (mComponents == 3)
 		{
-			for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+			for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
 			{
-				mRaster[dst] = ColorSpace.yuvToRgb(y, cb, cr, mComponents, src);
+				for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+				{
+					mRaster[dst] = ColorSpace.yuvToRgbFP(y, cb, cr, src);
+				}
 			}
+		}
+		else
+		{
+			throw new UnsupportedOperationException();
 		}
 	}
 }
