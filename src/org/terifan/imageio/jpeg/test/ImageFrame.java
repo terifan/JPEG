@@ -1,4 +1,4 @@
-package org.terifan.multimedia.jpeg.test;
+package org.terifan.imageio.jpeg.test;
 
 import java.awt.Color;
 import java.awt.Dimension;

@@ -1,9 +1,10 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
 
 
-class ComponentInfo
+public class ComponentInfo
 {
 	public final static int Y = 1;
 	public final static int CB = 2;

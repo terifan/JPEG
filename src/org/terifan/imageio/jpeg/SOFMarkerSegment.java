@@ -1,9 +1,11 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-class SOFMarkerSegment
+public class SOFMarkerSegment
 {
 	private int mPrecision;
 	private int mHeight;
@@ -40,7 +42,7 @@ class SOFMarkerSegment
 			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getSamplingY());
 		}
 
-		if (JPEGImageReader.VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
 

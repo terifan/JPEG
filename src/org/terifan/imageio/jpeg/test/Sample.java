@@ -1,11 +1,11 @@
-package org.terifan.multimedia.jpeg.test;
+package org.terifan.imageio.jpeg.test;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import org.terifan.multimedia.jpeg.JPEGImageReader;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
 public class Sample

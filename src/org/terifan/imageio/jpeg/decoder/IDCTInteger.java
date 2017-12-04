@@ -1,4 +1,6 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg.decoder;
+
+import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
 /**

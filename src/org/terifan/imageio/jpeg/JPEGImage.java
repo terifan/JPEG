@@ -1,4 +1,4 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -20,7 +20,7 @@ public class JPEGImage
 	private BufferedImage mImage;
 
 
-	JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aDensitiesUnits, int aDensityX, int aDensityY, int aComponents)
+	public JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aDensitiesUnits, int aDensityX, int aDensityY, int aComponents)
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
@@ -45,13 +45,13 @@ public class JPEGImage
 	}
 
 
-	BufferedImage getImage()
+	public BufferedImage getImage()
 	{
 		return mImage;
 	}
 
 
-	void setDamaged()
+	public void setDamaged()
 	{
 		mIsDamaged = true;
 
@@ -142,7 +142,7 @@ public class JPEGImage
 	}
 
 
-	void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffers, int[] aCoefficients, int[] aCoefficients2)
+	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffers, int[] aCoefficients, int[] aCoefficients2)
 	{
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
@@ -159,7 +159,7 @@ public class JPEGImage
 	}
 
 
-	void flushMCU(int aX, int aY, int[][] aBuffers)
+	public void flushMCU(int aX, int aY, int[][] aBuffers)
 	{
 		aX *= mMCUWidth;
 		aY *= mMCUHeight;

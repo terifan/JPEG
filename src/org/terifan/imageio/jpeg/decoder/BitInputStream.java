@@ -1,10 +1,10 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg.decoder;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 
-class BitInputStream
+public class BitInputStream
 {
 	private InputStream mInputStream;
 	private int mBitBuffer;

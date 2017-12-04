@@ -1,10 +1,12 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import static org.terifan.multimedia.jpeg.JPEGImageReader.ZIGZAG;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
+import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG;
 
 
-class DQTMarkerSegment
+public class DQTMarkerSegment
 {
 	public final static int PRECISION_8_BITS = 1;
 	public final static int PRECISION_16_BITS = 2;
@@ -92,7 +94,7 @@ class DQTMarkerSegment
 			}
 		}
 
-		if (JPEGImageReader.VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
 

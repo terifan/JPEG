@@ -1,6 +1,5 @@
-package org.terifan.multimedia.jpeg.test;
+package org.terifan.imageio.jpeg.test;
 
-import org.terifan.multimedia.jpeg.*;
 import java.awt.image.BufferedImage;
 import static java.lang.Math.pow;
 import static java.lang.Math.log10;

@@ -1,9 +1,11 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-class DHTMarkerSegment
+public class DHTMarkerSegment
 {
 	public final static int TYPE_DC = 0;
 	public final static int TYPE_AC = 1;
@@ -52,7 +54,7 @@ class DHTMarkerSegment
 			code <<= 1;
 		}
 
-		if (JPEGImageReader.VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + "]");
 		}

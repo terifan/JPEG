@@ -1,9 +1,11 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-class SOSMarkerSegment
+public class SOSMarkerSegment
 {
 	private int mNumComponents;
 	private int[] mComponents;
@@ -36,7 +38,7 @@ class SOSMarkerSegment
 
 		aInputStream.skipBytes(3);
 
-		if (JPEGImageReader.VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("SOSMarkerSegment[numcomponents=" + mNumComponents + "]");
 			for (int i = 0; i < mNumComponents; i++)

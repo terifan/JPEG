@@ -1,7 +1,7 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg;
 
 
-final class ColorSpace
+public class ColorSpace
 {
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);

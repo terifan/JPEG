@@ -1,11 +1,11 @@
-package org.terifan.multimedia.jpeg.test;
+package org.terifan.imageio.jpeg.test;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
-import org.terifan.multimedia.jpeg.JPEGImageReader;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
 public class Test

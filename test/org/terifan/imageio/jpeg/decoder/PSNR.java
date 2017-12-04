@@ -1,4 +1,4 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg.decoder;
 
 import java.awt.image.BufferedImage;
 import static java.lang.Math.pow;

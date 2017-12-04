@@ -1,5 +1,6 @@
-package org.terifan.multimedia.jpeg;
+package org.terifan.imageio.jpeg.decoder;
 
+import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
