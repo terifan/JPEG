@@ -18,7 +18,7 @@ public class DQTMarkerSegment
 	private int mIdentity;
 
 
-	public DQTMarkerSegment(int[] aQuantizationTable, int aIdentity)
+	public DQTMarkerSegment(int aIdentity, int... aQuantizationTable)
 	{
 		mIdentity = aIdentity;
 		mPrecision = PRECISION_8_BITS;

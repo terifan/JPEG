@@ -39,27 +39,27 @@ package org.terifan.imageio.jpeg.encoder;
  */
 public class FDCTFloat
 {
-	public void forward(int[] aBlock)
+	public void transform(int[] aCoefficients)
 	{
 		double[] workspace = new double[64];
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			double tmp0 = aBlock[0 + ctr] + aBlock[7 + ctr];
-			double tmp7 = aBlock[0 + ctr] - aBlock[7 + ctr];
-			double tmp1 = aBlock[1 + ctr] + aBlock[6 + ctr];
-			double tmp6 = aBlock[1 + ctr] - aBlock[6 + ctr];
-			double tmp2 = aBlock[2 + ctr] + aBlock[5 + ctr];
-			double tmp5 = aBlock[2 + ctr] - aBlock[5 + ctr];
-			double tmp3 = aBlock[3 + ctr] + aBlock[4 + ctr];
-			double tmp4 = aBlock[3 + ctr] - aBlock[4 + ctr];
+			double tmp0 = toDbl(aCoefficients[0 + ctr] + aCoefficients[7 + ctr]);
+			double tmp7 = toDbl(aCoefficients[0 + ctr] - aCoefficients[7 + ctr]);
+			double tmp1 = toDbl(aCoefficients[1 + ctr] + aCoefficients[6 + ctr]);
+			double tmp6 = toDbl(aCoefficients[1 + ctr] - aCoefficients[6 + ctr]);
+			double tmp2 = toDbl(aCoefficients[2 + ctr] + aCoefficients[5 + ctr]);
+			double tmp5 = toDbl(aCoefficients[2 + ctr] - aCoefficients[5 + ctr]);
+			double tmp3 = toDbl(aCoefficients[3 + ctr] + aCoefficients[4 + ctr]);
+			double tmp4 = toDbl(aCoefficients[3 + ctr] - aCoefficients[4 + ctr]);
 
 			double tmp10 = tmp0 + tmp3;
 			double tmp13 = tmp0 - tmp3;
 			double tmp11 = tmp1 + tmp2;
 			double tmp12 = tmp1 - tmp2;
 
-			workspace[0 + ctr] = tmp10 + tmp11 - 8 * 128*0;
+			workspace[0 + ctr] = tmp10 + tmp11 - 8 * 128;
 			workspace[4 + ctr] = tmp10 - tmp11;
 
 			double z1 = (tmp12 + tmp13) * 0.707106781;
@@ -100,12 +100,12 @@ public class FDCTFloat
 			double tmp11 = tmp1 + tmp2;
 			double tmp12 = tmp1 - tmp2;
 
-			workspace[8 * 0 + ctr] = tmp10 + tmp11;
-			workspace[8 * 4 + ctr] = tmp10 - tmp11;
+			aCoefficients[8 * 0 + ctr] = toInt(tmp10 + tmp11);
+			aCoefficients[8 * 4 + ctr] = toInt(tmp10 - tmp11);
 
 			double z1 = (tmp12 + tmp13) * 0.707106781;
-			workspace[8 * 2 + ctr] = tmp13 + z1;
-			workspace[8 * 6 + ctr] = tmp13 - z1;
+			aCoefficients[8 * 2 + ctr] = toInt(tmp13 + z1);
+			aCoefficients[8 * 6 + ctr] = toInt(tmp13 - z1);
 
 			tmp10 = tmp4 + tmp5;
 			tmp11 = tmp5 + tmp6;
@@ -119,15 +119,22 @@ public class FDCTFloat
 			double z11 = tmp7 + z3;
 			double z13 = tmp7 - z3;
 
-			workspace[8 * 5 + ctr] = z13 + z2;
-			workspace[8 * 3 + ctr] = z13 - z2;
-			workspace[8 * 1 + ctr] = z11 + z4;
-			workspace[8 * 7 + ctr] = z11 - z4;
+			aCoefficients[8 * 5 + ctr] = toInt(z13 + z2);
+			aCoefficients[8 * 3 + ctr] = toInt(z13 - z2);
+			aCoefficients[8 * 1 + ctr] = toInt(z11 + z4);
+			aCoefficients[8 * 7 + ctr] = toInt(z11 - z4);
 		}
-
-		for (int i = 0; i < 64; i++)
-		{
-			aBlock[i] = (int)workspace[i] / 8;
-		}
+	}
+	
+	
+	private static int toInt(double v)
+	{
+		return (int)(v*4);
+	}
+	
+	
+	private static double toDbl(int v)
+	{
+		return (double)v;
 	}
 }

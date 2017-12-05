@@ -188,24 +188,22 @@ public class IDCTIntegerSlow implements IDCT
 	{
 		int[] workspace = new int[64];
 
-//		printTables(new int[][]{aCoefficients});
-//		System.out.println();
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
-			if (aCoefficients[1 * 8 + ctr] == 0 && aCoefficients[2 * 8 + ctr] == 0 && aCoefficients[3 * 8 + ctr] == 0 && aCoefficients[4 * 8 + ctr] == 0 && aCoefficients[5 * 8 + ctr] == 0 && aCoefficients[6 * 8 + ctr] == 0 && aCoefficients[7 * 8 + ctr] == 0)
-			{
-				int dcval = aCoefficients[ctr] << PASS1_BITS;
-
-				workspace[0 * 8 + ctr] = dcval;
-				workspace[1 * 8 + ctr] = dcval;
-				workspace[2 * 8 + ctr] = dcval;
-				workspace[3 * 8 + ctr] = dcval;
-				workspace[4 * 8 + ctr] = dcval;
-				workspace[5 * 8 + ctr] = dcval;
-				workspace[6 * 8 + ctr] = dcval;
-				workspace[7 * 8 + ctr] = dcval;
-				continue;
-			}
+//			if (aCoefficients[1 * 8 + ctr] == 0 && aCoefficients[2 * 8 + ctr] == 0 && aCoefficients[3 * 8 + ctr] == 0 && aCoefficients[4 * 8 + ctr] == 0 && aCoefficients[5 * 8 + ctr] == 0 && aCoefficients[6 * 8 + ctr] == 0 && aCoefficients[7 * 8 + ctr] == 0)
+//			{
+//				int dcval = aCoefficients[ctr] << PASS1_BITS;
+//
+//				workspace[0 * 8 + ctr] = dcval;
+//				workspace[1 * 8 + ctr] = dcval;
+//				workspace[2 * 8 + ctr] = dcval;
+//				workspace[3 * 8 + ctr] = dcval;
+//				workspace[4 * 8 + ctr] = dcval;
+//				workspace[5 * 8 + ctr] = dcval;
+//				workspace[6 * 8 + ctr] = dcval;
+//				workspace[7 * 8 + ctr] = dcval;
+//				continue;
+//			}
 
 			int z2 = aCoefficients[2 * 8 + ctr];
 			int z3 = aCoefficients[6 * 8 + ctr];
@@ -266,20 +264,20 @@ public class IDCTIntegerSlow implements IDCT
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
-			{
-				int dcval = clamp(DESCALE(workspace[ctr], PASS1_BITS + 3));
-
-				aCoefficients[0 + ctr] = dcval;
-				aCoefficients[1 + ctr] = dcval;
-				aCoefficients[2 + ctr] = dcval;
-				aCoefficients[3 + ctr] = dcval;
-				aCoefficients[4 + ctr] = dcval;
-				aCoefficients[5 + ctr] = dcval;
-				aCoefficients[6 + ctr] = dcval;
-				aCoefficients[7 + ctr] = dcval;
-				continue;
-			}
+//			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
+//			{
+//				int dcval = clamp(workspace[ctr], PASS1_BITS + 3);
+//
+//				aCoefficients[0 + ctr] = dcval;
+//				aCoefficients[1 + ctr] = dcval;
+//				aCoefficients[2 + ctr] = dcval;
+//				aCoefficients[3 + ctr] = dcval;
+//				aCoefficients[4 + ctr] = dcval;
+//				aCoefficients[5 + ctr] = dcval;
+//				aCoefficients[6 + ctr] = dcval;
+//				aCoefficients[7 + ctr] = dcval;
+//				continue;
+//			}
 
 			int z2 = workspace[2 + ctr];
 			int z3 = workspace[6 + ctr];
@@ -325,39 +323,33 @@ public class IDCTIntegerSlow implements IDCT
 			tmp1 += z1 + z3;
 			tmp2 += z1 + z2;
 
-			aCoefficients[0 + ctr] = clamp(RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[7 + ctr] = clamp(RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[1 + ctr] = clamp(RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[6 + ctr] = clamp(RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[2 + ctr] = clamp(RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[5 + ctr] = clamp(RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[3 + ctr] = clamp(RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3));
-			aCoefficients[4 + ctr] = clamp(RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[0 + ctr] = clamp(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[7 + ctr] = clamp(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[1 + ctr] = clamp(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[6 + ctr] = clamp(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[2 + ctr] = clamp(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[5 + ctr] = clamp(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[3 + ctr] = clamp(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[4 + ctr] = clamp(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3);
 		}
 	}
 
 
-	private static int clamp(int aValue)
+	private static int clamp(int x, int q)
 	{
-		aValue = 128 + (aValue >> 5);
+		x = 128 + DESCALE(x, q + 5);
 
-		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
+		return x < 0 ? 0 : x > 255 ? 255 : x;
 	}
 
 
-	private final static int DEQUANTIZE(int v, int q)
-	{
-		return v * q;
-	}
-
-
-	private final static int MULTIPLY(int v, int q)
+	private static int MULTIPLY(int v, int q)
 	{
 		return v * q;
 	}
 
 
-	private final static int RIGHT_SHIFT(int v, int q)
+	private static int RIGHT_SHIFT(int v, int q)
 	{
 		return v >> q;
 	}

@@ -88,6 +88,6 @@ public class QuantizationTable
 			}
 		}
 
-		return new DQTMarkerSegment(quantval, aComponent);
+		return new DQTMarkerSegment(aComponent, quantval);
 	}
 }

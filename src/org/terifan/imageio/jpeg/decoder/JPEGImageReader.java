@@ -279,6 +279,37 @@ public class JPEGImageReader extends JPEGConstants
 							for (int cx = 0; cx < samplingX; cx++)
 							{
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
+								
+//								int[] a = dctCoefficients[x][cy][cx][component].clone();
+//								int[] b = dctCoefficients[x][cy][cx][component].clone();
+//								
+//								new IDCTIntegerSlow().transform(a, quantizationTable);
+//								new IDCTIntegerFast().transform(b, quantizationTable);
+//								
+//								int[] q = a;
+//								
+//								for (int i = 0; i < 64; i++)
+//								{
+//									if (Math.abs(a[i]-b[i]) > 3)
+//									{
+//										q = b;
+////										a = dctCoefficients[x][cy][cx][component].clone();
+////										for (int j = 0; j < 64; j++)
+////										{
+////											System.out.print(a[j]+",");
+////										}
+////										System.out.println();
+////										a = quantizationTable.getTableInt();
+////										for (int j = 0; j < 64; j++)
+////										{
+////											System.out.print(a[j]+",");
+////										}
+////										System.out.println();
+////										System.out.println();
+//									}
+//								}
+//								
+//								System.arraycopy(b, 0, dctCoefficients[x][cy][cx][component], 0, a.length);
 							}
 						}
 					}

@@ -24,7 +24,7 @@ public class FDCTIntegerNGTest
 
 		int[] original = block.clone();
 
-		new FDCTFloat().forward(block);
+		new FDCTFloat().transform(block);
 //		new FDCTInteger().forward(block);
 
 		int[] transformed = block.clone();

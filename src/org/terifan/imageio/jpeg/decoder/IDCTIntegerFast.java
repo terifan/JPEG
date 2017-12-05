@@ -20,6 +20,10 @@ import org.terifan.imageio.jpeg.DQTMarkerSegment;
  */
 public class IDCTIntegerFast implements IDCT
 {
+	private final static int CONST_BITS = 8;
+	private final static int PASS1_BITS = 2;
+
+
 	private static void printTables(int[][] aInput)
 	{
 		for (int r = 0; r < 8; r++)
@@ -216,7 +220,7 @@ public class IDCTIntegerFast implements IDCT
 			int tmp11 = tmp0 - tmp2;
 
 			int tmp13 = tmp1 + tmp3;
-			int tmp12 = (((tmp1 - tmp3) * 362) >> 8) - tmp13;
+			int tmp12 = MULTIPLY(tmp1 - tmp3, 362) - tmp13;
 
 			tmp0 = tmp10 + tmp13;
 			tmp3 = tmp10 - tmp13;
@@ -234,11 +238,11 @@ public class IDCTIntegerFast implements IDCT
 			int z12 = tmp4 - tmp7;
 
 			tmp7 = z11 + z13;
-			tmp11 = ((z11 - z13) * 362) >> 8;
+			tmp11 = MULTIPLY(z11 - z13, 362);
 
-			int z5 = ((z10 + z12) * 473) >> 8;
-			tmp10 = ((z12 * 277) >> 8) - z5;
-			tmp12 = ((z10 * -669) >> 8) + z5;
+			int z5 = MULTIPLY(z10 + z12, 473);
+			tmp10 = MULTIPLY(z12, 277) - z5;
+			tmp12 = MULTIPLY(z10, -669) + z5;
 
 			tmp6 = tmp12 - tmp7;
 			tmp5 = tmp11 - tmp6;
@@ -260,7 +264,7 @@ public class IDCTIntegerFast implements IDCT
 			if (workspace[ctr + 1] == 0 && workspace[ctr + 2] == 0 && workspace[ctr + 3] == 0 && workspace[ctr + 4] == 0 && workspace[ctr + 5] == 0 && workspace[ctr + 6] == 0 && workspace[ctr + 7] == 0)
 			{
 				// AC terms all zero
-				int dcval = clamp(workspace[ctr]);
+				int dcval = clamp(workspace[ctr], PASS1_BITS + 3);
 
 				aCoefficients[ctr + 0] = dcval;
 				aCoefficients[ctr + 1] = dcval;
@@ -278,7 +282,7 @@ public class IDCTIntegerFast implements IDCT
 			int tmp11 = workspace[ctr] - workspace[ctr + 4];
 
 			int tmp13 = workspace[ctr + 2] + workspace[ctr + 6];
-			int tmp12 = (((workspace[ctr + 2] - workspace[ctr + 6]) * 362) >> 8) - tmp13;
+			int tmp12 = MULTIPLY(workspace[ctr + 2] - workspace[ctr + 6], 362) - tmp13;
 
 			int tmp0 = tmp10 + tmp13;
 			int tmp3 = tmp10 - tmp13;
@@ -291,33 +295,45 @@ public class IDCTIntegerFast implements IDCT
 			int z12 = workspace[ctr + 1] - workspace[ctr + 7];
 
 			int tmp7 = z11 + z13;
-			tmp11 = ((z11 - z13) * 362) >> 8;
+			tmp11 = MULTIPLY(z11 - z13, 362);
 
-			int z5 = ((z10 + z12) * 473) >> 8;
-			tmp10 = ((z12 * 277) >> 8) - z5;
-			tmp12 = ((z10 * -669) >> 8) + z5;
+			int z5 = MULTIPLY((z10 + z12), 473);
+			tmp10 = MULTIPLY(z12, 277) - z5;
+			tmp12 = MULTIPLY(z10, -669) + z5;
 
 			int tmp6 = tmp12 - tmp7;
 			int tmp5 = tmp11 - tmp6;
 			int tmp4 = tmp10 + tmp5;
 
 			// Final output stage: scale down by a factor of 8
-			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7);
-			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6);
-			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5);
-			aCoefficients[ctr + 3] = clamp(tmp3 - tmp4);
-			aCoefficients[ctr + 4] = clamp(tmp3 + tmp4);
-			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5);
-			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6);
-			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7);
+			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7, PASS1_BITS + 3);
+			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6, PASS1_BITS + 3);
+			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5, PASS1_BITS + 3);
+			aCoefficients[ctr + 3] = clamp(tmp3 - tmp4, PASS1_BITS + 3);
+			aCoefficients[ctr + 4] = clamp(tmp3 + tmp4, PASS1_BITS + 3);
+			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5, PASS1_BITS + 3);
+			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6, PASS1_BITS + 3);
+			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7, PASS1_BITS + 3);
 		}
 	}
 
 
-	private static int clamp(int aValue)
+	private static int clamp(int x, int n)
 	{
-		aValue = 128 + ((aValue + 128) >> 8);
+		x = 128 + DESCALE(x, n + 3);
 
-		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
+		return x < 0 ? 0 : x > 255 ? 255 : x;
+	}
+
+
+	private static int DESCALE(int x, int n)
+	{
+		return (x + (1 << (n - 1))) >> n;
+	}
+
+
+	private static int MULTIPLY(int x, int n)
+	{
+		return (x * n) >> CONST_BITS;
 	}
 }
