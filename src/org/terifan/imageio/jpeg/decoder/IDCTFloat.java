@@ -19,134 +19,133 @@ import org.terifan.imageio.jpeg.DQTMarkerSegment;
  */
 public class IDCTFloat implements IDCT
 {
-	private final double[] mWorkspace = new double[64];
-
-
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
 	 */
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		double[] quantizationTable = aQuantizationTable.getTableDbl();
+		for (int i = 0; i < 64; i++) aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
 
-		// Pass 1: process columns from input, store into work array.
-		for (int ctr = 0; ctr < 8; ctr++)
-		{
-			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
-			{
-				// AC terms all zero
-				double dcval = aCoefficients[ctr] * quantizationTable[ctr];
+		transform(aCoefficients);
 
-				mWorkspace[8 * 0 + ctr] = dcval;
-				mWorkspace[8 * 1 + ctr] = dcval;
-				mWorkspace[8 * 2 + ctr] = dcval;
-				mWorkspace[8 * 3 + ctr] = dcval;
-				mWorkspace[8 * 4 + ctr] = dcval;
-				mWorkspace[8 * 5 + ctr] = dcval;
-				mWorkspace[8 * 6 + ctr] = dcval;
-				mWorkspace[8 * 7 + ctr] = dcval;
-
-				continue;
-			}
-
-			double tmp0 = aCoefficients[8 * 0 + ctr] * quantizationTable[8 * 0 + ctr];
-			double tmp1 = aCoefficients[8 * 2 + ctr] * quantizationTable[8 * 2 + ctr];
-			double tmp2 = aCoefficients[8 * 4 + ctr] * quantizationTable[8 * 4 + ctr];
-			double tmp3 = aCoefficients[8 * 6 + ctr] * quantizationTable[8 * 6 + ctr];
-
-			double tmp10 = tmp0 + tmp2;
-			double tmp11 = tmp0 - tmp2;
-
-			double tmp13 = tmp1 + tmp3;
-			double tmp12 = (tmp1 - tmp3) * 1.414213562 - tmp13;
-
-			tmp0 = tmp10 + tmp13;
-			tmp3 = tmp10 - tmp13;
-			tmp1 = tmp11 + tmp12;
-			tmp2 = tmp11 - tmp12;
-
-			double tmp4 = aCoefficients[8 * 1 + ctr] * quantizationTable[8 * 1 + ctr];
-			double tmp5 = aCoefficients[8 * 3 + ctr] * quantizationTable[8 * 3 + ctr];
-			double tmp6 = aCoefficients[8 * 5 + ctr] * quantizationTable[8 * 5 + ctr];
-			double tmp7 = aCoefficients[8 * 7 + ctr] * quantizationTable[8 * 7 + ctr];
-
-			double z13 = tmp6 + tmp5;
-			double z10 = tmp6 - tmp5;
-			double z11 = tmp4 + tmp7;
-			double z12 = tmp4 - tmp7;
-
-			tmp7 = z11 + z13;
-			tmp11 = (z11 - z13) * 1.414213562;
-
-			double z5 = (z10 + z12) * 1.847759065;
-			tmp10 = z5 - z12 * 1.0823922;
-			tmp12 = z5 - z10 * 2.61312593;
-
-			tmp6 = tmp12 - tmp7;
-			tmp5 = tmp11 - tmp6;
-			tmp4 = tmp10 - tmp5;
-
-			mWorkspace[8 * 0 + ctr] = tmp0 + tmp7;
-			mWorkspace[8 * 7 + ctr] = tmp0 - tmp7;
-			mWorkspace[8 * 1 + ctr] = tmp1 + tmp6;
-			mWorkspace[8 * 6 + ctr] = tmp1 - tmp6;
-			mWorkspace[8 * 2 + ctr] = tmp2 + tmp5;
-			mWorkspace[8 * 5 + ctr] = tmp2 - tmp5;
-			mWorkspace[8 * 3 + ctr] = tmp3 + tmp4;
-			mWorkspace[8 * 4 + ctr] = tmp3 - tmp4;
-		}
-
-		// Pass 2: process rows from work array, store into output array.
-		for (int ctr = 0, offset = 0; ctr < 8; ctr++, offset += 8)
-		{
-			double z5 = mWorkspace[offset] + (128 + 0.5);
-			double tmp10 = z5 + mWorkspace[offset + 4];
-			double tmp11 = z5 - mWorkspace[offset + 4];
-
-			double tmp13 = mWorkspace[offset + 2] + mWorkspace[offset + 6];
-			double tmp12 = (mWorkspace[offset + 2] - mWorkspace[offset + 6]) * 1.414213562 - tmp13;
-
-			double tmp0 = tmp10 + tmp13;
-			double tmp3 = tmp10 - tmp13;
-			double tmp1 = tmp11 + tmp12;
-			double tmp2 = tmp11 - tmp12;
-
-			double z13 = mWorkspace[offset + 5] + mWorkspace[offset + 3];
-			double z10 = mWorkspace[offset + 5] - mWorkspace[offset + 3];
-			double z11 = mWorkspace[offset + 1] + mWorkspace[offset + 7];
-			double z12 = mWorkspace[offset + 1] - mWorkspace[offset + 7];
-
-			double tmp7 = z11 + z13;
-			tmp11 = (z11 - z13) * 1.414213562;
-
-			z5 = (z10 + z12) * 1.847759065;
-			tmp10 = z5 - z12 * 1.082392200;
-			tmp12 = z5 - z10 * 2.613125930;
-
-			double tmp6 = tmp12 - tmp7;
-			double tmp5 = tmp11 - tmp6;
-			double tmp4 = tmp10 - tmp5;
-
-			// Final output stage: scale down by a factor of 8
-			aCoefficients[offset + 0] = clamp((int)(tmp0 + tmp7));
-			aCoefficients[offset + 7] = clamp((int)(tmp0 - tmp7));
-			aCoefficients[offset + 1] = clamp((int)(tmp1 + tmp6));
-			aCoefficients[offset + 6] = clamp((int)(tmp1 - tmp6));
-			aCoefficients[offset + 2] = clamp((int)(tmp2 + tmp5));
-			aCoefficients[offset + 5] = clamp((int)(tmp2 - tmp5));
-			aCoefficients[offset + 3] = clamp((int)(tmp3 + tmp4));
-			aCoefficients[offset + 4] = clamp((int)(tmp3 - tmp4));
-		}
+//		double[] mWorkspace = new double[64];
+//		double[] quantizationTable = aQuantizationTable.getTableDbl();
+//
+//		// Pass 1: process columns from input, store into work array.
+//		for (int ctr = 0; ctr < 8; ctr++)
+//		{
+//			if (aCoefficients[8 + ctr] == 0 && aCoefficients[16 + ctr] == 0 && aCoefficients[24 + ctr] == 0 && aCoefficients[32 + ctr] == 0 && aCoefficients[40 + ctr] == 0 && aCoefficients[48 + ctr] == 0 && aCoefficients[56 + ctr] == 0)
+//			{
+//				// AC terms all zero
+//				double dcval = aCoefficients[ctr] * quantizationTable[ctr];
+//
+//				mWorkspace[8 * 0 + ctr] = dcval;
+//				mWorkspace[8 * 1 + ctr] = dcval;
+//				mWorkspace[8 * 2 + ctr] = dcval;
+//				mWorkspace[8 * 3 + ctr] = dcval;
+//				mWorkspace[8 * 4 + ctr] = dcval;
+//				mWorkspace[8 * 5 + ctr] = dcval;
+//				mWorkspace[8 * 6 + ctr] = dcval;
+//				mWorkspace[8 * 7 + ctr] = dcval;
+//
+//				continue;
+//			}
+//
+//			double tmp0 = aCoefficients[8 * 0 + ctr] * quantizationTable[8 * 0 + ctr];
+//			double tmp1 = aCoefficients[8 * 2 + ctr] * quantizationTable[8 * 2 + ctr];
+//			double tmp2 = aCoefficients[8 * 4 + ctr] * quantizationTable[8 * 4 + ctr];
+//			double tmp3 = aCoefficients[8 * 6 + ctr] * quantizationTable[8 * 6 + ctr];
+//
+//			double tmp10 = tmp0 + tmp2;
+//			double tmp11 = tmp0 - tmp2;
+//
+//			double tmp13 = tmp1 + tmp3;
+//			double tmp12 = (tmp1 - tmp3) * 1.414213562 - tmp13;
+//
+//			tmp0 = tmp10 + tmp13;
+//			tmp3 = tmp10 - tmp13;
+//			tmp1 = tmp11 + tmp12;
+//			tmp2 = tmp11 - tmp12;
+//
+//			double tmp4 = aCoefficients[8 * 1 + ctr] * quantizationTable[8 * 1 + ctr];
+//			double tmp5 = aCoefficients[8 * 3 + ctr] * quantizationTable[8 * 3 + ctr];
+//			double tmp6 = aCoefficients[8 * 5 + ctr] * quantizationTable[8 * 5 + ctr];
+//			double tmp7 = aCoefficients[8 * 7 + ctr] * quantizationTable[8 * 7 + ctr];
+//
+//			double z13 = tmp6 + tmp5;
+//			double z10 = tmp6 - tmp5;
+//			double z11 = tmp4 + tmp7;
+//			double z12 = tmp4 - tmp7;
+//
+//			tmp7 = z11 + z13;
+//			tmp11 = (z11 - z13) * 1.414213562;
+//
+//			double z5 = (z10 + z12) * 1.847759065;
+//			tmp10 = z5 - z12 * 1.0823922;
+//			tmp12 = z5 - z10 * 2.61312593;
+//
+//			tmp6 = tmp12 - tmp7;
+//			tmp5 = tmp11 - tmp6;
+//			tmp4 = tmp10 - tmp5;
+//
+//			mWorkspace[8 * 0 + ctr] = tmp0 + tmp7;
+//			mWorkspace[8 * 7 + ctr] = tmp0 - tmp7;
+//			mWorkspace[8 * 1 + ctr] = tmp1 + tmp6;
+//			mWorkspace[8 * 6 + ctr] = tmp1 - tmp6;
+//			mWorkspace[8 * 2 + ctr] = tmp2 + tmp5;
+//			mWorkspace[8 * 5 + ctr] = tmp2 - tmp5;
+//			mWorkspace[8 * 3 + ctr] = tmp3 + tmp4;
+//			mWorkspace[8 * 4 + ctr] = tmp3 - tmp4;
+//		}
+//
+//		// Pass 2: process rows from work array, store into output array.
+//		for (int ctr = 0, offset = 0; ctr < 8; ctr++, offset += 8)
+//		{
+//			double z5 = mWorkspace[offset] + (128 + 0.5);
+//			double tmp10 = z5 + mWorkspace[offset + 4];
+//			double tmp11 = z5 - mWorkspace[offset + 4];
+//
+//			double tmp13 = mWorkspace[offset + 2] + mWorkspace[offset + 6];
+//			double tmp12 = (mWorkspace[offset + 2] - mWorkspace[offset + 6]) * 1.414213562 - tmp13;
+//
+//			double tmp0 = tmp10 + tmp13;
+//			double tmp3 = tmp10 - tmp13;
+//			double tmp1 = tmp11 + tmp12;
+//			double tmp2 = tmp11 - tmp12;
+//
+//			double z13 = mWorkspace[offset + 5] + mWorkspace[offset + 3];
+//			double z10 = mWorkspace[offset + 5] - mWorkspace[offset + 3];
+//			double z11 = mWorkspace[offset + 1] + mWorkspace[offset + 7];
+//			double z12 = mWorkspace[offset + 1] - mWorkspace[offset + 7];
+//
+//			double tmp7 = z11 + z13;
+//			tmp11 = (z11 - z13) * 1.414213562;
+//
+//			z5 = (z10 + z12) * 1.847759065;
+//			tmp10 = z5 - z12 * 1.082392200;
+//			tmp12 = z5 - z10 * 2.613125930;
+//
+//			double tmp6 = tmp12 - tmp7;
+//			double tmp5 = tmp11 - tmp6;
+//			double tmp4 = tmp10 - tmp5;
+//
+//			// Final output stage: scale down by a factor of 8
+//			aCoefficients[offset + 0] = clamp((int)(tmp0 + tmp7));
+//			aCoefficients[offset + 7] = clamp((int)(tmp0 - tmp7));
+//			aCoefficients[offset + 1] = clamp((int)(tmp1 + tmp6));
+//			aCoefficients[offset + 6] = clamp((int)(tmp1 - tmp6));
+//			aCoefficients[offset + 2] = clamp((int)(tmp2 + tmp5));
+//			aCoefficients[offset + 5] = clamp((int)(tmp2 - tmp5));
+//			aCoefficients[offset + 3] = clamp((int)(tmp3 + tmp4));
+//			aCoefficients[offset + 4] = clamp((int)(tmp3 - tmp4));
+//		}
 	}
 
 
 	public void transform(int[] aCoefficients)
 	{
-		for (int i = 0; i < 64; i++)
-		{
-			aCoefficients[i] *= 8;
-		}
+		double[] workspace = new double[64];
 
 		// Pass 1: process columns from input, store into work array.
 		for (int ctr = 0; ctr < 8; ctr++)
@@ -156,14 +155,14 @@ public class IDCTFloat implements IDCT
 				// AC terms all zero
 				double dcval = aCoefficients[ctr];
 
-				mWorkspace[8 * 0 + ctr] = dcval;
-				mWorkspace[8 * 1 + ctr] = dcval;
-				mWorkspace[8 * 2 + ctr] = dcval;
-				mWorkspace[8 * 3 + ctr] = dcval;
-				mWorkspace[8 * 4 + ctr] = dcval;
-				mWorkspace[8 * 5 + ctr] = dcval;
-				mWorkspace[8 * 6 + ctr] = dcval;
-				mWorkspace[8 * 7 + ctr] = dcval;
+				workspace[8 * 0 + ctr] = dcval;
+				workspace[8 * 1 + ctr] = dcval;
+				workspace[8 * 2 + ctr] = dcval;
+				workspace[8 * 3 + ctr] = dcval;
+				workspace[8 * 4 + ctr] = dcval;
+				workspace[8 * 5 + ctr] = dcval;
+				workspace[8 * 6 + ctr] = dcval;
+				workspace[8 * 7 + ctr] = dcval;
 
 				continue;
 			}
@@ -205,35 +204,35 @@ public class IDCTFloat implements IDCT
 			tmp5 = tmp11 - tmp6;
 			tmp4 = tmp10 - tmp5;
 
-			mWorkspace[8 * 0 + ctr] = tmp0 + tmp7;
-			mWorkspace[8 * 7 + ctr] = tmp0 - tmp7;
-			mWorkspace[8 * 1 + ctr] = tmp1 + tmp6;
-			mWorkspace[8 * 6 + ctr] = tmp1 - tmp6;
-			mWorkspace[8 * 2 + ctr] = tmp2 + tmp5;
-			mWorkspace[8 * 5 + ctr] = tmp2 - tmp5;
-			mWorkspace[8 * 3 + ctr] = tmp3 + tmp4;
-			mWorkspace[8 * 4 + ctr] = tmp3 - tmp4;
+			workspace[8 * 0 + ctr] = tmp0 + tmp7;
+			workspace[8 * 7 + ctr] = tmp0 - tmp7;
+			workspace[8 * 1 + ctr] = tmp1 + tmp6;
+			workspace[8 * 6 + ctr] = tmp1 - tmp6;
+			workspace[8 * 2 + ctr] = tmp2 + tmp5;
+			workspace[8 * 5 + ctr] = tmp2 - tmp5;
+			workspace[8 * 3 + ctr] = tmp3 + tmp4;
+			workspace[8 * 4 + ctr] = tmp3 - tmp4;
 		}
 
 		// Pass 2: process rows from work array, store into output array.
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			double z5 = mWorkspace[ctr] + (128 + 0.5);
-			double tmp10 = z5 + mWorkspace[ctr + 4];
-			double tmp11 = z5 - mWorkspace[ctr + 4];
+			double z5 = workspace[ctr] + (128 + 0.5);
+			double tmp10 = z5 + workspace[ctr + 4];
+			double tmp11 = z5 - workspace[ctr + 4];
 
-			double tmp13 = mWorkspace[ctr + 2] + mWorkspace[ctr + 6];
-			double tmp12 = (mWorkspace[ctr + 2] - mWorkspace[ctr + 6]) * 1.414213562 - tmp13;
+			double tmp13 = workspace[ctr + 2] + workspace[ctr + 6];
+			double tmp12 = (workspace[ctr + 2] - workspace[ctr + 6]) * 1.414213562 - tmp13;
 
 			double tmp0 = tmp10 + tmp13;
 			double tmp3 = tmp10 - tmp13;
 			double tmp1 = tmp11 + tmp12;
 			double tmp2 = tmp11 - tmp12;
 
-			double z13 = mWorkspace[ctr + 5] + mWorkspace[ctr + 3];
-			double z10 = mWorkspace[ctr + 5] - mWorkspace[ctr + 3];
-			double z11 = mWorkspace[ctr + 1] + mWorkspace[ctr + 7];
-			double z12 = mWorkspace[ctr + 1] - mWorkspace[ctr + 7];
+			double z13 = workspace[ctr + 5] + workspace[ctr + 3];
+			double z10 = workspace[ctr + 5] - workspace[ctr + 3];
+			double z11 = workspace[ctr + 1] + workspace[ctr + 7];
+			double z12 = workspace[ctr + 1] - workspace[ctr + 7];
 
 			double tmp7 = z11 + z13;
 			tmp11 = (z11 - z13) * 1.414213562;
@@ -261,6 +260,8 @@ public class IDCTFloat implements IDCT
 
 	private static int clamp(int aValue)
 	{
+		aValue = 128 + (aValue >> 8);
+
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 }

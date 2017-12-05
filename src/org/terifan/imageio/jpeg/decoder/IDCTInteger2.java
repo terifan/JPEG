@@ -1,7 +1,9 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
-public class IDCTInteger2
+
+public class IDCTInteger2 implements IDCT
 {
 	private final static int W1 = 2841;
 	private final static int W2 = 2676;
@@ -10,36 +12,39 @@ public class IDCTInteger2
 	private final static int W6 = 1108;
 	private final static int W7 = 565;
 
-	private final static int[] CLIP = new int[32768];
-	static
+
+	@Override
+	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		for (int i = -16384; i < 16384; i++)
-		{
-			CLIP[16384 + i] = (i < 0) ? 0 : ((i > 16384+255) ? 255 : i);
-		}
+		for (int i = 0; i < 64; i++) aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
+
+		transform(aCoefficients);
 	}
 
-	public void inverse(int[] aBlock)
+
+	public void transform(int[] aCoefficients)
 	{
+		int[] workspace = new int[64];
+
 		for (int ctr = 0; ctr < 64; ctr+=8)
 		{
 			int tmp0;
-			int tmp1 = aBlock[ctr + 4] << 11;
-			int tmp2 = aBlock[ctr + 6];
-			int tmp3 = aBlock[ctr + 2];
-			int tmp4 = aBlock[ctr + 1];
-			int tmp5 = aBlock[ctr + 7];
-			int tmp6 = aBlock[ctr + 5];
-			int tmp7 = aBlock[ctr + 3];
+			int tmp1 = aCoefficients[ctr + 4] << 11;
+			int tmp2 = aCoefficients[ctr + 6];
+			int tmp3 = aCoefficients[ctr + 2];
+			int tmp4 = aCoefficients[ctr + 1];
+			int tmp5 = aCoefficients[ctr + 7];
+			int tmp6 = aCoefficients[ctr + 5];
+			int tmp7 = aCoefficients[ctr + 3];
 			int tmp8;
 
-			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
-			{
-				aBlock[ctr + 0] = aBlock[ctr + 1] = aBlock[ctr + 2] = aBlock[ctr + 3] = aBlock[ctr + 4] = aBlock[ctr + 5] = aBlock[ctr + 6] = aBlock[ctr + 7] = aBlock[ctr + 0] << 3;
-				continue;
-			}
+//			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
+//			{
+//				aCoefficients[ctr + 0] = aCoefficients[ctr + 1] = aCoefficients[ctr + 2] = aCoefficients[ctr + 3] = aCoefficients[ctr + 4] = aCoefficients[ctr + 5] = aCoefficients[ctr + 6] = aCoefficients[ctr + 7] = aCoefficients[ctr + 0] << 3;
+//				continue;
+//			}
 
-			tmp0 = (aBlock[ctr + 0] << 11) + 128;
+			tmp0 = (aCoefficients[ctr + 0] << 11) + 128;
 
 			// first stage
 			tmp8 = W7 * (tmp4 + tmp5);
@@ -70,35 +75,35 @@ public class IDCTInteger2
 
 			// fourth stage
 
-			aBlock[ctr + 0] = ((tmp7 + tmp1) >> 8);
-			aBlock[ctr + 1] = ((tmp3 + tmp2) >> 8);
-			aBlock[ctr + 2] = ((tmp0 + tmp4) >> 8);
-			aBlock[ctr + 3] = ((tmp8 + tmp6) >> 8);
-			aBlock[ctr + 4] = ((tmp8 - tmp6) >> 8);
-			aBlock[ctr + 5] = ((tmp0 - tmp4) >> 8);
-			aBlock[ctr + 6] = ((tmp3 - tmp2) >> 8);
-			aBlock[ctr + 7] = ((tmp7 - tmp1) >> 8);
+			workspace[ctr + 0] = ((tmp7 + tmp1) >> 8);
+			workspace[ctr + 1] = ((tmp3 + tmp2) >> 8);
+			workspace[ctr + 2] = ((tmp0 + tmp4) >> 8);
+			workspace[ctr + 3] = ((tmp8 + tmp6) >> 8);
+			workspace[ctr + 4] = ((tmp8 - tmp6) >> 8);
+			workspace[ctr + 5] = ((tmp0 - tmp4) >> 8);
+			workspace[ctr + 6] = ((tmp3 - tmp2) >> 8);
+			workspace[ctr + 7] = ((tmp7 - tmp1) >> 8);
 		}
 
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
 			int tmp0;
-			int tmp1 = aBlock[ctr + 8 * 4] << 8;
-			int tmp2 = aBlock[ctr + 8 * 6];
-			int tmp3 = aBlock[ctr + 8 * 2];
-			int tmp4 = aBlock[ctr + 8 * 1];
-			int tmp5 = aBlock[ctr + 8 * 7];
-			int tmp6 = aBlock[ctr + 8 * 5];
-			int tmp7 = aBlock[ctr + 8 * 3];
+			int tmp1 = workspace[ctr + 8 * 4] << 8;
+			int tmp2 = workspace[ctr + 8 * 6];
+			int tmp3 = workspace[ctr + 8 * 2];
+			int tmp4 = workspace[ctr + 8 * 1];
+			int tmp5 = workspace[ctr + 8 * 7];
+			int tmp6 = workspace[ctr + 8 * 5];
+			int tmp7 = workspace[ctr + 8 * 3];
 			int tmp8;
 
-			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
-			{
-				aBlock[ctr + 8 * 0] = aBlock[ctr + 8 * 1] = aBlock[ctr + 8 * 2] = aBlock[ctr + 8 * 3] = aBlock[ctr + 8 * 4] = aBlock[ctr + 8 * 5] = aBlock[ctr + 8 * 6] = aBlock[ctr + 8 * 7] = CLIP[16384 + ((aBlock[ctr + 8 * 0] + 32) >> 6)];
-				continue;
-			}
+//			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
+//			{
+//				aCoefficients[ctr + 8 * 0] = aCoefficients[ctr + 8 * 1] = aCoefficients[ctr + 8 * 2] = aCoefficients[ctr + 8 * 3] = aCoefficients[ctr + 8 * 4] = aCoefficients[ctr + 8 * 5] = aCoefficients[ctr + 8 * 6] = aCoefficients[ctr + 8 * 7] = clamp(((workspace[ctr + 8 * 0] + 32) >> 6));
+//				continue;
+//			}
 
-			tmp0 = (aBlock[ctr + 8 * 0] << 8) + 8192;
+			tmp0 = (workspace[ctr + 8 * 0] << 8) + 8192;
 
 			// first stage
 			tmp8 = W7 * (tmp4 + tmp5) + 4;
@@ -128,15 +133,23 @@ public class IDCTInteger2
 			tmp4 = (181 * (tmp4 - tmp5) + 128) >> 8;
 
 			// fourth stage
-			aBlock[ctr + 8 * 0] = CLIP[16384 + DESCALE(tmp7 + tmp1, 14)];
-			aBlock[ctr + 8 * 1] = CLIP[16384 + DESCALE(tmp3 + tmp2, 14)];
-			aBlock[ctr + 8 * 2] = CLIP[16384 + DESCALE(tmp0 + tmp4, 14)];
-			aBlock[ctr + 8 * 3] = CLIP[16384 + DESCALE(tmp8 + tmp6, 14)];
-			aBlock[ctr + 8 * 4] = CLIP[16384 + DESCALE(tmp8 - tmp6, 14)];
-			aBlock[ctr + 8 * 5] = CLIP[16384 + DESCALE(tmp0 - tmp4, 14)];
-			aBlock[ctr + 8 * 6] = CLIP[16384 + DESCALE(tmp3 - tmp2, 14)];
-			aBlock[ctr + 8 * 7] = CLIP[16384 + DESCALE(tmp7 - tmp1, 14)];
+			aCoefficients[ctr + 8 * 0] = clamp(DESCALE(tmp7 + tmp1, 14));
+			aCoefficients[ctr + 8 * 1] = clamp(DESCALE(tmp3 + tmp2, 14));
+			aCoefficients[ctr + 8 * 2] = clamp(DESCALE(tmp0 + tmp4, 14));
+			aCoefficients[ctr + 8 * 3] = clamp(DESCALE(tmp8 + tmp6, 14));
+			aCoefficients[ctr + 8 * 4] = clamp(DESCALE(tmp8 - tmp6, 14));
+			aCoefficients[ctr + 8 * 5] = clamp(DESCALE(tmp0 - tmp4, 14));
+			aCoefficients[ctr + 8 * 6] = clamp(DESCALE(tmp3 - tmp2, 14));
+			aCoefficients[ctr + 8 * 7] = clamp(DESCALE(tmp7 - tmp1, 14));
 		}
+	}
+
+
+	private static int clamp(int aValue)
+	{
+		aValue = 128 + (aValue >> 5);
+
+		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 
 
