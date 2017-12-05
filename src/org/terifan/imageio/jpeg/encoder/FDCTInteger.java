@@ -26,40 +26,43 @@ public class FDCTInteger
 	private final static int W7 = 565;
 
 	private final static int[] CLIP = new int[32768];
+
+
 	static
 	{
 		for (int i = -16384; i < 16384; i++)
 		{
-			CLIP[16384 + i] = (i < 0) ? 0 : ((i > 16384+255) ? 255 : i);
+			CLIP[16384 + i] = (i < 0) ? 0 : ((i > 16384 + 255) ? 255 : i);
 		}
 	}
 
-	public void forward(int[] block)
-	{
-		int[] buf = new int[64];
 
-		for (int i = 0, blkptr = 0, dataptr = 0; i < 8; i++)
+	public void forward(int[] aBlock)
+	{
+		int[] workspace = new int[64];
+
+		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			int tmp0 = block[blkptr + 0] + block[blkptr + 7];
-			int tmp7 = block[blkptr + 0] - block[blkptr + 7];
-			int tmp1 = block[blkptr + 1] + block[blkptr + 6];
-			int tmp6 = block[blkptr + 1] - block[blkptr + 6];
-			int tmp2 = block[blkptr + 2] + block[blkptr + 5];
-			int tmp5 = block[blkptr + 2] - block[blkptr + 5];
-			int tmp3 = block[blkptr + 3] + block[blkptr + 4];
-			int tmp4 = block[blkptr + 3] - block[blkptr + 4];
+			int tmp0 = aBlock[ctr + 0] + aBlock[ctr + 7];
+			int tmp7 = aBlock[ctr + 0] - aBlock[ctr + 7];
+			int tmp1 = aBlock[ctr + 1] + aBlock[ctr + 6];
+			int tmp6 = aBlock[ctr + 1] - aBlock[ctr + 6];
+			int tmp2 = aBlock[ctr + 2] + aBlock[ctr + 5];
+			int tmp5 = aBlock[ctr + 2] - aBlock[ctr + 5];
+			int tmp3 = aBlock[ctr + 3] + aBlock[ctr + 4];
+			int tmp4 = aBlock[ctr + 3] - aBlock[ctr + 4];
 
 			int tmp10 = tmp0 + tmp3;
 			int tmp13 = tmp0 - tmp3;
 			int tmp11 = tmp1 + tmp2;
 			int tmp12 = tmp1 - tmp2;
 
-			buf[dataptr + 0] = (tmp10 + tmp11) << PASS1_BITS;
-			buf[dataptr + 4] = (tmp10 - tmp11) << PASS1_BITS;
+			workspace[ctr + 0] = (tmp10 + tmp11) << PASS1_BITS;
+			workspace[ctr + 4] = (tmp10 - tmp11) << PASS1_BITS;
 
 			int z1 = (tmp12 + tmp13) * FIX_0_541196100;
-			buf[dataptr + 2] = DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS - PASS1_BITS);
-			buf[dataptr + 6] = DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS - PASS1_BITS);
+			workspace[ctr + 2] = DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS - PASS1_BITS);
+			workspace[ctr + 6] = DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS - PASS1_BITS);
 
 			int z6 = tmp4 + tmp7;
 			int z2 = tmp5 + tmp6;
@@ -79,37 +82,34 @@ public class FDCTInteger
 			z3 += z5;
 			z4 += z5;
 
-			buf[dataptr + 7] = DESCALE(tmp4 + z6 + z3, CONST_BITS - PASS1_BITS);
-			buf[dataptr + 5] = DESCALE(tmp5 + z2 + z4, CONST_BITS - PASS1_BITS);
-			buf[dataptr + 3] = DESCALE(tmp6 + z2 + z3, CONST_BITS - PASS1_BITS);
-			buf[dataptr + 1] = DESCALE(tmp7 + z6 + z4, CONST_BITS - PASS1_BITS);
-
-			dataptr += 8;
-			blkptr += 8;
+			workspace[ctr + 7] = DESCALE(tmp4 + z6 + z3, CONST_BITS - PASS1_BITS);
+			workspace[ctr + 5] = DESCALE(tmp5 + z2 + z4, CONST_BITS - PASS1_BITS);
+			workspace[ctr + 3] = DESCALE(tmp6 + z2 + z3, CONST_BITS - PASS1_BITS);
+			workspace[ctr + 1] = DESCALE(tmp7 + z6 + z4, CONST_BITS - PASS1_BITS);
 		}
 
-		for (int i = 0, dataptr = 0; i < 8; i++)
+		for (int ctr = 0; ctr < 8; ctr++)
 		{
-			int tmp0 = buf[dataptr + 0*8] + buf[dataptr + 7*8];
-			int tmp7 = buf[dataptr + 0*8] - buf[dataptr + 7*8];
-			int tmp1 = buf[dataptr + 1*8] + buf[dataptr + 6*8];
-			int tmp6 = buf[dataptr + 1*8] - buf[dataptr + 6*8];
-			int tmp2 = buf[dataptr + 2*8] + buf[dataptr + 5*8];
-			int tmp5 = buf[dataptr + 2*8] - buf[dataptr + 5*8];
-			int tmp3 = buf[dataptr + 3*8] + buf[dataptr + 4*8];
-			int tmp4 = buf[dataptr + 3*8] - buf[dataptr + 4*8];
+			int tmp0 = workspace[ctr + 0 * 8] + workspace[ctr + 7 * 8];
+			int tmp7 = workspace[ctr + 0 * 8] - workspace[ctr + 7 * 8];
+			int tmp1 = workspace[ctr + 1 * 8] + workspace[ctr + 6 * 8];
+			int tmp6 = workspace[ctr + 1 * 8] - workspace[ctr + 6 * 8];
+			int tmp2 = workspace[ctr + 2 * 8] + workspace[ctr + 5 * 8];
+			int tmp5 = workspace[ctr + 2 * 8] - workspace[ctr + 5 * 8];
+			int tmp3 = workspace[ctr + 3 * 8] + workspace[ctr + 4 * 8];
+			int tmp4 = workspace[ctr + 3 * 8] - workspace[ctr + 4 * 8];
 
 			int tmp10 = tmp0 + tmp3;
 			int tmp13 = tmp0 - tmp3;
 			int tmp11 = tmp1 + tmp2;
 			int tmp12 = tmp1 - tmp2;
 
-			buf[dataptr + 0*8] = DESCALE(tmp10 + tmp11, PASS1_BITS);
-			buf[dataptr + 4*8] = DESCALE(tmp10 - tmp11, PASS1_BITS);
+			workspace[ctr + 0 * 8] = DESCALE(tmp10 + tmp11, PASS1_BITS);
+			workspace[ctr + 4 * 8] = DESCALE(tmp10 - tmp11, PASS1_BITS);
 
 			int z1 = (tmp12 + tmp13) * FIX_0_541196100;
-			buf[dataptr + 2*8] = DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS + PASS1_BITS);
-			buf[dataptr + 6*8] = DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS + PASS1_BITS);
+			workspace[ctr + 2 * 8] = DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS + PASS1_BITS);
+			workspace[ctr + 6 * 8] = DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS + PASS1_BITS);
 
 			int z6 = tmp4 + tmp7;
 			int z2 = tmp5 + tmp6;
@@ -129,142 +129,15 @@ public class FDCTInteger
 			z3 += z5;
 			z4 += z5;
 
-			buf[dataptr + 7*8] = DESCALE(tmp4 + z6 + z3, CONST_BITS + PASS1_BITS);
-			buf[dataptr + 5*8] = DESCALE(tmp5 + z2 + z4, CONST_BITS + PASS1_BITS);
-			buf[dataptr + 3*8] = DESCALE(tmp6 + z2 + z3, CONST_BITS + PASS1_BITS);
-			buf[dataptr + 1*8] = DESCALE(tmp7 + z6 + z4, CONST_BITS + PASS1_BITS);
-
-			dataptr++;
+			workspace[ctr + 7 * 8] = DESCALE(tmp4 + z6 + z3, CONST_BITS + PASS1_BITS);
+			workspace[ctr + 5 * 8] = DESCALE(tmp5 + z2 + z4, CONST_BITS + PASS1_BITS);
+			workspace[ctr + 3 * 8] = DESCALE(tmp6 + z2 + z3, CONST_BITS + PASS1_BITS);
+			workspace[ctr + 1 * 8] = DESCALE(tmp7 + z6 + z4, CONST_BITS + PASS1_BITS);
 		}
 
 		for (int i = 0; i < 64; i++)
 		{
-			block[i] = DESCALE(buf[i], 3);
-		}
-	}
-
-
-	public void inverse(int[] block)
-	{
-		for (int i = 0; i < 8; i++)
-		{
-			int blk = 8 * i;
-
-			int tmp0;
-			int tmp1 = block[blk + 4] << 11;
-			int tmp2 = block[blk + 6];
-			int tmp3 = block[blk + 2];
-			int tmp4 = block[blk + 1];
-			int tmp5 = block[blk + 7];
-			int tmp6 = block[blk + 5];
-			int tmp7 = block[blk + 3];
-			int tmp8;
-
-			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
-			{
-				block[blk + 0] = block[blk + 1] = block[blk + 2] = block[blk + 3] = block[blk + 4] = block[blk + 5] = block[blk + 6] = block[blk + 7] = block[blk + 0] << 3;
-				continue;
-			}
-
-			tmp0 = (block[blk + 0] << 11) + 128;
-
-			// first stage
-			tmp8 = W7 * (tmp4 + tmp5);
-			tmp4 = tmp8 + (W1 - W7) * tmp4;
-			tmp5 = tmp8 - (W1 + W7) * tmp5;
-			tmp8 = W3 * (tmp6 + tmp7);
-			tmp6 = tmp8 - (W3 - W5) * tmp6;
-			tmp7 = tmp8 - (W3 + W5) * tmp7;
-
-			// second stage
-			tmp8 = tmp0 + tmp1;
-			tmp0 -= tmp1;
-			tmp1 = W6 * (tmp3 + tmp2);
-			tmp2 = tmp1 - (W2 + W6) * tmp2;
-			tmp3 = tmp1 + (W2 - W6) * tmp3;
-			tmp1 = tmp4 + tmp6;
-			tmp4 -= tmp6;
-			tmp6 = tmp5 + tmp7;
-			tmp5 -= tmp7;
-
-			// third stage
-			tmp7 = tmp8 + tmp3;
-			tmp8 -= tmp3;
-			tmp3 = tmp0 + tmp2;
-			tmp0 -= tmp2;
-			tmp2 = (181 * (tmp4 + tmp5) + 128) >> 8;
-			tmp4 = (181 * (tmp4 - tmp5) + 128) >> 8;
-
-			// fourth stage
-
-			block[blk + 0] = ((tmp7 + tmp1) >> 8);
-			block[blk + 1] = ((tmp3 + tmp2) >> 8);
-			block[blk + 2] = ((tmp0 + tmp4) >> 8);
-			block[blk + 3] = ((tmp8 + tmp6) >> 8);
-			block[blk + 4] = ((tmp8 - tmp6) >> 8);
-			block[blk + 5] = ((tmp0 - tmp4) >> 8);
-			block[blk + 6] = ((tmp3 - tmp2) >> 8);
-			block[blk + 7] = ((tmp7 - tmp1) >> 8);
-		}
-
-		for (int i = 0; i < 8; i++)
-		{
-			int blk = i;
-
-			int tmp0;
-			int tmp1 = block[blk + 8 * 4] << 8;
-			int tmp2 = block[blk + 8 * 6];
-			int tmp3 = block[blk + 8 * 2];
-			int tmp4 = block[blk + 8 * 1];
-			int tmp5 = block[blk + 8 * 7];
-			int tmp6 = block[blk + 8 * 5];
-			int tmp7 = block[blk + 8 * 3];
-			int tmp8;
-
-			if (tmp1 == 0 && tmp2 == 0 && tmp3 == 0 && tmp4 == 0 && tmp5 == 0 && tmp6 == 0 && tmp7 == 0)
-			{
-				block[blk + 8 * 0] = block[blk + 8 * 1] = block[blk + 8 * 2] = block[blk + 8 * 3] = block[blk + 8 * 4] = block[blk + 8 * 5] = block[blk + 8 * 6] = block[blk + 8 * 7] = CLIP[16384 + ((block[blk + 8 * 0] + 32) >> 6)];
-				continue;
-			}
-
-			tmp0 = (block[blk + 8 * 0] << 8) + 8192;
-
-			// first stage
-			tmp8 = W7 * (tmp4 + tmp5) + 4;
-			tmp4 = (tmp8 + (W1 - W7) * tmp4) >> 3;
-			tmp5 = (tmp8 - (W1 + W7) * tmp5) >> 3;
-			tmp8 = W3 * (tmp6 + tmp7) + 4;
-			tmp6 = (tmp8 - (W3 - W5) * tmp6) >> 3;
-			tmp7 = (tmp8 - (W3 + W5) * tmp7) >> 3;
-
-			// second stage
-			tmp8 = tmp0 + tmp1;
-			tmp0 -= tmp1;
-			tmp1 = W6 * (tmp3 + tmp2) + 4;
-			tmp2 = (tmp1 - (W2 + W6) * tmp2) >> 3;
-			tmp3 = (tmp1 + (W2 - W6) * tmp3) >> 3;
-			tmp1 = tmp4 + tmp6;
-			tmp4 -= tmp6;
-			tmp6 = tmp5 + tmp7;
-			tmp5 -= tmp7;
-
-			// third stage
-			tmp7 = tmp8 + tmp3;
-			tmp8 -= tmp3;
-			tmp3 = tmp0 + tmp2;
-			tmp0 -= tmp2;
-			tmp2 = (181 * (tmp4 + tmp5) + 128) >> 8;
-			tmp4 = (181 * (tmp4 - tmp5) + 128) >> 8;
-
-			// fourth stage
-			block[blk + 8 * 0] = CLIP[16384 + DESCALE(tmp7 + tmp1, 14)];
-			block[blk + 8 * 1] = CLIP[16384 + DESCALE(tmp3 + tmp2, 14)];
-			block[blk + 8 * 2] = CLIP[16384 + DESCALE(tmp0 + tmp4, 14)];
-			block[blk + 8 * 3] = CLIP[16384 + DESCALE(tmp8 + tmp6, 14)];
-			block[blk + 8 * 4] = CLIP[16384 + DESCALE(tmp8 - tmp6, 14)];
-			block[blk + 8 * 5] = CLIP[16384 + DESCALE(tmp0 - tmp4, 14)];
-			block[blk + 8 * 6] = CLIP[16384 + DESCALE(tmp3 - tmp2, 14)];
-			block[blk + 8 * 7] = CLIP[16384 + DESCALE(tmp7 - tmp1, 14)];
+			aBlock[i] = DESCALE(workspace[i], 3);
 		}
 	}
 

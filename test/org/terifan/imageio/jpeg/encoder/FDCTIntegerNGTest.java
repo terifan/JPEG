@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg.encoder;
 import java.util.Random;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
-import org.terifan.imageio.jpeg.decoder.IDCTInteger;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -26,6 +25,7 @@ public class FDCTIntegerNGTest
 		int[] original = block.clone();
 
 		new FDCTFloat().forward(block);
+//		new FDCTInteger().forward(block);
 
 		int[] transformed = block.clone();
 
@@ -36,13 +36,13 @@ public class FDCTIntegerNGTest
 
 		int[] quantizised = block.clone();
 
-//		for (int i = 0; i < 64; i++)
-//		{
-//			block[i] *= quantTable[i];
-//		}
+		for (int i = 0; i < 64; i++)
+		{
+			block[i] *= quantTable[i];
+		}
 
-		new IDCTFloat().transform(block, dqt);
-//		new IDCTInteger().transform(block, dqt);
+		new IDCTFloat().transform(block);
+//		new IDCTInteger().transform(block);
 //		new FDCTInteger().inverse(block);
 
 		printTables(new int[][]{quantTable, original, transformed, quantizised, block});

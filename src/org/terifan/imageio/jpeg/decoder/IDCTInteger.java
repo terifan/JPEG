@@ -1,6 +1,5 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
@@ -178,32 +177,162 @@ public class IDCTInteger implements IDCT
 		}
 	}
 
-//	private final static int[] RANGE_LIMIT = new int[1024];
-//	
-//	static
-//	{
-//		for (int i = 0; i < 256; i++)
-//		{
-//			RANGE_LIMIT[i] = 128;
-//		}
-//		for (int i = 256, j = 128; i < 512; i++)
-//		{
-//			RANGE_LIMIT[i] = j++;
-//		}
-//		for (int i = 512; i < 1024; i++)
-//		{
-//			RANGE_LIMIT[i] = 128 + 255;
-//		}
-//		
-//		for (int i : RANGE_LIMIT)System.out.print(i+",");
-//	}
+
+	public void transform(int[] aCoefficients)
+	{
+		int[] workspace = new int[64];
+
+		for (int ctr = 0; ctr < 8; ctr++)
+		{
+			if (aCoefficients[1*8 + ctr] == 0 && aCoefficients[2*8 + ctr] == 0 && aCoefficients[3*8 + ctr] == 0 && aCoefficients[4*8 + ctr] == 0 && aCoefficients[5*8 + ctr] == 0 && aCoefficients[6*8 + ctr] == 0 && aCoefficients[7*8 + ctr] == 0)
+			{
+				int dcval = aCoefficients[ctr] << PASS1_BITS;
+
+				workspace[0*8 + ctr] = dcval;
+				workspace[1*8 + ctr] = dcval;
+				workspace[2*8 + ctr] = dcval;
+				workspace[3*8 + ctr] = dcval;
+				workspace[4*8 + ctr] = dcval;
+				workspace[5*8 + ctr] = dcval;
+				workspace[6*8 + ctr] = dcval;
+				workspace[7*8 + ctr] = dcval;
+				continue;
+			}
+
+			int z2 = aCoefficients[2*8 + ctr];
+			int z3 = aCoefficients[6*8 + ctr];
+
+			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
+			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
+			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
+
+			z2 = aCoefficients[0*8 + ctr];
+			z3 = aCoefficients[4*8 + ctr];
+			z2 <<= CONST_BITS;
+			z3 <<= CONST_BITS;
+			z2 += 1 << (CONST_BITS - PASS1_BITS - 1);
+
+			int tmp0 = z2 + z3;
+			int tmp1 = z2 - z3;
+
+			int tmp10 = tmp0 + tmp2;
+			int tmp13 = tmp0 - tmp2;
+			int tmp11 = tmp1 + tmp3;
+			int tmp12 = tmp1 - tmp3;
+
+			tmp0 = aCoefficients[7*8 + ctr];
+			tmp1 = aCoefficients[5*8 + ctr];
+			tmp2 = aCoefficients[3*8 + ctr];
+			tmp3 = aCoefficients[1*8 + ctr];
+
+			z2 = tmp0 + tmp2;
+			z3 = tmp1 + tmp3;
+
+			z1 = MULTIPLY(z2 + z3, FIX_1_175875602);
+			z2 = MULTIPLY(z2, -FIX_1_961570560);
+			z3 = MULTIPLY(z3, -FIX_0_390180644);
+			z2 += z1;
+			z3 += z1;
+
+			z1 = MULTIPLY(tmp0 + tmp3, -FIX_0_899976223);
+			tmp0 = MULTIPLY(tmp0, FIX_0_298631336);
+			tmp3 = MULTIPLY(tmp3, FIX_1_501321110);
+			tmp0 += z1 + z2;
+			tmp3 += z1 + z3;
+
+			z1 = MULTIPLY(tmp1 + tmp2, -FIX_2_562915447);
+			tmp1 = MULTIPLY(tmp1, FIX_2_053119869);
+			tmp2 = MULTIPLY(tmp2, FIX_3_072711026);
+			tmp1 += z1 + z3;
+			tmp2 += z1 + z2;
+
+			workspace[0*8 + ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
+			workspace[7*8 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
+			workspace[1*8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
+			workspace[6*8 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
+			workspace[2*8 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
+			workspace[5*8 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
+			workspace[3*8 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
+			workspace[4*8 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
+		}
+
+		for (int ctr = 0; ctr < 64; ctr += 8)
+		{
+			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
+			{
+				int dcval = clamp(DESCALE(workspace[ctr], PASS1_BITS + 3));
+
+				aCoefficients[0 + ctr] = dcval;
+				aCoefficients[1 + ctr] = dcval;
+				aCoefficients[2 + ctr] = dcval;
+				aCoefficients[3 + ctr] = dcval;
+				aCoefficients[4 + ctr] = dcval;
+				aCoefficients[5 + ctr] = dcval;
+				aCoefficients[6 + ctr] = dcval;
+				aCoefficients[7 + ctr] = dcval;
+				continue;
+			}
+
+			int z2 = workspace[2 + ctr];
+			int z3 = workspace[6 + ctr];
+
+			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
+			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
+			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
+
+			z2 = workspace[0 + ctr] + (1 << (PASS1_BITS + 2));
+			z3 = workspace[4 + ctr];
+
+			int tmp0 = (z2 + z3) << CONST_BITS;
+			int tmp1 = (z2 - z3) << CONST_BITS;
+
+			int tmp10 = tmp0 + tmp2;
+			int tmp13 = tmp0 - tmp2;
+			int tmp11 = tmp1 + tmp3;
+			int tmp12 = tmp1 - tmp3;
+
+			tmp0 = workspace[7 + ctr];
+			tmp1 = workspace[5 + ctr];
+			tmp2 = workspace[3 + ctr];
+			tmp3 = workspace[1 + ctr];
+
+			z2 = tmp0 + tmp2;
+			z3 = tmp1 + tmp3;
+
+			z1 = MULTIPLY(z2 + z3, FIX_1_175875602);
+			z2 = MULTIPLY(z2, -FIX_1_961570560);
+			z3 = MULTIPLY(z3, -FIX_0_390180644);
+			z2 += z1;
+			z3 += z1;
+
+			z1 = MULTIPLY(tmp0 + tmp3, -FIX_0_899976223);
+			tmp0 = MULTIPLY(tmp0, FIX_0_298631336);
+			tmp3 = MULTIPLY(tmp3, FIX_1_501321110);
+			tmp0 += z1 + z2;
+			tmp3 += z1 + z3;
+
+			z1 = MULTIPLY(tmp1 + tmp2, -FIX_2_562915447);
+			tmp1 = MULTIPLY(tmp1, FIX_2_053119869);
+			tmp2 = MULTIPLY(tmp2, FIX_3_072711026);
+			tmp1 += z1 + z3;
+			tmp2 += z1 + z2;
+
+			aCoefficients[0 + ctr] = clamp(RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[7 + ctr] = clamp(RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[1 + ctr] = clamp(RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[6 + ctr] = clamp(RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[2 + ctr] = clamp(RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[5 + ctr] = clamp(RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[3 + ctr] = clamp(RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3));
+			aCoefficients[4 + ctr] = clamp(RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3));
+		}
+	}
+
 
 	private static int clamp(int aValue)
 	{
 //		aValue = 128 + (aValue >> 5);
 
-		aValue = 128 + aValue/32;
-		
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}
 

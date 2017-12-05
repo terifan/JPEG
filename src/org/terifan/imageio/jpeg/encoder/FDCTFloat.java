@@ -39,98 +39,95 @@ package org.terifan.imageio.jpeg.encoder;
  */
 public class FDCTFloat
 {
-	int CENTERJSAMPLE = 128;
-
-
-	void forward(int[] elemptr)
+	public void forward(int[] aBlock)
 	{
-		double[] dataptr = new double[64];
+		double[] workspace = new double[64];
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			double tmp0 = elemptr[0 + ctr] + elemptr[7 + ctr];
-			double tmp7 = elemptr[0 + ctr] - elemptr[7 + ctr];
-			double tmp1 = elemptr[1 + ctr] + elemptr[6 + ctr];
-			double tmp6 = elemptr[1 + ctr] - elemptr[6 + ctr];
-			double tmp2 = elemptr[2 + ctr] + elemptr[5 + ctr];
-			double tmp5 = elemptr[2 + ctr] - elemptr[5 + ctr];
-			double tmp3 = elemptr[3 + ctr] + elemptr[4 + ctr];
-			double tmp4 = elemptr[3 + ctr] - elemptr[4 + ctr];
+			double tmp0 = aBlock[0 + ctr] + aBlock[7 + ctr];
+			double tmp7 = aBlock[0 + ctr] - aBlock[7 + ctr];
+			double tmp1 = aBlock[1 + ctr] + aBlock[6 + ctr];
+			double tmp6 = aBlock[1 + ctr] - aBlock[6 + ctr];
+			double tmp2 = aBlock[2 + ctr] + aBlock[5 + ctr];
+			double tmp5 = aBlock[2 + ctr] - aBlock[5 + ctr];
+			double tmp3 = aBlock[3 + ctr] + aBlock[4 + ctr];
+			double tmp4 = aBlock[3 + ctr] - aBlock[4 + ctr];
 
 			double tmp10 = tmp0 + tmp3;
 			double tmp13 = tmp0 - tmp3;
 			double tmp11 = tmp1 + tmp2;
 			double tmp12 = tmp1 - tmp2;
 
-			dataptr[0+ctr] = tmp10 + tmp11 - 8 * CENTERJSAMPLE;
-			dataptr[4+ctr] = tmp10 - tmp11;
+			workspace[0 + ctr] = tmp10 + tmp11 - 8 * 128*0;
+			workspace[4 + ctr] = tmp10 - tmp11;
 
-			double z1 = (tmp12 + tmp13) * (0.707106781);
-			dataptr[2+ctr] = tmp13 + z1;
-			dataptr[6+ctr] = tmp13 - z1;
+			double z1 = (tmp12 + tmp13) * 0.707106781;
+			workspace[2 + ctr] = tmp13 + z1;
+			workspace[6 + ctr] = tmp13 - z1;
 
 			tmp10 = tmp4 + tmp5;
 			tmp11 = tmp5 + tmp6;
 			tmp12 = tmp6 + tmp7;
 
-			double z5 = (tmp10 - tmp12) * (0.382683433);
-			double z2 = (0.541196100) * tmp10 + z5;
-			double z4 = (1.306562965) * tmp12 + z5;
-			double z3 = tmp11 * (0.707106781);
+			double z5 = (tmp10 - tmp12) * 0.382683433;
+			double z2 = 0.541196100 * tmp10 + z5;
+			double z4 = 1.306562965 * tmp12 + z5;
+			double z3 = tmp11 * 0.707106781;
 
 			double z11 = tmp7 + z3;
 			double z13 = tmp7 - z3;
 
-			dataptr[5+ctr] = z13 + z2;
-			dataptr[3+ctr] = z13 - z2;
-			dataptr[1+ctr] = z11 + z4;
-			dataptr[7+ctr] = z11 - z4;
+			workspace[5 + ctr] = z13 + z2;
+			workspace[3 + ctr] = z13 - z2;
+			workspace[1 + ctr] = z11 + z4;
+			workspace[7 + ctr] = z11 - z4;
 		}
 
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
-			double tmp0 = dataptr[8 * 0 + ctr] + dataptr[8 * 7 + ctr];
-			double tmp7 = dataptr[8 * 0 + ctr] - dataptr[8 * 7 + ctr];
-			double tmp1 = dataptr[8 * 1 + ctr] + dataptr[8 * 6 + ctr];
-			double tmp6 = dataptr[8 * 1 + ctr] - dataptr[8 * 6 + ctr];
-			double tmp2 = dataptr[8 * 2 + ctr] + dataptr[8 * 5 + ctr];
-			double tmp5 = dataptr[8 * 2 + ctr] - dataptr[8 * 5 + ctr];
-			double tmp3 = dataptr[8 * 3 + ctr] + dataptr[8 * 4 + ctr];
-			double tmp4 = dataptr[8 * 3 + ctr] - dataptr[8 * 4 + ctr];
+			double tmp0 = workspace[8 * 0 + ctr] + workspace[8 * 7 + ctr];
+			double tmp7 = workspace[8 * 0 + ctr] - workspace[8 * 7 + ctr];
+			double tmp1 = workspace[8 * 1 + ctr] + workspace[8 * 6 + ctr];
+			double tmp6 = workspace[8 * 1 + ctr] - workspace[8 * 6 + ctr];
+			double tmp2 = workspace[8 * 2 + ctr] + workspace[8 * 5 + ctr];
+			double tmp5 = workspace[8 * 2 + ctr] - workspace[8 * 5 + ctr];
+			double tmp3 = workspace[8 * 3 + ctr] + workspace[8 * 4 + ctr];
+			double tmp4 = workspace[8 * 3 + ctr] - workspace[8 * 4 + ctr];
 
 			double tmp10 = tmp0 + tmp3;
 			double tmp13 = tmp0 - tmp3;
 			double tmp11 = tmp1 + tmp2;
 			double tmp12 = tmp1 - tmp2;
 
-			dataptr[8 * 0 + ctr] = tmp10 + tmp11;
-			dataptr[8 * 4 + ctr] = tmp10 - tmp11;
+			workspace[8 * 0 + ctr] = tmp10 + tmp11;
+			workspace[8 * 4 + ctr] = tmp10 - tmp11;
 
-			double z1 = (tmp12 + tmp13) * (0.707106781);
-			dataptr[8 * 2 + ctr] = tmp13 + z1;
-			dataptr[8 * 6 + ctr] = tmp13 - z1;
+			double z1 = (tmp12 + tmp13) * 0.707106781;
+			workspace[8 * 2 + ctr] = tmp13 + z1;
+			workspace[8 * 6 + ctr] = tmp13 - z1;
 
 			tmp10 = tmp4 + tmp5;
 			tmp11 = tmp5 + tmp6;
 			tmp12 = tmp6 + tmp7;
 
-			double z5 = (tmp10 - tmp12) * (0.382683433);
-			double z2 = (0.541196100) * tmp10 + z5;
-			double z4 = (1.306562965) * tmp12 + z5;
-			double z3 = tmp11 * (0.707106781);
+			double z5 = (tmp10 - tmp12) * 0.382683433;
+			double z2 = 0.541196100 * tmp10 + z5;
+			double z4 = 1.306562965 * tmp12 + z5;
+			double z3 = tmp11 * 0.707106781;
 
 			double z11 = tmp7 + z3;
 			double z13 = tmp7 - z3;
 
-			dataptr[8 * 5 + ctr] = z13 + z2;
-			dataptr[8 * 3 + ctr] = z13 - z2;
-			dataptr[8 * 1 + ctr] = z11 + z4;
-			dataptr[8 * 7 + ctr] = z11 - z4;
+			workspace[8 * 5 + ctr] = z13 + z2;
+			workspace[8 * 3 + ctr] = z13 - z2;
+			workspace[8 * 1 + ctr] = z11 + z4;
+			workspace[8 * 7 + ctr] = z11 - z4;
 		}
-		
+
 		for (int i = 0; i < 64; i++)
 		{
-			elemptr[i] = (int)dataptr[i];
+			aBlock[i] = (int)workspace[i] / 8;
 		}
 	}
 }
