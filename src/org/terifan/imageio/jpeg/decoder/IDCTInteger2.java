@@ -3,21 +3,6 @@ package org.terifan.imageio.jpeg.decoder;
 
 public class IDCTInteger2
 {
-	private final static int CONST_BITS = 13;
-	private final static int PASS1_BITS = 1;
-	private final static int FIX_0_298631336 = 2446;
-	private final static int FIX_0_390180644 = 3196;
-	private final static int FIX_0_541196100 = 4433;
-	private final static int FIX_0_765366865 = 6270;
-	private final static int FIX_0_899976223 = 7373;
-	private final static int FIX_1_175875602 = 9633;
-	private final static int FIX_1_501321110 = 12299;
-	private final static int FIX_1_847759065 = 15137;
-	private final static int FIX_1_961570560 = 16069;
-	private final static int FIX_2_053119869 = 16819;
-	private final static int FIX_2_562915447 = 20995;
-	private final static int FIX_3_072711026 = 25172;
-
 	private final static int W1 = 2841;
 	private final static int W2 = 2676;
 	private final static int W3 = 2408;

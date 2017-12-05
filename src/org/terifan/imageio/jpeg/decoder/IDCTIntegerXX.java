@@ -3,7 +3,7 @@ package org.terifan.imageio.jpeg.decoder;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
-public class IDCTInteger implements IDCT
+public class IDCTIntegerXX implements IDCT
 {
 	private final static int CONST_BITS = 13;
 	private final static int PASS1_BITS = 2;
@@ -331,7 +331,7 @@ public class IDCTInteger implements IDCT
 
 	private static int clamp(int aValue)
 	{
-//		aValue = 128 + (aValue >> 5);
+		aValue = 128 + (aValue >> 5);
 
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}

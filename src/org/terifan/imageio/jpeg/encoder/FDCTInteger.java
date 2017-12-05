@@ -4,7 +4,7 @@ package org.terifan.imageio.jpeg.encoder;
 public class FDCTInteger
 {
 	private final static int CONST_BITS = 13;
-	private final static int PASS1_BITS = 1;
+	private final static int PASS1_BITS = 2;
 	private final static int FIX_0_298631336 = 2446;
 	private final static int FIX_0_390180644 = 3196;
 	private final static int FIX_0_541196100 = 4433;
@@ -17,24 +17,6 @@ public class FDCTInteger
 	private final static int FIX_2_053119869 = 16819;
 	private final static int FIX_2_562915447 = 20995;
 	private final static int FIX_3_072711026 = 25172;
-
-	private final static int W1 = 2841;
-	private final static int W2 = 2676;
-	private final static int W3 = 2408;
-	private final static int W5 = 1609;
-	private final static int W6 = 1108;
-	private final static int W7 = 565;
-
-	private final static int[] CLIP = new int[32768];
-
-
-	static
-	{
-		for (int i = -16384; i < 16384; i++)
-		{
-			CLIP[16384 + i] = (i < 0) ? 0 : ((i > 16384 + 255) ? 255 : i);
-		}
-	}
 
 
 	public void forward(int[] aBlock)
@@ -137,7 +119,8 @@ public class FDCTInteger
 
 		for (int i = 0; i < 64; i++)
 		{
-			aBlock[i] = DESCALE(workspace[i], 3);
+			aBlock[i] = workspace[i];
+//			aBlock[i] = DESCALE(workspace[i], 3);
 		}
 	}
 

@@ -1,14 +1,13 @@
 package org.terifan.imageio.jpeg.test;
 
 import java.util.Random;
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
-import org.terifan.imageio.jpeg.decoder.IDCTInteger;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerXX;
 import org.terifan.imageio.jpeg.decoder.IDCTInteger2;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTInteger;
-import org.terifan.imageio.jpeg.encoder.QuantizationTable;
+import org.terifan.imageio.jpeg.encoder.FDCTIntegerXX;
 
 
 
@@ -25,54 +24,35 @@ public class TestDCT
 				original[i] = (i/8+(i%8))*255/14; //rnd.nextInt(256);
 			}
 
-//			DQTMarkerSegment dqt = QuantizationTable.buildQuantTable(100, 8, 8, 0);
-//			int[] quantTable = dqt.getTableInt();
+			int[][] blockEnc = {original.clone(), original.clone(), original.clone()};
 
-			int[] blockEnc1 = original.clone();
-			int[] blockEnc2 = original.clone();
+			new FDCTFloat().forward(blockEnc[0]);
+			new FDCTIntegerXX().forward(blockEnc[1]);
+			new FDCTInteger().forward(blockEnc[2]);
 
-			new FDCTFloat().forward(blockEnc1);
-			new FDCTInteger().forward(blockEnc2);
+			int[][][] blockDec = new int[blockEnc.length][4][];
+			for (int i = 0; i < blockEnc.length; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					blockDec[i][j] = blockEnc[i].clone();
+				}
 
-//			for (int i = 0; i < 64; i++)
-//			{
-//				blockEnc1[i] /= quantTable[i];
-//				blockEnc2[i] /= quantTable[i];
-//			}
-//
-//			for (int i = 0; i < 64; i++)
-//			{
-//				blockEnc1[i] *= quantTable[i];
-//				blockEnc2[i] *= quantTable[i];
-//			}
-
-			int[] blockDec1a = blockEnc1.clone();
-			int[] blockDec2a = blockEnc1.clone();
-			int[] blockDec3a = blockEnc1.clone();
-			int[] blockDec4a = blockEnc1.clone();
-
-			new IDCTFloat().transform(blockDec1a);
-			new IDCTInteger().transform(blockDec2a);
-			new IDCTInteger2().inverse(blockDec3a);
-			new IDCTIntegerFast().transform(blockDec4a);
-
-			int[] blockDec1b = blockEnc2.clone();
-			int[] blockDec2b = blockEnc2.clone();
-			int[] blockDec3b = blockEnc2.clone();
-			int[] blockDec4b = blockEnc2.clone();
-
-			new IDCTFloat().transform(blockDec1b);
-			new IDCTInteger().transform(blockDec2b);
-			new IDCTInteger2().inverse(blockDec3b);
-			new IDCTIntegerFast().transform(blockDec4b);
+				new IDCTFloat().transform(blockDec[i][0]);
+				new IDCTIntegerXX().transform(blockDec[i][1]);
+				new IDCTInteger2().inverse(blockDec[i][2]);
+				new IDCTIntegerFast().transform(blockDec[i][3]);
+			}
 
 			printTables(new int[][]{original});
 			System.out.println();
-			printTables(new int[][]{blockEnc1, blockEnc2});
+			printTables(blockEnc);
 			System.out.println();
-			printTables(new int[][]{blockDec1a, blockDec2a, blockDec3a, blockDec4a});
+			printTables(blockDec[0]);
 			System.out.println();
-			printTables(new int[][]{blockDec1b, blockDec2b, blockDec3b, blockDec4b});
+			printTables(blockDec[1]);
+			System.out.println();
+			printTables(blockDec[2]);
 		}
 		catch (Throwable e)
 		{
