@@ -59,7 +59,7 @@ public class TestDCT
 //			new IDCTIntegerSlow().transform(dec);
 //			printTables(new int[][]{original,enc,dec});
 
-			DQTMarkerSegment q = QuantizationTable.buildQuantTable(75, 8, 8, 0);
+			DQTMarkerSegment q = QuantizationTable.buildQuantTable(75, 8, 8, 1);
 
 String s = (
 " -378   -87   -20     0     2    -1     1     0         \n" +

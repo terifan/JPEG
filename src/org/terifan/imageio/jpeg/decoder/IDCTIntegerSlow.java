@@ -27,7 +27,10 @@ public class IDCTIntegerSlow implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		for (int i = 0; i < 64; i++) aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
+		for (int i = 0; i < 64; i++)
+		{
+			aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
+		}
 
 		transform(aCoefficients);
 
@@ -187,33 +190,32 @@ public class IDCTIntegerSlow implements IDCT
 
 //		printTables(new int[][]{aCoefficients});
 //		System.out.println();
-
 		for (int ctr = 0; ctr < 8; ctr++)
 		{
-			if (aCoefficients[1*8 + ctr] == 0 && aCoefficients[2*8 + ctr] == 0 && aCoefficients[3*8 + ctr] == 0 && aCoefficients[4*8 + ctr] == 0 && aCoefficients[5*8 + ctr] == 0 && aCoefficients[6*8 + ctr] == 0 && aCoefficients[7*8 + ctr] == 0)
+			if (aCoefficients[1 * 8 + ctr] == 0 && aCoefficients[2 * 8 + ctr] == 0 && aCoefficients[3 * 8 + ctr] == 0 && aCoefficients[4 * 8 + ctr] == 0 && aCoefficients[5 * 8 + ctr] == 0 && aCoefficients[6 * 8 + ctr] == 0 && aCoefficients[7 * 8 + ctr] == 0)
 			{
 				int dcval = aCoefficients[ctr] << PASS1_BITS;
 
-				workspace[0*8 + ctr] = dcval;
-				workspace[1*8 + ctr] = dcval;
-				workspace[2*8 + ctr] = dcval;
-				workspace[3*8 + ctr] = dcval;
-				workspace[4*8 + ctr] = dcval;
-				workspace[5*8 + ctr] = dcval;
-				workspace[6*8 + ctr] = dcval;
-				workspace[7*8 + ctr] = dcval;
+				workspace[0 * 8 + ctr] = dcval;
+				workspace[1 * 8 + ctr] = dcval;
+				workspace[2 * 8 + ctr] = dcval;
+				workspace[3 * 8 + ctr] = dcval;
+				workspace[4 * 8 + ctr] = dcval;
+				workspace[5 * 8 + ctr] = dcval;
+				workspace[6 * 8 + ctr] = dcval;
+				workspace[7 * 8 + ctr] = dcval;
 				continue;
 			}
 
-			int z2 = aCoefficients[2*8 + ctr];
-			int z3 = aCoefficients[6*8 + ctr];
+			int z2 = aCoefficients[2 * 8 + ctr];
+			int z3 = aCoefficients[6 * 8 + ctr];
 
 			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
 			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
 			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
 
-			z2 = aCoefficients[0*8 + ctr];
-			z3 = aCoefficients[4*8 + ctr];
+			z2 = aCoefficients[0 * 8 + ctr];
+			z3 = aCoefficients[4 * 8 + ctr];
 			z2 <<= CONST_BITS;
 			z3 <<= CONST_BITS;
 			z2 += 1 << (CONST_BITS - PASS1_BITS - 1);
@@ -226,10 +228,10 @@ public class IDCTIntegerSlow implements IDCT
 			int tmp11 = tmp1 + tmp3;
 			int tmp12 = tmp1 - tmp3;
 
-			tmp0 = aCoefficients[7*8 + ctr];
-			tmp1 = aCoefficients[5*8 + ctr];
-			tmp2 = aCoefficients[3*8 + ctr];
-			tmp3 = aCoefficients[1*8 + ctr];
+			tmp0 = aCoefficients[7 * 8 + ctr];
+			tmp1 = aCoefficients[5 * 8 + ctr];
+			tmp2 = aCoefficients[3 * 8 + ctr];
+			tmp3 = aCoefficients[1 * 8 + ctr];
 
 			z2 = tmp0 + tmp2;
 			z3 = tmp1 + tmp3;
@@ -252,17 +254,17 @@ public class IDCTIntegerSlow implements IDCT
 			tmp1 += z1 + z3;
 			tmp2 += z1 + z2;
 
-			workspace[0*8 + ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
-			workspace[7*8 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
-			workspace[1*8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
-			workspace[6*8 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
-			workspace[2*8 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
-			workspace[5*8 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
-			workspace[3*8 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
-			workspace[4*8 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
+			workspace[0 * 8 + ctr] = RIGHT_SHIFT(tmp10 + tmp3, CONST_BITS - PASS1_BITS);
+			workspace[7 * 8 + ctr] = RIGHT_SHIFT(tmp10 - tmp3, CONST_BITS - PASS1_BITS);
+			workspace[1 * 8 + ctr] = RIGHT_SHIFT(tmp11 + tmp2, CONST_BITS - PASS1_BITS);
+			workspace[6 * 8 + ctr] = RIGHT_SHIFT(tmp11 - tmp2, CONST_BITS - PASS1_BITS);
+			workspace[2 * 8 + ctr] = RIGHT_SHIFT(tmp12 + tmp1, CONST_BITS - PASS1_BITS);
+			workspace[5 * 8 + ctr] = RIGHT_SHIFT(tmp12 - tmp1, CONST_BITS - PASS1_BITS);
+			workspace[3 * 8 + ctr] = RIGHT_SHIFT(tmp13 + tmp0, CONST_BITS - PASS1_BITS);
+			workspace[4 * 8 + ctr] = RIGHT_SHIFT(tmp13 - tmp0, CONST_BITS - PASS1_BITS);
 		}
 
-		for (int ctr = 0; ctr < 64; ctr+=8)
+		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
 			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
 			{

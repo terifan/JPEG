@@ -28,13 +28,14 @@ public class IDCTIntegerFast implements IDCT
 			{
 				for (int c = 0; c < 8; c++)
 				{
-					System.out.printf("%5d ", aInput[t][r*8+c]);
+					System.out.printf("%5d ", aInput[t][r * 8 + c]);
 				}
-				System.out.print(r == 4 && t < aInput.length-1 ? "  ===>  " : "        ");
+				System.out.print(r == 4 && t < aInput.length - 1 ? "  ===>  " : "        ");
 			}
 			System.out.println();
 		}
 	}
+
 
 	/**
 	 * Perform dequantization and inverse DCT on one block of coefficients.
@@ -45,7 +46,10 @@ public class IDCTIntegerFast implements IDCT
 //		printTables(new int[][]{aCoefficients});
 //		System.out.println();
 
-		for (int i = 0; i < 64; i++) aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
+		for (int i = 0; i < 64; i++)
+		{
+			aCoefficients[i] *= aQuantizationTable.getTableInt()[i];
+		}
 
 		transform(aCoefficients);
 
@@ -251,42 +255,40 @@ public class IDCTIntegerFast implements IDCT
 		}
 
 		// Pass 2: process rows from work array, store into output array.
-		for (int ctr = 0; ctr < 8; ctr++)
+		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			int offset = ctr * 8;
-
-			if (workspace[offset + 1] == 0 && workspace[offset + 2] == 0 && workspace[offset + 3] == 0 && workspace[offset + 4] == 0 && workspace[offset + 5] == 0 && workspace[offset + 6] == 0 && workspace[offset + 7] == 0)
+			if (workspace[ctr + 1] == 0 && workspace[ctr + 2] == 0 && workspace[ctr + 3] == 0 && workspace[ctr + 4] == 0 && workspace[ctr + 5] == 0 && workspace[ctr + 6] == 0 && workspace[ctr + 7] == 0)
 			{
 				// AC terms all zero
-				int dcval = clamp(workspace[offset]);
+				int dcval = clamp(workspace[ctr]);
 
-				aCoefficients[offset + 0] = dcval;
-				aCoefficients[offset + 1] = dcval;
-				aCoefficients[offset + 2] = dcval;
-				aCoefficients[offset + 3] = dcval;
-				aCoefficients[offset + 4] = dcval;
-				aCoefficients[offset + 5] = dcval;
-				aCoefficients[offset + 6] = dcval;
-				aCoefficients[offset + 7] = dcval;
+				aCoefficients[ctr + 0] = dcval;
+				aCoefficients[ctr + 1] = dcval;
+				aCoefficients[ctr + 2] = dcval;
+				aCoefficients[ctr + 3] = dcval;
+				aCoefficients[ctr + 4] = dcval;
+				aCoefficients[ctr + 5] = dcval;
+				aCoefficients[ctr + 6] = dcval;
+				aCoefficients[ctr + 7] = dcval;
 
 				continue;
 			}
 
-			int tmp10 = workspace[offset] + workspace[offset + 4];
-			int tmp11 = workspace[offset] - workspace[offset + 4];
+			int tmp10 = workspace[ctr] + workspace[ctr + 4];
+			int tmp11 = workspace[ctr] - workspace[ctr + 4];
 
-			int tmp13 = workspace[offset + 2] + workspace[offset + 6];
-			int tmp12 = (((workspace[offset + 2] - workspace[offset + 6]) * 362) >> 8) - tmp13;
+			int tmp13 = workspace[ctr + 2] + workspace[ctr + 6];
+			int tmp12 = (((workspace[ctr + 2] - workspace[ctr + 6]) * 362) >> 8) - tmp13;
 
 			int tmp0 = tmp10 + tmp13;
 			int tmp3 = tmp10 - tmp13;
 			int tmp1 = tmp11 + tmp12;
 			int tmp2 = tmp11 - tmp12;
 
-			int z13 = workspace[offset + 5] + workspace[offset + 3];
-			int z10 = workspace[offset + 5] - workspace[offset + 3];
-			int z11 = workspace[offset + 1] + workspace[offset + 7];
-			int z12 = workspace[offset + 1] - workspace[offset + 7];
+			int z13 = workspace[ctr + 5] + workspace[ctr + 3];
+			int z10 = workspace[ctr + 5] - workspace[ctr + 3];
+			int z11 = workspace[ctr + 1] + workspace[ctr + 7];
+			int z12 = workspace[ctr + 1] - workspace[ctr + 7];
 
 			int tmp7 = z11 + z13;
 			tmp11 = ((z11 - z13) * 362) >> 8;
@@ -300,14 +302,14 @@ public class IDCTIntegerFast implements IDCT
 			int tmp4 = tmp10 + tmp5;
 
 			// Final output stage: scale down by a factor of 8
-			aCoefficients[offset + 0] = clamp(tmp0 + tmp7);
-			aCoefficients[offset + 1] = clamp(tmp1 + tmp6);
-			aCoefficients[offset + 2] = clamp(tmp2 + tmp5);
-			aCoefficients[offset + 3] = clamp(tmp3 - tmp4);
-			aCoefficients[offset + 4] = clamp(tmp3 + tmp4);
-			aCoefficients[offset + 5] = clamp(tmp2 - tmp5);
-			aCoefficients[offset + 6] = clamp(tmp1 - tmp6);
-			aCoefficients[offset + 7] = clamp(tmp0 - tmp7);
+			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7);
+			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6);
+			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5);
+			aCoefficients[ctr + 3] = clamp(tmp3 - tmp4);
+			aCoefficients[ctr + 4] = clamp(tmp3 + tmp4);
+			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5);
+			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6);
+			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7);
 		}
 	}
 

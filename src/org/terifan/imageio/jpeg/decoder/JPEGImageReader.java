@@ -218,8 +218,8 @@ public class JPEGImageReader extends JPEGConstants
 	private JPEGImage readRaster() throws IOException
 	{
 //		IDCT idct = new IDCTFloat();
-//		IDCT idct = new IDCTIntegerSlow();
-		IDCT idct = new IDCTIntegerFast();
+		IDCT idct = new IDCTIntegerSlow();
+//		IDCT idct = new IDCTIntegerFast();
 //		IDCT idct = new IDCTInteger2();
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
@@ -278,13 +278,6 @@ public class JPEGImageReader extends JPEGConstants
 						{
 							for (int cx = 0; cx < samplingX; cx++)
 							{
-//								for (int i = 0; i < 64; i++)
-//								{
-//									dctCoefficients[x][cy][cx][component][i] *= quantizationTable.getTableInt()[i];
-//								}
-//
-//								new FDCTInteger().inverse(dctCoefficients[x][cy][cx][component]);
-
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
 							}
 						}
