@@ -5,6 +5,8 @@ import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 public class IDCTIntegerSlow implements IDCT
 {
+	private final static int MAXJSAMPLE = 255;
+	private final static int RANGE_CENTER = MAXJSAMPLE * 2 + 2;
 	private final static int CONST_BITS = 13;
 	private final static int PASS1_BITS = 2;
 	private final static int FIX_0_298631336 = 2446;
@@ -24,7 +26,7 @@ public class IDCTIntegerSlow implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		int[] quantval = aQuantizationTable.getDivisors();
+		double[] quantval = aQuantizationTable.getFloatDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
@@ -57,21 +59,21 @@ public class IDCTIntegerSlow implements IDCT
 				continue;
 			}
 
-			int z2 = aCoefficients[2 * 8 + ctr];
-			int z3 = aCoefficients[6 * 8 + ctr];
-
-			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
-			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
-			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
-
-			z2 = aCoefficients[0 * 8 + ctr];
-			z3 = aCoefficients[4 * 8 + ctr];
+			int z2 = aCoefficients[0 * 8 + ctr];
+			int z3 = aCoefficients[4 * 8 + ctr];
 			z2 <<= CONST_BITS;
 			z3 <<= CONST_BITS;
 			z2 += 1 << (CONST_BITS - PASS1_BITS - 1);
 
 			int tmp0 = z2 + z3;
 			int tmp1 = z2 - z3;
+
+			z2 = aCoefficients[2 * 8 + ctr];
+			z3 = aCoefficients[6 * 8 + ctr];
+
+			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
+			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
+			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
 
 			int tmp10 = tmp0 + tmp2;
 			int tmp13 = tmp0 - tmp2;
@@ -116,9 +118,11 @@ public class IDCTIntegerSlow implements IDCT
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
+			int z2 = workspace[0 + ctr] + (128 << (PASS1_BITS + 3)) + (1 << (PASS1_BITS + 2));
+
 			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
 			{
-				int dcval = clamp(workspace[ctr], PASS1_BITS + 3);
+				int dcval = clamp(z2, PASS1_BITS + 3);
 
 				aCoefficients[0 + ctr] = dcval;
 				aCoefficients[1 + ctr] = dcval;
@@ -131,18 +135,17 @@ public class IDCTIntegerSlow implements IDCT
 				continue;
 			}
 
-			int z2 = workspace[2 + ctr];
-			int z3 = workspace[6 + ctr];
+			int z3 = workspace[4 + ctr];
+			
+			int tmp0 = (z2 + z3) << CONST_BITS;
+			int tmp1 = (z2 - z3) << CONST_BITS;
+
+			z2 = workspace[2 + ctr];
+			z3 = workspace[6 + ctr];
 
 			int z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
 			int tmp2 = z1 + MULTIPLY(z2, FIX_0_765366865);
 			int tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065);
-
-			z2 = workspace[0 + ctr] + (1 << (PASS1_BITS + 2));
-			z3 = workspace[4 + ctr];
-
-			int tmp0 = (z2 + z3) << CONST_BITS;
-			int tmp1 = (z2 - z3) << CONST_BITS;
 
 			int tmp10 = tmp0 + tmp2;
 			int tmp13 = tmp0 - tmp2;
@@ -189,7 +192,7 @@ public class IDCTIntegerSlow implements IDCT
 
 	private static int clamp(int x, int q)
 	{
-		return 128 + (x >> (q + 2));
+		return x >> q;
 	}
 
 

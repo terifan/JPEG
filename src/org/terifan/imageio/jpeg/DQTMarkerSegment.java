@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG_ORDER;
@@ -13,7 +12,6 @@ public class DQTMarkerSegment
 	public final static int PRECISION_16_BITS = 2;
 
 	private double[] mTableDbl = new double[64];
-	private int[] mTableInt = new int[64];
 	private int mPrecision;
 	private int mIdentity;
 
@@ -25,7 +23,6 @@ public class DQTMarkerSegment
 
 		for (int i = 0; i < 64; i++)
 		{
-			mTableInt[i] = aQuantizationTable[i];
 			mTableDbl[i] = aQuantizationTable[i];
 		}
 	}
@@ -49,22 +46,6 @@ public class DQTMarkerSegment
 			}
 		}
 
-		double[] scaleFactors =
-		{
-			1.0, 1.387039845, 1.306562965, 1.175875602,
-			1.0, 0.785694958, 0.541196100, 0.275899379
-		};
-
-		for (int row = 0, i = 0; row < 8; row++)
-		{
-			for (int col = 0; col < 8; col++, i++)
-			{
-				double v = mTableDbl[i] * scaleFactors[row] * scaleFactors[col] / 8.0;
-//				mTableDbl[i] = v;
-				mTableInt[i] = Math.min(Math.max((int)(256 * v + 0.5), 1), 255);
-			}
-		}
-
 		if (VERBOSE)
 		{
 			System.out.println("DQTMarkerSegment[identity=" + mIdentity + ", precision=" + (mPrecision == PRECISION_8_BITS ? 8 : 16) + "]");
@@ -74,7 +55,7 @@ public class DQTMarkerSegment
 				System.out.print(" ");
 				for (int col = 0; col < 8; col++, i++)
 				{
-					System.out.printf("%7d ", mTableInt[i]);
+					System.out.printf("%7.3f ", mTableDbl[i]);
 				}
 				System.out.println();
 			}
@@ -91,12 +72,6 @@ public class DQTMarkerSegment
 	public int getPrecision()
 	{
 		return mPrecision;
-	}
-
-
-	public int[] getDivisors()
-	{
-		return mTableInt;
 	}
 
 

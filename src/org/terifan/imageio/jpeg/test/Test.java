@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
+import org.terifan.imageio.jpeg.decoder.IDCTFloat;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
@@ -23,7 +26,7 @@ public class Test
 
 			try (InputStream input = jpegResource.openStream())
 			{
-				BufferedImage myImage = JPEGImageReader.read(input);
+				BufferedImage myImage = JPEGImageReader.read(input, IDCTFloat.class);
 
 //				BufferedImage diff = new BufferedImage(myImage.getWidth(), myImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 //				for (int y = 0; y < diff.getHeight(); y++)

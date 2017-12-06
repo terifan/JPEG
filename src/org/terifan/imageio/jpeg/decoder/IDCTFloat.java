@@ -21,8 +21,8 @@ public class IDCTFloat implements IDCT
 {
 	private final static double[] AANSCALEFACTORS =
 	{
-	  1.0, 1.387039845, 1.306562965, 1.175875602,
-	  1.0, 0.785694958, 0.541196100, 0.275899379
+		1.0, 1.387039845, 1.306562965, 1.175875602,
+		1.0, 0.785694958, 0.541196100, 0.275899379
 	};
 
 
@@ -35,7 +35,7 @@ public class IDCTFloat implements IDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] = (int)(aCoefficients[i] * quantval[i] * (AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8));
+				aCoefficients[i] *= quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
 			}
 		}
 
@@ -147,22 +147,20 @@ public class IDCTFloat implements IDCT
 			double tmp4 = tmp10 - tmp5;
 
 			// Final output stage: scale down by a factor of 8
-			aCoefficients[ctr + 0] = clamp((int)(tmp0 + tmp7));
-			aCoefficients[ctr + 7] = clamp((int)(tmp0 - tmp7));
-			aCoefficients[ctr + 1] = clamp((int)(tmp1 + tmp6));
-			aCoefficients[ctr + 6] = clamp((int)(tmp1 - tmp6));
-			aCoefficients[ctr + 2] = clamp((int)(tmp2 + tmp5));
-			aCoefficients[ctr + 5] = clamp((int)(tmp2 - tmp5));
-			aCoefficients[ctr + 3] = clamp((int)(tmp3 + tmp4));
-			aCoefficients[ctr + 4] = clamp((int)(tmp3 - tmp4));
+			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7);
+			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7);
+			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6);
+			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6);
+			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5);
+			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5);
+			aCoefficients[ctr + 3] = clamp(tmp3 + tmp4);
+			aCoefficients[ctr + 4] = clamp(tmp3 - tmp4);
 		}
 	}
 
 
-	private static int clamp(int aValue)
+	private static int clamp(double aValue)
 	{
-		aValue = 128 + (aValue >> 6);
-
-		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
+		return (int)(aValue);
 	}
 }

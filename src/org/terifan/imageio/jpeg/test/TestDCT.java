@@ -27,8 +27,8 @@ public class TestDCT
 			Random rnd = new Random(7);
 			for (int i = 0; i < 64; i++)
 			{
-				original[i] = (i/8+(i%8))*255/14;
-//				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
+//				original[i] = (i/8+(i%8))*255/14;
+				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
 			}
 
 			DQTMarkerSegment qt = QuantizationTable.buildQuantTable(100, 0);
@@ -36,31 +36,31 @@ public class TestDCT
 			int[] enc;
 			int[] dec;
 
-//			System.out.println("\nFDCTIntegerFast");
-//
-//			enc = original.clone();
-//			new FDCTIntegerFast().transform(enc, qt);
-//			dec = enc.clone();
-//			new IDCTFloat().transform(dec, qt);
-//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-//
-//			System.out.println("\nFDCTFloat");
-//
-//			enc = original.clone();
-//			new FDCTFloat().transform(enc, qt);
-//			dec = enc.clone();
-//			new IDCTFloat().transform(dec, qt);
-//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-//
-//			System.out.println("\nFDCTIntegerSlow");
-//
-//			enc = original.clone();
-//			new FDCTIntegerSlow().transform(enc, qt);
-//			dec = enc.clone();
-//			new IDCTFloat().transform(dec, qt);
-//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-//
-//			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println("\nFDCTIntegerFast");
+
+			enc = original.clone();
+			new FDCTIntegerFast().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+
+			System.out.println("\nFDCTFloat");
+
+			enc = original.clone();
+			new FDCTFloat().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+
+			System.out.println("\nFDCTIntegerSlow");
+
+			enc = original.clone();
+			new FDCTIntegerSlow().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+
+			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
 			System.out.println("\nIDCTIntegerFast");
 
@@ -93,11 +93,11 @@ public class TestDCT
 			BufferedImage image2 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerFast.class);
 			BufferedImage image3 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerSlow.class);
 
-			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight(), BufferedImage.TYPE_INT_RGB);
+			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight()*2, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = image.createGraphics();
-			g.drawImage(image1, 0*image1.getWidth(), 0, null);
-			g.drawImage(image2, 1*image1.getWidth()/2, 0, null);
-			g.drawImage(image3, 1*image1.getWidth(), 0, null);
+			g.drawImage(image1, 0*image1.getWidth(), 0*image1.getHeight(), null);
+			g.drawImage(image2, 1*image1.getWidth(), 0*image1.getHeight(), null);
+			g.drawImage(image3, 0*image1.getWidth(), 1*image1.getHeight(), null);
 			g.dispose();
 
 			ImageFrame imagePane = new ImageFrame(image);
