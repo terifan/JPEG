@@ -1,11 +1,40 @@
 package org.terifan.imageio.jpeg.encoder;
 
+import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
-public class FDCTIntegerSlow
+
+/*
+ * jfdctint.c
+ *
+ * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Modification developed 2003-2009 by Guido Vollbeding.
+ * This file is part of the Independent JPEG Group's software.
+ * For conditions of distribution and use, see the accompanying README file.
+ *
+ * This file contains a slow-but-accurate integer implementation of the
+ * forward DCT (Discrete Cosine Transform).
+ *
+ * A 2-D DCT can be done by 1-D DCT on each row followed by 1-D DCT
+ * on each column.  Direct algorithms are also available, but they are
+ * much more complex and seem not to be any faster when reduced to code.
+ *
+ * This implementation is based on an algorithm described in
+ *   C. Loeffler, A. Ligtenberg and G. Moschytz, "Practical Fast 1-D DCT
+ *   Algorithms with 11 Multiplications", Proc. Int'l. Conf. on Acoustics,
+ *   Speech, and Signal Processing 1989 (ICASSP '89), pp. 988-991.
+ * The primary algorithm described there uses 11 multiplies and 29 adds.
+ * We use their alternate method with 12 multiplies and 32 adds.
+ * The advantage of this method is that no data path contains more than one
+ * multiplication; this allows a very simple and accurate implementation in
+ * scaled fixed-point arithmetic, with a minimal number of shifts.
+ */
+public class FDCTIntegerSlow implements FDCT
 {
 	private final static int CENTERJSAMPLE = 128;
+
 	private final static int CONST_BITS = 13;
 	private final static int PASS1_BITS = 2;
+
 	private final static int FIX_0_298631336 = 2446;
 	private final static int FIX_0_390180644 = 3196;
 	private final static int FIX_0_541196100 = 4433;
@@ -20,6 +49,21 @@ public class FDCTIntegerSlow
 	private final static int FIX_3_072711026 = 25172;
 
 
+	@Override
+	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
+	{
+		transform(aCoefficients);
+
+		int[] quantval = aQuantizationTable.getDivisors();
+
+		for (int i = 0; i < 64; i++)
+		{
+			aCoefficients[i] /= quantval[i] << 1;
+		}
+	}
+
+
+	@Override
 	public void transform(int[] aCoefficients)
 	{
 		int[] workspace = new int[64];
@@ -132,8 +176,8 @@ public class FDCTIntegerSlow
 	}
 
 
-	private final static int MULTIPLY(int v, int q)
+	private static int MULTIPLY(int x, int n)
 	{
-		return v * q;
+		return x * n;
 	}
 }

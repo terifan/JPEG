@@ -5,8 +5,11 @@ import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 public class QuantizationTable
 {
-	public static DQTMarkerSegment buildQuantTable(int aQuality, int W, int H, int aComponent)
+	public static DQTMarkerSegment buildQuantTable(int aQuality, int aComponent)
 	{
+		int W = 8;
+		int H = 8;
+		
 		aQuality = Math.max(Math.min(aQuality, 100), 1);
 
 		if (aQuality < 50)

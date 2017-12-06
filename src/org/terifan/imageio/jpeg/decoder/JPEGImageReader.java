@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
-import org.terifan.imageio.jpeg.encoder.FDCTInteger;
 
 
 public class JPEGImageReader extends JPEGConstants
@@ -279,15 +278,15 @@ public class JPEGImageReader extends JPEGConstants
 							for (int cx = 0; cx < samplingX; cx++)
 							{
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
-								
+
 //								int[] a = dctCoefficients[x][cy][cx][component].clone();
 //								int[] b = dctCoefficients[x][cy][cx][component].clone();
-//								
+//
 //								new IDCTIntegerSlow().transform(a, quantizationTable);
 //								new IDCTIntegerFast().transform(b, quantizationTable);
-//								
+//
 //								int[] q = a;
-//								
+//
 //								for (int i = 0; i < 64; i++)
 //								{
 //									if (Math.abs(a[i]-b[i]) > 3)
@@ -308,7 +307,7 @@ public class JPEGImageReader extends JPEGConstants
 ////										System.out.println();
 //									}
 //								}
-//								
+//
 //								System.arraycopy(b, 0, dctCoefficients[x][cy][cx][component], 0, a.length);
 							}
 						}

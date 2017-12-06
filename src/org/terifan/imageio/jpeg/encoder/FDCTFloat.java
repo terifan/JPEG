@@ -1,5 +1,8 @@
 package org.terifan.imageio.jpeg.encoder;
 
+import org.terifan.imageio.jpeg.DQTMarkerSegment;
+
+
 
 /*
  * jfdctflt.c
@@ -37,8 +40,33 @@ package org.terifan.imageio.jpeg.encoder;
  * scaled quantization values.  However, that problem does not arise if
  * we use floating point arithmetic.
  */
-public class FDCTFloat
+public class FDCTFloat implements FDCT
 {
+	private final static double[] AANSCALEFACTORS =
+	{
+	  1.0, 1.387039845, 1.306562965, 1.175875602,
+	  1.0, 0.785694958, 0.541196100, 0.275899379
+	};
+
+
+	@Override
+	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
+	{
+		transform(aCoefficients);
+
+		double[] quantval = aQuantizationTable.getFloatDivisors();
+
+		for (int row = 0, i = 0; row < 8; row++)
+		{
+			for (int col = 0; col < 8; col++, i++)
+			{
+				aCoefficients[i] /= (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8);
+			}
+		}
+	}
+
+
+	@Override
 	public void transform(int[] aCoefficients)
 	{
 		double[] workspace = new double[64];
@@ -125,14 +153,14 @@ public class FDCTFloat
 			aCoefficients[8 * 7 + ctr] = toInt(z11 - z4);
 		}
 	}
-	
-	
+
+
 	private static int toInt(double v)
 	{
-		return (int)(v*4);
+		return (int)(4 * v + 16384.5) - 16384;
 	}
-	
-	
+
+
 	private static double toDbl(int v)
 	{
 		return (double)v;

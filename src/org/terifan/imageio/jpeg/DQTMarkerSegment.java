@@ -93,13 +93,13 @@ public class DQTMarkerSegment
 	}
 
 
-	public int[] getTableInt()
+	public int[] getDivisors()
 	{
 		return mTableInt;
 	}
 
 
-	public double[] getTableDbl()
+	public double[] getFloatDivisors()
 	{
 		return mTableDbl;
 	}

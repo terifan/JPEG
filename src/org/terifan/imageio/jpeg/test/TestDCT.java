@@ -1,11 +1,14 @@
 package org.terifan.imageio.jpeg.test;
 
 import java.util.Random;
+import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
-
+import org.terifan.imageio.jpeg.encoder.QuantizationTable;
 
 
 public class TestDCT
@@ -15,81 +18,80 @@ public class TestDCT
 		try
 		{
 			int[] original = new int[64];
-			Random rnd = new Random(1);
+			Random rnd = new Random();
 			for (int i = 0; i < 64; i++)
 			{
-				original[i] = (i/8+(i%8))*255/14; //rnd.nextInt(256);
+//				original[i] = (i/8+(i%8))*255/14;
+				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
 			}
 
-//			int[][] blockEnc = {original.clone(), original.clone(), original.clone()};
-//
-//			new FDCTFloat().forward(blockEnc[0]);
-//			new FDCTIntegerSlow().forward(blockEnc[1]);
-//			new FDCTInteger().forward(blockEnc[2]);
-//
-//			int[][][] blockDec = new int[blockEnc.length][4][];
-//			for (int i = 0; i < blockEnc.length; i++)
-//			{
-//				for (int j = 0; j < 4; j++)
-//				{
-//					blockDec[i][j] = blockEnc[i].clone();
-//				}
-//
-//				new IDCTFloat().transform(blockDec[i][0]);
-//				new IDCTIntegerSlow().transform(blockDec[i][1]);
-//				new IDCTInteger2().inverse(blockDec[i][2]);
-//				new IDCTIntegerFast().transform(blockDec[i][3]);
-//			}
-//
-//			printTables(new int[][]{original});
-//			System.out.println();
-//			printTables(blockEnc);
-//			System.out.println();
-//			printTables(blockDec[0]);
-//			System.out.println();
-//			printTables(blockDec[1]);
-//			System.out.println();
-//			printTables(blockDec[2]);
+			DQTMarkerSegment qt = QuantizationTable.buildQuantTable(100, 0);
+
+			System.out.println("\nFDCTIntegerFast");
 
 			int[] enc = original.clone();
-			new FDCTIntegerSlow().transform(enc);
-//			new FDCTIntegerFast().transform(enc);
-//			new FDCTFloat().transform(enc);
+			new FDCTIntegerFast().transform(enc, qt);
 			int[] dec = enc.clone();
-			new IDCTIntegerFast().transform(dec);
-			printTables(new int[][]{original,enc,dec});
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
 
+			System.out.println("\nFDCTFloat");
 
-//			String[] s = "-468,16,0,0,-1,-1,0,0,28,3,2,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0".split(",");
-//
-//			DQTMarkerSegment qt = new DQTMarkerSegment(0, 64,44,42,75,96,126,104,62,44,62,116,104,133,244,168,86,84,116,109,147,209,230,181,81,75,104,147,133,226,255,204,73,64,133,167,255,255,255,208,79,75,139,230,237,251,237,190,76,104,192,204,204,208,204,131,57,79,135,127,125,115,83,57,29);
-//
-//			int[] enc = new int[64];
-//			for (int i = 0; i < 64;i++) enc[i]=Integer.parseInt(s[i]);
-//
-//			int[] dec1 = enc.clone();
-//			int[] dec2 = enc.clone();
-//			int[] dec3 = enc.clone();
-//			int[] dec4 = enc.clone();
-//
-//			new IDCTIntegerFast().transform(dec1, qt);
-//			new IDCTFloat().transform(dec2, qt);
-//			new IDCTIntegerSlow().transform(dec3, qt);
-//			new IDCTInteger2().transform(dec4, qt);
-//
-//			printTables(new int[][]{enc,dec1,dec2,dec3,dec4});
-//			
-//			for (int i = 0; i < 64; i++) dec2[i]=Math.abs(dec2[i]-dec1[i]);
-//			for (int i = 0; i < 64; i++) dec3[i]=Math.abs(dec3[i]-dec1[i]);
-//			for (int i = 0; i < 64; i++) dec4[i]=Math.abs(dec4[i]-dec1[i]);
-//			
-//			System.out.println();
-//			printTables(new int[][]{dec2,dec3,dec4});
+			enc = original.clone();
+			new FDCTFloat().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+
+			System.out.println("\nFDCTIntegerSlow");
+
+			enc = original.clone();
+			new FDCTIntegerSlow().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+
+			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
+			System.out.println("\nIDCTIntegerFast");
+
+			enc = original.clone();
+			new FDCTFloat().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTIntegerFast().transform(dec, qt);
+			printTables(new int[][]{original, enc, dec,delta(original,dec)});
+
+			System.out.println("\nIDCTFloat");
+
+			enc = original.clone();
+			new FDCTFloat().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTFloat().transform(dec, qt);
+			printTables(new int[][]{original, enc, dec,delta(original,dec)});
+
+			System.out.println("\nIDCTIntegerSlow");
+
+			enc = original.clone();
+			new FDCTFloat().transform(enc, qt);
+			dec = enc.clone();
+			new IDCTIntegerSlow().transform(dec, qt);
+			printTables(new int[][]{original, enc, dec,delta(original,dec)});
 		}
 		catch (Throwable e)
 		{
 			e.printStackTrace(System.out);
 		}
+	}
+
+
+	private static int[] delta(int[] aInput1, int[] aInput2)
+	{
+		int[] result = new int[64];
+		for (int i = 0; i < 64; i++)
+		{
+			result[i] = Math.abs(aInput1[i] - aInput2[i]);
+		}
+		return result;
 	}
 
 

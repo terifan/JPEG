@@ -19,8 +19,8 @@ public class FDCTIntegerNGTest
 			block[i] = (i/8+(i%8))*255/14; //rnd.nextInt(256);
 		}
 
-		DQTMarkerSegment dqt = QuantizationTable.buildQuantTable(100, 8, 8, 0);
-		int[] quantTable = dqt.getTableInt();
+		DQTMarkerSegment dqt = QuantizationTable.buildQuantTable(100, 0);
+		int[] quantTable = dqt.getDivisors();
 
 		int[] original = block.clone();
 

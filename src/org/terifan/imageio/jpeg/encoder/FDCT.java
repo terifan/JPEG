@@ -1,9 +1,9 @@
-package org.terifan.imageio.jpeg.decoder;
+package org.terifan.imageio.jpeg.encoder;
 
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 
 
-public interface IDCT
+public interface FDCT
 {
 	void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable);
 
