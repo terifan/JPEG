@@ -155,8 +155,8 @@ public class FDCTFloat implements FDCT
 	}
 
 
-	private static int toInt(double v)
+	private static int toInt(double aValue)
 	{
-		return (int)v;
+		return (int)(aValue + 16384.5) - 16384;
 	}
 }

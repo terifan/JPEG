@@ -30,21 +30,33 @@ public class IDCTFloat implements IDCT
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
 		double[] quantval = aQuantizationTable.getFloatDivisors();
+		
+		double[] data = new double[64];
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] *= quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
+				data[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
 			}
 		}
 
-		transform(aCoefficients);
+		transform(data);
+		
+		for (int i = 0; i < 64; i++)
+		{
+			aCoefficients[i] = (int)(data[i] + 16384.5) - 16384;
+		}
 	}
 
 
 	@Override
 	public void transform(int[] aCoefficients)
+	{
+	}
+	
+	
+	private void transform(double[] aCoefficients)
 	{
 		double[] workspace = new double[64];
 
@@ -118,7 +130,7 @@ public class IDCTFloat implements IDCT
 		// Pass 2: process rows from work array, store into output array.
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			double z5 = workspace[ctr] + (128 + 0.5);
+			double z5 = workspace[ctr + 0] + (128 + 0.5);
 			double tmp10 = z5 + workspace[ctr + 4];
 			double tmp11 = z5 - workspace[ctr + 4];
 
@@ -146,21 +158,14 @@ public class IDCTFloat implements IDCT
 			double tmp5 = tmp11 - tmp6;
 			double tmp4 = tmp10 - tmp5;
 
-			// Final output stage: scale down by a factor of 8
-			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7);
-			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7);
-			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6);
-			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6);
-			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5);
-			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5);
-			aCoefficients[ctr + 3] = clamp(tmp3 + tmp4);
-			aCoefficients[ctr + 4] = clamp(tmp3 - tmp4);
+			aCoefficients[ctr + 0] = tmp0 + tmp7;
+			aCoefficients[ctr + 7] = tmp0 - tmp7;
+			aCoefficients[ctr + 1] = tmp1 + tmp6;
+			aCoefficients[ctr + 6] = tmp1 - tmp6;
+			aCoefficients[ctr + 2] = tmp2 + tmp5;
+			aCoefficients[ctr + 5] = tmp2 - tmp5;
+			aCoefficients[ctr + 3] = tmp3 + tmp4;
+			aCoefficients[ctr + 4] = tmp3 - tmp4;
 		}
-	}
-
-
-	private static int clamp(double aValue)
-	{
-		return (int)(aValue);
 	}
 }
