@@ -30,22 +30,22 @@ public class IDCTFloat implements IDCT
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
 		double[] quantval = aQuantizationTable.getFloatDivisors();
-		
-		double[] data = new double[64];
+
+		double[] workspace = new double[64];
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				data[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
+				workspace[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
 			}
 		}
 
-		transform(data);
+		transform(workspace);
 		
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] = (int)(data[i] + 16384.5) - 16384;
+			aCoefficients[i] = (int)workspace[i];
 		}
 	}
 

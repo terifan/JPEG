@@ -73,8 +73,7 @@ public class FDCTIntegerFast implements FDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				double v = quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 8.0;
-				aCoefficients[i] /= Math.min(Math.max((int)(256 * v + 0.5), 1), 255);
+				aCoefficients[i] /= 256 * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 8.0;
 			}
 		}
 

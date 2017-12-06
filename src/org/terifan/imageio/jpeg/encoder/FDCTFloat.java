@@ -52,7 +52,14 @@ public class FDCTFloat implements FDCT
 	@Override
 	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
 	{
-		transform(aCoefficients);
+		double[] workspace = new double[64];
+
+		for (int i = 0; i < 64; i++)
+		{
+			workspace[i] = aCoefficients[i];
+		}
+
+		transform(workspace);
 
 		double[] quantval = aQuantizationTable.getFloatDivisors();
 
@@ -60,7 +67,7 @@ public class FDCTFloat implements FDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] /= quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8;
+				aCoefficients[i] = (int)(workspace[i] / (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8) + 16384.5) - 16384;
 			}
 		}
 	}
@@ -68,6 +75,11 @@ public class FDCTFloat implements FDCT
 
 	@Override
 	public void transform(int[] aCoefficients)
+	{
+	}
+	
+	
+	public void transform(double[] aCoefficients)
 	{
 		double[] workspace = new double[64];
 
@@ -128,12 +140,12 @@ public class FDCTFloat implements FDCT
 			double tmp11 = tmp1 + tmp2;
 			double tmp12 = tmp1 - tmp2;
 
-			aCoefficients[8 * 0 + ctr] = toInt(tmp10 + tmp11);
-			aCoefficients[8 * 4 + ctr] = toInt(tmp10 - tmp11);
+			aCoefficients[8 * 0 + ctr] = tmp10 + tmp11;
+			aCoefficients[8 * 4 + ctr] = tmp10 - tmp11;
 
 			double z1 = (tmp12 + tmp13) * 0.707106781;
-			aCoefficients[8 * 2 + ctr] = toInt(tmp13 + z1);
-			aCoefficients[8 * 6 + ctr] = toInt(tmp13 - z1);
+			aCoefficients[8 * 2 + ctr] = tmp13 + z1;
+			aCoefficients[8 * 6 + ctr] = tmp13 - z1;
 
 			tmp10 = tmp4 + tmp5;
 			tmp11 = tmp5 + tmp6;
@@ -147,16 +159,10 @@ public class FDCTFloat implements FDCT
 			double z11 = tmp7 + z3;
 			double z13 = tmp7 - z3;
 
-			aCoefficients[8 * 5 + ctr] = toInt(z13 + z2);
-			aCoefficients[8 * 3 + ctr] = toInt(z13 - z2);
-			aCoefficients[8 * 1 + ctr] = toInt(z11 + z4);
-			aCoefficients[8 * 7 + ctr] = toInt(z11 - z4);
+			aCoefficients[8 * 5 + ctr] = z13 + z2;
+			aCoefficients[8 * 3 + ctr] = z13 - z2;
+			aCoefficients[8 * 1 + ctr] = z11 + z4;
+			aCoefficients[8 * 7 + ctr] = z11 - z4;
 		}
-	}
-
-
-	private static int toInt(double aValue)
-	{
-		return (int)(aValue + 16384.5) - 16384;
 	}
 }
