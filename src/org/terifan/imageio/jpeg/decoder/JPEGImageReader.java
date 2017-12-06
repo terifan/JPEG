@@ -28,21 +28,29 @@ public class JPEGImageReader extends JPEGConstants
 	private int mDensitiesUnits;
 	private int mDensityX;
 	private int mDensityY;
+	private Class<? extends IDCT> mDecoder;
 
 
-	private JPEGImageReader(InputStream aInputStream) throws IOException
+	private JPEGImageReader(InputStream aInputStream, Class<? extends IDCT> aDecoder) throws IOException
 	{
 		mPreviousDCValue = new int[MAX_CHANNELS];
 		mQuantizationTables = new DQTMarkerSegment[MAX_CHANNELS];
 		mHuffmanTables = new DHTMarkerSegment[MAX_CHANNELS][2];
 
 		mBitStream = new BitInputStream(aInputStream);
+		this.mDecoder = aDecoder;
 	}
 
 
 	public static BufferedImage read(InputStream aInputStream) throws IOException
 	{
-		return new JPEGImageReader(aInputStream).readImpl();
+		return new JPEGImageReader(aInputStream, IDCTIntegerFast.class).readImpl();
+	}
+
+
+	public static BufferedImage read(InputStream aInputStream, Class<? extends IDCT> aDecoder) throws IOException
+	{
+		return new JPEGImageReader(aInputStream, aDecoder).readImpl();
 	}
 
 
@@ -216,10 +224,16 @@ public class JPEGImageReader extends JPEGConstants
 
 	private JPEGImage readRaster() throws IOException
 	{
-//		IDCT idct = new IDCTFloat();
-		IDCT idct = new IDCTIntegerSlow();
-//		IDCT idct = new IDCTIntegerFast();
-//		IDCT idct = new IDCTInteger2();
+		IDCT idct;
+		try
+		{
+			idct = mDecoder.newInstance();
+		}
+		catch (Exception e)
+		{
+			throw new IllegalStateException(e);
+		}
+
 		int maxSamplingX = mFrameSegment.getMaxSamplingX();
 		int maxSamplingY = mFrameSegment.getMaxSamplingY();
 		int numHorMCU = (int)Math.ceil(mFrameSegment.getWidth() / (8.0 * maxSamplingX));
@@ -278,37 +292,6 @@ public class JPEGImageReader extends JPEGConstants
 							for (int cx = 0; cx < samplingX; cx++)
 							{
 								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
-
-//								int[] a = dctCoefficients[x][cy][cx][component].clone();
-//								int[] b = dctCoefficients[x][cy][cx][component].clone();
-//
-//								new IDCTIntegerSlow().transform(a, quantizationTable);
-//								new IDCTIntegerFast().transform(b, quantizationTable);
-//
-//								int[] q = a;
-//
-//								for (int i = 0; i < 64; i++)
-//								{
-//									if (Math.abs(a[i]-b[i]) > 3)
-//									{
-//										q = b;
-////										a = dctCoefficients[x][cy][cx][component].clone();
-////										for (int j = 0; j < 64; j++)
-////										{
-////											System.out.print(a[j]+",");
-////										}
-////										System.out.println();
-////										a = quantizationTable.getTableInt();
-////										for (int j = 0; j < 64; j++)
-////										{
-////											System.out.print(a[j]+",");
-////										}
-////										System.out.println();
-////										System.out.println();
-//									}
-//								}
-//
-//								System.arraycopy(b, 0, dctCoefficients[x][cy][cx][component], 0, a.length);
 							}
 						}
 					}

@@ -1,10 +1,16 @@
 package org.terifan.imageio.jpeg.test;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Random;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.DQTMarkerSegment;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
@@ -18,40 +24,43 @@ public class TestDCT
 		try
 		{
 			int[] original = new int[64];
-			Random rnd = new Random();
+			Random rnd = new Random(7);
 			for (int i = 0; i < 64; i++)
 			{
-//				original[i] = (i/8+(i%8))*255/14;
-				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
+				original[i] = (i/8+(i%8))*255/14;
+//				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
 			}
 
 			DQTMarkerSegment qt = QuantizationTable.buildQuantTable(100, 0);
 
-			System.out.println("\nFDCTIntegerFast");
+			int[] enc;
+			int[] dec;
 
-			int[] enc = original.clone();
-			new FDCTIntegerFast().transform(enc, qt);
-			int[] dec = enc.clone();
-			new IDCTFloat().transform(dec, qt);
-			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-
-			System.out.println("\nFDCTFloat");
-
-			enc = original.clone();
-			new FDCTFloat().transform(enc, qt);
-			dec = enc.clone();
-			new IDCTFloat().transform(dec, qt);
-			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-
-			System.out.println("\nFDCTIntegerSlow");
-
-			enc = original.clone();
-			new FDCTIntegerSlow().transform(enc, qt);
-			dec = enc.clone();
-			new IDCTFloat().transform(dec, qt);
-			printTables(new int[][]{original,enc,dec,delta(original,dec)});
-
-			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//			System.out.println("\nFDCTIntegerFast");
+//
+//			enc = original.clone();
+//			new FDCTIntegerFast().transform(enc, qt);
+//			dec = enc.clone();
+//			new IDCTFloat().transform(dec, qt);
+//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+//
+//			System.out.println("\nFDCTFloat");
+//
+//			enc = original.clone();
+//			new FDCTFloat().transform(enc, qt);
+//			dec = enc.clone();
+//			new IDCTFloat().transform(dec, qt);
+//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+//
+//			System.out.println("\nFDCTIntegerSlow");
+//
+//			enc = original.clone();
+//			new FDCTIntegerSlow().transform(enc, qt);
+//			dec = enc.clone();
+//			new IDCTFloat().transform(dec, qt);
+//			printTables(new int[][]{original,enc,dec,delta(original,dec)});
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
 			System.out.println("\nIDCTIntegerFast");
 
@@ -76,6 +85,22 @@ public class TestDCT
 			dec = enc.clone();
 			new IDCTIntegerSlow().transform(dec, qt);
 			printTables(new int[][]{original, enc, dec,delta(original,dec)});
+
+
+			URL jpegResource = Test.class.getResource("Swallowtail.jpg");
+
+			BufferedImage image1 = JPEGImageReader.read(jpegResource.openStream(), IDCTFloat.class);
+			BufferedImage image2 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerFast.class);
+			BufferedImage image3 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerSlow.class);
+
+			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight(), BufferedImage.TYPE_INT_RGB);
+			Graphics2D g = image.createGraphics();
+			g.drawImage(image1, 0*image1.getWidth(), 0, null);
+			g.drawImage(image2, 1*image1.getWidth()/2, 0, null);
+			g.drawImage(image3, 1*image1.getWidth(), 0, null);
+			g.dispose();
+
+			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)
 		{

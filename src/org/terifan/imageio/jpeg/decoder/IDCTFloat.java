@@ -35,7 +35,7 @@ public class IDCTFloat implements IDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] *= (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8);
+				aCoefficients[i] = (int)(aCoefficients[i] * quantval[i] * (AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8));
 			}
 		}
 
@@ -161,7 +161,7 @@ public class IDCTFloat implements IDCT
 
 	private static int clamp(int aValue)
 	{
-		aValue = 128 + (aValue >> 8);
+		aValue = 128 + (aValue >> 6);
 
 		return aValue < 0 ? 0 : aValue > 255 ? 255 : aValue;
 	}

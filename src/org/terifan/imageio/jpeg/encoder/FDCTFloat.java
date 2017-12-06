@@ -60,7 +60,7 @@ public class FDCTFloat implements FDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] /= (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8);
+				aCoefficients[i] /= quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8;
 			}
 		}
 	}
@@ -73,14 +73,14 @@ public class FDCTFloat implements FDCT
 
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
-			double tmp0 = toDbl(aCoefficients[0 + ctr] + aCoefficients[7 + ctr]);
-			double tmp7 = toDbl(aCoefficients[0 + ctr] - aCoefficients[7 + ctr]);
-			double tmp1 = toDbl(aCoefficients[1 + ctr] + aCoefficients[6 + ctr]);
-			double tmp6 = toDbl(aCoefficients[1 + ctr] - aCoefficients[6 + ctr]);
-			double tmp2 = toDbl(aCoefficients[2 + ctr] + aCoefficients[5 + ctr]);
-			double tmp5 = toDbl(aCoefficients[2 + ctr] - aCoefficients[5 + ctr]);
-			double tmp3 = toDbl(aCoefficients[3 + ctr] + aCoefficients[4 + ctr]);
-			double tmp4 = toDbl(aCoefficients[3 + ctr] - aCoefficients[4 + ctr]);
+			double tmp0 = aCoefficients[0 + ctr] + aCoefficients[7 + ctr];
+			double tmp7 = aCoefficients[0 + ctr] - aCoefficients[7 + ctr];
+			double tmp1 = aCoefficients[1 + ctr] + aCoefficients[6 + ctr];
+			double tmp6 = aCoefficients[1 + ctr] - aCoefficients[6 + ctr];
+			double tmp2 = aCoefficients[2 + ctr] + aCoefficients[5 + ctr];
+			double tmp5 = aCoefficients[2 + ctr] - aCoefficients[5 + ctr];
+			double tmp3 = aCoefficients[3 + ctr] + aCoefficients[4 + ctr];
+			double tmp4 = aCoefficients[3 + ctr] - aCoefficients[4 + ctr];
 
 			double tmp10 = tmp0 + tmp3;
 			double tmp13 = tmp0 - tmp3;
@@ -157,12 +157,6 @@ public class FDCTFloat implements FDCT
 
 	private static int toInt(double v)
 	{
-		return (int)(4 * v + 16384.5) - 16384;
-	}
-
-
-	private static double toDbl(int v)
-	{
-		return (double)v;
+		return (int)(v + 16384.5) - 16384;
 	}
 }

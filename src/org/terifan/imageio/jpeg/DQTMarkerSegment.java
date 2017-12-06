@@ -59,8 +59,9 @@ public class DQTMarkerSegment
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				mTableDbl[i] *= scaleFactors[row] * scaleFactors[col] / 8.0;
-				mTableInt[i] = Math.min(Math.max((int)(256 * mTableDbl[i] + 0.5), 1), 255);
+				double v = mTableDbl[i] * scaleFactors[row] * scaleFactors[col] / 8.0;
+//				mTableDbl[i] = v;
+				mTableInt[i] = Math.min(Math.max((int)(256 * v + 0.5), 1), 255);
 			}
 		}
 
