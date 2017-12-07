@@ -73,13 +73,7 @@ public class FDCTFloat implements FDCT
 	}
 
 
-	@Override
-	public void transform(int[] aCoefficients)
-	{
-	}
-	
-	
-	public void transform(double[] aCoefficients)
+	private void transform(double[] aCoefficients)
 	{
 		double[] workspace = new double[64];
 

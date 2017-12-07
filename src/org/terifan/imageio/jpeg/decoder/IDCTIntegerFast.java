@@ -23,7 +23,6 @@ public class IDCTIntegerFast implements IDCT
 	private final static int CONST_BITS = 8;
 	private final static int PASS1_BITS = 2;
 
-
 	private final static int[] AANSCALES = {
 	  16384, 22725, 21407, 19266, 16384, 12873,  8867,  4520,
 	  22725, 31521, 29692, 26722, 22725, 17855, 12299,  6270,
@@ -34,11 +33,6 @@ public class IDCTIntegerFast implements IDCT
 	   8867, 12299, 11585, 10426,  8867,  6967,  4799,  2446,
 	   4520,  6270,  5906,  5315,  4520,  3552,  2446,  1247
 	};
-	private final static double[] AANSCALEFACTORS =
-	{
-	  1.0, 1.387039845, 1.306562965, 1.175875602,
-	  1.0, 0.785694958, 0.541196100, 0.275899379
-	};
 
 
 	@Override
@@ -46,25 +40,16 @@ public class IDCTIntegerFast implements IDCT
 	{
 		double[] quantval = aQuantizationTable.getFloatDivisors();
 
-//		for (int i = 0; i < 64; i++)
-//		{
-//			aCoefficients[i] *= quantval[i] * AANSCALES[i];
-//		}
-
-		for (int row = 0, i = 0; row < 8; row++)
+		for (int i = 0; i < 64; i++)
 		{
-			for (int col = 0; col < 8; col++, i++)
-			{
-				aCoefficients[i] *= 256 * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 8.0;
-			}
+			aCoefficients[i] *= 256 * quantval[i] * AANSCALES[i] / 16384 / 8;
 		}
 
 		transform(aCoefficients);
 	}
 
 
-	@Override
-	public void transform(int[] aCoefficients)
+	private void transform(int[] aCoefficients)
 	{
 		int[] workspace = new int[64];
 

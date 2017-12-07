@@ -63,8 +63,7 @@ public class FDCTIntegerSlow implements FDCT
 	}
 
 
-	@Override
-	public void transform(int[] aCoefficients)
+	private void transform(int[] aCoefficients)
 	{
 		int[] workspace = new int[64];
 

@@ -49,12 +49,6 @@ public class IDCTFloat implements IDCT
 		}
 	}
 
-
-	@Override
-	public void transform(int[] aCoefficients)
-	{
-	}
-	
 	
 	private void transform(double[] aCoefficients)
 	{

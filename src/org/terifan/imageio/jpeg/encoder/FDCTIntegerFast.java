@@ -55,11 +55,6 @@ public class FDCTIntegerFast implements FDCT
 	   8867, 12299, 11585, 10426,  8867,  6967,  4799,  2446,
 	   4520,  6270,  5906,  5315,  4520,  3552,  2446,  1247
 	};
-	private final static double[] AANSCALEFACTORS =
-	{
-	  1.0, 1.387039845, 1.306562965, 1.175875602,
-	  1.0, 0.785694958, 0.541196100, 0.275899379
-	};
 
 
 	@Override
@@ -69,23 +64,14 @@ public class FDCTIntegerFast implements FDCT
 
 		double[] quantval = aQuantizationTable.getFloatDivisors();
 
-		for (int row = 0, i = 0; row < 8; row++)
+		for (int i = 0; i < 64; i++)
 		{
-			for (int col = 0; col < 8; col++, i++)
-			{
-				aCoefficients[i] /= 256 * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 8.0;
-			}
+			aCoefficients[i] /= 256 * quantval[i] * AANSCALES[i] / 16384 / 8;
 		}
-
-//		for (int i = 0; i < 64; i++)
-//		{
-//			aCoefficients[i] /= DESCALE(quantval[i] * AANSCALES[i], 11);
-//		}
 	}
 
 
-	@Override
-	public void transform(int[] aCoefficients)
+	private void transform(int[] aCoefficients)
 	{
 		int[] workspace = new int[64];
 
