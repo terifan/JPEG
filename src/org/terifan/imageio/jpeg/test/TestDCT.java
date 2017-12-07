@@ -27,8 +27,8 @@ public class TestDCT
 			Random rnd = new Random(7);
 			for (int i = 0; i < 64; i++)
 			{
-//				original[i] = (i/8+(i%8))*255/14;
-				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
+				original[i] = (i/8+(i%8))*255/14;
+//				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
 			}
 
 			DQTMarkerSegment qt = QuantizationTable.buildQuantTable(100, 0);
