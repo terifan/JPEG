@@ -9,7 +9,6 @@ public class JPEGImage
 {
 	private final int mWidth;
 	private final int mHeight;
-//	private final int[][] mBuffers;
 	private final int mMCUWidth;
 	private final int mMCUHeight;
 	private final int mComponents;
@@ -24,7 +23,6 @@ public class JPEGImage
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
-//		mBuffers = new int[JPEGImageReader.MAX_CHANNELS][aMaxSamplingX * aMaxSamplingY * 64];
 		mMCUWidth = 8 * aMaxSamplingX;
 		mMCUHeight = 8 * aMaxSamplingY;
 		mLastMCUPosition = new Point();

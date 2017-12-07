@@ -1,8 +1,12 @@
 package org.terifan.imageio.jpeg.decoder;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
+import org.terifan.imageio.jpeg.ComponentInfo;
+import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
+import static org.terifan.imageio.jpeg.JPEGConstants.MAX_COMPS_IN_SCAN;
+import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
 
 /*
@@ -21,15 +25,15 @@ import java.util.Arrays;
  */
 public class ArithmeticDecoder
 {
-	private InputStream mInputStream;
+	private BitInputStream mBitStream;
 
-	int NUM_ARITH_TBLS = 16;	/* Arith-coding tables are numbered 0..15 */
-	int MAX_COMPS_IN_SCAN = 4;	/* JPEG limit on # of components in one scan */
-	int MAX_SAMP_FACTOR = 4;	/* JPEG limit on sampling factors */
-	int DCTSIZE2 = 64;
 
-	int[] jpeg_aritab;
+	public ArithmeticDecoder(BitInputStream aBitStream)
+	{
+		mBitStream = aBitStream;
+	}
 
+	
 	String JERR_CANT_SUSPEND = "JERR_CANT_SUSPEND";
 	String JWRN_ARITH_BAD_CODE = "JWRN_ARITH_BAD_CODE";
 	String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
@@ -38,28 +42,11 @@ public class ArithmeticDecoder
 	String JWRN_BOGUS_PROGRESSION = "JWRN_BOGUS_PROGRESSION";
 void ERREXIT(Object... o)
 {
-	System.out.println(o);
-	System.exit(-1);
-}
-void ERREXIT1(Object... o)
-{
-	System.out.println(o);
-	System.exit(-1);
-}
-void ERREXIT4(Object... o)
-{
-	System.out.println(o);
-	System.exit(-1);
+	throw new IllegalStateException(""+Arrays.asList(o));
 }
 void WARNMS(Object... o)
 {
-	System.out.println(o);
-	System.exit(-1);
-}
-void WARNMS2(Object... o)
-{
-	System.out.println(o);
-	System.exit(-1);
+	System.out.println(Arrays.asList(o));
 }
 
 	void MEMZERO(int[] arr, int off, int len)
@@ -70,76 +57,11 @@ void WARNMS2(Object... o)
 	{
 		return n >> q;
 	}
-	class JBLOCKROW
+	public static class JBLOCKROW
 	{
-		int[] data;
+		public int[] data;
 	}
 
-	class arith_entropy_ptr
-	{
-		int decode_mcu;
-		int a;
-		int c;
-		int ct;
-		int[] last_dc_val;
-		int[] dc_context;
-		int[][] dc_stats;
-		int restarts_to_go;
-		int[][] ac_stats;
-		int[] fixed_bin;
-	}
-
-	class j_decompress_ptr
-	{
-
-		int Al;
-		int[] natural_order;
-		int[] arith_ac_K;
-		int blocks_in_MCU;
-		int[] MCU_membership;
-		int Ah;
-		int restart_interval;
-		int Ss;
-		int Se;
-		int Sh;
-		int lim_Se;
-		boolean progressive_mode;
-		int comps_in_scan;
-		jpeg_component_info[] cur_comp_info;
-		arith_entropy_ptr entropy;
-		int unread_marker;
-		int[] arith_dc_L;
-		int[] arith_dc_U;
-		int[][] coef_bits;
-		int num_components;
-	}
-	class jpeg_component_info
-	{
-		int dc_tbl_no;
-		int ac_tbl_no;
-		int component_index;
-	}
-
-class arith_entropy_decoder
-{
-  int c;       /* C register, base of coding interval + input bit buffer */
-  int a;               /* A register, normalized size of coding interval */
-  int ct;     /* bit shift counter, # of bits left in bit buffer part of C */
-                                                         /* init: ct = -16 */
-                                                         /* run: ct = 0..7 */
-                                                         /* error: ct = -1 */
-  int[] last_dc_val = new int[MAX_COMPS_IN_SCAN]; /* last DC coef for each component */
-  int[] dc_context = new int[MAX_COMPS_IN_SCAN]; /* context index for DC conditioning */
-
-  int restarts_to_go;	/* MCUs left in this restart interval */
-
-  /* Pointers to statistics areas (these workspaces have image lifespan) */
-  int[] dc_stats = new int[NUM_ARITH_TBLS];
-  int[] ac_stats = new int[NUM_ARITH_TBLS];
-
-  /* Statistics bin for coding with fixed probability 0.5 */
-  int[] fixed_bin = new int[4];
-}
 
 /* The following two definitions specify the allocation chunk size
  * for the statistics area.
@@ -161,7 +83,7 @@ int AC_STAT_BINS = 256;
 int get_byte (j_decompress_ptr cinfo) throws IOException
 /* Read next input byte; we do not support suspension in this module. */
 {
-  return mInputStream.read();
+  return mBitStream.readInt8();
 }
 
 
@@ -198,8 +120,7 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
   int nl, nm;
   int qe, temp;
   int data;
-  int[] sv;
-  int sv_off;
+  int sv;
 
   /* Renormalization & data input per section D.2.6 */
   while (e.a < 0x8000L) {
@@ -239,9 +160,8 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
   /* Fetch values from our compact representation of Table D.3(D.2):
    * Qe values and probability estimation state machine
    */
-  sv = st;
-  sv_off = 0;
-  qe = jpeg_aritab[sv[sv_off] & 0x7F];	/* => Qe_Value */
+  sv = st[st_off];
+  qe = jpeg_aritab[sv & 0x7F];	/* => Qe_Value */
   nl = qe & 0xFF; qe >>= 8;	/* Next_Index_LPS + Switch_MPS */
   nm = qe & 0xFF; qe >>= 8;	/* Next_Index_MPS */
 
@@ -254,23 +174,23 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
     /* Conditional LPS (less probable symbol) exchange */
     if (e.a < qe) {
       e.a = qe;
-      sv[sv_off] = (sv[sv_off] & 0x80) ^ nm;	/* Estimate_after_MPS */
+      st[st_off] = (sv & 0x80) ^ nm;	/* Estimate_after_MPS */
     } else {
       e.a = qe;
-      sv[sv_off] = (sv[sv_off] & 0x80) ^ nl;	/* Estimate_after_LPS */
-      sv_off ^= 0x80;		/* Exchange LPS/MPS */
+      st[st_off] = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
+      sv ^= 0x80;		/* Exchange LPS/MPS */
     }
   } else if (e.a < 0x8000L) {
     /* Conditional MPS (more probable symbol) exchange */
     if (e.a < qe) {
-      sv_off = (sv[sv_off] & 0x80) ^ nl;	/* Estimate_after_LPS */
-      sv[sv_off] ^= 0x80;		/* Exchange LPS/MPS */
+      st[st_off] = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
+      sv ^= 0x80;		/* Exchange LPS/MPS */
     } else {
-      sv[sv_off] = (sv[sv_off] & 0x80) ^ nm;	/* Estimate_after_MPS */
+      st[st_off] = (sv & 0x80) ^ nm;	/* Estimate_after_MPS */
     }
   }
 
-  return sv[sv_off] >> 7;
+  return sv >> 7;
 }
 
 
@@ -283,7 +203,7 @@ process_restart (j_decompress_ptr cinfo)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int ci;
-  jpeg_component_info compptr;
+  ComponentInfo compptr;
 
   /* Advance past the RSTn marker */
 //  if (! (cinfo.marker.read_restart_marker) (cinfo))
@@ -293,16 +213,14 @@ process_restart (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-		for (int[] stats : entropy.dc_stats)
-      MEMZERO(stats, compptr.dc_tbl_no, DC_STAT_BINS);
+      MEMZERO(entropy.dc_stats[compptr.getDCTableNo()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-		for (int[] stats : entropy.ac_stats)
-      MEMZERO(stats, compptr.ac_tbl_no, AC_STAT_BINS);
+      MEMZERO(entropy.ac_stats[compptr.getACTableNo()], 0, AC_STAT_BINS);
     }
   }
 
@@ -355,7 +273,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     block = MCU_data[blkn];
     ci = cinfo.MCU_membership[blkn];
-    tbl = cinfo.cur_comp_info[ci].dc_tbl_no;
+    tbl = cinfo.cur_comp_info[ci].getDCTableNo();
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -436,7 +354,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].ac_tbl_no;
+  tbl = cinfo.cur_comp_info[0].getACTableNo();
 
   /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -553,7 +471,7 @@ boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].ac_tbl_no;
+  tbl = cinfo.cur_comp_info[0].getACTableNo();
 
   p1 = 1 << cinfo.Al;		/* 1 in the bit position being coded */
   m1 = (-1) << cinfo.Al;	/* -1 in the bit position being coded */
@@ -619,8 +537,8 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 			return decode_mcu_DC_refine(cinfo, MCU_data);
 	}
 
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
-  jpeg_component_info compptr;
+  final arith_entropy_ptr entropy = cinfo.entropy;
+  ComponentInfo compptr;
   JBLOCKROW block;
   int[] st;
   int st_off;
@@ -648,9 +566,10 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-    tbl = compptr.dc_tbl_no;
+    tbl = compptr.getDCTableNo();
 
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
+
     st = entropy.dc_stats[tbl];
 	st_off = entropy.dc_context[ci];
 
@@ -696,7 +615,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
     /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
     if (cinfo.lim_Se == 0) continue;
-    tbl = compptr.ac_tbl_no;
+    tbl = compptr.getACTableNo();
     k = 0;
 
     /* Figure F.20: Decode_AC_coefficients */
@@ -762,7 +681,7 @@ start_pass (j_decompress_ptr cinfo)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int ci, tbl;
-  jpeg_component_info compptr;
+  ComponentInfo compptr;
 
   if (cinfo.progressive_mode) {
     /* Validate progressive scan parameters */
@@ -784,7 +703,7 @@ start_pass (j_decompress_ptr cinfo)
 	bad=true;
     }
     if (bad || cinfo.Al > 13) {	/* need not check for < 0 */
-      ERREXIT4(cinfo, JERR_BAD_PROGRESSION,
+      ERREXIT(cinfo, JERR_BAD_PROGRESSION,
 	       cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
     }
     /* Update progression status, and verify that scan order is legal.
@@ -792,14 +711,14 @@ start_pass (j_decompress_ptr cinfo)
      * not fatal errors ... not clear if this is right way to behave.
      */
     for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
-      int coefi, cindex = cinfo.cur_comp_info[ci].component_index;
+      int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex();
       int[] coef_bit_ptr = cinfo.coef_bits[cindex];
       if (cinfo.Ss!=0 && coef_bit_ptr[0] < 0) /* AC without prior DC scan */
-	WARNMS2(cinfo, JWRN_BOGUS_PROGRESSION, cindex, 0);
+	WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, 0);
       for (coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++) {
 	int expected = (coef_bit_ptr[coefi] < 0) ? 0 : coef_bit_ptr[coefi];
 	if (cinfo.Ah != expected)
-	  WARNMS2(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
+	  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
 	coef_bit_ptr[coefi] = cinfo.Al;
       }
     }
@@ -830,9 +749,9 @@ start_pass (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      tbl = compptr.dc_tbl_no;
+      tbl = compptr.getDCTableNo();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
-	ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
+	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.dc_stats[tbl] == null)
 	entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
       /* Initialize DC predictions to 0 */
@@ -841,9 +760,9 @@ start_pass (j_decompress_ptr cinfo)
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      tbl = compptr.ac_tbl_no;
+      tbl = compptr.getACTableNo();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
-	ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
+	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.ac_stats[tbl] == null)
 	entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
     }
@@ -878,6 +797,9 @@ void
 jinit_arith_decoder (j_decompress_ptr cinfo)
 {
   arith_entropy_ptr entropy = new arith_entropy_ptr();
+  
+  cinfo.entropy = entropy;
+
   int i;
 
 //  entropy = (arith_entropy_ptr)  (*cinfo.mem.alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,SIZEOF(arith_entropy_decoder));
@@ -889,6 +811,8 @@ jinit_arith_decoder (j_decompress_ptr cinfo)
   for (i = 0; i < NUM_ARITH_TBLS; i++) {
     entropy.dc_stats[i] = null;
     entropy.ac_stats[i] = null;
+// 	entropy.dc_context = new int[DC_STAT_BINS];
+// 	entropy.last_dc_val = new int[cinfo.num_components];
   }
 
   /* Initialize index for fixed probability estimation */
@@ -896,13 +820,11 @@ jinit_arith_decoder (j_decompress_ptr cinfo)
 
   if (cinfo.progressive_mode) {
     /* Create progression status table */
-    int[] coef_bit_ptr;
 	int ci;
     cinfo.coef_bits = new int[cinfo.num_components][DCTSIZE2];
-    coef_bit_ptr = cinfo.coef_bits[0];
     for (ci = 0; ci < cinfo.num_components; ci++)
       for (i = 0; i < DCTSIZE2; i++)
-	coef_bit_ptr[i] = -1;
+	    cinfo.coef_bits[ci][i] = -1;
   }
 }
 }

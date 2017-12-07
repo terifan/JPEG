@@ -11,6 +11,10 @@ public class SOSMarkerSegment
 	private int[] mComponents;
 	private int[] mHuffmanTableAC;
 	private int[] mHuffmanTableDC;
+	private int mSs;
+	private int mSe;
+	private int mAh;
+	private int mAl;
 
 
 	public SOSMarkerSegment(BitInputStream aInputStream) throws IOException
@@ -31,12 +35,16 @@ public class SOSMarkerSegment
 		for (int i = 0; i < mNumComponents; i++)
 		{
 			mComponents[i] = aInputStream.readInt8();
+
 			int temp = aInputStream.readInt8();
 			mHuffmanTableAC[i] = temp & 15;
 			mHuffmanTableDC[i] = temp >> 4;
 		}
 
-		aInputStream.skipBytes(3);
+		mSs = aInputStream.readInt8();
+		mSe = aInputStream.readInt8();
+		mAh = aInputStream.readBits(4);
+		mAl = aInputStream.readBits(4);
 
 		if (VERBOSE)
 		{
@@ -83,5 +91,29 @@ public class SOSMarkerSegment
 	public int getHuffmanTableDC(int aIndex)
 	{
 		return mHuffmanTableDC[aIndex];
+	}
+
+
+	public int getSs()
+	{
+		return mSs;
+	}
+
+
+	public int getSe()
+	{
+		return mSe;
+	}
+
+
+	public int getAh()
+	{
+		return mAh;
+	}
+
+
+	public int getAl()
+	{
+		return mAl;
 	}
 }

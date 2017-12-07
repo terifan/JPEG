@@ -12,46 +12,41 @@ public class ComponentInfo
 	public final static int I = 4;
 	public final static int Q = 5;
 
-	private int mComponent;
+	private int mComponentIndex;
 	private int mQuantizationTableId;
-	private int mSamplingX;
-	private int mSamplingY;
+	private int mDCTableNo;
+	private int mACTableNo;
 
 
-	public static ComponentInfo read(BitInputStream aInputStream) throws IOException
+	public ComponentInfo(BitInputStream aInputStream) throws IOException
 	{
-		ComponentInfo ci = new ComponentInfo();
+		mComponentIndex = aInputStream.readInt8();
+		mDCTableNo = aInputStream.readBits(4);
+		mACTableNo = aInputStream.readBits(4);
+		mQuantizationTableId = aInputStream.readInt8();
 
-		ci.mComponent = aInputStream.readInt8();
-		int temp = aInputStream.readInt8();
-		ci.mSamplingX = temp >> 4;
-		ci.mSamplingY = temp & 0xf;
-		ci.mQuantizationTableId = aInputStream.readInt8();
-
-		if (ci.mComponent < 1 || ci.mComponent > 5)
-		{
-//			throw new IOException("Error in JPEG stream; Undefined component type: " + ci.mComponent);
-		}
-
-		return ci;
+//		if (mComponentIndex < 1 || mComponentIndex > 5)
+//		{
+//			throw new IOException("Error in JPEG stream; Undefined component type: " + ci.mComponentId);
+//		}
 	}
 
 
-	public int getComponent()
+	public int getComponentIndex()
 	{
-		return mComponent;
+		return mComponentIndex;
 	}
 
 
-	public int getSamplingX()
+	public int getDCTableNo()
 	{
-		return mSamplingX;
+		return mDCTableNo;
 	}
 
 
-	public int getSamplingY()
+	public int getACTableNo()
 	{
-		return mSamplingY;
+		return mACTableNo;
 	}
 
 
@@ -66,7 +61,7 @@ public class ComponentInfo
 	{
 		String component;
 
-		switch (mComponent)
+		switch (mComponentIndex)
 		{
 			case Y: component = "Y"; break;
 			case CB: component = "Cb"; break;
@@ -75,6 +70,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "ComponentInfo[component=" + component + ", sampling=[" + mSamplingX + "," + mSamplingY + "], quantizationTableId=" + mQuantizationTableId + "]";
+		return "ComponentInfo[component=" + component + ", sampling=[" + mDCTableNo + "," + mACTableNo + "], quantizationTableId=" + mQuantizationTableId + "]";
 	}
 }

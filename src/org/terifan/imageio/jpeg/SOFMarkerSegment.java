@@ -7,6 +7,8 @@ import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 public class SOFMarkerSegment
 {
+	private boolean mArithmetic;
+	private boolean mProgressive;
 	private int mPrecision;
 	private int mHeight;
 	private int mWidth;
@@ -15,7 +17,7 @@ public class SOFMarkerSegment
 	private int mMaxSamplingY;
 
 
-	public SOFMarkerSegment(BitInputStream aInputStream) throws IOException
+	public SOFMarkerSegment(BitInputStream aInputStream, boolean aArithmetic, boolean aProgressive) throws IOException
 	{
 		int segmentLength = aInputStream.readInt16();
 
@@ -24,6 +26,8 @@ public class SOFMarkerSegment
 			throw new IOException("segmentLength illegal value: " + segmentLength);
 		}
 
+		mArithmetic = aArithmetic;
+		mProgressive = aProgressive;
 		mPrecision = aInputStream.readInt8();
 		mHeight = aInputStream.readInt16();
 		mWidth = aInputStream.readInt16();
@@ -36,10 +40,10 @@ public class SOFMarkerSegment
 
 		for (int i = 0; i < mComponents.length; i++)
 		{
-			mComponents[i] = ComponentInfo.read(aInputStream);
+			mComponents[i] = new ComponentInfo(aInputStream);
 
-			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getSamplingX());
-			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getSamplingY());
+			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getDCTableNo());
+			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getACTableNo());
 		}
 
 		if (VERBOSE)
@@ -87,5 +91,17 @@ public class SOFMarkerSegment
 	public ComponentInfo getComponent(int aIndex)
 	{
 		return mComponents[aIndex];
+	}
+
+
+	public boolean isArithmetic()
+	{
+		return mArithmetic;
+	}
+
+
+	public boolean isProgressive()
+	{
+		return mProgressive;
 	}
 }
