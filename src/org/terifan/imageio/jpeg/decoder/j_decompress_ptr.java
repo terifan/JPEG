@@ -27,4 +27,14 @@ public class j_decompress_ptr
 	boolean progressive_mode;
 	int unread_marker;
 	int[][] coef_bits;
+
+
+	public j_decompress_ptr()
+	{
+		for (int i = 0; i < NUM_ARITH_TBLS; i++) {
+		  arith_dc_L[i] = 0;
+		  arith_dc_U[i] = 1;
+		  arith_ac_K[i] = 5;
+		}
+	}
 }

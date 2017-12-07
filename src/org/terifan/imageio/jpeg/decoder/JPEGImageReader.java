@@ -301,6 +301,7 @@ public class JPEGImageReader extends JPEGConstants
 			cinfo.comps_in_scan = 3;
 			cinfo.natural_order = NATURAL_ORDER;
 			cinfo.progressive_mode = mSOFMarkerSegment.isProgressive();
+			cinfo.lim_Se = DCTSIZE2-1;
 
 			ArithmeticDecoder ariDecoder = new ArithmeticDecoder(mBitStream);
 			ariDecoder.jinit_arith_decoder(cinfo);
