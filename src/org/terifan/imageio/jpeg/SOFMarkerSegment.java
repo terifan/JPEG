@@ -82,7 +82,7 @@ public class SOFMarkerSegment
 	}
 
 
-	public int getComponentCount()
+	public int getNumComponents()
 	{
 		return mComponents.length;
 	}

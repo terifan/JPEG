@@ -70,6 +70,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "ComponentInfo[component=" + component + ", sampling=[" + mHorSampleFactor + "," + mVerSampleFactor + "], quantizationTableId=" + mQuantizationTableId + "]";
+		return "component=" + component + ", sampling=[" + mHorSampleFactor + "," + mVerSampleFactor + "], quantizationTableId=" + mQuantizationTableId;
 	}
 }

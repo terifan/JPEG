@@ -419,7 +419,6 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] st;
-  int st_off;
   int p1, blkn;
 
   /* Process restart marker if needed */
@@ -568,7 +567,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
     tbl = compptr.getHorSampleFactor();
-
+	  
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
     st = entropy.dc_stats[tbl];
@@ -729,15 +728,20 @@ start_pass (j_decompress_ptr cinfo)
     }
     /* Select MCU decoding routine */
     if (cinfo.Ah == 0) {
-      if (cinfo.Ss == 0)
+      if (cinfo.Ss == 0){
 	entropy.decode_mcu = x_decode_mcu_DC_first;
-      else
+  System.out.println("start scan decode_mcu_DC_first");
+	  }else{
 	entropy.decode_mcu = x_decode_mcu_AC_first;
+  System.out.println("start scan decode_mcu_AC_first");
+  }
     } else {
-      if (cinfo.Ss == 0)
-	entropy.decode_mcu = x_decode_mcu_DC_refine;
-      else
-	entropy.decode_mcu = x_decode_mcu_AC_refine;
+      if (cinfo.Ss == 0){
+  System.out.println("start scan decode_mcu_DC_refine");
+	entropy.decode_mcu = x_decode_mcu_DC_refine;}
+	  else{
+  System.out.println("start scan decode_mcu_AC_refine");
+	entropy.decode_mcu = x_decode_mcu_AC_refine;}
     }
   } else {
     /* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.

@@ -61,8 +61,6 @@ public class JPEGImageReader extends JPEGConstants
 
 	private BufferedImage readImpl() throws IOException
 	{
-		JPEGImage image = null;
-
 		try
 		{
 			int nextSegment = mBitStream.readInt16();
@@ -90,6 +88,10 @@ public class JPEGImageReader extends JPEGConstants
 
 					if ((nextSegment >> 8) != 255)
 					{
+						System.out.println("Bad input");
+
+						hexdump();
+						
 						break;
 	//					throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 					}
@@ -170,7 +172,7 @@ public class JPEGImageReader extends JPEGConstants
 					case SOS:
 					{
 						mSOSMarkerSegment = new SOSMarkerSegment(mBitStream);
-						image = readRaster();
+						readRaster();
 //						if (image.isDamaged() || !true)
 //						{
 //							return image.getImage();
@@ -193,13 +195,30 @@ public class JPEGImageReader extends JPEGConstants
 				}
 			}
 		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+		}
 		finally
 		{
 			mBitStream.close();
 			mBitStream = null;
 		}
 
-		return image == null ? null : image.getImage();
+		return mImage == null ? null : mImage.getImage();
+	}
+
+
+	public void hexdump() throws IOException
+	{
+		for (int r = 0; r < 10; r++)
+		{
+			for (int c = 0; c < 64; c++)
+			{
+				System.out.printf("%02x ", mBitStream.readInt8());
+			}
+			System.out.println();
+		}
 	}
 
 
@@ -259,9 +278,9 @@ public class JPEGImageReader extends JPEGConstants
 	JPEGImage mImage;
 	int[][][][][][] dctCoefficients;
 	ArithmeticDecoder ariDecoder;
-	int zz;
+	int progLevel;
 
-	private JPEGImage readRaster() throws IOException
+	private void readRaster() throws IOException
 	{
 		IDCT idct;
 		try
@@ -277,41 +296,51 @@ public class JPEGImageReader extends JPEGConstants
 		int maxSamplingY = mSOFMarkerSegment.getMaxSamplingY();
 		int numHorMCU = (int)Math.ceil(mSOFMarkerSegment.getWidth() / (8.0 * maxSamplingX));
 		int numVerMCU = (int)Math.ceil(mSOFMarkerSegment.getHeight() / (8.0 * maxSamplingY));
-		int numComponents = mSOFMarkerSegment.getComponentCount();
 		int restartMarkerIndex = 0;
-		int mcuCounter = 0;
 
 		try
 		{
-			numComponents = mSOSMarkerSegment.getNumComponents();
-
 			cinfo.Ss = mSOSMarkerSegment.getSs();
 			cinfo.Se = mSOSMarkerSegment.getSe();
 			cinfo.Ah = mSOSMarkerSegment.getAh();
 			cinfo.Al = mSOSMarkerSegment.getAl();
 			cinfo.comps_in_scan = mSOSMarkerSegment.getNumComponents();
-			cinfo.num_components = numComponents;
+			cinfo.num_components = mSOSMarkerSegment.getNumComponents();
 
 			cinfo.blocks_in_MCU = 0;
 
-			for (int component = 0; component < numComponents; component++)
+			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSMarkerSegment.getNumComponents(); scanComponentIndex++)
 			{
-				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-				cinfo.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-				System.out.println(comp.getHorSampleFactor()+" * "+comp.getVerSampleFactor());
+				for (int frameComponentIndex = 0; frameComponentIndex < mSOFMarkerSegment.getNumComponents(); frameComponentIndex++)
+				{
+					if (mSOFMarkerSegment.getComponent(frameComponentIndex).getComponentIndex() == mSOSMarkerSegment.getComponent(scanComponentIndex))
+					{
+						ComponentInfo comp = mSOFMarkerSegment.getComponent(frameComponentIndex);
+
+						cinfo.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+					}
+				}
 			}
 
 			cinfo.MCU_membership = new int[cinfo.blocks_in_MCU];
 			cinfo.cur_comp_info = new ComponentInfo[cinfo.num_components];
 
-			for (int component = 0, j = 0; component < numComponents; component++)
+			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSMarkerSegment.getNumComponents(); scanComponentIndex++)
 			{
-				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-
-				for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, j++)
+				for (int frameComponentIndex = 0; frameComponentIndex < mSOFMarkerSegment.getNumComponents(); frameComponentIndex++)
 				{
-					cinfo.MCU_membership[j] = component;
-					cinfo.cur_comp_info[component] = comp;
+					if (mSOFMarkerSegment.getComponent(frameComponentIndex).getComponentIndex() == mSOSMarkerSegment.getComponent(scanComponentIndex))
+					{
+						ComponentInfo comp = mSOFMarkerSegment.getComponent(frameComponentIndex);
+						cinfo.cur_comp_info[scanComponentIndex] = comp;
+
+						for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, j++)
+						{
+							cinfo.MCU_membership[j] = scanComponentIndex;
+						}
+
+						System.out.println(comp.getHorSampleFactor()+" * "+comp.getVerSampleFactor());
+					}
 				}
 			}
 
@@ -326,12 +355,12 @@ public class JPEGImageReader extends JPEGConstants
 				ariDecoder = new ArithmeticDecoder(mBitStream);
 				ariDecoder.jinit_arith_decoder(cinfo);
 
-				mImage = new JPEGImage(mSOFMarkerSegment.getWidth(), mSOFMarkerSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mSOFMarkerSegment.getComponentCount());
+				mImage = new JPEGImage(mSOFMarkerSegment.getWidth(), mSOFMarkerSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mSOFMarkerSegment.getNumComponents());
 			}
 
 			ariDecoder.start_pass(cinfo);
 
-			System.out.println(numComponents+" "+cinfo.comps_in_scan+" "+cinfo.blocks_in_MCU);
+			System.out.println(mSOSMarkerSegment.getNumComponents()+" "+cinfo.comps_in_scan+" "+cinfo.blocks_in_MCU);
 
 			JBLOCKROW[] mcu = new JBLOCKROW[cinfo.blocks_in_MCU];
 			for (int i = 0; i < cinfo.blocks_in_MCU; i++)
@@ -339,17 +368,48 @@ public class JPEGImageReader extends JPEGConstants
 				mcu[i] = new JBLOCKROW();
 			}
 
-			for (int mcuY = 0, index = 0; mcuY < numVerMCU; mcuY++)
+			if (mSOSMarkerSegment.getNumComponents() == 1 && mSOSMarkerSegment.getComponent(0) == ComponentInfo.Y)
+			{
+				for (int mcuY = 0, mcuIndex = 0; mcuY < numVerMCU; mcuY++)
+				{
+					for (int mcuRow = 0; mcuRow < 2; mcuRow++)
+					{
+						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+						{
+							if (mcuRow == 0)
+							{
+								ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][0]);
+								ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][1][0]);
+							}
+							else
+							{
+								ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][1][0][0]);
+								ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][1][1][0]);
+							}
+							
+							if (mcuRow == 1 && (mcuX == 0 && (mcuY == 0 || mcuY == 10)))
+							{
+								printTables(new int[][]{dctCoefficients[mcuY][mcuX][0][0][0], dctCoefficients[mcuY][mcuX][0][1][0], dctCoefficients[mcuY][mcuX][1][0][0], dctCoefficients[mcuY][mcuX][1][1][0], dctCoefficients[mcuY][mcuX][0][0][1], dctCoefficients[mcuY][mcuX][0][0][2]});
+								System.out.println();
+							}
+						}
+					}
+				}
+			}
+else
+			{
+
+			for (int mcuY = 0, mcuIndex = 0; mcuY < numVerMCU; mcuY++)
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
-					if (numComponents == 1)
+					if (mSOSMarkerSegment.getNumComponents() == 1)
 					{
-						if (mSOFMarkerSegment.getComponent(0).getComponentIndex() == ComponentInfo.CB)
+						if (mSOSMarkerSegment.getComponent(0) == ComponentInfo.CB)
 						{
 							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][1]);
 						}
-						else if (mSOFMarkerSegment.getComponent(0).getComponentIndex() == ComponentInfo.CR)
+						else if (mSOSMarkerSegment.getComponent(0) == ComponentInfo.CR)
 						{
 							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][2]);
 						}
@@ -369,12 +429,12 @@ public class JPEGImageReader extends JPEGConstants
 						arraycopy(mcu[1].data, dctCoefficients[mcuY][mcuX][0][1][0]);
 						arraycopy(mcu[2].data, dctCoefficients[mcuY][mcuX][1][0][0]);
 						arraycopy(mcu[3].data, dctCoefficients[mcuY][mcuX][1][1][0]);
-					}
 
-					if (cinfo.blocks_in_MCU > 4)
-					{
-						arraycopy(mcu[4].data, dctCoefficients[mcuY][mcuX][0][0][1]);
-						arraycopy(mcu[5].data, dctCoefficients[mcuY][mcuX][0][0][2]);
+						if (cinfo.blocks_in_MCU > 4)
+						{
+							arraycopy(mcu[4].data, dctCoefficients[mcuY][mcuX][0][0][1]);
+							arraycopy(mcu[5].data, dctCoefficients[mcuY][mcuX][0][0][2]);
+						}
 					}
 
 					if (mcuX == 0 && (mcuY == 0 || mcuY == 10))
@@ -395,86 +455,85 @@ public class JPEGImageReader extends JPEGConstants
 //					}
 				}
 
-				if (mRestartInterval > 0 && (((index += numHorMCU) % mRestartInterval) == 0))
-				{
-					if (index < numHorMCU * numVerMCU - 1) // Don't check restart marker when all MCUs are loaded
-					{
-						mBitStream.align();
-
-						int restartMarker = mBitStream.readInt16();
-						if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
-						{
-							throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
-						}
-						restartMarkerIndex++;
-
-						for (int i = 0; i < MAX_CHANNELS; i++)
-						{
-							mPreviousDCValue[i] = 0;
-						}
-					}
-				}
-			}
-
-//			if (numComponents==1)
-//			{
-//				for (int r = 0; r < 6; r++)
+//				if (mRestartInterval > 0 && (((mcuIndex += numHorMCU) % mRestartInterval) == 0))
 //				{
-//					System.out.println(mBitStream.readInt8());
+//					if (mcuIndex < numHorMCU * numVerMCU - 1) // Don't check restart marker when all MCUs are loaded
+//					{
+//						mBitStream.align();
+//
+//						int restartMarker = mBitStream.readInt16();
+//						if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
+//						{
+//							throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
+//						}
+//						restartMarkerIndex++;
+//
+//						for (int i = 0; i < MAX_CHANNELS; i++)
+//						{
+//							mPreviousDCValue[i] = 0;
+//						}
+//					}
 //				}
-//			}
+			}
 			
-if (++zz==5)
-{
-			numComponents = 3;
+}
 
-			int[][][][][][] dummy = dctCoefficients.clone();
-			
-			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+			if (++progLevel==2)
 			{
-				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
-					for (int component = 0; component < numComponents; component++)
-					{
-						ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-						DQTMarkerSegment quantizationTable = mQuantizationTables[comp.getQuantizationTableId()];
-						int samplingX = comp.getHorSampleFactor();
-						int samplingY = comp.getVerSampleFactor();
-
-						for (int blockY = 0; blockY < samplingY; blockY++)
-						{
-							for (int blockX = 0; blockX < samplingX; blockX++)
-							{
-								idct.transform(dummy[mcuY][mcuX][blockY][blockX][component], quantizationTable);
-							}
-						}
-					}
+				int mcuX = 0;
+				int mcuY = 10;
+				printTables(new int[][]{dctCoefficients[mcuY][mcuX][0][0][0], dctCoefficients[mcuY][mcuX][0][1][0], dctCoefficients[mcuY][mcuX][1][0][0], dctCoefficients[mcuY][mcuX][1][1][0], dctCoefficients[mcuY][mcuX][0][0][1], dctCoefficients[mcuY][mcuX][0][0][2]});
 				}
 
-				int[][] buffer = new int[3][maxSamplingX * maxSamplingY * 8 * 8];
+				hexdump();
 
-				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+				int[][][][][][] dummy = dctCoefficients.clone();
+
+				for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 				{
-					for (int component = 0; component < numComponents; component++)
+					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-						int samplingX = comp.getHorSampleFactor();
-						int samplingY = comp.getVerSampleFactor();
-
-						for (int blockY = 0; blockY < samplingY; blockY++)
+						for (int component = 0; component < mSOFMarkerSegment.getNumComponents(); component++)
 						{
-							for (int blockX = 0; blockX < samplingX; blockX++)
+							ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
+							DQTMarkerSegment quantizationTable = mQuantizationTables[comp.getQuantizationTableId()];
+							int samplingX = comp.getHorSampleFactor();
+							int samplingY = comp.getVerSampleFactor();
+
+							for (int blockY = 0; blockY < samplingY; blockY++)
 							{
-								mImage.setData(blockX, blockY, samplingX, samplingY, dummy[mcuY][mcuX][blockY][blockX][component], buffer[component]);
+								for (int blockX = 0; blockX < samplingX; blockX++)
+								{
+									idct.transform(dummy[mcuY][mcuX][blockY][blockX][component], quantizationTable);
+								}
 							}
 						}
 					}
 
-					mImage.flushMCU(mcuX, mcuY, buffer);
-					mcuCounter++;
+					int[][] buffer = new int[3][maxSamplingX * maxSamplingY * 8 * 8];
+
+					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+					{
+						for (int component = 0; component < mSOFMarkerSegment.getNumComponents(); component++)
+						{
+							ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
+							int samplingX = comp.getHorSampleFactor();
+							int samplingY = comp.getVerSampleFactor();
+
+							for (int blockY = 0; blockY < samplingY; blockY++)
+							{
+								for (int blockX = 0; blockX < samplingX; blockX++)
+								{
+									mImage.setData(blockX, blockY, samplingX, samplingY, dummy[mcuY][mcuX][blockY][blockX][component], buffer[component]);
+								}
+							}
+						}
+
+						mImage.flushMCU(mcuX, mcuY, buffer);
+					}
 				}
 			}
-}
 		}
 		catch (IOException e)
 		{
@@ -482,9 +541,7 @@ if (++zz==5)
 			throw e;
 		}
 
-		mBitStream.align();
-
-		return mImage;
+//		mBitStream.align();
 	}
 
 
