@@ -8,14 +8,9 @@ import org.terifan.imageio.jpeg.decoder.j_decompress_ptr;
 
 public class DACMarkerSegment
 {
-	private j_decompress_ptr cinfo;
-
-
-	public DACMarkerSegment(BitInputStream aBitStream) throws IOException
+	public DACMarkerSegment(BitInputStream aBitStream, j_decompress_ptr cinfo) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
-
-		cinfo = new j_decompress_ptr();
 
 		while (length > 0)
 		{
@@ -30,7 +25,7 @@ public class DACMarkerSegment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-//				System.out.println("arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
+				System.out.println("  arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
 
 				cinfo.arith_ac_K[index - NUM_ARITH_TBLS] = val;
 			}
@@ -39,8 +34,8 @@ public class DACMarkerSegment
 				cinfo.arith_dc_L[index] = (val & 0x0F);
 				cinfo.arith_dc_U[index] = (val >> 4);
 
-//				System.out.println("arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
-//				System.out.println("arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
+				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
+				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
 
 				if (cinfo.arith_dc_L[index] > cinfo.arith_dc_U[index])
 				{
@@ -54,11 +49,5 @@ public class DACMarkerSegment
 			throw new IllegalArgumentException("Bad DAC segment: remaining: " + length);
 		}
 
-	}
-
-
-	public j_decompress_ptr getCinfo()
-	{
-		return cinfo;
 	}
 }

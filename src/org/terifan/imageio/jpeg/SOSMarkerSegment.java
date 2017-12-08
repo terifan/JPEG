@@ -71,7 +71,7 @@ public class SOSMarkerSegment
 						component = "Q";
 				}
 
-				System.out.println("  component=" + component + ", ac-table=" + mTableAC[i] + ", dc-table=" + mTableDC[i]);
+				System.out.println("  component=" + component + ", ac-table=" + mTableAC[i] + ", dc-table=" + mTableDC[i] + ", ss=" + mSs + ", se=" + mSe + ", ah=" + mAh + ", al=" + mAl);
 			}
 		}
 	}

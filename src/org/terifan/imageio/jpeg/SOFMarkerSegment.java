@@ -42,8 +42,8 @@ public class SOFMarkerSegment
 		{
 			mComponents[i] = new ComponentInfo(aInputStream);
 
-			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getDCTableNo());
-			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getACTableNo());
+			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getHorSampleFactor());
+			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getVerSampleFactor());
 		}
 
 		if (VERBOSE)

@@ -33,6 +33,8 @@ public class JPEGImageReader extends JPEGConstants
 	private Class<? extends IDCT> mDecoder;
 	private DACMarkerSegment mDACMarkerSegment;
 
+	private j_decompress_ptr cinfo = new j_decompress_ptr();
+	
 
 	private JPEGImageReader(InputStream aInputStream, Class<? extends IDCT> aDecoder) throws IOException
 	{
@@ -65,34 +67,42 @@ public class JPEGImageReader extends JPEGConstants
 		{
 			int nextSegment = mBitStream.readInt16();
 
-			if (VERBOSE)
-			{
-				System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
-			}
-
 			if (nextSegment != SOI) // Start Of Image
 			{
 				throw new IOException("Error in JPEG stream; expected SOI segment marker but found: " + Integer.toString(nextSegment, 16));
 			}
 
-			do
+			for (;;)
 			{
-				nextSegment = mBitStream.readInt16();
-
-				while ((nextSegment & 0xFF00) == 0)
+				if (cinfo != null && cinfo.unread_marker != 0)
 				{
-					nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
+					nextSegment = 0xff00 + cinfo.unread_marker;
+					cinfo.unread_marker = 0;
+				}
+				else
+				{
+					nextSegment = mBitStream.readInt16();
+
+					while ((nextSegment & 0xFF00) == 0)
+					{
+						nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
+					}
+
+					if ((nextSegment >> 8) != 255)
+					{
+						break;
+	//					throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
+					}
 				}
 
 //				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
-
-				if ((nextSegment >> 8) != 255)
+				
+				if (nextSegment == EOI)
 				{
 					break;
-//					throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 				}
 
 				switch (nextSegment)
@@ -133,7 +143,7 @@ public class JPEGImageReader extends JPEGConstants
 						break;
 					}
 					case DAC: // Arithmetic Table
-						mDACMarkerSegment = new DACMarkerSegment(mBitStream);
+						mDACMarkerSegment = new DACMarkerSegment(mBitStream, cinfo);
 						break;
 					case SOF0: // Baseline
 						mSOFMarkerSegment = new SOFMarkerSegment(mBitStream, false, false);
@@ -161,12 +171,10 @@ public class JPEGImageReader extends JPEGConstants
 					{
 						mSOSMarkerSegment = new SOSMarkerSegment(mBitStream);
 						image = readRaster();
-						if (image.isDamaged() || !true)
-						{
-							return image.getImage();
-						}
-
-mBitStream.skipBytes(4);
+//						if (image.isDamaged() || !true)
+//						{
+//							return image.getImage();
+//						}
 
 						break;
 					}
@@ -177,8 +185,6 @@ mBitStream.skipBytes(4);
 					case COM:
 						mBitStream.skipBytes(mBitStream.readInt16() - 2);
 						break;
-					case EOI:
-						break;
 					default:
 						System.out.printf("Unsupported segment: %02X%n", nextSegment);
 
@@ -186,7 +192,6 @@ mBitStream.skipBytes(4);
 						break;
 				}
 			}
-			while (nextSegment != EOI);
 		}
 		finally
 		{
@@ -251,9 +256,10 @@ mBitStream.skipBytes(4);
 	}
 
 
-		JPEGImage mImage;
-		int[][][][][][] dctCoefficients;
-			ArithmeticDecoder ariDecoder;
+	JPEGImage mImage;
+	int[][][][][][] dctCoefficients;
+	ArithmeticDecoder ariDecoder;
+	int zz;
 
 	private JPEGImage readRaster() throws IOException
 	{
@@ -279,7 +285,6 @@ mBitStream.skipBytes(4);
 		{
 			numComponents = mSOSMarkerSegment.getNumComponents();
 
-			j_decompress_ptr cinfo = mDACMarkerSegment.getCinfo();
 			cinfo.Ss = mSOSMarkerSegment.getSs();
 			cinfo.Se = mSOSMarkerSegment.getSe();
 			cinfo.Ah = mSOSMarkerSegment.getAh();
@@ -292,8 +297,8 @@ mBitStream.skipBytes(4);
 			for (int component = 0; component < numComponents; component++)
 			{
 				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-				cinfo.blocks_in_MCU += comp.getDCTableNo() * comp.getACTableNo();
-				System.out.println(comp.getDCTableNo()+" * "+comp.getACTableNo());
+				cinfo.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+				System.out.println(comp.getHorSampleFactor()+" * "+comp.getVerSampleFactor());
 			}
 
 			cinfo.MCU_membership = new int[cinfo.blocks_in_MCU];
@@ -303,7 +308,7 @@ mBitStream.skipBytes(4);
 			{
 				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
 
-				for (int i = 0; i < comp.getDCTableNo() * comp.getACTableNo(); i++, j++)
+				for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, j++)
 				{
 					cinfo.MCU_membership[j] = component;
 					cinfo.cur_comp_info[component] = comp;
@@ -338,12 +343,33 @@ mBitStream.skipBytes(4);
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
-					ariDecoder.decode_mcu(cinfo, mcu);
+					if (numComponents == 1)
+					{
+						if (mSOFMarkerSegment.getComponent(0).getComponentIndex() == ComponentInfo.CB)
+						{
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][1]);
+						}
+						else if (mSOFMarkerSegment.getComponent(0).getComponentIndex() == ComponentInfo.CR)
+						{
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][2]);
+						}
+						else
+						{
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][0]);
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][1][0]);
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][1][0][0]);
+							ariDecoder.decode_mcu(cinfo, mcu); arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][1][1][0]);
+						}
+					}
+					else
+					{
+						ariDecoder.decode_mcu(cinfo, mcu);
 
-					arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][0]);
-					arraycopy(mcu[1].data, dctCoefficients[mcuY][mcuX][0][1][0]);
-					arraycopy(mcu[2].data, dctCoefficients[mcuY][mcuX][1][0][0]);
-					arraycopy(mcu[3].data, dctCoefficients[mcuY][mcuX][1][1][0]);
+						arraycopy(mcu[0].data, dctCoefficients[mcuY][mcuX][0][0][0]);
+						arraycopy(mcu[1].data, dctCoefficients[mcuY][mcuX][0][1][0]);
+						arraycopy(mcu[2].data, dctCoefficients[mcuY][mcuX][1][0][0]);
+						arraycopy(mcu[3].data, dctCoefficients[mcuY][mcuX][1][1][0]);
+					}
 
 					if (cinfo.blocks_in_MCU > 4)
 					{
@@ -353,16 +379,10 @@ mBitStream.skipBytes(4);
 
 					if (mcuX == 0 && (mcuY == 0 || mcuY == 10))
 					{
+//						printTables(new int[][]{mcu[0].data,mcu[1].data,mcu[2].data,mcu[3].data});
 						printTables(new int[][]{dctCoefficients[mcuY][mcuX][0][0][0], dctCoefficients[mcuY][mcuX][0][1][0], dctCoefficients[mcuY][mcuX][1][0][0], dctCoefficients[mcuY][mcuX][1][1][0], dctCoefficients[mcuY][mcuX][0][0][1], dctCoefficients[mcuY][mcuX][0][0][2]});
 						System.out.println();
 					}
-
-//					dctCoefficients[mcuX][0][0][0] = mcu[0].data;
-//					dctCoefficients[mcuX][0][1][0] = mcu[1].data;
-//					dctCoefficients[mcuX][1][0][0] = mcu[2].data;
-//					dctCoefficients[mcuX][1][1][0] = mcu[3].data;
-//					dctCoefficients[mcuX][0][0][1] = mcu[4].data;
-//					dctCoefficients[mcuX][0][0][2] = mcu[5].data;
 
 //					if (!readDCTCofficients(dctCoefficients[x], numComponents))
 //					{
@@ -375,34 +395,41 @@ mBitStream.skipBytes(4);
 //					}
 				}
 
-				for (int mcuX = 0; mcuX < numHorMCU; mcuX++, index++)
+				if (mRestartInterval > 0 && (((index += numHorMCU) % mRestartInterval) == 0))
 				{
-					if (mRestartInterval > 0 && (((index + 1) % mRestartInterval) == 0))
+					if (index < numHorMCU * numVerMCU - 1) // Don't check restart marker when all MCUs are loaded
 					{
-						if (index < numHorMCU * numVerMCU - 1) // Don't check restart marker when all MCUs are loaded
+						mBitStream.align();
+
+						int restartMarker = mBitStream.readInt16();
+						if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
 						{
-							mBitStream.align();
+							throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
+						}
+						restartMarkerIndex++;
 
-							int restartMarker = mBitStream.readInt16();
-							if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
-							{
-								throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
-							}
-							restartMarkerIndex++;
-
-							for (int i = 0; i < MAX_CHANNELS; i++)
-							{
-								mPreviousDCValue[i] = 0;
-							}
+						for (int i = 0; i < MAX_CHANNELS; i++)
+						{
+							mPreviousDCValue[i] = 0;
 						}
 					}
 				}
 			}
 
-if (cinfo.comps_in_scan == 1)
+//			if (numComponents==1)
+//			{
+//				for (int r = 0; r < 6; r++)
+//				{
+//					System.out.println(mBitStream.readInt8());
+//				}
+//			}
+			
+if (++zz==5)
 {
 			numComponents = 3;
 
+			int[][][][][][] dummy = dctCoefficients.clone();
+			
 			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
@@ -411,14 +438,14 @@ if (cinfo.comps_in_scan == 1)
 					{
 						ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
 						DQTMarkerSegment quantizationTable = mQuantizationTables[comp.getQuantizationTableId()];
-						int samplingX = comp.getDCTableNo();
-						int samplingY = comp.getACTableNo();
+						int samplingX = comp.getHorSampleFactor();
+						int samplingY = comp.getVerSampleFactor();
 
 						for (int blockY = 0; blockY < samplingY; blockY++)
 						{
 							for (int blockX = 0; blockX < samplingX; blockX++)
 							{
-								idct.transform(dctCoefficients[mcuY][mcuX][blockY][blockX][component], quantizationTable);
+								idct.transform(dummy[mcuY][mcuX][blockY][blockX][component], quantizationTable);
 							}
 						}
 					}
@@ -431,14 +458,14 @@ if (cinfo.comps_in_scan == 1)
 					for (int component = 0; component < numComponents; component++)
 					{
 						ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-						int samplingX = comp.getDCTableNo();
-						int samplingY = comp.getACTableNo();
+						int samplingX = comp.getHorSampleFactor();
+						int samplingY = comp.getVerSampleFactor();
 
 						for (int blockY = 0; blockY < samplingY; blockY++)
 						{
 							for (int blockX = 0; blockX < samplingX; blockX++)
 							{
-								mImage.setData(blockX, blockY, samplingX, samplingY, dctCoefficients[mcuY][mcuX][blockY][blockX][component], buffer[component]);
+								mImage.setData(blockX, blockY, samplingX, samplingY, dummy[mcuY][mcuX][blockY][blockX][component], buffer[component]);
 							}
 						}
 					}
@@ -466,8 +493,8 @@ if (cinfo.comps_in_scan == 1)
 		for (int component = 0; component < numComponents; component++)
 		{
 			ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-			int samplingX = comp.getDCTableNo();
-			int samplingY = comp.getACTableNo();
+			int samplingX = comp.getHorSampleFactor();
+			int samplingY = comp.getVerSampleFactor();
 
 			for (int cy = 0; cy < samplingY; cy++)
 			{

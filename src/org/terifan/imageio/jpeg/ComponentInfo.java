@@ -14,15 +14,15 @@ public class ComponentInfo
 
 	private int mComponentIndex;
 	private int mQuantizationTableId;
-	private int mDCTableNo;
-	private int mACTableNo;
+	private int mHorSampleFactor;
+	private int mVerSampleFactor;
 
 
 	public ComponentInfo(BitInputStream aInputStream) throws IOException
 	{
 		mComponentIndex = aInputStream.readInt8();
-		mDCTableNo = aInputStream.readBits(4);
-		mACTableNo = aInputStream.readBits(4);
+		mHorSampleFactor = aInputStream.readBits(4);
+		mVerSampleFactor = aInputStream.readBits(4);
 		mQuantizationTableId = aInputStream.readInt8();
 
 //		if (mComponentIndex < 1 || mComponentIndex > 5)
@@ -38,15 +38,15 @@ public class ComponentInfo
 	}
 
 
-	public int getDCTableNo()
+	public int getHorSampleFactor()
 	{
-		return mDCTableNo;
+		return mHorSampleFactor;
 	}
 
 
-	public int getACTableNo()
+	public int getVerSampleFactor()
 	{
-		return mACTableNo;
+		return mVerSampleFactor;
 	}
 
 
@@ -70,6 +70,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "ComponentInfo[component=" + component + ", sampling=[" + mDCTableNo + "," + mACTableNo + "], quantizationTableId=" + mQuantizationTableId + "]";
+		return "ComponentInfo[component=" + component + ", sampling=[" + mHorSampleFactor + "," + mVerSampleFactor + "], quantizationTableId=" + mQuantizationTableId + "]";
 	}
 }

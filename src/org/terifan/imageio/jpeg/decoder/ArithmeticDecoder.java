@@ -82,7 +82,9 @@ int AC_STAT_BINS = 256;
 
 int get_byte (j_decompress_ptr cinfo) throws IOException
 {
-  return mBitStream.readInt8();
+  int c = mBitStream.readInt8();
+
+  return c;
 }
 
 
@@ -113,7 +115,7 @@ int get_byte (j_decompress_ptr cinfo) throws IOException
  * derived from Markus Kuhn's JBIG implementation.
  */
 
-int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOException
+int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int nl, nm;
@@ -212,14 +214,14 @@ process_restart (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      MEMZERO(entropy.dc_stats[compptr.getDCTableNo()], 0, DC_STAT_BINS);
+      MEMZERO(entropy.dc_stats[compptr.getHorSampleFactor()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      MEMZERO(entropy.ac_stats[compptr.getACTableNo()], 0, AC_STAT_BINS);
+      MEMZERO(entropy.ac_stats[compptr.getVerSampleFactor()], 0, AC_STAT_BINS);
     }
   }
 
@@ -272,7 +274,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     block = MCU_data[blkn];
     ci = cinfo.MCU_membership[blkn];
-    tbl = cinfo.cur_comp_info[ci].getDCTableNo();
+    tbl = cinfo.cur_comp_info[ci].getHorSampleFactor();
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -353,7 +355,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getACTableNo();
+  tbl = cinfo.cur_comp_info[0].getVerSampleFactor();
 
   /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -400,7 +402,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
       if (arith_decode(cinfo, st,st_off)!=0) v |= m;
     v += 1; if (sign!=0) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-    block.data[natural_order[k]] = (v << cinfo.Al);
+	block.data[natural_order[k]] = (v << cinfo.Al);
   } while (k < cinfo.Se);
 
   return true;
@@ -470,7 +472,7 @@ boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getACTableNo();
+  tbl = cinfo.cur_comp_info[0].getVerSampleFactor();
 
   p1 = 1 << cinfo.Al;		/* 1 in the bit position being coded */
   m1 = (-1) << cinfo.Al;	/* -1 in the bit position being coded */
@@ -565,7 +567,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-    tbl = compptr.getDCTableNo();
+    tbl = compptr.getHorSampleFactor();
 
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
@@ -614,7 +616,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
     /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
     if (cinfo.lim_Se == 0) continue;
-    tbl = compptr.getACTableNo();
+    tbl = compptr.getVerSampleFactor();
     k = 0;
 
     /* Figure F.20: Decode_AC_coefficients */
@@ -709,18 +711,18 @@ start_pass (j_decompress_ptr cinfo)
      */
 	  for (ci = 0; ci < cinfo.comps_in_scan; ci++)
 	  {
-		  int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex() - 1;
+		  int cindex = cinfo.cur_comp_info[ci].getComponentIndex() - 1;
 		  int[] coef_bit_ptr = cinfo.coef_bits[cindex];
 		  if (cinfo.Ss != 0 && coef_bit_ptr[0] < 0) // AC without prior DC scan
 		  {
 			  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION + " - AC without prior DC scan", cindex, 0);
 		  }
-		  for (coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++)
+		  for (int coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++)
 		  {
 			  int expected = (coef_bit_ptr[coefi] < 0) ? 0 : coef_bit_ptr[coefi];
 			  if (cinfo.Ah != expected)
 			  {
-				  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
+				  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION + " - " + cinfo.Ah+" != "+expected, cindex, coefi);
 			  }
 			  coef_bit_ptr[coefi] = cinfo.Al;
 		  }
@@ -752,7 +754,7 @@ start_pass (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      tbl = compptr.getDCTableNo();
+      tbl = compptr.getHorSampleFactor();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.dc_stats[tbl] == null)
@@ -763,7 +765,7 @@ start_pass (j_decompress_ptr cinfo)
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      tbl = compptr.getACTableNo();
+      tbl = compptr.getVerSampleFactor();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.ac_stats[tbl] == null)
