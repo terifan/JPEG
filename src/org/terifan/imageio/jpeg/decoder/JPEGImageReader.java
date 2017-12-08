@@ -146,7 +146,8 @@ public class JPEGImageReader extends JPEGConstants
 						mSOFMarkerSegment = new SOFMarkerSegment(mBitStream, true, false);
 						break;
 					case SOF10: // Progressive, arithmetic
-						throw new IOException("Image encoding not supported.");
+						mSOFMarkerSegment = new SOFMarkerSegment(mBitStream, true, true);
+						break;
 					case SOF3: // Lossless, Huffman
 					case SOF5: // Differential sequential, Huffman
 					case SOF6: // Differential progressive, Huffman
@@ -177,7 +178,7 @@ public class JPEGImageReader extends JPEGConstants
 						break;
 					default:
 						System.out.printf("Unsupported segment: %02X%n", nextSegment);
-						
+
 						mBitStream.skipBytes(mBitStream.readInt16() - 2);
 						break;
 				}
@@ -280,7 +281,7 @@ public class JPEGImageReader extends JPEGConstants
 			cinfo.Al = mSOSMarkerSegment.getAl();
 			cinfo.num_components = numComponents;
 
-			for (int component = 0, j = 0; component < numComponents; component++)
+			for (int component = 0; component < numComponents; component++)
 			{
 				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
 				cinfo.blocks_in_MCU += comp.getDCTableNo() * comp.getACTableNo();
@@ -290,14 +291,14 @@ public class JPEGImageReader extends JPEGConstants
 			for (int component = 0, j = 0; component < numComponents; component++)
 			{
 				ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-				
+
 				for (int i = 0; i < comp.getDCTableNo() * comp.getACTableNo(); i++, j++)
 				{
 					cinfo.MCU_membership[j] = component;
 					cinfo.cur_comp_info[component] = comp;
 				}
 			}
-			
+
 			cinfo.comps_in_scan = 3;
 			cinfo.natural_order = NATURAL_ORDER;
 			cinfo.progressive_mode = mSOFMarkerSegment.isProgressive();
@@ -306,31 +307,37 @@ public class JPEGImageReader extends JPEGConstants
 			ArithmeticDecoder ariDecoder = new ArithmeticDecoder(mBitStream);
 			ariDecoder.jinit_arith_decoder(cinfo);
 
-			
-			for (int y = 0, index = 0; y < numVerMCU; y++)
-			{
-				ariDecoder.start_pass(cinfo);
+			ariDecoder.start_pass(cinfo);
 
+			JBLOCKROW[][][] bb = new JBLOCKROW[numVerMCU][numHorMCU][cinfo.blocks_in_MCU];
+			for (int y = 0; y < numVerMCU; y++)
+			{
 				for (int x = 0; x < numHorMCU; x++)
 				{
-					JBLOCKROW[] mcu = new JBLOCKROW[cinfo.blocks_in_MCU];
-					for (int i = 0; i < mcu.length; i++)
+					for (int i = 0; i < cinfo.blocks_in_MCU; i++)
 					{
-						mcu[i] = new JBLOCKROW();
-						mcu[i].data = new int[64];
+						bb[y][x][i] = new JBLOCKROW();
+						bb[y][x][i].data = new int[64];
 					}
+				}
+			}
+
+for (int z = 0; z < 2; z++)
+{
+			for (int mcuY = 0, index = 0; mcuY < numVerMCU; mcuY++)
+			{
+				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+				{
+					JBLOCKROW[] mcu = bb[mcuY][mcuX];
 
 					ariDecoder.decode_mcu(cinfo, mcu);
 
-//					printTables(new int[][]{mcu[0].data,mcu[1].data,mcu[2].data,mcu[3].data,mcu[4].data,mcu[5].data});
-
-					dctCoefficients[x][0][0][0] = mcu[0].data;
-					dctCoefficients[x][1][0][0] = mcu[1].data;
-					dctCoefficients[x][1][1][0] = mcu[2].data;
-					dctCoefficients[x][0][1][0] = mcu[3].data;
-					dctCoefficients[x][0][0][1] = mcu[4].data;
-					dctCoefficients[x][0][0][2] = mcu[5].data;
-
+					dctCoefficients[mcuX][0][0][0] = mcu[0].data;
+					dctCoefficients[mcuX][0][1][0] = mcu[1].data;
+					dctCoefficients[mcuX][1][0][0] = mcu[2].data;
+					dctCoefficients[mcuX][1][1][0] = mcu[3].data;
+					dctCoefficients[mcuX][0][0][1] = mcu[4].data;
+					dctCoefficients[mcuX][0][0][2] = mcu[5].data;
 
 //					if (!readDCTCofficients(dctCoefficients[x], numComponents))
 //					{
@@ -345,7 +352,7 @@ public class JPEGImageReader extends JPEGConstants
 
 				int[][][] buffers = new int[numHorMCU][3][maxSamplingX * maxSamplingY * 8 * 8];
 
-				for (int x = 0; x < numHorMCU; x++)
+				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
 					for (int component = 0; component < numComponents; component++)
 					{
@@ -354,17 +361,17 @@ public class JPEGImageReader extends JPEGConstants
 						int samplingX = comp.getDCTableNo();
 						int samplingY = comp.getACTableNo();
 
-						for (int cy = 0; cy < samplingY; cy++)
+						for (int blockY = 0; blockY < samplingY; blockY++)
 						{
-							for (int cx = 0; cx < samplingX; cx++)
+							for (int blockX = 0; blockX < samplingX; blockX++)
 							{
-								idct.transform(dctCoefficients[x][cy][cx][component], quantizationTable);
+								idct.transform(dctCoefficients[mcuX][blockY][blockX][component], quantizationTable);
 							}
 						}
 					}
 				}
 
-				for (int x = 0; x < numHorMCU; x++)
+				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
 					for (int component = 0; component < numComponents; component++)
 					{
@@ -372,36 +379,36 @@ public class JPEGImageReader extends JPEGConstants
 						int samplingX = comp.getDCTableNo();
 						int samplingY = comp.getACTableNo();
 
-						for (int cy = 0; cy < samplingY; cy++)
+						for (int blockY = 0; blockY < samplingY; blockY++)
 						{
-							for (int cx = 0; cx < samplingX; cx++)
+							for (int blockX = 0; blockX < samplingX; blockX++)
 							{
 								int a, b;
-								if (cx == samplingX - 1 && x == numHorMCU - 1)
+								if (blockX == samplingX - 1 && mcuX == numHorMCU - 1)
 								{
 									a = numHorMCU - 1;
 									b = samplingX - 1;
 								}
-								else if (cx == samplingX - 1)
+								else if (blockX == samplingX - 1)
 								{
-									a = x + 1;
+									a = mcuX + 1;
 									b = 0;
 								}
 								else
 								{
-									a = x;
-									b = cx + 1;
+									a = mcuX;
+									b = blockX + 1;
 								}
 
-								image.setData(cx, cy, samplingX, samplingY, buffers[x][component], dctCoefficients[x][cy][cx][component], dctCoefficients[a][cy][b][component]);
+								image.setData(blockX, blockY, samplingX, samplingY, buffers[mcuX][component], dctCoefficients[mcuX][blockY][blockX][component], dctCoefficients[a][blockY][b][component]);
 							}
 						}
 					}
 				}
 
-				for (int x = 0; x < numHorMCU; x++, index++)
+				for (int mcuX = 0; mcuX < numHorMCU; mcuX++, index++)
 				{
-					image.flushMCU(x, y, buffers[x]);
+					image.flushMCU(mcuX, mcuY, buffers[mcuX]);
 					mcuCounter++;
 
 					if (mRestartInterval > 0 && (((index + 1) % mRestartInterval) == 0))
@@ -411,13 +418,13 @@ public class JPEGImageReader extends JPEGConstants
 							mBitStream.align();
 
 							int restartMarker = mBitStream.readInt16();
-							if (restartMarker != 0xFFD0 + restartMarkerIndex)
+							if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
 							{
-								throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + restartMarkerIndex));
+								throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
 							}
-							restartMarkerIndex = (restartMarkerIndex + 1) & 7;
+							restartMarkerIndex++;
 
-							for (int i = MAX_CHANNELS; --i >= 0;)
+							for (int i = 0; i < MAX_CHANNELS; i++)
 							{
 								mPreviousDCValue[i] = 0;
 							}
@@ -425,6 +432,7 @@ public class JPEGImageReader extends JPEGConstants
 					}
 				}
 			}
+}
 		}
 		catch (IOException e)
 		{
@@ -457,11 +465,11 @@ public class JPEGImageReader extends JPEGConstants
 				}
 			}
 		}
-		
+
 		return true;
 	}
-	
-	
+
+
 	private boolean readDCTCofficients(int[] aCoefficients, int aComponent) throws IOException
 	{
 		Arrays.fill(aCoefficients, 0);

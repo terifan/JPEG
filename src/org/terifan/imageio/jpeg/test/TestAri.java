@@ -13,7 +13,7 @@ public class TestAri
 	{
 		try
 		{
-			URL jpegResource = TestAri.class.getResource("Swallowtail-ari.jpg");
+			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
 
 			try (InputStream input = jpegResource.openStream())
 			{

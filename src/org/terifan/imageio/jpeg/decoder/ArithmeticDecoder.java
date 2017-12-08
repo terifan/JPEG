@@ -33,7 +33,7 @@ public class ArithmeticDecoder
 		mBitStream = aBitStream;
 	}
 
-	
+
 	String JERR_CANT_SUSPEND = "JERR_CANT_SUSPEND";
 	String JWRN_ARITH_BAD_CODE = "JWRN_ARITH_BAD_CODE";
 	String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
@@ -711,7 +711,7 @@ start_pass (j_decompress_ptr cinfo)
      * not fatal errors ... not clear if this is right way to behave.
      */
     for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
-      int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex();
+      int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex()-1;
       int[] coef_bit_ptr = cinfo.coef_bits[cindex];
       if (cinfo.Ss!=0 && coef_bit_ptr[0] < 0) /* AC without prior DC scan */
 	WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, 0);
@@ -797,7 +797,7 @@ void
 jinit_arith_decoder (j_decompress_ptr cinfo)
 {
   arith_entropy_ptr entropy = new arith_entropy_ptr();
-  
+
   cinfo.entropy = entropy;
 
   int i;
