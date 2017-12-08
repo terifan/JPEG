@@ -59,7 +59,7 @@ void WARNMS(Object... o)
 	}
 	public static class JBLOCKROW
 	{
-		public int[] data;
+		public int[] data = new int[64];
 	}
 
 
@@ -81,7 +81,6 @@ int AC_STAT_BINS = 256;
 
 
 int get_byte (j_decompress_ptr cinfo) throws IOException
-/* Read next input byte; we do not support suspension in this module. */
 {
   return mBitStream.readInt8();
 }
@@ -116,15 +115,15 @@ int get_byte (j_decompress_ptr cinfo) throws IOException
 
 int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOException
 {
-  arith_entropy_ptr e = (arith_entropy_ptr) cinfo.entropy;
+  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int nl, nm;
   int qe, temp;
   int data;
   int sv;
 
   /* Renormalization & data input per section D.2.6 */
-  while (e.a < 0x8000L) {
-    if (--e.ct < 0) {
+  while (entropy.a < 0x8000L) {
+    if (--entropy.ct < 0) {
       /* Need to fetch next data byte */
       if (cinfo.unread_marker!=0)
 	data = 0;		/* stuff zero data */
@@ -147,14 +146,14 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
 	  }
 	}
       }
-      e.c = (e.c << 8) | data; /* insert data into C register */
-      if ((e.ct += 8) < 0)	 /* update bit shift counter */
+      entropy.c = (entropy.c << 8) | data; /* insert data into C register */
+      if ((entropy.ct += 8) < 0)	 /* update bit shift counter */
 	/* Need more initial bytes */
-	if (++e.ct == 0)
+	if (++entropy.ct == 0)
 	  /* Got 2 initial bytes . re-init A and exit loop */
-	  e.a = 0x8000; /* => e.a = 0x10000L after loop exit */
+	  entropy.a = 0x8000; /* => e.a = 0x10000L after loop exit */
     }
-    e.a <<= 1;
+    entropy.a <<= 1;
   }
 
   /* Fetch values from our compact representation of Table D.3(D.2):
@@ -166,23 +165,23 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
   nm = qe & 0xFF; qe >>= 8;	/* Next_Index_MPS */
 
   /* Decode & estimation procedures per sections D.2.4 & D.2.5 */
-  temp = e.a - qe;
-  e.a = temp;
-  temp <<= e.ct;
-  if (e.c >= temp) {
-    e.c -= temp;
+  temp = entropy.a - qe;
+  entropy.a = temp;
+  temp <<= entropy.ct;
+  if (entropy.c >= temp) {
+    entropy.c -= temp;
     /* Conditional LPS (less probable symbol) exchange */
-    if (e.a < qe) {
-      e.a = qe;
+    if (entropy.a < qe) {
+      entropy.a = qe;
       st[st_off] = (sv & 0x80) ^ nm;	/* Estimate_after_MPS */
     } else {
-      e.a = qe;
+      entropy.a = qe;
       st[st_off] = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
       sv ^= 0x80;		/* Exchange LPS/MPS */
     }
-  } else if (e.a < 0x8000L) {
+  } else if (entropy.a < 0x8000L) {
     /* Conditional MPS (more probable symbol) exchange */
-    if (e.a < qe) {
+    if (entropy.a < qe) {
       st[st_off] = (sv & 0x80) ^ nl;	/* Estimate_after_LPS */
       sv ^= 0x80;		/* Exchange LPS/MPS */
     } else {
@@ -201,7 +200,7 @@ int arith_decode (j_decompress_ptr cinfo, int[] st, int st_off) throws IOExcepti
 void
 process_restart (j_decompress_ptr cinfo)
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  arith_entropy_ptr entropy = cinfo.entropy;
   int ci;
   ComponentInfo compptr;
 
@@ -449,7 +448,7 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
 
 boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  arith_entropy_ptr entropy = cinfo.entropy;
   JBLOCKROW block;
   int thiscoef;
   int[] st;
@@ -708,17 +707,23 @@ start_pass (j_decompress_ptr cinfo)
      * Note that inter-scan inconsistencies are treated as warnings
      * not fatal errors ... not clear if this is right way to behave.
      */
-    for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
-      int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex()-1;
-      int[] coef_bit_ptr = cinfo.coef_bits[cindex];
-      if (cinfo.Ss!=0 && coef_bit_ptr[0] < 0) /* AC without prior DC scan */
-	WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, 0);
-      for (coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++) {
-	int expected = (coef_bit_ptr[coefi] < 0) ? 0 : coef_bit_ptr[coefi];
-	if (cinfo.Ah != expected)
-	  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
-	coef_bit_ptr[coefi] = cinfo.Al;
-      }
+	  for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+	  {
+		  int coefi, cindex = cinfo.cur_comp_info[ci].getComponentIndex() - 1;
+		  int[] coef_bit_ptr = cinfo.coef_bits[cindex];
+		  if (cinfo.Ss != 0 && coef_bit_ptr[0] < 0) // AC without prior DC scan
+		  {
+			  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION + " - AC without prior DC scan", cindex, 0);
+		  }
+		  for (coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++)
+		  {
+			  int expected = (coef_bit_ptr[coefi] < 0) ? 0 : coef_bit_ptr[coefi];
+			  if (cinfo.Ah != expected)
+			  {
+				  WARNMS(cinfo, JWRN_BOGUS_PROGRESSION, cindex, coefi);
+			  }
+			  coef_bit_ptr[coefi] = cinfo.Al;
+		  }
     }
     /* Select MCU decoding routine */
     if (cinfo.Ah == 0) {

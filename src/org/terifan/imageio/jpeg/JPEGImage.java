@@ -75,11 +75,7 @@ public class JPEGImage
 	{
 		for (int src = 0; src < 64; aDst += aWidth, src += 8)
 		{
-			for (int i = 0; i < 64; i++)
-			{
-				aBuffer[i] += aCoefficients[i];
-			}
-//			System.arraycopy(aCoefficients, src, aBuffer, aDst, 8);
+			System.arraycopy(aCoefficients, src, aBuffer, aDst, 8);
 		}
 	}
 
@@ -95,7 +91,7 @@ public class JPEGImage
 			{
 				for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
 				{
-					aBuffer[dst] += aCoefficients[(x >> xShift) + src];
+					aBuffer[dst] = aCoefficients[(x >> xShift) + src];
 				}
 			}
 		}
@@ -107,15 +103,11 @@ public class JPEGImage
 	}
 
 
-	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffer, int[] aCoefficients)
+	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aCoefficients, int[] aBuffer)
 	{
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
-//			System.arraycopy(aCoefficients, 0, aBuffers, 0, 64);
-			for (int i = 0; i < 64; i++)
-			{
-				aBuffer[i] += aCoefficients[i];
-			}
+			System.arraycopy(aCoefficients, 0, aBuffer, 0, 64);
 		}
 		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
@@ -144,9 +136,9 @@ public class JPEGImage
 		{
 			for (int mcuY = 0; mcuY < mcuHeight; mcuY++)
 			{
-				for (int mcuX = 0, src = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, src++)
+				for (int mcuX = 0, i = mcuY * mMCUWidth, dst = (aY + mcuY) * mWidth + aX; mcuX < mcuWidth; mcuX++, dst++, i++)
 				{
-					mRaster[dst] = ColorSpace.yuvToRgbFP(y, cb, cr, src);
+					mRaster[dst] = ColorSpace.yuvToRgbFP(y, cb, cr, i);
 				}
 			}
 		}
