@@ -84,7 +84,7 @@ public class JPEGImageReader extends JPEGConstants
 					nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
 				}
 
-				if (VERBOSE)
+//				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
@@ -165,6 +165,9 @@ public class JPEGImageReader extends JPEGConstants
 						{
 							return image.getImage();
 						}
+
+mBitStream.skipBytes(4);
+
 						break;
 					}
 					case DRI:
@@ -248,6 +251,8 @@ public class JPEGImageReader extends JPEGConstants
 	}
 
 
+		JPEGImage mImage;
+			int[][][][] buffers2;
 	private JPEGImage readRaster() throws IOException
 	{
 		IDCT idct;
@@ -270,7 +275,10 @@ public class JPEGImageReader extends JPEGConstants
 
 		int[][][][][] dctCoefficients = new int[numHorMCU][maxSamplingY][maxSamplingX][3][64];
 
-		JPEGImage image = new JPEGImage(mSOFMarkerSegment.getWidth(), mSOFMarkerSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mSOFMarkerSegment.getComponentCount());
+		if (mImage == null)
+		{
+			mImage = new JPEGImage(mSOFMarkerSegment.getWidth(), mSOFMarkerSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mSOFMarkerSegment.getComponentCount());
+		}
 
 		try
 		{
@@ -279,6 +287,7 @@ public class JPEGImageReader extends JPEGConstants
 			cinfo.Se = mSOSMarkerSegment.getSe();
 			cinfo.Ah = mSOSMarkerSegment.getAh();
 			cinfo.Al = mSOSMarkerSegment.getAl();
+			cinfo.comps_in_scan = mSOSMarkerSegment.getNumComponents();
 			cinfo.num_components = numComponents;
 
 			for (int component = 0; component < numComponents; component++)
@@ -299,7 +308,6 @@ public class JPEGImageReader extends JPEGConstants
 				}
 			}
 
-			cinfo.comps_in_scan = 3;
 			cinfo.natural_order = NATURAL_ORDER;
 			cinfo.progressive_mode = mSOFMarkerSegment.isProgressive();
 			cinfo.lim_Se = DCTSIZE2-1;
@@ -322,8 +330,9 @@ public class JPEGImageReader extends JPEGConstants
 				}
 			}
 
-for (int z = 0; z < 2; z++)
-{
+			if (buffers2 == null)
+			buffers2 = new int[numVerMCU][numHorMCU][3][maxSamplingX * maxSamplingY * 8 * 8];
+
 			for (int mcuY = 0, index = 0; mcuY < numVerMCU; mcuY++)
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
@@ -350,8 +359,6 @@ for (int z = 0; z < 2; z++)
 //					}
 				}
 
-				int[][][] buffers = new int[numHorMCU][3][maxSamplingX * maxSamplingY * 8 * 8];
-
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
 					for (int component = 0; component < numComponents; component++)
@@ -371,6 +378,8 @@ for (int z = 0; z < 2; z++)
 					}
 				}
 
+				int[][][] buffers = buffers2[mcuY];
+
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
 					for (int component = 0; component < numComponents; component++)
@@ -383,24 +392,7 @@ for (int z = 0; z < 2; z++)
 						{
 							for (int blockX = 0; blockX < samplingX; blockX++)
 							{
-								int a, b;
-								if (blockX == samplingX - 1 && mcuX == numHorMCU - 1)
-								{
-									a = numHorMCU - 1;
-									b = samplingX - 1;
-								}
-								else if (blockX == samplingX - 1)
-								{
-									a = mcuX + 1;
-									b = 0;
-								}
-								else
-								{
-									a = mcuX;
-									b = blockX + 1;
-								}
-
-								image.setData(blockX, blockY, samplingX, samplingY, buffers[mcuX][component], dctCoefficients[mcuX][blockY][blockX][component], dctCoefficients[a][blockY][b][component]);
+								mImage.setData(blockX, blockY, samplingX, samplingY, buffers[mcuX][component], dctCoefficients[mcuX][blockY][blockX][component]);
 							}
 						}
 					}
@@ -408,7 +400,7 @@ for (int z = 0; z < 2; z++)
 
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++, index++)
 				{
-					image.flushMCU(mcuX, mcuY, buffers[mcuX]);
+					mImage.flushMCU(mcuX, mcuY, buffers[mcuX]);
 					mcuCounter++;
 
 					if (mRestartInterval > 0 && (((index + 1) % mRestartInterval) == 0))
@@ -432,17 +424,16 @@ for (int z = 0; z < 2; z++)
 					}
 				}
 			}
-}
 		}
 		catch (IOException e)
 		{
-			image.setDamaged();
+			mImage.setDamaged();
 			throw e;
 		}
 
 		mBitStream.align();
 
-		return image;
+		return mImage;
 	}
 
 
@@ -474,8 +465,8 @@ for (int z = 0; z < 2; z++)
 	{
 		Arrays.fill(aCoefficients, 0);
 
-		DHTMarkerSegment dcTable = mHuffmanTables[mSOSMarkerSegment.getHuffmanTableDC(aComponent)][0];
-		DHTMarkerSegment acTable = mHuffmanTables[mSOSMarkerSegment.getHuffmanTableAC(aComponent)][1];
+		DHTMarkerSegment dcTable = mHuffmanTables[mSOSMarkerSegment.getDCTable(aComponent)][0];
+		DHTMarkerSegment acTable = mHuffmanTables[mSOSMarkerSegment.getACTable(aComponent)][1];
 
 		int value = dcTable.decodeSymbol(mBitStream);
 

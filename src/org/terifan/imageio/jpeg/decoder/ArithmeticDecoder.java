@@ -685,26 +685,24 @@ start_pass (j_decompress_ptr cinfo)
 
   if (cinfo.progressive_mode) {
     /* Validate progressive scan parameters */
-	boolean bad = false;
     if (cinfo.Ss == 0) {
       if (cinfo.Se != 0)
-	bad=true;
+	ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
     } else {
       /* need not check Ss/Se < 0 since they came from unsigned bytes */
       if (cinfo.Se < cinfo.Ss || cinfo.Se > cinfo.lim_Se)
-	bad=true;
+	ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
       /* AC scans may have only one component */
       if (cinfo.comps_in_scan != 1)
-	bad=true;
+	ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
     }
     if (cinfo.Ah != 0) {
       /* Successive approximation refinement scan: must have Al = Ah-1. */
       if (cinfo.Ah-1 != cinfo.Al)
-	bad=true;
+	ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
     }
-    if (bad || cinfo.Al > 13) {	/* need not check for < 0 */
-      ERREXIT(cinfo, JERR_BAD_PROGRESSION,
-	       cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+    if (cinfo.Al > 13) {	/* need not check for < 0 */
+      ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
     }
     /* Update progression status, and verify that scan order is legal.
      * Note that inter-scan inconsistencies are treated as warnings

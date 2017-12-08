@@ -71,64 +71,31 @@ public class JPEGImage
 	}
 
 
-	private void copyBlock(int[] aDctCoefficients, int[] aBuffer, int aWidth, int aDst)
+	private void copyBlock(int[] aCoefficients, int[] aBuffer, int aWidth, int aDst)
 	{
 		for (int src = 0; src < 64; aDst += aWidth, src += 8)
 		{
-			System.arraycopy(aDctCoefficients, src, aBuffer, aDst, 8);
+			for (int i = 0; i < 64; i++)
+			{
+				aBuffer[i] += aCoefficients[i];
+			}
+//			System.arraycopy(aCoefficients, src, aBuffer, aDst, 8);
 		}
 	}
 
 
-	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY, int[] aCoefficients2)
+	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
 	{
 		try
 		{
-			if (aMcuHeight == 8 && aMcuWidth == 16)
+			int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
+			int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
+
+			for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
 			{
-				for (int y = 0; y < 8; y++)
+				for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
 				{
-					for (int x = 0; x < 8; x++)
-					{
-						int c0 = aCoefficients[Math.min(x + 0, 7) + Math.min(y + 0, 7) * 8];
-						int c1 = aCoefficients[Math.min(x + 1, 7) + Math.min(y + 0, 7) * 8];
-
-						aBuffer[aOffset + 2 * x + y * aMcuWidth] = c0;
-						aBuffer[aOffset + 2 * x + y * aMcuWidth + 1] = (c0 + c1) / 2;
-					}
-				}
-			}
-			else if (aMcuHeight == 16 && aMcuWidth == 16)
-			{
-				for (int y = 0; y < 8; y++)
-				{
-					int z = Math.min(y + 1, 7);
-
-					for (int x = 0; x < 8; x++)
-					{
-						int c00 =         aCoefficients[x +     y * 8];
-						int c10 = x < 7 ? aCoefficients[x + 1 + y * 8] : aCoefficients2[y * 8];
-						int c11 = x < 7 ? aCoefficients[x + 1 + z * 8] : aCoefficients2[z * 8];
-						int c01 =         aCoefficients[x +     z * 8];
-
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth] = c00;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + 1] = (c00 + c10 + 1) / 2;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth + 1] = (c00 + c10 + c01 + c11 + 2) / 4;
-						aBuffer[aOffset + 2 * x + 2 * y * aMcuWidth + aMcuWidth] = (c00 + c01 + 1) / 2;
-					}
-				}
-			}
-			else
-			{
-				int xShift = ((mMCUWidth / aSamplingX) >> 3) - 1;
-				int yShift = ((mMCUHeight / aSamplingY) >> 3) - 1;
-
-				for (int y = 0; y < aMcuHeight; y++, aOffset += aMcuWidth)
-				{
-					for (int x = 0, dst = aOffset, src = (y >> yShift) * 8; x < aMcuWidth; x++, dst++)
-					{
-						aBuffer[dst] = aCoefficients[(x >> xShift) + src];
-					}
+					aBuffer[dst] += aCoefficients[(x >> xShift) + src];
 				}
 			}
 		}
@@ -140,19 +107,23 @@ public class JPEGImage
 	}
 
 
-	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffers, int[] aCoefficients, int[] aCoefficients2)
+	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aBuffer, int[] aCoefficients)
 	{
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
-			System.arraycopy(aCoefficients, 0, aBuffers, 0, 64);
+//			System.arraycopy(aCoefficients, 0, aBuffers, 0, 64);
+			for (int i = 0; i < 64; i++)
+			{
+				aBuffer[i] += aCoefficients[i];
+			}
 		}
 		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
-			copyBlock(aCoefficients, aBuffers, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
+			copyBlock(aCoefficients, aBuffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
 		}
 		else
 		{
-			scaleBlock(aCoefficients, aBuffers, cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY, aCoefficients2);
+			scaleBlock(aCoefficients, aBuffer, cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
 		}
 	}
 

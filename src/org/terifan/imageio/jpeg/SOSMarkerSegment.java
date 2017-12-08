@@ -9,8 +9,8 @@ public class SOSMarkerSegment
 {
 	private int mNumComponents;
 	private int[] mComponents;
-	private int[] mHuffmanTableAC;
-	private int[] mHuffmanTableDC;
+	private int[] mACTable;
+	private int[] mDCTable;
 	private int mSs;
 	private int mSe;
 	private int mAh;
@@ -29,16 +29,16 @@ public class SOSMarkerSegment
 		}
 
 		mComponents = new int[mNumComponents];
-		mHuffmanTableAC = new int[mNumComponents];
-		mHuffmanTableDC = new int[mNumComponents];
+		mACTable = new int[mNumComponents];
+		mDCTable = new int[mNumComponents];
 
 		for (int i = 0; i < mNumComponents; i++)
 		{
 			mComponents[i] = aInputStream.readInt8();
 
 			int temp = aInputStream.readInt8();
-			mHuffmanTableAC[i] = temp & 15;
-			mHuffmanTableDC[i] = temp >> 4;
+			mACTable[i] = temp & 15;
+			mDCTable[i] = temp >> 4;
 		}
 
 		mSs = aInputStream.readInt8();
@@ -46,9 +46,10 @@ public class SOSMarkerSegment
 		mAh = aInputStream.readBits(4);
 		mAl = aInputStream.readBits(4);
 
-		if (VERBOSE)
+//		if (VERBOSE)
 		{
-			System.out.println("SOSMarkerSegment[numcomponents=" + mNumComponents + "]");
+			System.out.println("SOSMarkerSegment");
+			System.out.println("  numcomponents=" + mNumComponents);
 			for (int i = 0; i < mNumComponents; i++)
 			{
 				String component;
@@ -70,9 +71,15 @@ public class SOSMarkerSegment
 						component = "Q";
 				}
 
-				System.out.println("  component=" + component + ", ac-table=" + mHuffmanTableAC[i] + ", dc-table=" + mHuffmanTableDC[i]);
+				System.out.println("  component=" + component + ", ac-table=" + mACTable[i] + ", dc-table=" + mDCTable[i]);
 			}
 		}
+	}
+
+
+	public int getNumComponents()
+	{
+		return mNumComponents;
 	}
 
 
@@ -82,15 +89,15 @@ public class SOSMarkerSegment
 	}
 
 
-	public int getHuffmanTableAC(int aIndex)
+	public int getACTable(int aIndex)
 	{
-		return mHuffmanTableAC[aIndex];
+		return mACTable[aIndex];
 	}
 
 
-	public int getHuffmanTableDC(int aIndex)
+	public int getDCTable(int aIndex)
 	{
-		return mHuffmanTableDC[aIndex];
+		return mDCTable[aIndex];
 	}
 
 
