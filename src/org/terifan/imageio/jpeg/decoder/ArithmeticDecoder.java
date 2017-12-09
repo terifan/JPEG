@@ -113,14 +113,14 @@ int get_byte (j_decompress_ptr cinfo) throws IOException
 
 int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) throws IOException
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  arith_entropy_ptr entropy = cinfo.entropy;
   int nl, nm;
   int qe, temp;
   int data;
   int sv;
 
   /* Renormalization & data input per section D.2.6 */
-  while (entropy.a < 0x8000L) {
+  while (entropy.a < 0x8000) {
     if (--entropy.ct < 0) {
       /* Need to fetch next data byte */
       if (cinfo.unread_marker!=0)
@@ -398,7 +398,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IO
       if (arith_decode(cinfo, st,st_off)!=0) v |= m;
     v += 1; if (sign!=0) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-	block[natural_order[k]] = (v << cinfo.Al);
+	block[natural_order[k]] = v << cinfo.Al;
   } while (k < cinfo.Se);
 
   return true;
@@ -752,24 +752,24 @@ start_pass (j_decompress_ptr cinfo)
 		  if (cinfo.Ss == 0)
 		  {
 			  entropy.decode_mcu = x_decode_mcu_DC_first;
-			  System.out.println("start scan decode_mcu_DC_first");
+			  System.out.println("  start scan decode_mcu_DC_first [" + cinfo.Ss+"-"+cinfo.Se+"] scale " + cinfo.Al);
 		  }
 		  else
 		  {
 			  entropy.decode_mcu = x_decode_mcu_AC_first;
-			  System.out.println("start scan decode_mcu_AC_first");
+			  System.out.println("  start scan decode_mcu_AC_first [" + cinfo.Ss+"-"+cinfo.Se+"] scale " + cinfo.Al);
 		  }
 	  }
 	  else
 	  {
 		  if (cinfo.Ss == 0)
 		  {
-			  System.out.println("start scan decode_mcu_DC_refine");
+			  System.out.println("  start scan decode_mcu_DC_refine [" + cinfo.Ss+"-"+cinfo.Se+"] scale " + cinfo.Al);
 			  entropy.decode_mcu = x_decode_mcu_DC_refine;
 		  }
 		  else
 		  {
-			  System.out.println("start scan decode_mcu_AC_refine");
+			  System.out.println("  start scan decode_mcu_AC_refine [" + cinfo.Ss+"-"+cinfo.Se+"] scale " + cinfo.Al);
 			  entropy.decode_mcu = x_decode_mcu_AC_refine;
 		  }
 	  }

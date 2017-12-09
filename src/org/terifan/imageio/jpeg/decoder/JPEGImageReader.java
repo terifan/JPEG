@@ -393,14 +393,15 @@ public class JPEGImageReader extends JPEGConstants
 			if (mSOSMarkerSegment.getNumComponents() == 1)
 			{
 				ComponentInfo comp = cinfo.cur_comp_info[0];
+				int samplingX = comp.getHorSampleFactor();
+				int samplingY = comp.getVerSampleFactor();
 				
 				int rowsPerMCU = comp.getVerSampleFactor();
 
-				int samplingX = comp.getHorSampleFactor();
-				int samplingY = comp.getVerSampleFactor();
-
-				for (int loop = 0; cinfo.unread_marker==0; loop++)
+				for (int loop = 0; cinfo.unread_marker==0 && (mProgressiveLevel <5 || loop<300); loop++)
 				{
+					if (mProgressiveLevel==5)System.out.println(loop);
+					
 					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 					{
 //						for (int mcuYi = 0; mcuYi < rowsPerMCU; mcuYi++)
@@ -598,7 +599,7 @@ public class JPEGImageReader extends JPEGConstants
 			mPreviousDCValue[aComponent] += dcTable.readCoefficient(mBitStream, value);
 		}
 
-		aCoefficients[ZIGZAG_ORDER[0]] = mPreviousDCValue[aComponent];
+		aCoefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
 
 		for (int offset = 1; offset < 64; offset++)
 		{
@@ -616,7 +617,7 @@ public class JPEGImageReader extends JPEGConstants
 
 			if (codeLength > 0)
 			{
-				aCoefficients[ZIGZAG_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
+				aCoefficients[NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
 			}
 			else if (zeroCount == 0)
 			{
@@ -649,18 +650,12 @@ public class JPEGImageReader extends JPEGConstants
 	}
 
 
-	private boolean accumBuffer(int[] aSrc, int[] aDst)
+	private void accumBuffer(int[] aSrc, int[] aDst)
 	{
-		boolean nz = false;
-		
 		for (int i = 0; i < 64; i++)
 		{
-			nz |= aSrc[i] != 0;
-			
 			aDst[i] += aSrc[i];
 		}
-		
-		return nz;
 	}
 
 
