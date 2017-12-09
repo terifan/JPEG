@@ -139,7 +139,6 @@ int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) thro
 	     * The convention is to supply zero data
 	     * then until decoding is complete.
 	     */
-		  System.out.println("cinfo.unread_marker = "  + data);
 	    cinfo.unread_marker = data;
 	    data = 0;
 	  }
@@ -433,7 +432,7 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws I
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     /* Encoded data is simply the next bit of the two's-complement DC value */
     if (arith_decode(cinfo, st,0)!=0)
-      MCU_data[blkn][0] |= p1; // ?????????????????????????????
+      MCU_data[blkn][0] |= p1;
   }
 
   return true;
@@ -748,22 +747,32 @@ start_pass (j_decompress_ptr cinfo)
 		  }
     }
     /* Select MCU decoding routine */
-    if (cinfo.Ah == 0) {
-      if (cinfo.Ss == 0){
-	entropy.decode_mcu = x_decode_mcu_DC_first;
-  System.out.println("start scan decode_mcu_DC_first");
-	  }else{
-	entropy.decode_mcu = x_decode_mcu_AC_first;
-  System.out.println("start scan decode_mcu_AC_first");
-  }
-    } else {
-      if (cinfo.Ss == 0){
-  System.out.println("start scan decode_mcu_DC_refine");
-	entropy.decode_mcu = x_decode_mcu_DC_refine;}
-	  else{
-  System.out.println("start scan decode_mcu_AC_refine");
-	entropy.decode_mcu = x_decode_mcu_AC_refine;}
-    }
+    if (cinfo.Ah == 0)
+	  {
+		  if (cinfo.Ss == 0)
+		  {
+			  entropy.decode_mcu = x_decode_mcu_DC_first;
+			  System.out.println("start scan decode_mcu_DC_first");
+		  }
+		  else
+		  {
+			  entropy.decode_mcu = x_decode_mcu_AC_first;
+			  System.out.println("start scan decode_mcu_AC_first");
+		  }
+	  }
+	  else
+	  {
+		  if (cinfo.Ss == 0)
+		  {
+			  System.out.println("start scan decode_mcu_DC_refine");
+			  entropy.decode_mcu = x_decode_mcu_DC_refine;
+		  }
+		  else
+		  {
+			  System.out.println("start scan decode_mcu_AC_refine");
+			  entropy.decode_mcu = x_decode_mcu_AC_refine;
+		  }
+	  }
   } else {
     /* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.
      * This ought to be an error condition, but we make it a warning.

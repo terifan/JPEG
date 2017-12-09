@@ -100,7 +100,7 @@ public class JPEGImageReader extends JPEGConstants
 					}
 				}
 
-//				if (VERBOSE)
+				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
@@ -177,6 +177,7 @@ public class JPEGImageReader extends JPEGConstants
 						throw new IOException("Image encoding not supported.");
 					case SOS:
 					{
+						System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 						mSOSMarkerSegment = new SOSMarkerSegment(mBitStream);
 						readRaster();
 //						if (image.isDamaged() || !true)
@@ -304,6 +305,8 @@ public class JPEGImageReader extends JPEGConstants
 
 	private void readRaster() throws IOException
 	{
+		boolean verbose = false;
+		
 		IDCT idct;
 		try
 		{
@@ -322,8 +325,6 @@ public class JPEGImageReader extends JPEGConstants
 
 		try
 		{
-			System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
-			
 			cinfo.Ss = mSOSMarkerSegment.getSs();
 			cinfo.Se = mSOSMarkerSegment.getSe();
 			cinfo.Ah = mSOSMarkerSegment.getAh();
@@ -363,7 +364,7 @@ public class JPEGImageReader extends JPEGConstants
 							cinfo.MCU_membership[j] = scanComponentIndex;
 						}
 
-						System.out.println("  "+comp);
+						System.out.println("  SOF: "+comp);
 					}
 				}
 			}
@@ -384,41 +385,37 @@ public class JPEGImageReader extends JPEGConstants
 
 			mArithmeticDecoder.start_pass(cinfo);
 
-			System.out.println("  "+mSOSMarkerSegment.getNumComponents()+" "+cinfo.comps_in_scan+" "+cinfo.blocks_in_MCU);
+			if (verbose) System.out.println("  "+mSOSMarkerSegment.getNumComponents()+" "+cinfo.comps_in_scan+" "+cinfo.blocks_in_MCU);
 
 			int[][] mcu = new int[cinfo.blocks_in_MCU][64];
 			int compIndex = mSOSMarkerSegment.getComponent(0) - 1;
 
-			if (mSOSMarkerSegment.getNumComponents() == 1 && cinfo.blocks_in_MCU == 4)
+			if (mSOSMarkerSegment.getNumComponents() == 1)
 			{
-				for (int loop = 0; cinfo.unread_marker==0; loop++)
-				{
-					for (int mcuY = 0; mcuY < 2*numVerMCU; mcuY++)
-					{
-						for (int mcuX = 0, blockRow = mcuY % 2; mcuX < numHorMCU; mcuX++)
-						{
-							mArithmeticDecoder.decode_mcu(cinfo, mcu); accumBuffer(mcu[0], mDctCoefficients[mcuY/2][mcuX][blockRow][0][0]);
-							mArithmeticDecoder.decode_mcu(cinfo, mcu); accumBuffer(mcu[0], mDctCoefficients[mcuY/2][mcuX][blockRow][1][0]);
+				ComponentInfo comp = cinfo.cur_comp_info[0];
+				
+				int rowsPerMCU = comp.getVerSampleFactor();
 
-							// level 5 = 9 extra
-							// level 9 = 18 extra
-						}
-					}
-				}
-			}
-			else if (mSOSMarkerSegment.getNumComponents() == 1)
-			{
+				int samplingX = comp.getHorSampleFactor();
+				int samplingY = comp.getVerSampleFactor();
+
 				for (int loop = 0; cinfo.unread_marker==0; loop++)
 				{
 					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 					{
-						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+//						for (int mcuYi = 0; mcuYi < rowsPerMCU; mcuYi++)
 						{
-							mArithmeticDecoder.decode_mcu(cinfo, mcu);  accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][0][0][compIndex]);
-
-							// level 5 = 2 extra
-							// level 7 = 8 extra
-							// level 8 = 8 extra
+							for (int blockY = 0; blockY < samplingY; blockY++)
+							{
+								for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+								{
+									for (int blockX = 0; blockX < samplingX; blockX++)
+									{
+										mArithmeticDecoder.decode_mcu(cinfo, mcu); 
+										accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][blockY][blockX][compIndex]);
+									}
+								}
+							}
 						}
 					}
 				}
@@ -431,23 +428,27 @@ public class JPEGImageReader extends JPEGConstants
 					{
 						mArithmeticDecoder.decode_mcu(cinfo, mcu);
 
-						accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][0][0][0]);
-						accumBuffer(mcu[1], mDctCoefficients[mcuY][mcuX][0][1][0]);
-						accumBuffer(mcu[2], mDctCoefficients[mcuY][mcuX][1][0][0]);
-						accumBuffer(mcu[3], mDctCoefficients[mcuY][mcuX][1][1][0]);
-
-						if (cinfo.blocks_in_MCU > 4)
+						for (int component = 0, blockIndex = 0; component < mSOSMarkerSegment.getNumComponents(); component++)
 						{
-							accumBuffer(mcu[4], mDctCoefficients[mcuY][mcuX][0][0][1]);
-							accumBuffer(mcu[5], mDctCoefficients[mcuY][mcuX][0][0][2]);
+							ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
+							int samplingX = comp.getHorSampleFactor();
+							int samplingY = comp.getVerSampleFactor();
+
+							for (int blockY = 0; blockY < samplingY; blockY++)
+							{
+								for (int blockX = 0; blockX < samplingX; blockX++, blockIndex++)
+								{
+									accumBuffer(mcu[blockIndex], mDctCoefficients[mcuY][mcuX][blockY][blockX][component]);
+								}
+							}
 						}
 					}
 				}
 			}
 
-			debugprint(30,30);
+			if (verbose) debugprint(30,30);
 
-			if (mProgressiveLevel++ == 9 || cinfo.unread_marker == 217)
+			if (mProgressiveLevel++ == 99 || cinfo.unread_marker == 217)
 			{
 				if (cinfo.unread_marker != 217)
 				{

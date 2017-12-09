@@ -25,7 +25,7 @@ public class DACMarkerSegment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-				System.out.println("  arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
+//				System.out.println("  arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
 
 				cinfo.arith_ac_K[index - NUM_ARITH_TBLS] = val;
 			}
@@ -34,8 +34,8 @@ public class DACMarkerSegment
 				cinfo.arith_dc_U[index] = val >> 4;
 				cinfo.arith_dc_L[index] = val & 0x0F;
 
-				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
-				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
+//				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
+//				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
 
 				if (cinfo.arith_dc_L[index] > cinfo.arith_dc_U[index])
 				{

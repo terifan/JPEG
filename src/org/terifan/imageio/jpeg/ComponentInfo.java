@@ -21,8 +21,9 @@ public class ComponentInfo
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
 
 
-	public ComponentInfo(BitInputStream aInputStream) throws IOException
+	public ComponentInfo(BitInputStream aInputStream, int aComponentId) throws IOException
 	{
+		mComponentId = aComponentId;
 		mComponentIndex = aInputStream.readInt8();
 		mTableDC = aInputStream.readBits(4);
 		mTableAC = aInputStream.readBits(4);
@@ -45,6 +46,12 @@ public class ComponentInfo
 	}
 
 
+	public int getComponentId()
+	{
+		return mComponentId;
+	}
+ 
+
 	public int getComponentIndex()
 	{
 		return mComponentIndex;
@@ -57,9 +64,21 @@ public class ComponentInfo
 	}
 
 
+	public void setTableDC(int aTableDC)
+	{
+		this.mTableDC = aTableDC;
+	}
+
+
 	public int getTableAC()
 	{
 		return mTableAC;
+	}
+
+
+	public void setTableAC(int aTableAC)
+	{
+		this.mTableAC = aTableAC;
 	}
 
 
@@ -95,6 +114,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor;
+		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
 	}
 }

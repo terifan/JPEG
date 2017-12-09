@@ -40,7 +40,7 @@ public class SOFMarkerSegment
 
 		for (int i = 0; i < mComponents.length; i++)
 		{
-			mComponents[i] = new ComponentInfo(aInputStream);
+			mComponents[i] = new ComponentInfo(aInputStream, i);
 		}
 
 		if (VERBOSE)
