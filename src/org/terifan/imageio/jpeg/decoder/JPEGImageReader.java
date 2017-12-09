@@ -431,7 +431,7 @@ public class JPEGImageReader extends JPEGConstants
 
 						for (int component = 0, blockIndex = 0; component < mSOSMarkerSegment.getNumComponents(); component++)
 						{
-							ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
+							ComponentInfo comp = cinfo.cur_comp_info[component];
 							int samplingX = comp.getHorSampleFactor();
 							int samplingY = comp.getVerSampleFactor();
 
