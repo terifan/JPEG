@@ -31,8 +31,8 @@ public class DACMarkerSegment
 			}
 			else // define DC table
 			{
-				cinfo.arith_dc_L[index] = (val & 0x0F);
-				cinfo.arith_dc_U[index] = (val >> 4);
+				cinfo.arith_dc_U[index] = val >> 4;
+				cinfo.arith_dc_L[index] = val & 0x0F;
 
 				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
 				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);

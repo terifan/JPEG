@@ -41,9 +41,6 @@ public class SOFMarkerSegment
 		for (int i = 0; i < mComponents.length; i++)
 		{
 			mComponents[i] = new ComponentInfo(aInputStream);
-
-			mMaxSamplingX = Math.max(mMaxSamplingX, mComponents[i].getHorSampleFactor());
-			mMaxSamplingY = Math.max(mMaxSamplingY, mComponents[i].getVerSampleFactor());
 		}
 
 		if (VERBOSE)
@@ -55,18 +52,6 @@ public class SOFMarkerSegment
 				System.out.println(mComponent);
 			}
 		}
-	}
-
-
-	public int getMaxSamplingX()
-	{
-		return mMaxSamplingX;
-	}
-
-
-	public int getMaxSamplingY()
-	{
-		return mMaxSamplingY;
 	}
 
 

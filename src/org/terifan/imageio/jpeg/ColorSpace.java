@@ -3,6 +3,15 @@ package org.terifan.imageio.jpeg;
 
 public final class ColorSpace
 {
+//	JCS_UNKNOWN,		/* error/unspecified */
+//	JCS_GRAYSCALE,		/* monochrome */
+//	JCS_RGB,		/* red/green/blue, standard RGB (sRGB) */
+//	JCS_YCbCr,		/* Y/Cb/Cr (also known as YUV), standard YCC */
+//	JCS_CMYK,		/* C/M/Y/K */
+//	JCS_YCCK,		/* Y/Cb/Cr/K */
+//	JCS_BG_RGB,		/* big gamut red/green/blue, bg-sRGB */
+//	JCS_BG_YCC		/* big gamut Y/Cb/Cr, bg-sYCC */
+
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
 	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
@@ -14,6 +23,13 @@ public final class ColorSpace
 	private final static int[] CB_B_TAB = new int[256];
 	private final static int[] CR_G_TAB = new int[256];
 	private final static int[] CB_G_TAB = new int[256];
+	
+	public static enum ColorSpaceType
+	{
+		YCBCR,
+		YCCK,
+		RGB
+	}
 
 //	private final static int[] RANGE_LIMIT = new int[257 + 256 + 257];
 

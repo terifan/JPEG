@@ -9,6 +9,7 @@ public class BitInputStream
 	private InputStream mInputStream;
 	private int mBitBuffer;
 	private int mBitBufferLength;
+	private int mStreamOffset;
 
 
 	public BitInputStream(InputStream aInputStream)
@@ -23,10 +24,7 @@ public class BitInputStream
 		{
 			return readBits(8);
 		}
-		else
-		{
-			return mInputStream.read();
-		}
+		return read();
 	}
 
 
@@ -38,8 +36,8 @@ public class BitInputStream
 		}
 		else
 		{
-			int a = mInputStream.read();
-			int b = mInputStream.read();
+			int a = read();
+			int b = read();
 			if (b == -1)
 			{
 				return -1;
@@ -81,7 +79,7 @@ public class BitInputStream
 
 		while (mBitBufferLength < aLength)
 		{
-			int value = mInputStream.read();
+			int value = read();
 			if (value == -1)
 			{
 				break;
@@ -89,7 +87,7 @@ public class BitInputStream
 
 			if (value == 255)
 			{
-				value = mInputStream.read();
+				value = read();
 				if (value == -1)
 				{
 					break;
@@ -127,6 +125,7 @@ public class BitInputStream
 			while (aByteCount > 0)
 			{
 				long s = mInputStream.skip(aByteCount);
+				mStreamOffset += aByteCount;
 				if (s <= 0)
 				{
 					IOException e = new IOException("Skip failed");
@@ -156,5 +155,18 @@ public class BitInputStream
 			mInputStream.close();
 			mInputStream = null;
 		}
+	}
+
+
+	private int read() throws IOException
+	{
+		mStreamOffset++;
+		return mInputStream.read();
+	}
+
+
+	public int getStreamOffset()
+	{
+		return mStreamOffset;
 	}
 }

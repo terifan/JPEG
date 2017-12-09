@@ -57,10 +57,6 @@ void WARNMS(Object... o)
 	{
 		return n >> q;
 	}
-	public static class JBLOCKROW
-	{
-		public int[] data = new int[64];
-	}
 
 
 /* The following two definitions specify the allocation chunk size
@@ -143,6 +139,7 @@ int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) thro
 	     * The convention is to supply zero data
 	     * then until decoding is complete.
 	     */
+		  System.out.println("cinfo.unread_marker = "  + data);
 	    cinfo.unread_marker = data;
 	    data = 0;
 	  }
@@ -214,14 +211,14 @@ process_restart (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      MEMZERO(entropy.dc_stats[compptr.getHorSampleFactor()], 0, DC_STAT_BINS);
+      MEMZERO(entropy.dc_stats[compptr.getTableDC()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      MEMZERO(entropy.ac_stats[compptr.getVerSampleFactor()], 0, AC_STAT_BINS);
+      MEMZERO(entropy.ac_stats[compptr.getTableAC()], 0, AC_STAT_BINS);
     }
   }
 
@@ -251,10 +248,10 @@ process_restart (j_decompress_ptr cinfo)
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
+boolean decode_mcu_DC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
-  JBLOCKROW block;
+  int[] block;
   int[] st;
   int st_off;
   int blkn, ci, tbl, sign;
@@ -274,7 +271,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     block = MCU_data[blkn];
     ci = cinfo.MCU_membership[blkn];
-    tbl = cinfo.cur_comp_info[ci].getHorSampleFactor();
+    tbl = cinfo.cur_comp_info[ci].getTableDC();
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -296,7 +293,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
 	st_off = 20;	/* Table F.4: X1 = 20 */
 	while (arith_decode(cinfo, st, st_off)!=0) {
 	  if ((m <<= 1) == 0x8000) {
-	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
+	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 1");
 	    entropy.ct = -1;			/* magnitude overflow */
 	    return true;
 	  }
@@ -320,7 +317,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
     }
 
     /* Scale and output the DC coefficient (assumes jpeg_natural_order[0]=0) */
-    block.data[0] = (entropy.last_dc_val[ci] << cinfo.Al);
+    block[0] = (entropy.last_dc_val[ci] << cinfo.Al);
   }
 
   return true;
@@ -332,10 +329,10 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
+boolean decode_mcu_AC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
-  JBLOCKROW block;
+  int[] block;
   int[] st;
   int st_off;
   int tbl, sign, k;
@@ -355,7 +352,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getVerSampleFactor();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -370,9 +367,9 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
       if (arith_decode(cinfo, st,st_off + 1)!=0) break;
       st_off += 3;
       if (k >= cinfo.Se) {
-	WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
-	entropy.ct = -1;			/* spectral overflow */
-	return true;
+		WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 2");
+		entropy.ct = -1;			/* spectral overflow */
+		return true;
       }
     }
     /* Figure F.21: Decoding nonzero value v */
@@ -387,7 +384,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
 	st_off = (k <= cinfo.arith_ac_K[tbl] ? 189 : 217);
 	while (arith_decode(cinfo, st,st_off)!=0) {
 	  if ((m <<= 1) == 0x8000) {
-	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
+	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 3");
 	    entropy.ct = -1;			/* magnitude overflow */
 	    return true;
 	  }
@@ -402,7 +399,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
       if (arith_decode(cinfo, st,st_off)!=0) v |= m;
     v += 1; if (sign!=0) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-	block.data[natural_order[k]] = (v << cinfo.Al);
+	block[natural_order[k]] = (v << cinfo.Al);
   } while (k < cinfo.Se);
 
   return true;
@@ -415,7 +412,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throw
  * although the spec is not very clear on the point.
  */
 
-boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
+boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] st;
@@ -436,7 +433,7 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     /* Encoded data is simply the next bit of the two's-complement DC value */
     if (arith_decode(cinfo, st,0)!=0)
-      MCU_data[blkn].data[0] |= p1; // ?????????????????????????????
+      MCU_data[blkn][0] |= p1; // ?????????????????????????????
   }
 
   return true;
@@ -447,14 +444,14 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
  * MCU decoding for AC successive approximation refinement scan.
  */
 
-boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
+boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = cinfo.entropy;
-  JBLOCKROW block;
+  int[] block;
   int thiscoef;
   int[] st;
   int st_off;
-  int tbl, k, kex;
+  int tbl, kex;
   int p1, m1;
   int[] natural_order;
 
@@ -471,46 +468,51 @@ boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getVerSampleFactor();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   p1 = 1 << cinfo.Al;		/* 1 in the bit position being coded */
   m1 = (-1) << cinfo.Al;	/* -1 in the bit position being coded */
-
   /* Establish EOBx (previous stage end-of-block) index */
   kex = cinfo.Se;
   do {
-    if (block.data[natural_order[kex]]!=0) break;
-  } while (--kex!=0);
+    if (block[natural_order[kex]]!=0) 
+		break;
+  } 
+  while (--kex!=0);
 
-  k = cinfo.Ss - 1;
+  int k = cinfo.Ss - 1;
   do {
     st = entropy.ac_stats[tbl];
 	st_off = 3 * k;
     if (k >= kex)
-      if (arith_decode(cinfo, st,st_off)!=0) break;	/* EOB flag */
-    for (;;) {
+      if (arith_decode(cinfo, st,st_off)!=0) 
+		  break;	/* EOB flag */
+    for (;;) 
+	{
       thiscoef = natural_order[++k];
-      if (block.data[thiscoef]!=0) {				/* previously nonzero coef */
-	if (arith_decode(cinfo, st, st_off + 2)!=0) {
-	  if (block.data[thiscoef] < 0)
-	    block.data[thiscoef] += m1;
-	  else
-	    block.data[thiscoef] += p1;
-	}
-	break;
+      if (block[thiscoef]!=0) {				/* previously nonzero coef */
+		if (arith_decode(cinfo, st, st_off + 2)!=0) 
+		{
+	      if (block[thiscoef] < 0)
+			block[thiscoef] += m1;
+		  else
+			block[thiscoef] += p1;
+		}
+		break;
       }
       if (arith_decode(cinfo, st,st_off + 1)!=0) {	/* newly nonzero coef */
-	if (arith_decode(cinfo, entropy.fixed_bin,0)!=0)
-	  block.data[thiscoef] = m1;
-	else
-	  block.data[thiscoef] = p1;
-	break;
+		if (arith_decode(cinfo, entropy.fixed_bin,0)!=0)
+		  block[thiscoef] = m1;
+		else
+		  block[thiscoef] = p1;
+		break;
       }
       st_off += 3;
-      if (k >= cinfo.Se) {
-	WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
-	entropy.ct = -1;			/* spectral overflow */
-	return true;
+      if (k >= cinfo.Se) 
+	  {
+		WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 4 " + k+" >= "+cinfo.Se+" "+tbl);
+		entropy.ct = -1;			/* spectral overflow */
+		return true;
       }
     }
   } while (k < cinfo.Se);
@@ -518,12 +520,7 @@ boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) thro
   return true;
 }
 
-
-/*
- * Decode one MCU's worth of arithmetic-compressed coefficients.
- */
-
-boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOException
+private boolean x(j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
 {
 	switch (cinfo.entropy.decode_mcu)
 	{
@@ -537,9 +534,33 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 			return decode_mcu_DC_refine(cinfo, MCU_data);
 	}
 
-  final arith_entropy_ptr entropy = cinfo.entropy;
+	throw new IllegalStateException();
+}
+
+/*
+ * Decode one MCU's worth of arithmetic-compressed coefficients.
+ */
+
+boolean decode_mcu (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+{
+	for (int[] d : MCU_data)
+	{
+		Arrays.fill(d, 0);
+	}
+	
+	if (cinfo.entropy.decode_mcu != x_decode_mcu)
+	{
+		if (!x(cinfo, MCU_data))
+		{
+			throw new IllegalStateException("bad decode");
+//			System.out.println("err");
+		}
+		return true;
+	}
+
+  arith_entropy_ptr entropy = cinfo.entropy;
   ComponentInfo compptr;
-  JBLOCKROW block;
+  int[] block;
   int[] st;
   int st_off;
   int blkn, ci, tbl, sign, k;
@@ -566,7 +587,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-    tbl = compptr.getHorSampleFactor();
+    tbl = compptr.getTableDC();
 	  
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
@@ -587,7 +608,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 	st_off = 20;	/* Table F.4: X1 = 20 */
 	while (arith_decode(cinfo, st,st_off)!=0) {
 	  if ((m <<= 1) == 0x8000) {
-//	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
+//	    WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 5");
 	    entropy.ct = -1;			/* magnitude overflow */
 	    return true;
 	  }
@@ -610,12 +631,12 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
       entropy.last_dc_val[ci] += v;
     }
 
-    block.data[0] = entropy.last_dc_val[ci];
+    block[0] = entropy.last_dc_val[ci];
 
     /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
     if (cinfo.lim_Se == 0) continue;
-    tbl = compptr.getVerSampleFactor();
+    tbl = compptr.getTableAC();
     k = 0;
 
     /* Figure F.20: Decode_AC_coefficients */
@@ -628,7 +649,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 	if (arith_decode(cinfo, st,st_off + 1)!=0) break;
 	st_off += 3;
 	if (k >= cinfo.lim_Se) {
-	  WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
+	  WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 6");
 	  entropy.ct = -1;			/* spectral overflow */
 	  return true;
 	}
@@ -645,7 +666,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
 	  st_off = (k <= cinfo.arith_ac_K[tbl] ? 189 : 217);
 	  while (arith_decode(cinfo, st,st_off)!=0) {
 	    if ((m <<= 1) == 0x8000) {
-	      WARNMS(cinfo, JWRN_ARITH_BAD_CODE);
+	      WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 7");
 	      entropy.ct = -1;			/* magnitude overflow */
 	      return true;
 	    }
@@ -659,7 +680,7 @@ boolean decode_mcu (j_decompress_ptr cinfo, JBLOCKROW[] MCU_data) throws IOExcep
       while ((m >>= 1)!=0)
 	if (arith_decode(cinfo, st,st_off)!=0) v |= m;
       v += 1; if (sign!=0) v = -v;
-      block.data[natural_order[k]] = v;
+      block[natural_order[k]] = v;
     } while (k < cinfo.lim_Se);
   }
 
@@ -758,7 +779,7 @@ start_pass (j_decompress_ptr cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      tbl = compptr.getHorSampleFactor();
+      tbl = compptr.getTableDC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.dc_stats[tbl] == null)
@@ -769,7 +790,7 @@ start_pass (j_decompress_ptr cinfo)
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      tbl = compptr.getVerSampleFactor();
+      tbl = compptr.getTableAC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.ac_stats[tbl] == null)

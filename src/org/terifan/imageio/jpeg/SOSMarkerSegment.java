@@ -29,16 +29,14 @@ public class SOSMarkerSegment
 		}
 
 		mComponents = new int[mNumComponents];
-		mTableAC = new int[mNumComponents];
 		mTableDC = new int[mNumComponents];
+		mTableAC = new int[mNumComponents];
 
 		for (int i = 0; i < mNumComponents; i++)
 		{
 			mComponents[i] = aInputStream.readInt8();
-
-			int temp = aInputStream.readInt8();
-			mTableAC[i] = temp & 15;
-			mTableDC[i] = temp >> 4;
+			mTableDC[i] = aInputStream.readBits(4);
+			mTableAC[i] = aInputStream.readBits(4);
 		}
 
 		mSs = aInputStream.readInt8();
@@ -71,7 +69,7 @@ public class SOSMarkerSegment
 						component = "Q";
 				}
 
-				System.out.println("  component=" + component + ", ac-table=" + mTableAC[i] + ", dc-table=" + mTableDC[i] + ", ss=" + mSs + ", se=" + mSe + ", ah=" + mAh + ", al=" + mAl);
+				System.out.println("  component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mSs + ", se=" + mSe + ", ah=" + mAh + ", al=" + mAl);
 			}
 		}
 	}
