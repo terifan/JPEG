@@ -4,7 +4,7 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 
 
-public class j_decompress_ptr
+public class DecompressionState
 {
 	public int[] arith_dc_L = new int[16];
 	public int[] arith_dc_U = new int[16];
@@ -29,7 +29,7 @@ public class j_decompress_ptr
 	int[][] coef_bits;
 
 
-	public j_decompress_ptr()
+	public DecompressionState()
 	{
 		for (int i = 0; i < NUM_ARITH_TBLS; i++) {
 		  arith_dc_L[i] = 0;

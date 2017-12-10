@@ -13,7 +13,8 @@ public class TestAri
 	{
 		try
 		{
-			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
+			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def.jpg");
+//			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
 //			URL jpegResource = TestAri.class.getResource("untitled.jpg");

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
-import static org.terifan.imageio.jpeg.JPEGConstants.MAX_COMPS_IN_SCAN;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
@@ -23,14 +22,11 @@ import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
  *
  * Suspension is not currently supported in this module.
  */
-public class ArithmeticDecoder
+public class ArithmeticDecoder extends Decoder
 {
-	private BitInputStream mBitStream;
-
-
 	public ArithmeticDecoder(BitInputStream aBitStream)
 	{
-		mBitStream = aBitStream;
+		super(aBitStream);
 	}
 
 
@@ -40,15 +36,16 @@ public class ArithmeticDecoder
 	String JWRN_NOT_SEQUENTIAL = "JWRN_NOT_SEQUENTIAL";
 	String JERR_BAD_PROGRESSION = "JERR_BAD_PROGRESSION";
 	String JWRN_BOGUS_PROGRESSION = "JWRN_BOGUS_PROGRESSION";
-void ERREXIT(Object... o)
-{
-	throw new IllegalStateException(""+Arrays.asList(o));
-}
-void WARNMS(Object... o)
-{
-	System.out.println(Arrays.asList(o));
-}
 
+	
+	void ERREXIT(Object... o)
+	{
+		throw new IllegalStateException(""+Arrays.asList(o));
+	}
+	void WARNMS(Object... o)
+	{
+		System.out.println(Arrays.asList(o));
+	}
 	void MEMZERO(int[] arr, int off, int len)
 	{
 		Arrays.fill(arr, off, off+len, 0);
@@ -76,12 +73,6 @@ int DC_STAT_BINS = 64;
 int AC_STAT_BINS = 256;
 
 
-int get_byte (j_decompress_ptr cinfo) throws IOException
-{
-  int c = mBitStream.readInt8();
-
-  return c;
-}
 
 
 /*
@@ -111,7 +102,7 @@ int get_byte (j_decompress_ptr cinfo) throws IOException
  * derived from Markus Kuhn's JBIG implementation.
  */
 
-int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) throws IOException
+int arith_decode(DecompressionState cinfo, final int[] st, final int st_off) throws IOException
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int nl, nm;
@@ -195,8 +186,7 @@ int arith_decode (j_decompress_ptr cinfo, final int[] st, final int st_off) thro
  * Check for a restart marker & resynchronize decoder.
  */
 
-void
-process_restart (j_decompress_ptr cinfo)
+void process_restart(DecompressionState cinfo)
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int ci;
@@ -247,7 +237,7 @@ process_restart (j_decompress_ptr cinfo)
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_DC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_DC_first(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] block;
@@ -328,7 +318,7 @@ boolean decode_mcu_DC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IO
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_AC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] block;
@@ -411,7 +401,7 @@ boolean decode_mcu_AC_first (j_decompress_ptr cinfo, int[][] MCU_data) throws IO
  * although the spec is not very clear on the point.
  */
 
-boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_DC_refine(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] st;
@@ -443,7 +433,7 @@ boolean decode_mcu_DC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws I
  * MCU decoding for AC successive approximation refinement scan.
  */
 
-boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int[] block;
@@ -519,7 +509,7 @@ boolean decode_mcu_AC_refine (j_decompress_ptr cinfo, int[][] MCU_data) throws I
   return true;
 }
 
-private boolean x(j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+private boolean x(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
 	switch (cinfo.entropy.decode_mcu)
 	{
@@ -540,7 +530,8 @@ private boolean x(j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
  * Decode one MCU's worth of arithmetic-compressed coefficients.
  */
 
-boolean decode_mcu (j_decompress_ptr cinfo, int[][] MCU_data) throws IOException
+	@Override
+boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOException
 {
 	for (int[] d : MCU_data)
 	{
@@ -696,8 +687,8 @@ final static int x_decode_mcu=0;
  * Initialize for an arithmetic-compressed scan.
  */
 
-void
-start_pass (j_decompress_ptr cinfo)
+	@Override
+void start_pass(DecompressionState cinfo)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int ci, tbl;
@@ -821,8 +812,8 @@ start_pass (j_decompress_ptr cinfo)
  * Finish up at the end of an arithmetic-compressed scan.
  */
 
-void
-finish_pass (j_decompress_ptr cinfo)
+	@Override
+void finish_pass(DecompressionState cinfo)
 {
   /* no work necessary here */
 }
@@ -832,8 +823,8 @@ finish_pass (j_decompress_ptr cinfo)
  * Module initialization routine for arithmetic entropy decoding.
  */
 
-void
-jinit_arith_decoder (j_decompress_ptr cinfo)
+	@Override
+void jinit_decoder(DecompressionState cinfo)
 {
   arith_entropy_ptr entropy = new arith_entropy_ptr();
 
