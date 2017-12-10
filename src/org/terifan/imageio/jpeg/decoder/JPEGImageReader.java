@@ -350,10 +350,6 @@ public class JPEGImageReader extends JPEGConstants
 			throw new IllegalStateException(e);
 		}
 
-		int maxSamplingX = 2;
-		int maxSamplingY = 2;
-		int numHorMCU = (int)Math.ceil(mSOFMarkerSegment.getWidth() / (8.0 * maxSamplingX));
-		int numVerMCU = (int)Math.ceil(mSOFMarkerSegment.getHeight() / (8.0 * maxSamplingY));
 		int restartMarkerIndex = 0;
 
 		try
@@ -367,6 +363,9 @@ public class JPEGImageReader extends JPEGConstants
 
 			cinfo.blocks_in_MCU = 0;
 
+			int maxSamplingX = 0;
+			int maxSamplingY = 0;
+
 			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSMarkerSegment.getNumComponents(); scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFMarkerSegment.getNumComponents(); frameComponentIndex++)
@@ -376,10 +375,16 @@ public class JPEGImageReader extends JPEGConstants
 						ComponentInfo comp = mSOFMarkerSegment.getComponent(frameComponentIndex);
 
 						cinfo.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+						
+						maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
+						maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
 					}
 				}
 			}
 
+			int numHorMCU = (int)Math.ceil(mSOFMarkerSegment.getWidth() / (8.0 * maxSamplingX));
+			int numVerMCU = (int)Math.ceil(mSOFMarkerSegment.getHeight() / (8.0 * maxSamplingY));
+			
 			cinfo.MCU_membership = new int[cinfo.blocks_in_MCU];
 			cinfo.cur_comp_info = new ComponentInfo[cinfo.num_components];
 
@@ -480,11 +485,12 @@ public class JPEGImageReader extends JPEGConstants
 			catch (Throwable e)
 			{
 				e.printStackTrace(System.err);
+				mStop = true;
 			}
 
 			if (verbose) debugprint(30,30);
 
-			if (!mSOFMarkerSegment.isProgressive() || mProgressiveLevel++ == 99 || cinfo.unread_marker == 217)
+			if (mStop || !mSOFMarkerSegment.isProgressive() || mProgressiveLevel++ == 99 || cinfo.unread_marker == 217)
 			{
 				if (mSOFMarkerSegment.isProgressive() && cinfo.unread_marker != 217)
 				{
