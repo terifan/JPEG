@@ -20,6 +20,9 @@ public class ComponentInfo
 	private int mHorSampleFactor; // horizontal sampling factor (1..4)
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
 
+	private int mSOSTableDC; // DC entropy table selector (0..3)
+	private int mSOSTableAC; // AC entropy table selector (0..3)
+
 
 	public ComponentInfo(BitInputStream aInputStream, int aComponentId) throws IOException
 	{
@@ -64,21 +67,9 @@ public class ComponentInfo
 	}
 
 
-	public void setTableDC(int aTableDC)
-	{
-		this.mTableDC = aTableDC;
-	}
-
-
 	public int getTableAC()
 	{
 		return mTableAC;
-	}
-
-
-	public void setTableAC(int aTableAC)
-	{
-		this.mTableAC = aTableAC;
 	}
 
 
@@ -97,6 +88,30 @@ public class ComponentInfo
 	public int getVerSampleFactor()
 	{
 		return mVerSampleFactor;
+	}
+
+
+	public int getSOSTableDC()
+	{
+		return mSOSTableDC;
+	}
+
+
+	public void setSOSTableDC(int aSOSTableDC)
+	{
+		this.mSOSTableDC = aSOSTableDC;
+	}
+
+
+	public int getSOSTableAC()
+	{
+		return mSOSTableAC;
+	}
+
+
+	public void setSOSTableAC(int aSOSTableAC)
+	{
+		this.mSOSTableAC = aSOSTableAC;
 	}
 
 

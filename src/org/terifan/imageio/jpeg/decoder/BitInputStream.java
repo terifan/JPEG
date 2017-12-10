@@ -10,11 +10,18 @@ public class BitInputStream
 	private int mBitBuffer;
 	private int mBitBufferLength;
 	private int mStreamOffset;
+	private boolean mHandleEscapeChars;
 
 
 	public BitInputStream(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
+	}
+
+
+	public void setHandleEscapeChars(boolean aHandleEscapeChars)
+	{
+		mHandleEscapeChars = aHandleEscapeChars;
 	}
 
 
@@ -85,7 +92,7 @@ public class BitInputStream
 				break;
 			}
 
-			if (value == 255)
+			if (mHandleEscapeChars && value == 255)
 			{
 				value = read();
 				if (value == -1)

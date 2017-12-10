@@ -11,17 +11,15 @@ import static org.terifan.imageio.jpeg.decoder.JPEGImageReader.MAX_CHANNELS;
 
 public class HuffmanDecoder extends Decoder
 {
-	private JPEGImageReader mImageReader;
 	private int[] mPreviousDCValue;
 	private DHTMarkerSegment[][] mHuffmanTables;
 
 
-	public HuffmanDecoder(BitInputStream aBitStream, JPEGImageReader aImageReader)
+	public HuffmanDecoder(BitInputStream aBitStream)
 	{
 		super(aBitStream);
 
 		mPreviousDCValue = new int[MAX_CHANNELS];
-		mImageReader = aImageReader;
 		mHuffmanTables = new DHTMarkerSegment[MAX_CHANNELS][2];
 	}
 
@@ -29,7 +27,6 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	void jinit_decoder(DecompressionState aCinfo)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 
@@ -48,9 +45,16 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	boolean decode_mcu(DecompressionState aCinfo, int[][] aCoefficients) throws IOException
 	{
-		for (int i = 0; i < aCinfo.num_components; i++)
+		for (int blockIndex = 0; blockIndex < aCinfo.blocks_in_MCU; blockIndex++)
 		{
-			if (!decodeImpl(aCinfo, aCoefficients, i))
+			int component = aCinfo.MCU_membership[blockIndex];
+			
+			ComponentInfo comp = aCinfo.cur_comp_info[component];
+
+			DHTMarkerSegment dcTable = mHuffmanTables[comp.getSOSTableDC()][DHTMarkerSegment.TYPE_DC];
+			DHTMarkerSegment acTable = mHuffmanTables[comp.getSOSTableAC()][DHTMarkerSegment.TYPE_AC];
+
+			if (!decodeImpl(aCinfo, aCoefficients[blockIndex], component, dcTable, acTable))
 			{
 				return false;
 			}
@@ -58,16 +62,30 @@ public class HuffmanDecoder extends Decoder
 
 		return true;
 	}
+	
+	
+//		for (int component = 0; component < numComponents; component++)
+//		{
+//			ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
+//			int samplingX = comp.getTableDC();
+//			int samplingY = comp.getTableAC();
+//
+//			for (int cy = 0; cy < samplingY; cy++)
+//			{
+//				for (int cx = 0; cx < samplingX; cx++)
+//				{
+//					if (!readDCTCofficients(aCoefficients[cy][cx][component], component))
+//					{
+//						return false;
+//					}
+//				}
+//			}
+//		}
 
 
-	boolean decodeImpl(DecompressionState aCinfo, int[][] aCoefficients, int aComponent) throws IOException
+	boolean decodeImpl(DecompressionState aCinfo, int[] aCoefficients, int aComponent, DHTMarkerSegment dcTable, DHTMarkerSegment acTable) throws IOException
 	{
-		int[] coefficients = aCoefficients[aComponent];
-
-		Arrays.fill(coefficients, 0);
-
-		DHTMarkerSegment dcTable = mHuffmanTables[aCinfo.cur_comp_info[aComponent].getTableDC()][0];
-		DHTMarkerSegment acTable = mHuffmanTables[aCinfo.cur_comp_info[aComponent].getTableAC()][1];
+		Arrays.fill(aCoefficients, 0);
 
 		int value = dcTable.decodeSymbol(mBitStream);
 
@@ -81,7 +99,7 @@ public class HuffmanDecoder extends Decoder
 			mPreviousDCValue[aComponent] += dcTable.readCoefficient(mBitStream, value);
 		}
 
-		coefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
+		aCoefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
 
 		for (int offset = 1; offset < 64; offset++)
 		{
@@ -99,7 +117,7 @@ public class HuffmanDecoder extends Decoder
 
 			if (codeLength > 0)
 			{
-				coefficients[NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
+				aCoefficients[NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
 			}
 			else if (zeroCount == 0)
 			{
