@@ -16,7 +16,7 @@ public class TestEncode
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-			new JPEGImageWriter().write(ImageIO.read(TestEncode.class.getResource("sample.jpg")), baos);
+			new JPEGImageWriter().write(ImageIO.read(TestEncode.class.getResource("sample.jpg")), 90, baos);
 
 			Debug.hexDump(baos.toByteArray());
 			

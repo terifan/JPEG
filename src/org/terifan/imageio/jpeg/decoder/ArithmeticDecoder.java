@@ -127,7 +127,7 @@ int AC_STAT_BINS = 256;
 
 int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOException
 {
-  arith_entropy_ptr entropy = cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int nl, nm;
   int qe, temp;
   int data;
@@ -211,7 +211,7 @@ int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOExceptio
 
 void process_restart(JPEG cinfo)
 {
-  arith_entropy_ptr entropy = cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int ci;
   ComponentInfo compptr;
 
@@ -262,7 +262,7 @@ void process_restart(JPEG cinfo)
 
 boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -343,7 +343,7 @@ boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean decode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -423,7 +423,7 @@ boolean decode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean decode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] st;
   int p1, blkn;
 
@@ -455,7 +455,7 @@ boolean decode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean decode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  arith_entropy_ptr entropy = cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int thiscoef;
   int[] st;
@@ -565,7 +565,7 @@ boolean decode_mcu(JPEG cinfo, int[][] MCU_data) throws IOException
 		return true;
 	}
 
-  arith_entropy_ptr entropy = cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   ComponentInfo compptr;
   int[] block;
   int[] st;
@@ -706,7 +706,7 @@ void start_pass(JPEG cinfo)
 {
 xx = 0;
 
-	arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+	ArithEntropyState entropy = cinfo.entropy;
   int ci, tbl;
   ComponentInfo compptr;
 
@@ -842,13 +842,13 @@ void finish_pass(JPEG cinfo)
 	@Override
 void jinit_decoder(JPEG cinfo)
 {
-  arith_entropy_ptr entropy = new arith_entropy_ptr();
+  ArithEntropyState entropy = new ArithEntropyState();
 
   cinfo.entropy = entropy;
 
   int i;
 
-//  entropy = (arith_entropy_ptr)  (*cinfo.mem.alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,SIZEOF(arith_entropy_decoder));
+//  entropy = (*cinfo.mem.alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,SIZEOF(arith_entropy_decoder));
 //  cinfo.entropy = &entropy.pub;
 //  entropy.pub.start_pass = start_pass;
 //  entropy.pub.finish_pass = finish_pass;

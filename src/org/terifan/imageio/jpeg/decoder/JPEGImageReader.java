@@ -8,10 +8,14 @@ import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.ColorSpace.ColorSpaceType;
+import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
+import org.terifan.imageio.jpeg.QuantizationTable;
+import static org.terifan.imageio.jpeg.test.Debug.printTables;
 
 
 public class JPEGImageReader
@@ -19,13 +23,10 @@ public class JPEGImageReader
 	final static int MAX_CHANNELS = 3;
 
 	private BitInputStream mBitStream;
-	private final DQTSegment[] mQuantizationTables;
+	private DQTSegment[] mQuantizationTables;
 	private int mRestartInterval;
 	private SOFSegment mSOFSegment;
 	private SOSSegment mSOSSegment;
-	private int mDensitiesUnits;
-	private int mDensityX;
-	private int mDensityY;
 	private Class<? extends IDCT> mIDCT;
 	private ColorSpaceType mColorSpace;
 	private boolean mStop;
@@ -42,50 +43,6 @@ public class JPEGImageReader
 
 		mBitStream = new BitInputStream(aInputStream);
 		mIDCT = aIDCT;
-	}
-
-
-	private void readDACMarkerSegment() throws IOException
-	{
-		int length = mBitStream.readInt16() - 2;
-
-		while (length > 0)
-		{
-			int index = mBitStream.readInt8();
-			int val = mBitStream.readInt8();
-			length -= 2;
-
-			if (index < 0 || index >= (2 * NUM_ARITH_TBLS))
-			{
-				throw new IllegalArgumentException("Bad DAC index: " + index);
-			}
-
-			if (index >= NUM_ARITH_TBLS) // define AC table
-			{
-//				System.out.println("  arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
-
-				mJPEG.arith_ac_K[index - NUM_ARITH_TBLS] = val;
-			}
-			else // define DC table
-			{
-				mJPEG.arith_dc_U[index] = val >> 4;
-				mJPEG.arith_dc_L[index] = val & 0x0F;
-
-//				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
-//				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
-
-				if (mJPEG.arith_dc_L[index] > mJPEG.arith_dc_U[index])
-				{
-					throw new IllegalArgumentException("Bad DAC value: " + val);
-				}
-			}
-		}
-
-		if (length != 0)
-		{
-			throw new IllegalArgumentException("Bad DAC segment: remaining: " + length);
-		}
-
 	}
 
 
@@ -139,7 +96,7 @@ public class JPEGImageReader
 					}
 				}
 
-				if (VERBOSE)
+//				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
@@ -152,32 +109,19 @@ public class JPEGImageReader
 				switch (nextSegment)
 				{
 					case APP0:
-						readAPP0Segment();
+						new APP0Segment(mJPEG).read(mBitStream);
 						break;
 					case APP14:
 						new APP14Segment(mJPEG).read(mBitStream);
 						break;
 					case DQT:
-					{
-						int segmentLength = mBitStream.readInt16() - 2;
-						do
-						{
-							DQTSegment temp = new DQTSegment(mBitStream);
-							mQuantizationTables[temp.getIdentity()] = temp;
-							segmentLength -= 1 + temp.getPrecision() * 64;
-							if (segmentLength < 0)
-							{
-								throw new IOException("Error in JPEG stream; illegal DQT segment size.");
-							}
-						}
-						while (segmentLength > 0);
+						new DQTSegment(mJPEG).read(mBitStream);
 						break;
-					}
 					case DHT:
 						((HuffmanDecoder)mDecoder).readHuffmanTables();
 						break;
 					case DAC: // Arithmetic Table
-						readDACMarkerSegment();
+						new DACSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF0: // Baseline
 						mDecoder = new HuffmanDecoder(mBitStream);
@@ -245,59 +189,6 @@ public class JPEGImageReader
 		}
 
 		return mImage == null ? null : mImage.getImage();
-	}
-
-
-	private void readAPP0Segment() throws IOException
-	{
-		int segmentLength = mBitStream.readInt16();
-
-		StringBuilder segmentType = new StringBuilder();
-		for (int c; (c = mBitStream.readInt8()) != 0;)
-		{
-			segmentType.append((char)c);
-		}
-
-		switch (segmentType.toString())
-		{
-			case "JFIF":
-				int majorVersion = mBitStream.readInt8();
-				int minorVersion = mBitStream.readInt8();
-				if (majorVersion != 1)
-				{
-					throw new IOException("Error in JPEG stream; unsupported version: " + majorVersion + "." + minorVersion);
-				}
-				mDensitiesUnits = mBitStream.readInt8();
-				mDensityX = mBitStream.readInt16();
-				mDensityY = mBitStream.readInt16();
-				int thumbnailSize = mBitStream.readInt8() * mBitStream.readInt8() * 3; // thumbnailWidth, thumbnailHeight
-				if (segmentLength != 16 + thumbnailSize)
-				{
-					throw new IOException("Error in JPEG stream; illegal APP0 segment size.");
-				}
-				mBitStream.skipBytes(thumbnailSize); // uncompressed 24-bit thumbnail raster
-				if (VERBOSE)
-				{
-					System.out.println("Ignoring thumbnail " + thumbnailSize + " bytes");
-				}
-				break;
-			case "JFXX":
-				int extensionCode = mBitStream.readInt8();
-				switch (extensionCode)
-				{
-					case 0x10: // jpeg encoded
-					case 0x11: // 8-bit palette
-					case 0x13: // 24-bit RGB
-				}
-				mBitStream.skipBytes(segmentLength - 8);
-				if (VERBOSE)
-				{
-					System.out.println("Ignoring thumbnail " + (segmentLength-8) + " bytes");
-				}
-				break;
-			default:
-				throw new IOException("Unsupported APP0 extension: " + segmentType);
-		}
 	}
 
 
@@ -383,11 +274,11 @@ public class JPEGImageReader
 
 			if (mImage == null)
 			{
-				mDctCoefficients = new int[numVerMCU][numHorMCU][maxSamplingY][maxSamplingX][mSOFSegment.getNumComponents()][64];
+				mDctCoefficients = new int[numVerMCU][numHorMCU][maxSamplingY][maxSamplingX][mJPEG.num_components][64];
 
 				mDecoder.jinit_decoder(mJPEG);
 
-				mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mDensitiesUnits, mDensityX, mDensityY, mSOFSegment.getNumComponents());
+				mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.mDensitiesUnits, mJPEG.mDensityX, mJPEG.mDensityY, mJPEG.num_components);
 			}
 
 			mDecoder.start_pass(mJPEG);
@@ -472,10 +363,10 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						for (int component = 0; component < mSOFSegment.getNumComponents(); component++)
+						for (int component = 0; component < mJPEG.num_components; component++)
 						{
 							ComponentInfo comp = mSOFSegment.getComponent(component);
-							DQTSegment quantizationTable = mQuantizationTables[comp.getQuantizationTableId()];
+							QuantizationTable quantizationTable = mJPEG.mQuantizationTables[comp.getQuantizationTableId()];
 							int samplingX = comp.getHorSampleFactor();
 							int samplingY = comp.getVerSampleFactor();
 
@@ -493,7 +384,7 @@ public class JPEGImageReader
 
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						for (int component = 0; component < mSOFSegment.getNumComponents(); component++)
+						for (int component = 0; component < mJPEG.num_components; component++)
 						{
 							ComponentInfo comp = mSOFSegment.getComponent(component);
 							int samplingX = comp.getHorSampleFactor();
@@ -551,23 +442,6 @@ public class JPEGImageReader
 	//						}
 	//					}
 	//				}
-
-
-	private static void printTables(int[][] aInput)
-	{
-		for (int r = 0; r < 8; r++)
-		{
-			for (int t = 0; t < aInput.length; t++)
-			{
-				for (int c = 0; c < 8; c++)
-				{
-					System.out.printf("%5d ", aInput[t][r*8+c]);
-				}
-				System.out.print(r == 4 && t < aInput.length-1 ? "  ===>" : "      ");
-			}
-			System.out.println();
-		}
-	}
 
 
 	private void accumBuffer(int[] aSrc, int[] aDst)

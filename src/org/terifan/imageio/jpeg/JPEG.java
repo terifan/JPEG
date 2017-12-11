@@ -1,9 +1,7 @@
 package org.terifan.imageio.jpeg;
 
-import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.decoder.arith_entropy_ptr;
-import org.terifan.imageio.jpeg.decoder.arith_entropy_ptr;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
 
 
 public class JPEG
@@ -16,7 +14,7 @@ public class JPEG
 	public int Se;
 	public int Ah;
 	public int Al;
-	public arith_entropy_ptr entropy;
+	public ArithEntropyState entropy;
 	public int[] MCU_membership;
 	public ComponentInfo[] cur_comp_info;
 	public int num_components;
@@ -29,7 +27,13 @@ public class JPEG
 	public int unread_marker;
 	public int[][] coef_bits;
 
+	public int mDensitiesUnits;
+	public int mDensityX;
+	public int mDensityY;
+	
+	public QuantizationTable[] mQuantizationTables = new QuantizationTable[8];
 
+	
 	public JPEG()
 	{
 		for (int i = 0; i < NUM_ARITH_TBLS; i++) {

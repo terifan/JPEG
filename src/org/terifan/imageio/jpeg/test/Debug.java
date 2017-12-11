@@ -34,7 +34,7 @@ public class Debug
 
 	public static void hexDump(InputStream aInputStream, int aLength)
 	{
-		int LW = 24;
+		int LW = 64;
 
 		try
 		{
@@ -83,6 +83,23 @@ public class Debug
 		catch (IOException e)
 		{
 			throw new IllegalStateException(e);
+		}
+	}
+
+
+	public static void printTables(int[][] aInput)
+	{
+		for (int r = 0; r < 8; r++)
+		{
+			for (int t = 0; t < aInput.length; t++)
+			{
+				for (int c = 0; c < 8; c++)
+				{
+					System.out.printf("%5d ", aInput[t][r*8+c]);
+				}
+				System.out.print(r == 4 && t < aInput.length-1 ? "  ===>" : "      ");
+			}
+			System.out.println();
 		}
 	}
 }

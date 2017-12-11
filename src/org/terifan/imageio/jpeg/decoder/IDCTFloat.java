@@ -1,6 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.DQTSegment;
+import org.terifan.imageio.jpeg.QuantizationTable;
 
 
 /**
@@ -27,9 +27,9 @@ public class IDCTFloat implements IDCT
 
 
 	@Override
-	public void transform(int[] aCoefficients, DQTSegment aQuantizationTable)
+	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
-		double[] quantval = aQuantizationTable.getFloatDivisors();
+		double[] quantval = aQuantizationTable.getDivisors();
 
 		double[] workspace = new double[64];
 

@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import org.terifan.imageio.jpeg.DQTSegment;
+import org.terifan.imageio.jpeg.QuantizationTable;
 
 
 /*
@@ -50,11 +51,11 @@ public class FDCTIntegerSlow implements FDCT
 
 
 	@Override
-	public void transform(int[] aCoefficients, DQTSegment aQuantizationTable)
+	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
 		transform(aCoefficients);
 
-		double[] quantval = aQuantizationTable.getFloatDivisors();
+		double[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
