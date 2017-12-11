@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
+import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
@@ -37,7 +38,7 @@ public class ArithmeticDecoder extends Decoder
 	String JERR_BAD_PROGRESSION = "JERR_BAD_PROGRESSION";
 	String JWRN_BOGUS_PROGRESSION = "JWRN_BOGUS_PROGRESSION";
 
-	
+
 	void ERREXIT(Object... o)
 	{
 		throw new IllegalStateException(""+Arrays.asList(o));
@@ -326,7 +327,6 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
   int st_off;
   int tbl, sign, k;
   int v, m;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -336,8 +336,6 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
   }
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
-
-  natural_order = cinfo.natural_order;
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
@@ -388,7 +386,7 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
       if (arith_decode(cinfo, st,st_off)!=0) v |= m;
     v += 1; if (sign!=0) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-	block[natural_order[k]] = v << cinfo.Al;
+	block[NATURAL_ORDER[k]] = v << cinfo.Al;
   } while (k < cinfo.Se);
 
   return true;
@@ -442,7 +440,6 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
   int st_off;
   int tbl, kex;
   int p1, m1;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -453,8 +450,6 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
 
-  natural_order = cinfo.natural_order;
-
   /* There is always only one block per MCU */
   block = MCU_data[0];
   tbl = cinfo.cur_comp_info[0].getSOSTableAC();
@@ -464,9 +459,9 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
   /* Establish EOBx (previous stage end-of-block) index */
   kex = cinfo.Se;
   do {
-    if (block[natural_order[kex]]!=0) 
+    if (block[NATURAL_ORDER[kex]]!=0)
 		break;
-  } 
+  }
   while (--kex!=0);
 
   int k = cinfo.Ss - 1;
@@ -474,13 +469,13 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
     st = entropy.ac_stats[tbl];
 	st_off = 3 * k;
     if (k >= kex)
-      if (arith_decode(cinfo, st,st_off)!=0) 
+      if (arith_decode(cinfo, st,st_off)!=0)
 		  break;	/* EOB flag */
-    for (;;) 
+    for (;;)
 	{
-      thiscoef = natural_order[++k];
+      thiscoef = NATURAL_ORDER[++k];
       if (block[thiscoef]!=0) {				/* previously nonzero coef */
-		if (arith_decode(cinfo, st, st_off + 2)!=0) 
+		if (arith_decode(cinfo, st, st_off + 2)!=0)
 		{
 	      if (block[thiscoef] < 0)
 			block[thiscoef] += m1;
@@ -497,7 +492,7 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
 		break;
       }
       st_off += 3;
-      if (k >= cinfo.Se) 
+      if (k >= cinfo.Se)
 	  {
 		WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 4 " + k+" >= "+cinfo.Se+" "+tbl);
 		entropy.ct = -1;			/* spectral overflow */
@@ -537,7 +532,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 	{
 		Arrays.fill(d, 0);
 	}
-	
+
 	if (cinfo.entropy.decode_mcu != x_decode_mcu)
 	{
 		if (!x(cinfo, MCU_data))
@@ -555,7 +550,6 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
   int st_off;
   int blkn, ci, tbl, sign, k;
   int v, m;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -565,8 +559,6 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
   }
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
-
-  natural_order = cinfo.natural_order;
 
   /* Outer loop handles each block in the MCU */
 
@@ -578,7 +570,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
     tbl = compptr.getSOSTableDC();
-	  
+
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
     st = entropy.dc_stats[tbl];
@@ -670,7 +662,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
       while ((m >>= 1)!=0)
 	if (arith_decode(cinfo, st,st_off)!=0) v |= m;
       v += 1; if (sign!=0) v = -v;
-      block[natural_order[k]] = v;
+      block[NATURAL_ORDER[k]] = v;
     } while (k < cinfo.lim_Se);
   }
 

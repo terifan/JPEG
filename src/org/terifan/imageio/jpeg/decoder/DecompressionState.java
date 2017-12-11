@@ -20,8 +20,7 @@ public class DecompressionState
 	int num_components;
 	int blocks_in_MCU;
 	int comps_in_scan;
-	int[] natural_order;
-	
+
 	int restart_interval;
 	int lim_Se;
 	boolean progressive_mode;

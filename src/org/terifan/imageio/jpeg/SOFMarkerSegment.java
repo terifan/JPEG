@@ -13,8 +13,6 @@ public class SOFMarkerSegment
 	private int mHeight;
 	private int mWidth;
 	private ComponentInfo[] mComponents;
-	private int mMaxSamplingX;
-	private int mMaxSamplingY;
 
 
 	public SOFMarkerSegment(BitInputStream aInputStream, boolean aArithmetic, boolean aProgressive) throws IOException
@@ -49,7 +47,7 @@ public class SOFMarkerSegment
 
 			for (ComponentInfo mComponent : mComponents)
 			{
-				System.out.println(mComponent);
+				System.out.println("  " + mComponent);
 			}
 		}
 	}
