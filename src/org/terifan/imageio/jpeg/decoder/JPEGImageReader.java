@@ -388,15 +388,6 @@ public class JPEGImageReader extends JPEGConstants
 				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
 			}
 
-			int maxSamplingX = 0;
-			int maxSamplingY = 0;
-			for (int i = 0; i < mSOFMarkerSegment.getNumComponents(); i++)
-			{
-				ComponentInfo comp = mSOFMarkerSegment.getComponent(i);
-				maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
-				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
-			}
-
 			int numHorMCU = (mSOFMarkerSegment.getWidth() + 8 * maxSamplingX - 1) / (8 * maxSamplingX);
 			int numVerMCU = (mSOFMarkerSegment.getHeight() + 8 * maxSamplingY - 1) / (8 * maxSamplingY);
 
