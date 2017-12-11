@@ -15,11 +15,8 @@ public class ComponentInfo
 	private int mComponentId; // identifier for this component (0..255)
 	private int mComponentIndex; // its index in SOF or cinfo->comp_info[]
 	private int mQuantizationTableId;
-	private int mTableDC; // DC entropy table selector (0..3)
-	private int mTableAC; // AC entropy table selector (0..3)
 	private int mHorSampleFactor; // horizontal sampling factor (1..4)
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
-
 	private int mSOSTableDC; // DC entropy table selector (0..3)
 	private int mSOSTableAC; // AC entropy table selector (0..3)
 
@@ -28,24 +25,9 @@ public class ComponentInfo
 	{
 		mComponentId = aComponentId;
 		mComponentIndex = aInputStream.readInt8();
-		mTableDC = aInputStream.readBits(4);
-		mTableAC = aInputStream.readBits(4);
+		mHorSampleFactor = aInputStream.readBits(4);
+		mVerSampleFactor = aInputStream.readBits(4);
 		mQuantizationTableId = aInputStream.readInt8();
-
-		switch (mComponentIndex)
-		{
-			case Y: 
-				mHorSampleFactor = 2;
-				mVerSampleFactor = 2;
-				break;
-			case CB: 
-			case CR: 
-				mHorSampleFactor = 1;
-				mVerSampleFactor = 1;
-				break;
-			default:
-				throw new UnsupportedOperationException("component unsupported " + mComponentIndex);
-		}
 	}
 
 
@@ -53,23 +35,11 @@ public class ComponentInfo
 	{
 		return mComponentId;
 	}
- 
+
 
 	public int getComponentIndex()
 	{
 		return mComponentIndex;
-	}
-
-
-	public int getTableDC()
-	{
-		return mTableDC;
-	}
-
-
-	public int getTableAC()
-	{
-		return mTableAC;
 	}
 
 
@@ -129,6 +99,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
+		return "component=" + component + ", dc-table=" + mSOSTableDC + ", ac-table=" + mSOSTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
 	}
 }

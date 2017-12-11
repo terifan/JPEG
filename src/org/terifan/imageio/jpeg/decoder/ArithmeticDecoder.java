@@ -45,7 +45,8 @@ public class ArithmeticDecoder extends Decoder
 	}
 	void WARNMS(Object... o)
 	{
-		System.out.println(Arrays.asList(o));
+//		System.out.println(Arrays.asList(o));
+		throw new IllegalStateException(""+Arrays.asList(o));
 	}
 	void MEMZERO(int[] arr, int off, int len)
 	{
@@ -54,6 +55,26 @@ public class ArithmeticDecoder extends Decoder
 	int IRIGHT_SHIFT(int n, int q)
 	{
 		return n >> q;
+	}
+
+
+	int pc = -1;
+	int xx = 0;
+	int get_byte(DecompressionState cinfo) throws IOException
+	{
+		int c = mBitStream.readInt8();
+		if (pc==255 && c!=0)
+		{
+			System.out.println("#"+c);
+			xx++;
+		}
+		if (xx > 0)
+		{
+			System.out.println(xx);
+			xx++;
+		}
+		pc=c;
+		return c;
 	}
 
 
@@ -537,7 +558,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 	{
 		if (!x(cinfo, MCU_data))
 		{
-			throw new IllegalStateException("bad decode");
+			throw new IllegalStateException("bad code");
 //			System.out.println("err");
 		}
 		return true;
@@ -682,7 +703,9 @@ final static int x_decode_mcu=0;
 	@Override
 void start_pass(DecompressionState cinfo)
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+xx = 0;
+
+	arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int ci, tbl;
   ComponentInfo compptr;
 
