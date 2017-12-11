@@ -17,8 +17,8 @@ public class ComponentInfo
 	private int mQuantizationTableId;
 	private int mHorSampleFactor; // horizontal sampling factor (1..4)
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
-	private int mSOSTableDC; // DC entropy table selector (0..3)
-	private int mSOSTableAC; // AC entropy table selector (0..3)
+	private int mTableDC; // DC entropy table selector (0..3)
+	private int mTableAC; // AC entropy table selector (0..3)
 
 
 	public ComponentInfo(BitInputStream aInputStream, int aComponentId) throws IOException
@@ -61,27 +61,27 @@ public class ComponentInfo
 	}
 
 
-	public int getSOSTableDC()
+	public int getTableDC()
 	{
-		return mSOSTableDC;
+		return mTableDC;
 	}
 
 
-	public void setSOSTableDC(int aSOSTableDC)
+	public void setTableDC(int aSOSTableDC)
 	{
-		this.mSOSTableDC = aSOSTableDC;
+		mTableDC = aSOSTableDC;
 	}
 
 
-	public int getSOSTableAC()
+	public int getTableAC()
 	{
-		return mSOSTableAC;
+		return mTableAC;
 	}
 
 
-	public void setSOSTableAC(int aSOSTableAC)
+	public void setTableAC(int aSOSTableAC)
 	{
-		this.mSOSTableAC = aSOSTableAC;
+		mTableAC = aSOSTableAC;
 	}
 
 
@@ -99,6 +99,6 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "component=" + component + ", dc-table=" + mSOSTableDC + ", ac-table=" + mSOSTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
+		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
 	}
 }

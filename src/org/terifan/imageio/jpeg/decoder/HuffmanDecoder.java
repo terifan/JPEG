@@ -51,8 +51,8 @@ public class HuffmanDecoder extends Decoder
 
 			ComponentInfo comp = aCinfo.cur_comp_info[component];
 
-			DHTMarkerSegment dcTable = mHuffmanTables[comp.getSOSTableDC()][DHTMarkerSegment.TYPE_DC];
-			DHTMarkerSegment acTable = mHuffmanTables[comp.getSOSTableAC()][DHTMarkerSegment.TYPE_AC];
+			DHTMarkerSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTMarkerSegment.TYPE_DC];
+			DHTMarkerSegment acTable = mHuffmanTables[comp.getTableAC()][DHTMarkerSegment.TYPE_AC];
 
 			if (!decodeImpl(aCinfo, aCoefficients[blockIndex], component, dcTable, acTable))
 			{

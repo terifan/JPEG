@@ -222,14 +222,14 @@ void process_restart(DecompressionState cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      MEMZERO(entropy.dc_stats[compptr.getSOSTableDC()], 0, DC_STAT_BINS);
+      MEMZERO(entropy.dc_stats[compptr.getTableDC()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      MEMZERO(entropy.ac_stats[compptr.getSOSTableAC()], 0, AC_STAT_BINS);
+      MEMZERO(entropy.ac_stats[compptr.getTableAC()], 0, AC_STAT_BINS);
     }
   }
 
@@ -282,7 +282,7 @@ boolean decode_mcu_DC_first(DecompressionState cinfo, int[][] MCU_data) throws I
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     block = MCU_data[blkn];
     ci = cinfo.MCU_membership[blkn];
-    tbl = cinfo.cur_comp_info[ci].getSOSTableDC();
+    tbl = cinfo.cur_comp_info[ci].getTableDC();
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -360,7 +360,7 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getSOSTableAC();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -473,7 +473,7 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
 
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getSOSTableAC();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   p1 = 1 << cinfo.Al;		/* 1 in the bit position being coded */
   m1 = (-1) << cinfo.Al;	/* -1 in the bit position being coded */
@@ -590,7 +590,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-    tbl = compptr.getSOSTableDC();
+    tbl = compptr.getTableDC();
 
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
@@ -639,7 +639,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
     /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
     if (cinfo.lim_Se == 0) continue;
-    tbl = compptr.getSOSTableAC();
+    tbl = compptr.getTableAC();
     k = 0;
 
     /* Figure F.20: Decode_AC_coefficients */
@@ -794,7 +794,7 @@ xx = 0;
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      tbl = compptr.getSOSTableDC();
+      tbl = compptr.getTableDC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.dc_stats[tbl] == null)
@@ -805,7 +805,7 @@ xx = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      tbl = compptr.getSOSTableAC();
+      tbl = compptr.getTableAC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.ac_stats[tbl] == null)
