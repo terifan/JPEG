@@ -363,9 +363,6 @@ public class JPEGImageReader extends JPEGConstants
 
 			cinfo.blocks_in_MCU = 0;
 
-			int maxSamplingX = 0;
-			int maxSamplingY = 0;
-
 			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSMarkerSegment.getNumComponents(); scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFMarkerSegment.getNumComponents(); frameComponentIndex++)
@@ -375,11 +372,18 @@ public class JPEGImageReader extends JPEGConstants
 						ComponentInfo comp = mSOFMarkerSegment.getComponent(frameComponentIndex);
 
 						cinfo.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-						
-						maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
-						maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
 					}
 				}
+			}
+						
+			int maxSamplingX = 0;
+			int maxSamplingY = 0;
+
+			for (int i = 0; i < mSOFMarkerSegment.getNumComponents(); i++)
+			{
+				ComponentInfo comp = mSOFMarkerSegment.getComponent(i);
+				maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
+				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
 			}
 
 			int numHorMCU = (int)Math.ceil(mSOFMarkerSegment.getWidth() / (8.0 * maxSamplingX));
