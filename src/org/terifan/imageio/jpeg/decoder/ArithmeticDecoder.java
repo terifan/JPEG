@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
+import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
@@ -37,14 +38,15 @@ public class ArithmeticDecoder extends Decoder
 	String JERR_BAD_PROGRESSION = "JERR_BAD_PROGRESSION";
 	String JWRN_BOGUS_PROGRESSION = "JWRN_BOGUS_PROGRESSION";
 
-	
+
 	void ERREXIT(Object... o)
 	{
 		throw new IllegalStateException(""+Arrays.asList(o));
 	}
 	void WARNMS(Object... o)
 	{
-		System.out.println(Arrays.asList(o));
+//		System.out.println(Arrays.asList(o));
+		throw new IllegalStateException(""+Arrays.asList(o));
 	}
 	void MEMZERO(int[] arr, int off, int len)
 	{
@@ -53,6 +55,26 @@ public class ArithmeticDecoder extends Decoder
 	int IRIGHT_SHIFT(int n, int q)
 	{
 		return n >> q;
+	}
+
+
+	int pc = -1;
+	int xx = 0;
+	int get_byte(DecompressionState cinfo) throws IOException
+	{
+		int c = mBitStream.readInt8();
+		if (pc==255 && c!=0)
+		{
+			System.out.println("#"+c);
+			xx++;
+		}
+		if (xx > 0)
+		{
+			System.out.println(xx);
+			xx++;
+		}
+		pc=c;
+		return c;
 	}
 
 
@@ -200,14 +222,14 @@ void process_restart(DecompressionState cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      MEMZERO(entropy.dc_stats[compptr.getSOSTableDC()], 0, DC_STAT_BINS);
+      MEMZERO(entropy.dc_stats[compptr.getTableDC()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      MEMZERO(entropy.ac_stats[compptr.getSOSTableAC()], 0, AC_STAT_BINS);
+      MEMZERO(entropy.ac_stats[compptr.getTableAC()], 0, AC_STAT_BINS);
     }
   }
 
@@ -260,7 +282,7 @@ boolean decode_mcu_DC_first(DecompressionState cinfo, int[][] MCU_data) throws I
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     block = MCU_data[blkn];
     ci = cinfo.MCU_membership[blkn];
-    tbl = cinfo.cur_comp_info[ci].getSOSTableDC();
+    tbl = cinfo.cur_comp_info[ci].getTableDC();
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -326,7 +348,6 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
   int st_off;
   int tbl, sign, k;
   int v, m;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -337,11 +358,9 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
 
-  natural_order = cinfo.natural_order;
-
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getSOSTableAC();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -388,7 +407,7 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
       if (arith_decode(cinfo, st,st_off)!=0) v |= m;
     v += 1; if (sign!=0) v = -v;
     /* Scale and output coefficient in natural (dezigzagged) order */
-	block[natural_order[k]] = v << cinfo.Al;
+	block[NATURAL_ORDER[k]] = v << cinfo.Al;
   } while (k < cinfo.Se);
 
   return true;
@@ -442,7 +461,6 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
   int st_off;
   int tbl, kex;
   int p1, m1;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -453,20 +471,18 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
 
-  natural_order = cinfo.natural_order;
-
   /* There is always only one block per MCU */
   block = MCU_data[0];
-  tbl = cinfo.cur_comp_info[0].getSOSTableAC();
+  tbl = cinfo.cur_comp_info[0].getTableAC();
 
   p1 = 1 << cinfo.Al;		/* 1 in the bit position being coded */
   m1 = (-1) << cinfo.Al;	/* -1 in the bit position being coded */
   /* Establish EOBx (previous stage end-of-block) index */
   kex = cinfo.Se;
   do {
-    if (block[natural_order[kex]]!=0) 
+    if (block[NATURAL_ORDER[kex]]!=0)
 		break;
-  } 
+  }
   while (--kex!=0);
 
   int k = cinfo.Ss - 1;
@@ -474,13 +490,13 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
     st = entropy.ac_stats[tbl];
 	st_off = 3 * k;
     if (k >= kex)
-      if (arith_decode(cinfo, st,st_off)!=0) 
+      if (arith_decode(cinfo, st,st_off)!=0)
 		  break;	/* EOB flag */
-    for (;;) 
+    for (;;)
 	{
-      thiscoef = natural_order[++k];
+      thiscoef = NATURAL_ORDER[++k];
       if (block[thiscoef]!=0) {				/* previously nonzero coef */
-		if (arith_decode(cinfo, st, st_off + 2)!=0) 
+		if (arith_decode(cinfo, st, st_off + 2)!=0)
 		{
 	      if (block[thiscoef] < 0)
 			block[thiscoef] += m1;
@@ -497,7 +513,7 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
 		break;
       }
       st_off += 3;
-      if (k >= cinfo.Se) 
+      if (k >= cinfo.Se)
 	  {
 		WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 4 " + k+" >= "+cinfo.Se+" "+tbl);
 		entropy.ct = -1;			/* spectral overflow */
@@ -537,12 +553,12 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 	{
 		Arrays.fill(d, 0);
 	}
-	
+
 	if (cinfo.entropy.decode_mcu != x_decode_mcu)
 	{
 		if (!x(cinfo, MCU_data))
 		{
-			throw new IllegalStateException("bad decode");
+			throw new IllegalStateException("bad code");
 //			System.out.println("err");
 		}
 		return true;
@@ -555,7 +571,6 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
   int st_off;
   int blkn, ci, tbl, sign, k;
   int v, m;
-  int[] natural_order;
 
   /* Process restart marker if needed */
   if (cinfo.restart_interval!=0) {
@@ -566,8 +581,6 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 
   if (entropy.ct == -1) return true;	/* if error do nothing */
 
-  natural_order = cinfo.natural_order;
-
   /* Outer loop handles each block in the MCU */
 
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
@@ -577,8 +590,8 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
 
     /* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-    tbl = compptr.getSOSTableDC();
-	  
+    tbl = compptr.getTableDC();
+
     /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 
     st = entropy.dc_stats[tbl];
@@ -626,7 +639,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
     /* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
     if (cinfo.lim_Se == 0) continue;
-    tbl = compptr.getSOSTableAC();
+    tbl = compptr.getTableAC();
     k = 0;
 
     /* Figure F.20: Decode_AC_coefficients */
@@ -670,7 +683,7 @@ boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOExceptio
       while ((m >>= 1)!=0)
 	if (arith_decode(cinfo, st,st_off)!=0) v |= m;
       v += 1; if (sign!=0) v = -v;
-      block[natural_order[k]] = v;
+      block[NATURAL_ORDER[k]] = v;
     } while (k < cinfo.lim_Se);
   }
 
@@ -690,7 +703,9 @@ final static int x_decode_mcu=0;
 	@Override
 void start_pass(DecompressionState cinfo)
 {
-  arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
+xx = 0;
+
+	arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int ci, tbl;
   ComponentInfo compptr;
 
@@ -779,7 +794,7 @@ void start_pass(DecompressionState cinfo)
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
     if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
-      tbl = compptr.getSOSTableDC();
+      tbl = compptr.getTableDC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.dc_stats[tbl] == null)
@@ -790,7 +805,7 @@ void start_pass(DecompressionState cinfo)
     }
     if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
 	(cinfo.progressive_mode && cinfo.Ss!=0)) {
-      tbl = compptr.getSOSTableAC();
+      tbl = compptr.getTableAC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
       if (entropy.ac_stats[tbl] == null)

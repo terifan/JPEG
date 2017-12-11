@@ -35,7 +35,7 @@ public class JPEGImageReader extends JPEGConstants
 	private Decoder mDecoder;
 	private int mProgressiveLevel;
 	private DecompressionState cinfo = new DecompressionState();
-	
+
 
 	private JPEGImageReader(InputStream aInputStream, Class<? extends IDCT> aIDCT) throws IOException
 	{
@@ -134,7 +134,7 @@ public class JPEGImageReader extends JPEGConstants
 						System.out.println("Bad input");
 
 						hexdump();
-						
+
 						break;
 	//					throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 					}
@@ -144,7 +144,7 @@ public class JPEGImageReader extends JPEGConstants
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
-				
+
 				if (nextSegment == EOI)
 				{
 					break;
@@ -253,14 +253,14 @@ public class JPEGImageReader extends JPEGConstants
 	{
 		int offset = mBitStream.getStreamOffset();
 		int length = mBitStream.readInt16();
-		
+
 		if (mBitStream.readInt8() == 'A' && mBitStream.readInt8() == 'd' && mBitStream.readInt8() == 'o' && mBitStream.readInt8() == 'b' && mBitStream.readInt8() == 'e')
 		{
 			if (mBitStream.readInt8() != 100)
 			{
 				mBitStream.skipBytes(1); //flags 0
 				mBitStream.skipBytes(1); //flags 1
-				
+
 				switch (mBitStream.readInt8())
 				{
 					case 1:
@@ -269,19 +269,19 @@ public class JPEGImageReader extends JPEGConstants
 					case 2:
 						mColorSpace = ColorSpace.ColorSpaceType.YCCK;
 						break;
-					default: 
+					default:
 						mColorSpace = ColorSpace.ColorSpaceType.RGB;
 						break;
 				}
 			}
 		}
-		
+
 		if (mBitStream.getStreamOffset() != offset + length)
 		{
 			throw new IOException("Expected offset " + (offset + length) + ", actual " + mBitStream.getStreamOffset());
 		}
 	}
-	
+
 
 	private void readAPPSegmentMarker() throws IOException
 	{
@@ -339,7 +339,7 @@ public class JPEGImageReader extends JPEGConstants
 	private void readRaster() throws IOException
 	{
 		boolean verbose = false;
-		
+
 		IDCT idct;
 		try
 		{
@@ -360,6 +360,8 @@ public class JPEGImageReader extends JPEGConstants
 			cinfo.Al = mSOSMarkerSegment.getAl();
 			cinfo.comps_in_scan = mSOSMarkerSegment.getNumComponents();
 			cinfo.num_components = mSOFMarkerSegment.getNumComponents();
+			cinfo.progressive_mode = mSOFMarkerSegment.isProgressive();
+			cinfo.lim_Se = DCTSIZE2-1;
 
 			cinfo.blocks_in_MCU = 0;
 
@@ -386,9 +388,18 @@ public class JPEGImageReader extends JPEGConstants
 				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
 			}
 
-			int numHorMCU = (int)Math.ceil(mSOFMarkerSegment.getWidth() / (8.0 * maxSamplingX));
-			int numVerMCU = (int)Math.ceil(mSOFMarkerSegment.getHeight() / (8.0 * maxSamplingY));
-			
+			int maxSamplingX = 0;
+			int maxSamplingY = 0;
+			for (int i = 0; i < mSOFMarkerSegment.getNumComponents(); i++)
+			{
+				ComponentInfo comp = mSOFMarkerSegment.getComponent(i);
+				maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
+				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
+			}
+
+			int numHorMCU = (mSOFMarkerSegment.getWidth() + 8 * maxSamplingX - 1) / (8 * maxSamplingX);
+			int numVerMCU = (mSOFMarkerSegment.getHeight() + 8 * maxSamplingY - 1) / (8 * maxSamplingY);
+
 			cinfo.MCU_membership = new int[cinfo.blocks_in_MCU];
 			cinfo.cur_comp_info = new ComponentInfo[cinfo.num_components];
 
@@ -399,11 +410,11 @@ public class JPEGImageReader extends JPEGConstants
 					if (mSOFMarkerSegment.getComponent(frameComponentIndex).getComponentIndex() == mSOSMarkerSegment.getComponent(scanComponentIndex))
 					{
 						ComponentInfo comp = mSOFMarkerSegment.getComponent(frameComponentIndex);
+						comp.setTableAC(mSOSMarkerSegment.getACTable(scanComponentIndex));
+						comp.setTableDC(mSOSMarkerSegment.getDCTable(scanComponentIndex));
+
 						cinfo.cur_comp_info[scanComponentIndex] = comp;
 
-						comp.setSOSTableAC(mSOSMarkerSegment.getACTable(scanComponentIndex));
-						comp.setSOSTableDC(mSOSMarkerSegment.getDCTable(scanComponentIndex));
-						
 						for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, j++)
 						{
 							cinfo.MCU_membership[j] = scanComponentIndex;
@@ -414,13 +425,9 @@ public class JPEGImageReader extends JPEGConstants
 				}
 			}
 
-			cinfo.natural_order = NATURAL_ORDER;
-			cinfo.progressive_mode = mSOFMarkerSegment.isProgressive();
-			cinfo.lim_Se = DCTSIZE2-1;
-
 			if (mImage == null)
 			{
-				mDctCoefficients = new int[numVerMCU][numHorMCU][maxSamplingY][maxSamplingX][3][64];
+				mDctCoefficients = new int[numVerMCU][numHorMCU][maxSamplingY][maxSamplingX][mSOFMarkerSegment.getNumComponents()][64];
 
 				mDecoder.jinit_decoder(cinfo);
 
@@ -452,7 +459,7 @@ public class JPEGImageReader extends JPEGConstants
 								{
 									for (int blockX = 0; blockX < samplingX; blockX++)
 									{
-										mDecoder.decode_mcu(cinfo, mcu); 
+										mDecoder.decode_mcu(cinfo, mcu);
 										accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][blockY][blockX][compIndex]);
 									}
 								}
@@ -568,7 +575,7 @@ public class JPEGImageReader extends JPEGConstants
 		System.out.println();
 	}
 
-	
+
 
 	//					if (!readDCTCofficients(dctCoefficients[x], numComponents))
 	//					{
@@ -630,7 +637,7 @@ public class JPEGImageReader extends JPEGConstants
 	public void hexdump() throws IOException
 	{
 		int streamOffset = mBitStream.getStreamOffset();
-		
+
 		int cnt = 0;
 		int b1 = 0;
 		for (int r = 0; r < 1000; r++)
@@ -639,14 +646,14 @@ public class JPEGImageReader extends JPEGConstants
 			{
 				int b0 = mBitStream.readInt8();
 				System.out.printf("%02x ", b0);
-				
+
 				if (b1 == 255 && b0 != 0)
 				{
 					System.out.println();
 					System.out.println("=> "+streamOffset+" +" + cnt + " ("+Integer.toHexString(streamOffset)+")");
 					return;
 				}
-				
+
 				b1 = b0;
 				if ((c % 8) == 7) System.out.print(" ");
 			}

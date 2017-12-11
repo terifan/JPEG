@@ -48,11 +48,11 @@ public class HuffmanDecoder extends Decoder
 		for (int blockIndex = 0; blockIndex < aCinfo.blocks_in_MCU; blockIndex++)
 		{
 			int component = aCinfo.MCU_membership[blockIndex];
-			
+
 			ComponentInfo comp = aCinfo.cur_comp_info[component];
 
-			DHTMarkerSegment dcTable = mHuffmanTables[comp.getSOSTableDC()][DHTMarkerSegment.TYPE_DC];
-			DHTMarkerSegment acTable = mHuffmanTables[comp.getSOSTableAC()][DHTMarkerSegment.TYPE_AC];
+			DHTMarkerSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTMarkerSegment.TYPE_DC];
+			DHTMarkerSegment acTable = mHuffmanTables[comp.getTableAC()][DHTMarkerSegment.TYPE_AC];
 
 			if (!decodeImpl(aCinfo, aCoefficients[blockIndex], component, dcTable, acTable))
 			{
@@ -62,8 +62,8 @@ public class HuffmanDecoder extends Decoder
 
 		return true;
 	}
-	
-	
+
+
 //		for (int component = 0; component < numComponents; component++)
 //		{
 //			ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
