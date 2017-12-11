@@ -1,11 +1,11 @@
 package org.terifan.imageio.jpeg.encoder;
 
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.DQTSegment;
 
 
 public class QuantizationTable
 {
-	public static DQTMarkerSegment buildQuantTable(int aQuality, int aComponent)
+	public static DQTSegment buildQuantTable(int aQuality, int aComponent)
 	{
 		int W = 8;
 		int H = 8;
@@ -91,6 +91,6 @@ public class QuantizationTable
 			}
 		}
 
-		return new DQTMarkerSegment(aComponent, quantval);
+		return new DQTSegment(aComponent, quantval);
 	}
 }

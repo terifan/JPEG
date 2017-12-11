@@ -5,7 +5,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-public class SOSMarkerSegment
+public class SOSSegment
 {
 	private int mNumComponents;
 	private int[] mComponentIds;
@@ -17,7 +17,7 @@ public class SOSMarkerSegment
 	private int mAl;
 
 
-	public SOSMarkerSegment(BitInputStream aInputStream) throws IOException
+	public SOSSegment(BitInputStream aInputStream) throws IOException
 	{
 		int segmentLength = aInputStream.readInt16();
 

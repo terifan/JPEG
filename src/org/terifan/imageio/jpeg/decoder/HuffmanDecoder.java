@@ -3,16 +3,16 @@ package org.terifan.imageio.jpeg.decoder;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.DHTMarkerSegment;
+import org.terifan.imageio.jpeg.DHTSegment;
+import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import org.terifan.imageio.jpeg.SOFMarkerSegment;
 import static org.terifan.imageio.jpeg.decoder.JPEGImageReader.MAX_CHANNELS;
 
 
 public class HuffmanDecoder extends Decoder
 {
 	private int[] mPreviousDCValue;
-	private DHTMarkerSegment[][] mHuffmanTables;
+	private DHTSegment[][] mHuffmanTables;
 
 
 	public HuffmanDecoder(BitInputStream aBitStream)
@@ -20,30 +20,30 @@ public class HuffmanDecoder extends Decoder
 		super(aBitStream);
 
 		mPreviousDCValue = new int[MAX_CHANNELS];
-		mHuffmanTables = new DHTMarkerSegment[MAX_CHANNELS][2];
+		mHuffmanTables = new DHTSegment[MAX_CHANNELS][2];
 	}
 
 
 	@Override
-	void jinit_decoder(DecompressionState aCinfo)
+	void jinit_decoder(JPEG aCinfo)
 	{
 	}
 
 
 	@Override
-	void start_pass(DecompressionState aCinfo)
+	void start_pass(JPEG aCinfo)
 	{
 	}
 
 
 	@Override
-	void finish_pass(DecompressionState aCinfo)
+	void finish_pass(JPEG aCinfo)
 	{
 	}
 
 
 	@Override
-	boolean decode_mcu(DecompressionState aCinfo, int[][] aCoefficients) throws IOException
+	boolean decode_mcu(JPEG aCinfo, int[][] aCoefficients) throws IOException
 	{
 		for (int blockIndex = 0; blockIndex < aCinfo.blocks_in_MCU; blockIndex++)
 		{
@@ -51,8 +51,8 @@ public class HuffmanDecoder extends Decoder
 
 			ComponentInfo comp = aCinfo.cur_comp_info[component];
 
-			DHTMarkerSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTMarkerSegment.TYPE_DC];
-			DHTMarkerSegment acTable = mHuffmanTables[comp.getTableAC()][DHTMarkerSegment.TYPE_AC];
+			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
+			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 			if (!decodeImpl(aCinfo, aCoefficients[blockIndex], component, dcTable, acTable))
 			{
@@ -83,7 +83,7 @@ public class HuffmanDecoder extends Decoder
 //		}
 
 
-	boolean decodeImpl(DecompressionState aCinfo, int[] aCoefficients, int aComponent, DHTMarkerSegment dcTable, DHTMarkerSegment acTable) throws IOException
+	boolean decodeImpl(JPEG aCinfo, int[] aCoefficients, int aComponent, DHTSegment dcTable, DHTSegment acTable) throws IOException
 	{
 		Arrays.fill(aCoefficients, 0);
 
@@ -139,7 +139,7 @@ public class HuffmanDecoder extends Decoder
 
 		do
 		{
-			DHTMarkerSegment dht = new DHTMarkerSegment(mBitStream);
+			DHTSegment dht = new DHTSegment(mBitStream);
 
 			mHuffmanTables[dht.getIdentity()][dht.getType()] = dht;
 

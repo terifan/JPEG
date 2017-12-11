@@ -16,10 +16,10 @@ public class TestAri
 //			URL jpegResource = TestAri.class.getResource("sample.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt.jpg");
-//			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
+			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
-			URL jpegResource = TestAri.class.getResource("untitled.jpg");
+//			URL jpegResource = TestAri.class.getResource("untitled.jpg");
 
 			try (InputStream input = jpegResource.openStream())
 			{

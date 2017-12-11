@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg.decoder;
 
 import java.io.IOException;
+import org.terifan.imageio.jpeg.JPEG;
 
 
 public abstract class Decoder
@@ -14,11 +15,11 @@ public abstract class Decoder
 	}
 
 
-	abstract void jinit_decoder(DecompressionState cinfo);
+	abstract void jinit_decoder(JPEG cinfo);
 
-	abstract void finish_pass(DecompressionState cinfo);
+	abstract void finish_pass(JPEG cinfo);
 
-	abstract void start_pass(DecompressionState cinfo);
+	abstract void start_pass(JPEG cinfo);
 
-	abstract boolean decode_mcu(DecompressionState cinfo, int[][] aCoefficients) throws IOException;
+	abstract boolean decode_mcu(JPEG cinfo, int[][] aCoefficients) throws IOException;
 }

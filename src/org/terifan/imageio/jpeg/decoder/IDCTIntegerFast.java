@@ -1,6 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.DQTSegment;
 
 
 /**
@@ -36,7 +36,7 @@ public class IDCTIntegerFast implements IDCT
 
 
 	@Override
-	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
+	public void transform(int[] aCoefficients, DQTSegment aQuantizationTable)
 	{
 		double[] quantval = aQuantizationTable.getFloatDivisors();
 

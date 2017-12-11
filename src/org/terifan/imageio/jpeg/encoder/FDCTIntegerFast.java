@@ -1,6 +1,6 @@
 package org.terifan.imageio.jpeg.encoder;
 
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.DQTSegment;
 
 
 /*
@@ -58,7 +58,7 @@ public class FDCTIntegerFast implements FDCT
 
 
 	@Override
-	public void transform(int[] aCoefficients, DQTMarkerSegment aQuantizationTable)
+	public void transform(int[] aCoefficients, DQTSegment aQuantizationTable)
 	{
 		transform(aCoefficients);
 

@@ -5,7 +5,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-public class DHTMarkerSegment
+public class DHTSegment
 {
 	public final static int TYPE_DC = 0;
 	public final static int TYPE_AC = 1;
@@ -17,7 +17,7 @@ public class DHTMarkerSegment
 	private int mMaxLength;
 
 
-	public DHTMarkerSegment(BitInputStream aInputStream) throws IOException
+	public DHTSegment(BitInputStream aInputStream) throws IOException
 	{
 		int temp = aInputStream.readInt8();
 		mIdentity = temp & 0x07;

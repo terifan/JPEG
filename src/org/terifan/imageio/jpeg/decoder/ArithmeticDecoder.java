@@ -3,6 +3,7 @@ package org.terifan.imageio.jpeg.decoder;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
+import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
@@ -60,7 +61,7 @@ public class ArithmeticDecoder extends Decoder
 
 	int pc = -1;
 	int xx = 0;
-	int get_byte(DecompressionState cinfo) throws IOException
+	int get_byte(JPEG cinfo) throws IOException
 	{
 		int c = mBitStream.readInt8();
 		if (pc==255 && c!=0)
@@ -124,7 +125,7 @@ int AC_STAT_BINS = 256;
  * derived from Markus Kuhn's JBIG implementation.
  */
 
-int arith_decode(DecompressionState cinfo, final int[] st, final int st_off) throws IOException
+int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOException
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int nl, nm;
@@ -208,7 +209,7 @@ int arith_decode(DecompressionState cinfo, final int[] st, final int st_off) thr
  * Check for a restart marker & resynchronize decoder.
  */
 
-void process_restart(DecompressionState cinfo)
+void process_restart(JPEG cinfo)
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int ci;
@@ -259,7 +260,7 @@ void process_restart(DecompressionState cinfo)
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_DC_first(DecompressionState cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] block;
@@ -340,7 +341,7 @@ boolean decode_mcu_DC_first(DecompressionState cinfo, int[][] MCU_data) throws I
  * or first pass of successive approximation).
  */
 
-boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] block;
@@ -420,7 +421,7 @@ boolean decode_mcu_AC_first(DecompressionState cinfo, int[][] MCU_data) throws I
  * although the spec is not very clear on the point.
  */
 
-boolean decode_mcu_DC_refine(DecompressionState cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo.entropy;
   int[] st;
@@ -452,7 +453,7 @@ boolean decode_mcu_DC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
  * MCU decoding for AC successive approximation refinement scan.
  */
 
-boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 {
   arith_entropy_ptr entropy = cinfo.entropy;
   int[] block;
@@ -525,7 +526,7 @@ boolean decode_mcu_AC_refine(DecompressionState cinfo, int[][] MCU_data) throws 
   return true;
 }
 
-private boolean x(DecompressionState cinfo, int[][] MCU_data) throws IOException
+private boolean x(JPEG cinfo, int[][] MCU_data) throws IOException
 {
 	switch (cinfo.entropy.decode_mcu)
 	{
@@ -547,7 +548,7 @@ private boolean x(DecompressionState cinfo, int[][] MCU_data) throws IOException
  */
 
 	@Override
-boolean decode_mcu(DecompressionState cinfo, int[][] MCU_data) throws IOException
+boolean decode_mcu(JPEG cinfo, int[][] MCU_data) throws IOException
 {
 	for (int[] d : MCU_data)
 	{
@@ -701,7 +702,7 @@ final static int x_decode_mcu=0;
  */
 
 	@Override
-void start_pass(DecompressionState cinfo)
+void start_pass(JPEG cinfo)
 {
 xx = 0;
 
@@ -828,7 +829,7 @@ xx = 0;
  */
 
 	@Override
-void finish_pass(DecompressionState cinfo)
+void finish_pass(JPEG cinfo)
 {
   /* no work necessary here */
 }
@@ -839,7 +840,7 @@ void finish_pass(DecompressionState cinfo)
  */
 
 	@Override
-void jinit_decoder(DecompressionState cinfo)
+void jinit_decoder(JPEG cinfo)
 {
   arith_entropy_ptr entropy = new arith_entropy_ptr();
 

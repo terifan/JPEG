@@ -6,7 +6,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 
 
-public class DQTMarkerSegment
+public class DQTSegment
 {
 	public final static int PRECISION_8_BITS = 1;
 	public final static int PRECISION_16_BITS = 2;
@@ -16,7 +16,7 @@ public class DQTMarkerSegment
 	private int mIdentity;
 
 
-	public DQTMarkerSegment(int aIdentity, int... aQuantizationTable)
+	public DQTSegment(int aIdentity, int... aQuantizationTable)
 	{
 		mIdentity = aIdentity;
 		mPrecision = PRECISION_8_BITS;
@@ -28,7 +28,7 @@ public class DQTMarkerSegment
 	}
 
 
-	public DQTMarkerSegment(BitInputStream aInputStream) throws IOException
+	public DQTSegment(BitInputStream aInputStream) throws IOException
 	{
 		int temp = aInputStream.readInt8();
 		mIdentity = temp & 0x07;

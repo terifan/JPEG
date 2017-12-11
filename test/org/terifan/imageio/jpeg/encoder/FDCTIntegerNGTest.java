@@ -1,7 +1,7 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import java.util.Random;
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;

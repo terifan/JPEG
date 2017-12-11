@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.DQTMarkerSegment;
+import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
@@ -31,7 +31,7 @@ public class TestDCT
 //				original[i] = rnd.nextInt(1<<rnd.nextInt(8));
 			}
 
-			DQTMarkerSegment qt = QuantizationTable.buildQuantTable(100, 0);
+			DQTSegment qt = QuantizationTable.buildQuantTable(100, 0);
 
 			int[] enc;
 			int[] dec;

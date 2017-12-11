@@ -5,7 +5,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
 
-public class SOFMarkerSegment
+public class SOFSegment
 {
 	private boolean mArithmetic;
 	private boolean mProgressive;
@@ -15,7 +15,7 @@ public class SOFMarkerSegment
 	private ComponentInfo[] mComponents;
 
 
-	public SOFMarkerSegment(BitInputStream aInputStream, boolean aArithmetic, boolean aProgressive) throws IOException
+	public SOFSegment(BitInputStream aInputStream, boolean aArithmetic, boolean aProgressive) throws IOException
 	{
 		int segmentLength = aInputStream.readInt16();
 
