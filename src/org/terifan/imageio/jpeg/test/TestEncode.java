@@ -15,7 +15,7 @@ public class TestEncode
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-			BufferedImage src = JPEGImageReader.read(TestEncode.class.getResourceAsStream("Swallowtail.jpg"));
+			BufferedImage src = JPEGImageReader.read(TestEncode.class.getResourceAsStream("7glyqHJ.jpg"));
 			
 			new JPEGImageWriter().write(src, 95, baos);
 

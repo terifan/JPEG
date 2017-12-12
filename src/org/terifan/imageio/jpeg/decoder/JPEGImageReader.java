@@ -83,7 +83,7 @@ public class JPEGImageReader
 
 					if ((nextSegment >> 8) != 255)
 					{
-						System.out.println("Bad input");
+						System.out.println("######### Bad input #########");
 
 						hexdump();
 
@@ -209,11 +209,12 @@ public class JPEGImageReader
 
 		try
 		{
+			mJPEG.comps_in_scan = mSOSSegment.getNumComponents();
 			mJPEG.num_components = mSOFSegment.getNumComponents();
 
 			mJPEG.blocks_in_MCU = 0;
 
-			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
+			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
 				{
@@ -230,11 +231,13 @@ public class JPEGImageReader
 			int maxSamplingY = mSOFSegment.getMaxVerSampling();
 			int numHorMCU = mSOFSegment.getHorMCU();
 			int numVerMCU = mSOFSegment.getVerMCU();
+			
+			System.out.println(maxSamplingX+" "+maxSamplingY+" "+numHorMCU+" "+numVerMCU);
 
 			mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
-			mJPEG.cur_comp_info = new ComponentInfo[mJPEG.num_components];
+			mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
 
-			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
+			for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
 				{
@@ -246,9 +249,9 @@ public class JPEGImageReader
 
 						mJPEG.cur_comp_info[scanComponentIndex] = comp;
 
-						for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, j++)
+						for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
 						{
-							mJPEG.MCU_membership[j] = scanComponentIndex;
+							mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 						}
 
 						System.out.println("  SOF: "+comp);
@@ -270,7 +273,6 @@ public class JPEGImageReader
 			if (verbose) System.out.println("  "+mJPEG.num_components+" "+mJPEG.comps_in_scan+" "+mJPEG.blocks_in_MCU);
 
 			int[][] mcu = new int[mJPEG.blocks_in_MCU][64];
-			int compIndex = mSOSSegment.getComponent(0) - 1;
 
 			try
 			{
@@ -279,6 +281,7 @@ public class JPEGImageReader
 					ComponentInfo comp = mJPEG.cur_comp_info[0];
 					int samplingX = comp.getHorSampleFactor();
 					int samplingY = comp.getVerSampleFactor();
+					int compIndex = mSOSSegment.getComponent(0) - 1;
 
 					for (int loop = 0; mJPEG.unread_marker==0; loop++)
 					{
@@ -312,8 +315,8 @@ public class JPEGImageReader
 								Debug.printTables(mcu);
 								System.out.println();
 							}
-
-							for (int component = 0, blockIndex = 0; component < mJPEG.num_components; component++)
+							
+							for (int component = 0, blockIndex = 0; component < mJPEG.comps_in_scan; component++)
 							{
 								ComponentInfo comp = mJPEG.cur_comp_info[component];
 								int samplingX = comp.getHorSampleFactor();
@@ -339,6 +342,11 @@ public class JPEGImageReader
 
 			if (verbose) debugprint(30,30);
 
+			if (mJPEG.mProgressive && mJPEG.unread_marker != 217)
+			{
+				System.out.println("unread_marker=" + mJPEG.unread_marker);
+			}
+			
 			if (mStop || !mJPEG.mProgressive || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
 			{
 				if (mJPEG.mProgressive && mJPEG.unread_marker != 217)

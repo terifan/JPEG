@@ -58,21 +58,12 @@ public class QuantizationTableFactory
 
 			for (int i = 0; i < quantval.length; i++)
 			{
-				int temp = (quantval[i] * aQuality + 50) / 100;
-				if (temp <= 0)
-				{
-					temp = 1;
-				}
-				if (temp > 255) // 32767 for 12-bit samles
-				{
-					temp = 255;
-				}
-				quantval[i] = temp;
+				quantval[i] = Math.max(1, Math.min(255, (quantval[i] * aQuality + 50) / 100));
 			}
 		}
 		else
 		{
-			int[] basic_table = aComponent == 0 ? STD_LUMINANCE_QUANT_TBL : STD_CHROMINANCE_QUANT_TBL;
+			int[] table = aComponent == 0 ? STD_LUMINANCE_QUANT_TBL : STD_CHROMINANCE_QUANT_TBL;
 
 			int sw = W / 8;
 			int sh = H / 8;
@@ -80,16 +71,7 @@ public class QuantizationTableFactory
 			{
 				for (int x = 0; x < W; x++, i++)
 				{
-					int temp = (basic_table[x / sw + y / sh * 8] * aQuality + 50) / 100;
-					if (temp <= 0)
-					{
-						temp = 1;
-					}
-					if (temp > 255) // 32767 for 12-bit samles
-					{
-						temp = 255;
-					}
-					quantval[i] = temp;
+					quantval[i] = Math.max(1, Math.min(255, (table[x / sw + y / sh * 8] * aQuality + 50) / 100));
 				}
 			}
 		}

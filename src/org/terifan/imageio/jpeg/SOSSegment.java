@@ -108,6 +108,12 @@ public class SOSSegment
 	}
 
 
+	public int getNumComponents()
+	{
+		return mComponentIds.length;
+	}
+
+
 	public int getACTable(int aIndex)
 	{
 		return mTableAC[aIndex];

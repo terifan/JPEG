@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
-import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG_ORDER;
+import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
 import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
@@ -307,7 +307,7 @@ void arith_encode (JPEG cinfo, int[] st, int st_off, int val) throws IOException
 
 void emit_restart (JPEG cinfo, int restart_num) throws IOException
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int ci;
   ComponentInfo compptr;
 
@@ -349,7 +349,7 @@ void emit_restart (JPEG cinfo, int restart_num) throws IOException
 
 boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] st;
   int st_off;
   int blkn, ci, tbl;
@@ -374,7 +374,7 @@ boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
     /* Compute the DC value after the required point transform by Al.
      * This is simply an arithmetic right shift.
      */
-    m = IRIGHT_SHIFT((int) (MCU_data[blkn][0]), cinfo.Al); // ???????????????????????????????????????????
+    m = IRIGHT_SHIFT((int) (MCU_data[blkn][0]), cinfo.Al);
 
     /* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 
@@ -439,7 +439,7 @@ boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -470,7 +470,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
      * is an integer division with rounding towards 0.  To do this portably
      * in C, we shift after obtaining the absolute value.
      */
-    if ((v = block[ZIGZAG_ORDER[ke]]) >= 0) {
+    if ((v = block[NATURAL_ORDER[ke]]) >= 0) {
       if ((v >>= cinfo.Al)!=0) break;
     } else {
       v = -v;
@@ -484,7 +484,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 	st_off = 3 * k;
     arith_encode(cinfo, st, st_off, 0);		/* EOB decision */
     for (;;) {
-      if ((v = block[ZIGZAG_ORDER[++k]]) >= 0) {
+      if ((v = block[NATURAL_ORDER[++k]]) >= 0) {
 	if ((v >>= cinfo.Al)!=0) {
 	  arith_encode(cinfo, st, st_off + 1, 1);
 	  arith_encode(cinfo, entropy.fixed_bin, 0, 0);
@@ -545,7 +545,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] st;
   int st_off=0;
   int Al, blkn;
@@ -567,7 +567,7 @@ boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
   /* Encode the MCU data blocks */
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
     /* We simply emit the Al'th bit of the DC coefficient value. */
-    arith_encode(cinfo, st, st_off, (MCU_data[blkn][0] >> Al) & 1); // ???????????????????????????????????????????
+    arith_encode(cinfo, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
   }
 
   return true;
@@ -580,7 +580,7 @@ boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -611,7 +611,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
      * is an integer division with rounding towards 0.  To do this portably
      * in C, we shift after obtaining the absolute value.
      */
-    if ((v = block[ZIGZAG_ORDER[ke]]) >= 0) {
+    if ((v = block[NATURAL_ORDER[ke]]) >= 0) {
       if ((v >>= cinfo.Al)!=0) break;
     } else {
       v = -v;
@@ -621,7 +621,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 
   /* Establish EOBx (previous stage end-of-block) index */
   for (kex = ke; kex > 0; kex--)
-    if ((v = block[ZIGZAG_ORDER[kex]]) >= 0) {
+    if ((v = block[NATURAL_ORDER[kex]]) >= 0) {
       if ((v >>= cinfo.Ah)!=0) break;
     } else {
       v = -v;
@@ -635,7 +635,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
     if (k >= kex)
       arith_encode(cinfo, st, st_off, 0);	/* EOB decision */
     for (;;) {
-      if ((v = block[ZIGZAG_ORDER[++k]]) >= 0) {
+      if ((v = block[NATURAL_ORDER[++k]]) >= 0) {
 	if ((v >>= cinfo.Al)!=0) {
 	  if ((v >> 1)!=0)			/* previously nonzero coef */
 	    arith_encode(cinfo, st, st_off + 2, (v & 1));
@@ -690,7 +690,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
 			return encode_mcu_AC_refine(cinfo, MCU_data);
 	}
 
-	ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+	ArithEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -776,7 +776,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
 
     /* Establish EOB (end-of-block) index */
     do {
-      if (block[ZIGZAG_ORDER[ke]]!=0) break;
+      if (block[NATURAL_ORDER[ke]]!=0) break;
     } while ((--ke)!=0);
 
     /* Figure F.5: Encode_AC_Coefficients */
@@ -784,7 +784,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
       st = entropy.ac_stats[tbl];
 	  st_off = 3 * k;
       arith_encode(cinfo, st, st_off, 0);	/* EOB decision */
-      while ((v = block[ZIGZAG_ORDER[++k]]) == 0) {
+      while ((v = block[NATURAL_ORDER[++k]]) == 0) {
 	arith_encode(cinfo, st, st_off + 1, 0);
 	st_off += 3;
       }
@@ -850,7 +850,7 @@ String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
 
 void start_pass (JPEG cinfo, boolean gather_statistics)
 {
-  ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
+  ArithEntropyState entropy = cinfo.entropy;
   int ci, tbl;
   ComponentInfo compptr;
 
