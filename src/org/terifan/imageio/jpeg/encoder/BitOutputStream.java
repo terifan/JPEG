@@ -7,6 +7,7 @@ import java.io.OutputStream;
 public class BitOutputStream extends OutputStream
 {
 	private OutputStream mOutputStream;
+	private int mStreamOffset;
 	private int mBitsToGo;
 	private int mBitBuffer;
 
@@ -68,6 +69,7 @@ public class BitOutputStream extends OutputStream
 	public void write(int aByte) throws IOException
 	{
 		writeBits(0xff & aByte, 8);
+		mStreamOffset++;
 	}
 
 
@@ -81,6 +83,7 @@ public class BitOutputStream extends OutputStream
 	@Override
 	public void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
+		mStreamOffset+=aLength;
 		if (mBitsToGo == 8)
 		{
 			mOutputStream.write(aBuffer, aOffset, aLength);
@@ -120,5 +123,11 @@ public class BitOutputStream extends OutputStream
 	public int getBitCount()
 	{
 		return 8-mBitsToGo;
+	}
+
+
+	public int getStreamOffset()
+	{
+		return mStreamOffset;
 	}
 }

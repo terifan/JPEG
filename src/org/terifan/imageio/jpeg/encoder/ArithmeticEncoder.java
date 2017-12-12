@@ -8,6 +8,7 @@ import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
 import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
+import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
 
 /*
@@ -28,25 +29,12 @@ public class ArithmeticEncoder
 {
 	OutputStream mOutputStream;
 
-//	static class j_compress_ptr
-//	{
-//		arith_entropy_encoder entropy;
-//		int[] arith_dc_L;
-//		int[] MCU_membership;
-//		int blocks_in_MCU;
-//		int restart_interval;
-//		int Ah;
-//		int Al;
-//		int Ss;
-//		int Se;
-//		int comps_in_scan;
-//		boolean progressive_mode;
-//		ComponentInfo[] cur_comp_info;
-//		private long[] arith_dc_U;
-//		private int[] natural_order;
-//		private int[] arith_ac_K;
-//		private int lim_Se;
-//	}
+
+	public ArithmeticEncoder(OutputStream aOutputStream)
+	{
+		mOutputStream = aOutputStream;
+	}
+
 
 	void MEMZERO(int[] arr, int size)
 	{
@@ -56,8 +44,6 @@ public class ArithmeticEncoder
 	{
 		return n >> q;
 	}
-
-	int[] jpeg_aritab;
 
 	int NUM_ARITH_TBLS = 16;	/* Arith-coding tables are numbered 0..15 */
 	int MAX_COMPS_IN_SCAN = 4;	/* JPEG limit on # of components in one scan */
@@ -137,7 +123,7 @@ void emit_byte (int val, JPEG cinfo) throws IOException
 
 void finish_pass (JPEG cinfo) throws IOException
 {
- arith_entropy_encoder e = null;//cinfo->entropy;
+ ArithEntropyState e = cinfo.entropy;
   int temp;
 
   /* Section D.1.8: Termination of encoding */
