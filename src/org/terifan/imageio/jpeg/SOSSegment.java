@@ -7,14 +7,9 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public class SOSSegment
 {
-	private int mNumComponents;
 	private int[] mComponentIds;
 	private int[] mTableAC;
 	private int[] mTableDC;
-	private int mSs;
-	private int mSe;
-	private int mAh;
-	private int mAl;
 	private JPEG mJPEG;
 
 
@@ -28,34 +23,34 @@ public class SOSSegment
 	{
 		int segmentLength = aBitStream.readInt16();
 
-		mNumComponents = aBitStream.readInt8();
+		mJPEG.comps_in_scan = aBitStream.readInt8();
 
-		if (6 + 2 * mNumComponents != segmentLength)
+		if (6 + 2 * mJPEG.comps_in_scan != segmentLength)
 		{
 			throw new IOException("Error in JPEG stream; illegal SOS segment size.");
 		}
 
-		mComponentIds = new int[mNumComponents];
-		mTableDC = new int[mNumComponents];
-		mTableAC = new int[mNumComponents];
+		mComponentIds = new int[mJPEG.comps_in_scan];
+		mTableDC = new int[mJPEG.comps_in_scan];
+		mTableAC = new int[mJPEG.comps_in_scan];
 
-		for (int i = 0; i < mNumComponents; i++)
+		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
 			mComponentIds[i] = aBitStream.readInt8();
 			mTableDC[i] = aBitStream.readBits(4);
 			mTableAC[i] = aBitStream.readBits(4);
 		}
 
-		mSs = aBitStream.readInt8();
-		mSe = aBitStream.readInt8();
-		mAh = aBitStream.readBits(4);
-		mAl = aBitStream.readBits(4);
+		mJPEG.Ss = aBitStream.readInt8();
+		mJPEG.Se = aBitStream.readInt8();
+		mJPEG.Ah = aBitStream.readBits(4);
+		mJPEG.Al = aBitStream.readBits(4);
 
 //		if (VERBOSE)
 		{
 			System.out.println("SOSMarkerSegment");
-			System.out.println("  numcomponents=" + mNumComponents);
-			for (int i = 0; i < mNumComponents; i++)
+			System.out.println("  numcomponents=" + mJPEG.comps_in_scan);
+			for (int i = 0; i < mJPEG.comps_in_scan; i++)
 			{
 				String component;
 				switch (mComponentIds[i])
@@ -76,7 +71,7 @@ public class SOSSegment
 						component = "Q";
 				}
 
-				System.out.println("  SOS: component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mSs + ", se=" + mSe + ", ah=" + mAh + ", al=" + mAl);
+				System.out.println("  SOS: component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al);
 			}
 		}
 
@@ -87,29 +82,23 @@ public class SOSSegment
 	public SOSSegment write(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.SOS);
-		aBitStream.writeInt16(2 + 1 + mNumComponents * 2 + 3);
+		aBitStream.writeInt16(2 + 1 + mJPEG.comps_in_scan * 2 + 3);
 
-		aBitStream.writeInt8(mNumComponents);
+		aBitStream.writeInt8(mJPEG.comps_in_scan);
 
-		for (int i = 0; i < mNumComponents; i++)
+		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
 			aBitStream.writeInt8(mComponentIds[i]);
 			aBitStream.writeBits(mTableDC[i], 4);
 			aBitStream.writeBits(mTableAC[i], 4);
 		}
 
-		aBitStream.writeInt8(mSs);
-		aBitStream.writeInt8(mSe);
-		aBitStream.writeBits(mAh, 4);
-		aBitStream.writeBits(mAl, 4);
+		aBitStream.writeInt8(mJPEG.Ss);
+		aBitStream.writeInt8(mJPEG.Se);
+		aBitStream.writeBits(mJPEG.Ah, 4);
+		aBitStream.writeBits(mJPEG.Al, 4);
 
 		return this;
-	}
-
-
-	public int getNumComponents()
-	{
-		return mNumComponents;
 	}
 
 
@@ -128,29 +117,5 @@ public class SOSSegment
 	public int getDCTable(int aIndex)
 	{
 		return mTableDC[aIndex];
-	}
-
-
-	public int getSs()
-	{
-		return mSs;
-	}
-
-
-	public int getSe()
-	{
-		return mSe;
-	}
-
-
-	public int getAh()
-	{
-		return mAh;
-	}
-
-
-	public int getAl()
-	{
-		return mAl;
 	}
 }

@@ -41,13 +41,27 @@ public class JPEGImageWriter
 
 		new DQTSegment(mJPEG).write(mBitStream);
 
+		ComponentInfo y, cb, cr;
+
 		new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8,
-			new ComponentInfo(0, 0, 0, 2, 2),
-			new ComponentInfo(1, 1, 1, 1, 1),
-			new ComponentInfo(2, 2, 1, 1, 1)
+			y=new ComponentInfo(0, 0, 0, 2, 2),
+			cb=new ComponentInfo(1, 1, 1, 1, 1),
+			cr=new ComponentInfo(2, 2, 1, 1, 1)
 		).write(mBitStream);
 
 		new DACSegment(mJPEG).write(mBitStream);
+
+
+
+		mJPEG.comps_in_scan = 3;
+		mJPEG.cur_comp_info = new ComponentInfo[]{y,cb,cr};
+//		aBitStream.writeInt8(mComponentIds[i]);
+//		aBitStream.writeBits(mTableDC[i], 4);
+//		aBitStream.writeBits(mTableAC[i], 4);
+		mJPEG.Ss = 0;
+		mJPEG.Se = 63;
+		mJPEG.Ah = 0;
+		mJPEG.Al = 0;
 
 		new SOSSegment(mJPEG).write(mBitStream);
 

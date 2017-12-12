@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
-import org.terifan.imageio.jpeg.ColorSpace.ColorSpaceType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
@@ -23,12 +22,10 @@ public class JPEGImageReader
 	final static int MAX_CHANNELS = 3;
 
 	private BitInputStream mBitStream;
-	private DQTSegment[] mQuantizationTables;
 	private int mRestartInterval;
 	private SOFSegment mSOFSegment;
 	private SOSSegment mSOSSegment;
 	private Class<? extends IDCT> mIDCT;
-	private ColorSpaceType mColorSpace;
 	private boolean mStop;
 	private JPEGImage mImage;
 	private int[][][][][][] mDctCoefficients;
@@ -39,8 +36,6 @@ public class JPEGImageReader
 
 	private JPEGImageReader(InputStream aInputStream, Class<? extends IDCT> aIDCT) throws IOException
 	{
-		mQuantizationTables = new DQTSegment[MAX_CHANNELS];
-
 		mBitStream = new BitInputStream(aInputStream);
 		mIDCT = aIDCT;
 	}
@@ -213,17 +208,12 @@ public class JPEGImageReader
 
 		try
 		{
-			mJPEG.Ss = mSOSSegment.getSs();
-			mJPEG.Se = mSOSSegment.getSe();
-			mJPEG.Ah = mSOSSegment.getAh();
-			mJPEG.Al = mSOSSegment.getAl();
-			mJPEG.comps_in_scan = mSOSSegment.getNumComponents();
 			mJPEG.num_components = mSOFSegment.getNumComponents();
-			mJPEG.lim_Se = DCTSIZE2-1;
+			mJPEG.lim_Se = DCTSIZE2 - 1;
 
 			mJPEG.blocks_in_MCU = 0;
 
-			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSSegment.getNumComponents(); scanComponentIndex++)
+			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
 				{
@@ -252,7 +242,7 @@ public class JPEGImageReader
 			mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
 			mJPEG.cur_comp_info = new ComponentInfo[mJPEG.num_components];
 
-			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mSOSSegment.getNumComponents(); scanComponentIndex++)
+			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
 			{
 				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
 				{
@@ -285,14 +275,14 @@ public class JPEGImageReader
 
 			mDecoder.start_pass(mJPEG);
 
-			if (verbose) System.out.println("  "+mSOSSegment.getNumComponents()+" "+mJPEG.comps_in_scan+" "+mJPEG.blocks_in_MCU);
+			if (verbose) System.out.println("  "+mJPEG.num_components+" "+mJPEG.comps_in_scan+" "+mJPEG.blocks_in_MCU);
 
 			int[][] mcu = new int[mJPEG.blocks_in_MCU][64];
 			int compIndex = mSOSSegment.getComponent(0) - 1;
 
 			try
 			{
-				if (mSOSSegment.getNumComponents() == 1)
+				if (mJPEG.num_components == 1)
 				{
 					ComponentInfo comp = mJPEG.cur_comp_info[0];
 					int samplingX = comp.getHorSampleFactor();
@@ -324,7 +314,7 @@ public class JPEGImageReader
 						{
 							mDecoder.decode_mcu(mJPEG, mcu);
 
-							for (int component = 0, blockIndex = 0; component < mSOSSegment.getNumComponents(); component++)
+							for (int component = 0, blockIndex = 0; component < mJPEG.num_components; component++)
 							{
 								ComponentInfo comp = mJPEG.cur_comp_info[component];
 								int samplingX = comp.getHorSampleFactor();
