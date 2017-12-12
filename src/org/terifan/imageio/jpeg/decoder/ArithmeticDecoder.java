@@ -653,7 +653,7 @@ boolean decode_mcu(JPEG cinfo, int[][] MCU_data) throws IOException
 	if (arith_decode(cinfo, st,st_off + 1)!=0) break;
 	st_off += 3;
 	if (k >= cinfo.lim_Se) {
-	  WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 6");
+	  WARNMS(cinfo, JWRN_ARITH_BAD_CODE+" - 6 " + k+" >= "+cinfo.lim_Se);
 	  entropy.ct = -1;			/* spectral overflow */
 	  return true;
 	}
