@@ -226,18 +226,10 @@ public class JPEGImageReader
 				}
 			}
 
-			int maxSamplingX = 0;
-			int maxSamplingY = 0;
-
-			for (int i = 0; i < mSOFSegment.getNumComponents(); i++)
-			{
-				ComponentInfo comp = mSOFSegment.getComponent(i);
-				maxSamplingX = Math.max(maxSamplingX, comp.getHorSampleFactor());
-				maxSamplingY = Math.max(maxSamplingY, comp.getVerSampleFactor());
-			}
-
-			int numHorMCU = (mSOFSegment.getWidth() + 8 * maxSamplingX - 1) / (8 * maxSamplingX);
-			int numVerMCU = (mSOFSegment.getHeight() + 8 * maxSamplingY - 1) / (8 * maxSamplingY);
+			int maxSamplingX = mSOFSegment.getMaxHorSampling();
+			int maxSamplingY = mSOFSegment.getMaxVerSampling();
+			int numHorMCU = mSOFSegment.getHorMCU();
+			int numVerMCU = mSOFSegment.getVerMCU();
 
 			mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
 			mJPEG.cur_comp_info = new ComponentInfo[mJPEG.num_components];

@@ -136,4 +136,42 @@ public class SOFSegment
 	{
 		return mComponents[aIndex];
 	}
+
+
+	public int getMaxHorSampling()
+	{
+		int maxSamplingX = 0;
+		for (ComponentInfo ci : mComponents)
+		{
+			maxSamplingX = Math.max(maxSamplingX, ci.getHorSampleFactor());
+		}
+		return maxSamplingX;
+	}
+
+
+	public int getMaxVerSampling()
+	{
+		int maxSamplingY = 0;
+		for (ComponentInfo ci : mComponents)
+		{
+			maxSamplingY = Math.max(maxSamplingY, ci.getVerSampleFactor());
+		}
+		return maxSamplingY;
+	}
+
+
+	public int getHorMCU()
+	{
+		int maxSamplingX = getMaxHorSampling();
+
+		return (mWidth + 8 * maxSamplingX - 1) / (8 * maxSamplingX);
+	}
+
+
+	public int getVerMCU()
+	{
+		int maxSamplingY = getMaxVerSampling();
+
+		return (mHeight + 8 * maxSamplingY - 1) / (8 * maxSamplingY);
+	}
 }

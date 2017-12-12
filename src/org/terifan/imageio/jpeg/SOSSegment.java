@@ -16,6 +16,8 @@ public class SOSSegment
 	public SOSSegment(JPEG aJPEG)
 	{
 		mJPEG = aJPEG;
+		mTableDC = new int[4];
+		mTableAC = new int[4];
 	}
 
 
@@ -31,8 +33,6 @@ public class SOSSegment
 		}
 
 		mComponentIds = new int[mJPEG.comps_in_scan];
-		mTableDC = new int[mJPEG.comps_in_scan];
-		mTableAC = new int[mJPEG.comps_in_scan];
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
@@ -88,9 +88,9 @@ public class SOSSegment
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
-			aBitStream.writeInt8(mComponentIds[i]);
-			aBitStream.writeBits(mTableDC[i], 4);
-			aBitStream.writeBits(mTableAC[i], 4);
+			aBitStream.writeInt8(mJPEG.cur_comp_info[i].getComponentId());
+			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableDC(), 4);
+			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableAC(), 4);
 		}
 
 		aBitStream.writeInt8(mJPEG.Ss);
@@ -117,5 +117,19 @@ public class SOSSegment
 	public int getDCTable(int aIndex)
 	{
 		return mTableDC[aIndex];
+	}
+
+
+	public SOSSegment setTableAC(int aIndex, int aTableAC)
+	{
+		mTableAC[aIndex] = aTableAC;
+		return this;
+	}
+
+
+	public SOSSegment setTableDC(int aIndex, int aTableDC)
+	{
+		mTableDC[aIndex] = aTableDC;
+		return this;
 	}
 }
