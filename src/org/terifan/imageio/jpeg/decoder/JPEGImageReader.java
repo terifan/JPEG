@@ -14,6 +14,7 @@ import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.test.Debug;
 import static org.terifan.imageio.jpeg.test.Debug.printTables;
 
 
@@ -209,7 +210,6 @@ public class JPEGImageReader
 		try
 		{
 			mJPEG.num_components = mSOFSegment.getNumComponents();
-			mJPEG.lim_Se = DCTSIZE2 - 1;
 
 			mJPEG.blocks_in_MCU = 0;
 
@@ -305,6 +305,13 @@ public class JPEGImageReader
 						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 						{
 							mDecoder.decode_mcu(mJPEG, mcu);
+
+							if (mcuY == 0 && mcuX == 0)
+							{
+								System.out.println("READER " + mJPEG.mArithmetic);
+								Debug.printTables(mcu);
+								System.out.println();
+							}
 
 							for (int component = 0, blockIndex = 0; component < mJPEG.num_components; component++)
 							{

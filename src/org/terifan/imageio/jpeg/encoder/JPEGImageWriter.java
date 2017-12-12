@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
+import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DQTSegment;
@@ -13,6 +14,7 @@ import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
+import org.terifan.imageio.jpeg.test.Debug;
 
 
 public class JPEGImageWriter
@@ -52,6 +54,7 @@ public class JPEGImageWriter
 
 		new DACSegment(mJPEG).write(mBitStream);
 
+		mJPEG.num_components = 3;
 		mJPEG.comps_in_scan = 3;
 		mJPEG.cur_comp_info = new ComponentInfo[]{lu,cb,cr};
 		mJPEG.Ss = 0;
@@ -84,17 +87,28 @@ public class JPEGImageWriter
 		int numVerMCU = mSOFSegment.getVerMCU();
 
 
-		FDCT fdct = new FDCTFloat();
+		FDCT fdct = new FDCTIntegerFast();
 
 		int[][][][] buffer = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
+
+		int[] raster = new int[8 * maxSamplingX * 8 * maxSamplingY];
+		int[][] colors = new int[mJPEG.num_components][8 * maxSamplingX * 8 * maxSamplingY];
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{
 			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 			{
-				for (int component = 0, blockIndex = 0; component < mJPEG.num_components; component++)
+				int bx = mcuX * 8 * maxSamplingX;
+				int by = mcuY * 8 * maxSamplingY;
+
+				aImage.getRGB(bx, by, 8 * maxSamplingX, 8 * maxSamplingY, raster, 0, 8 * maxSamplingX);
+
+				ColorSpace.rgbToYuvFloat(raster, colors[0], colors[1], colors[2]);
+
+				for (int componentIndex = 0, blockIndex = 0; componentIndex < mJPEG.comps_in_scan; componentIndex++)
 				{
-					ComponentInfo comp = mSOFSegment.getComponent(component);
+					ComponentInfo comp = mSOFSegment.getComponent(componentIndex);
+
 					int samplingX = comp.getHorSampleFactor();
 					int samplingY = comp.getVerSampleFactor();
 
@@ -104,14 +118,33 @@ public class JPEGImageWriter
 					{
 						for (int blockX = 0; blockX < samplingX; blockX++, blockIndex++)
 						{
-							int x = mcuX * maxSamplingX * 8 + blockX * 8;
-							int y = mcuY * maxSamplingY * 8 + blockY * 8;
-
-							aImage.getRGB(x, y, 8, 8, buffer[mcuY][mcuX][blockIndex], 0, aImage.getWidth());
+							if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
+							{
+								downsample16x16(buffer[mcuY][mcuX][blockIndex], colors[componentIndex]);
+							}
+							else if (samplingX == 2 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
+							{
+								downsample8x16(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX);
+							}
+							else if (samplingX == 2 && samplingY == 2)
+							{
+								copyBlock(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, maxSamplingX);
+							}
+							else
+							{
+								throw new UnsupportedOperationException(samplingX+" "+samplingY+" "+maxSamplingX+" "+maxSamplingY);
+							}
 
 							fdct.transform(buffer[mcuY][mcuX][blockIndex], quantizationTable);
 						}
 					}
+				}
+
+				if (mcuY == 0 && mcuX == 0)
+				{
+					System.out.println("WRITER " + mJPEG.mArithmetic);
+					Debug.printTables(buffer[mcuY][mcuX]);
+					System.out.println();
 				}
 			}
 		}
@@ -126,21 +159,6 @@ public class JPEGImageWriter
 		{
 			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 			{
-//				for (int component = 0, blockIndex = 0; component < mJPEG.num_components; component++)
-//				{
-//					ComponentInfo comp = mJPEG.cur_comp_info[component];
-//					int samplingX = comp.getHorSampleFactor();
-//					int samplingY = comp.getVerSampleFactor();
-//
-//					for (int blockY = 0; blockY < samplingY; blockY++)
-//					{
-//						for (int blockX = 0; blockX < samplingX; blockX++, blockIndex++)
-//						{
-//
-//						}
-//					}
-//				}
-
 				encoder.encode_mcu(mJPEG, buffer[mcuY][mcuX]);
 			}
 		}
@@ -148,7 +166,48 @@ public class JPEGImageWriter
 		encoder.finish_pass(mJPEG);
 
 		mBitStream.writeInt16(JPEGConstants.EOI);
+	}
 
-		System.out.println("+++"+mBitStream.getStreamOffset());
+
+	private void downsample16x16(int[] aDst, int[] aSrc)
+	{
+		for (int y = 0, i = 0; y < 8; y++)
+		{
+			for (int x = 0; x < 8; x++, i++)
+			{
+				int v = 
+					  aSrc[16 * (y + 0) + 2 * x + 0]
+					+ aSrc[16 * (y + 0) + 2 * x + 1]
+					+ aSrc[16 * (y + 1) + 2 * x + 0]
+					+ aSrc[16 * (y + 1) + 2 * x + 1];
+	
+				aDst[i] = (v + 2) / 4;
+			}
+		}
+	}
+
+
+	private void downsample8x16(int[] aDst, int[] aSrc, int aOffsetX)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			for (int x = 0; x < 8; x++)
+			{
+				int v = 
+					  aSrc[16 * (y + 0) + aOffsetX + x]
+					+ aSrc[16 * (y + 1) + aOffsetX + x];
+	
+				aDst[y*16+x+aOffsetX] = (v + 1) / 2;
+			}
+		}
+	}
+
+
+	private void copyBlock(int[] aDst, int[] aSrc, int aSrcOffsetX, int aSrcOffsetY, int aSrcWidth)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			System.arraycopy(aSrc, aSrcOffsetX + aSrcWidth * (aSrcOffsetY + y), aDst, 8 * y, 8);
+		}
 	}
 }

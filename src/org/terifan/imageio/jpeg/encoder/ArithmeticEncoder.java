@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.JPEGConstants;
+import static org.terifan.imageio.jpeg.JPEGConstants.ZIGZAG_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
 import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
@@ -236,7 +236,7 @@ void arith_encode (JPEG cinfo, int[] st, int st_off, int val) throws IOException
     st[sv] = (st[sv] & 0x80) ^ nl;	/* Estimate_after_LPS */
   } else {
     /* Encode the more probable symbol */
-    if (e.a >= 0x8000L)
+    if (e.a >= 0x8000)
       return;  /* A >= 0x8000 . ready, no renormalization required */
     if (e.a < qe) {
       /* If the interval size (qe) for the less probable symbol (LPS)
@@ -294,10 +294,10 @@ void arith_encode (JPEG cinfo, int[] st, int st_off, int val) throws IOException
 	}
 	e.buffer = temp & 0xFF;  /* new output byte (can still overflow) */
       }
-      e.c &= 0x7FFFFL;
+      e.c &= 0x7FFFF;
       e.ct += 8;
     }
-  } while (e.a < 0x8000L);
+  } while (e.a < 0x8000);
 }
 
 
@@ -440,7 +440,6 @@ boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 {
   ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
-  int[] natural_order;
   int[] block;
   int[] st;
   int st_off;
@@ -458,8 +457,6 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
     entropy.restarts_to_go--;
   }
 
-  natural_order = JPEGConstants.NATURAL_ORDER;
-
   /* Encode the MCU data block */
   block = MCU_data[0];
   tbl = cinfo.cur_comp_info[0].getTableAC();
@@ -473,7 +470,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
      * is an integer division with rounding towards 0.  To do this portably
      * in C, we shift after obtaining the absolute value.
      */
-    if ((v = block[natural_order[ke]]) >= 0) {
+    if ((v = block[ZIGZAG_ORDER[ke]]) >= 0) {
       if ((v >>= cinfo.Al)!=0) break;
     } else {
       v = -v;
@@ -487,7 +484,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 	st_off = 3 * k;
     arith_encode(cinfo, st, st_off, 0);		/* EOB decision */
     for (;;) {
-      if ((v = block[natural_order[++k]]) >= 0) {
+      if ((v = block[ZIGZAG_ORDER[++k]]) >= 0) {
 	if ((v >>= cinfo.Al)!=0) {
 	  arith_encode(cinfo, st, st_off + 1, 1);
 	  arith_encode(cinfo, entropy.fixed_bin, 0, 0);
@@ -584,7 +581,6 @@ boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 {
   ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
-  int[] natural_order;
   int[] block;
   int[] st;
   int st_off;
@@ -602,8 +598,6 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
     entropy.restarts_to_go--;
   }
 
-  natural_order = JPEGConstants.NATURAL_ORDER;
-
   /* Encode the MCU data block */
   block = MCU_data[0];
   tbl = cinfo.cur_comp_info[0].getTableAC();
@@ -617,7 +611,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
      * is an integer division with rounding towards 0.  To do this portably
      * in C, we shift after obtaining the absolute value.
      */
-    if ((v = block[natural_order[ke]]) >= 0) {
+    if ((v = block[ZIGZAG_ORDER[ke]]) >= 0) {
       if ((v >>= cinfo.Al)!=0) break;
     } else {
       v = -v;
@@ -627,7 +621,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 
   /* Establish EOBx (previous stage end-of-block) index */
   for (kex = ke; kex > 0; kex--)
-    if ((v = block[natural_order[kex]]) >= 0) {
+    if ((v = block[ZIGZAG_ORDER[kex]]) >= 0) {
       if ((v >>= cinfo.Ah)!=0) break;
     } else {
       v = -v;
@@ -641,7 +635,7 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
     if (k >= kex)
       arith_encode(cinfo, st, st_off, 0);	/* EOB decision */
     for (;;) {
-      if ((v = block[natural_order[++k]]) >= 0) {
+      if ((v = block[ZIGZAG_ORDER[++k]]) >= 0) {
 	if ((v >>= cinfo.Al)!=0) {
 	  if ((v >> 1)!=0)			/* previously nonzero coef */
 	    arith_encode(cinfo, st, st_off + 2, (v & 1));
@@ -697,7 +691,6 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
 	}
 
 	ArithEntropyState entropy = (ArithEntropyState) cinfo.entropy;
-  int[] natural_order;
   int[] block;
   int[] st;
   int st_off;
@@ -716,8 +709,6 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
     }
     entropy.restarts_to_go--;
   }
-
-  natural_order = JPEGConstants.NATURAL_ORDER;
 
   /* Encode the MCU data blocks */
   for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++) {
@@ -785,7 +776,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
 
     /* Establish EOB (end-of-block) index */
     do {
-      if (block[natural_order[ke]]!=0) break;
+      if (block[ZIGZAG_ORDER[ke]]!=0) break;
     } while ((--ke)!=0);
 
     /* Figure F.5: Encode_AC_Coefficients */
@@ -793,7 +784,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
       st = entropy.ac_stats[tbl];
 	  st_off = 3 * k;
       arith_encode(cinfo, st, st_off, 0);	/* EOB decision */
-      while ((v = block[natural_order[++k]]) == 0) {
+      while ((v = block[ZIGZAG_ORDER[++k]]) == 0) {
 	arith_encode(cinfo, st, st_off + 1, 0);
 	st_off += 3;
       }
@@ -853,8 +844,7 @@ final static int x_encode_mcu=0;
  */
 void ERREXIT1(Object... o)
 {
-	System.out.println(o);
-	System.exit(-1);
+	throw new IllegalStateException(Arrays.toString(o));
 }
 String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
 
@@ -929,10 +919,11 @@ void start_pass (JPEG cinfo, boolean gather_statistics)
 
 void jinit_encoder (JPEG cinfo)
 {
-  ArithEntropyState entropy;
+  ArithEntropyState entropy = new ArithEntropyState();
+
+  cinfo.entropy = entropy;
   int i;
 
-  cinfo.entropy = new ArithEntropyState();
 //  cinfo.entropy = entropy.pub;
 //  entropy.pub.start_pass = start_pass;
 //  entropy.pub.finish_pass = finish_pass;

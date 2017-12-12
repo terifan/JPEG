@@ -1,13 +1,14 @@
 package org.terifan.imageio.jpeg;
 
+import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
 
 
 public class JPEG
 {
-	public int[] arith_dc_L = new int[16];
-	public int[] arith_dc_U = new int[16];
+	public int[] arith_dc_L = new int[NUM_ARITH_TBLS];
+	public int[] arith_dc_U = new int[NUM_ARITH_TBLS];
 	public int[] arith_ac_K = new int[NUM_ARITH_TBLS];
 
 	public int Ss;
@@ -20,9 +21,9 @@ public class JPEG
 	public int num_components;
 	public int blocks_in_MCU;
 	public int comps_in_scan;
+	public int lim_Se = DCTSIZE2 - 1;
 
 	public int restart_interval;
-	public int lim_Se;
 	public int unread_marker;
 	public int[][] coef_bits;
 

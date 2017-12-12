@@ -21,11 +21,11 @@ public class SOFSegment
 	}
 
 
-	public SOFSegment(JPEG aJPEG, int aHeight, int aWidth, int aPrecision, ComponentInfo... aComponents)
+	public SOFSegment(JPEG aJPEG, int aWidth, int aHeight, int aPrecision, ComponentInfo... aComponents)
 	{
 		mJPEG = aJPEG;
-		mHeight = aHeight;
 		mWidth = aWidth;
+		mHeight = aHeight;
 		mPrecision = aPrecision;
 		mComponents = aComponents;
 	}
