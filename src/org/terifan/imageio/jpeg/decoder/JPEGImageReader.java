@@ -126,7 +126,7 @@ public class JPEGImageReader
 					case SOF0: // Baseline
 						mDecoder = new HuffmanDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(true);
-						mSOFSegment = new SOFSegment(mBitStream, false, false);
+						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported.");
@@ -135,12 +135,15 @@ public class JPEGImageReader
 					case SOF9: // Extended sequential, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(false);
-						mSOFSegment = new SOFSegment(mBitStream, true, false);
+						mJPEG.mArithmetic = true;
+						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF10: // Progressive, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(false);
-						mSOFSegment = new SOFSegment(mBitStream, true, true);
+						mJPEG.mArithmetic = true;
+						mJPEG.mProgressive = true;
+						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF3: // Lossless, Huffman
 					case SOF5: // Differential sequential, Huffman
@@ -154,7 +157,7 @@ public class JPEGImageReader
 					case SOS:
 					{
 						System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
-						mSOSSegment = new SOSSegment(mBitStream);
+						mSOSSegment = new SOSSegment(mJPEG).read(mBitStream);
 						readRaster();
 //						if (image.isDamaged() || !true)
 //						{
@@ -216,7 +219,6 @@ public class JPEGImageReader
 			mJPEG.Al = mSOSSegment.getAl();
 			mJPEG.comps_in_scan = mSOSSegment.getNumComponents();
 			mJPEG.num_components = mSOFSegment.getNumComponents();
-			mJPEG.progressive_mode = mSOFSegment.isProgressive();
 			mJPEG.lim_Se = DCTSIZE2-1;
 
 			mJPEG.blocks_in_MCU = 0;
@@ -233,7 +235,7 @@ public class JPEGImageReader
 					}
 				}
 			}
-						
+
 			int maxSamplingX = 0;
 			int maxSamplingY = 0;
 
@@ -348,9 +350,9 @@ public class JPEGImageReader
 
 			if (verbose) debugprint(30,30);
 
-			if (mStop || !mSOFSegment.isProgressive() || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
+			if (mStop || !mJPEG.mProgressive || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
 			{
-				if (mSOFSegment.isProgressive() && mJPEG.unread_marker != 217)
+				if (mJPEG.mProgressive && mJPEG.unread_marker != 217)
 				{
 					hexdump();
 				}

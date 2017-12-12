@@ -222,14 +222,14 @@ void process_restart(JPEG cinfo)
   /* Re-initialize statistics areas */
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
-    if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
+    if (! cinfo.mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
       MEMZERO(entropy.dc_stats[compptr.getTableDC()], 0, DC_STAT_BINS);
       /* Reset DC predictions to 0 */
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
-    if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
-	(cinfo.progressive_mode && cinfo.Ss!=0)) {
+    if ((! cinfo.mProgressive && cinfo.lim_Se!=0) ||
+	(cinfo.mProgressive && cinfo.Ss!=0)) {
       MEMZERO(entropy.ac_stats[compptr.getTableAC()], 0, AC_STAT_BINS);
     }
   }
@@ -710,7 +710,7 @@ xx = 0;
   int ci, tbl;
   ComponentInfo compptr;
 
-  if (cinfo.progressive_mode) {
+  if (cinfo.mProgressive) {
     /* Validate progressive scan parameters */
     if (cinfo.Ss == 0) {
       if (cinfo.Se != 0)
@@ -794,7 +794,7 @@ xx = 0;
   /* Allocate & initialize requested statistics areas */
   for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
     compptr = cinfo.cur_comp_info[ci];
-    if (! cinfo.progressive_mode || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
+    if (! cinfo.mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0)) {
       tbl = compptr.getTableDC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
@@ -804,8 +804,8 @@ xx = 0;
       entropy.last_dc_val[ci] = 0;
       entropy.dc_context[ci] = 0;
     }
-    if ((! cinfo.progressive_mode && cinfo.lim_Se!=0) ||
-	(cinfo.progressive_mode && cinfo.Ss!=0)) {
+    if ((! cinfo.mProgressive && cinfo.lim_Se!=0) ||
+	(cinfo.mProgressive && cinfo.Ss!=0)) {
       tbl = compptr.getTableAC();
       if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 	ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
@@ -864,7 +864,7 @@ void jinit_decoder(JPEG cinfo)
   /* Initialize index for fixed probability estimation */
   entropy.fixed_bin[0] = 113;
 
-  if (cinfo.progressive_mode) {
+  if (cinfo.mProgressive) {
     /* Create progression status table */
 	int ci;
     cinfo.coef_bits = new int[cinfo.num_components][DCTSIZE2];

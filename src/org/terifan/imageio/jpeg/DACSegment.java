@@ -3,9 +3,10 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DACSegment 
+public class DACSegment
 {
 	private JPEG mJPEG;
 
@@ -14,8 +15,8 @@ public class DACSegment
 	{
 		mJPEG = aJPEG;
 	}
-	
-	
+
+
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -33,7 +34,7 @@ public class DACSegment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-//				System.out.println("  arith_ac_K[" + (index - NUM_ARITH_TBLS) + "]=" + val);
+				System.out.println("  arith_ac_K[" + index + "]=" + val);
 
 				mJPEG.arith_ac_K[index - NUM_ARITH_TBLS] = val;
 			}
@@ -42,8 +43,8 @@ public class DACSegment
 				mJPEG.arith_dc_U[index] = val >> 4;
 				mJPEG.arith_dc_L[index] = val & 0x0F;
 
-//				System.out.println("  arith_dc_L[" + index + "]=" + cinfo.arith_dc_L[index]);
-//				System.out.println("  arith_dc_U[" + index + "]=" + cinfo.arith_dc_U[index]);
+				System.out.println("  arith_dc_L[" + index + "]=" + mJPEG.arith_dc_L[index]);
+				System.out.println("  arith_dc_U[" + index + "]=" + mJPEG.arith_dc_U[index]);
 
 				if (mJPEG.arith_dc_L[index] > mJPEG.arith_dc_U[index])
 				{
@@ -55,6 +56,24 @@ public class DACSegment
 		if (length != 0)
 		{
 			throw new IllegalArgumentException("Bad DAC segment: remaining: " + length);
+		}
+	}
+
+
+	public void write(BitOutputStream aBitStream) throws IOException
+	{
+		aBitStream.writeInt16(JPEGConstants.DAC);
+		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + mJPEG.arith_ac_K.length));
+
+		for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
+		{
+			aBitStream.writeInt8(i);
+			aBitStream.writeInt8((mJPEG.arith_dc_U[i] << 4) + mJPEG.arith_dc_L[i]);
+		}
+		for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
+		{
+			aBitStream.writeInt8(NUM_ARITH_TBLS + i);
+			aBitStream.writeInt8(mJPEG.arith_ac_K[i]);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
 public class ComponentInfo
@@ -21,13 +22,41 @@ public class ComponentInfo
 	private int mTableAC; // AC entropy table selector (0..3)
 
 
-	public ComponentInfo(BitInputStream aInputStream, int aComponentId) throws IOException
+	public ComponentInfo()
+	{
+	}
+
+
+	public ComponentInfo(int aComponentId, int aComponentIndex, int aQuantizationTableId, int aHorSampleFactor, int aVerSampleFactor)
+	{
+		mComponentId = aComponentId;
+		mComponentIndex = aComponentIndex;
+		mQuantizationTableId = aQuantizationTableId;
+		mHorSampleFactor = aHorSampleFactor;
+		mVerSampleFactor = aVerSampleFactor;
+	}
+
+
+	public ComponentInfo read(BitInputStream aInputStream, int aComponentId) throws IOException
 	{
 		mComponentId = aComponentId;
 		mComponentIndex = aInputStream.readInt8();
 		mHorSampleFactor = aInputStream.readBits(4);
 		mVerSampleFactor = aInputStream.readBits(4);
 		mQuantizationTableId = aInputStream.readInt8();
+
+		return this;
+	}
+
+
+	public ComponentInfo write(BitOutputStream aBitStream) throws IOException
+	{
+		aBitStream.writeInt8(mComponentIndex);
+		aBitStream.writeBits(mHorSampleFactor, 4);
+		aBitStream.writeBits(mVerSampleFactor, 4);
+		aBitStream.writeInt8(mQuantizationTableId);
+
+		return this;
 	}
 
 

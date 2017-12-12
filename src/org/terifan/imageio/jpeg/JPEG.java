@@ -23,17 +23,19 @@ public class JPEG
 
 	public int restart_interval;
 	public int lim_Se;
-	public boolean progressive_mode;
 	public int unread_marker;
 	public int[][] coef_bits;
 
 	public int mDensitiesUnits;
 	public int mDensityX;
 	public int mDensityY;
-	
+
 	public QuantizationTable[] mQuantizationTables = new QuantizationTable[8];
 
-	
+	public boolean mArithmetic;
+	public boolean mProgressive;
+
+
 	public JPEG()
 	{
 		for (int i = 0; i < NUM_ARITH_TBLS; i++) {
