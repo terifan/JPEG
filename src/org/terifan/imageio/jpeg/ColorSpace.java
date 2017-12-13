@@ -23,7 +23,7 @@ public final class ColorSpace
 	private final static int[] CB_B_TAB = new int[256];
 	private final static int[] CR_G_TAB = new int[256];
 	private final static int[] CB_G_TAB = new int[256];
-	
+
 	public static enum ColorSpaceType
 	{
 		YCBCR,
@@ -82,58 +82,17 @@ public final class ColorSpace
 	}
 
 
-//	public static void yuvToRgb(int[] aRGB, int[] aY, int[] aU, int[] aV)
-//	{
-//		for (int i = 0; i < aRGB.length; i++)
-//		{
-//			int Y = clamp(aY[i]);
-//			int U = clamp2(aU[i] - 255);
-//			int V = clamp2(aV[i] - 255);
-//
-//			int G = Y - floorDiv2(-U);
-//			int R = G - U - ceilDiv2(V);
-//			int B = V + R;
-//
-//			aRGB[i] = (clamp(R) << 16) + (clamp(G) << 8) + clamp(B);
-//		}
-//	}
-
-
-//	public static void rgbToYuv(int[] aRGB, int[] aY, int[] aU, int[] aV)
-//	{
-//		for (int i = 0; i < aRGB.length; i++)
-//		{
-//			int c = aRGB[i];
-//			int R = 255 & (c >> 16);
-//			int G = 255 & (c >> 8);
-//			int B = 255 & (c);
-//
-//			int V = B - R;
-//			int tmp = R - G + ceilDiv2(V);
-//			int Y = G + floorDiv2(tmp);
-//			int U = -tmp;
-//
-//			aY[i] = Y;
-//			aU[i] = 255 + U;
-//			aV[i] = 255 + V;
-//		}
-//	}
-
-
-	public static void yuvToRgbFloat(int[] aRGB, int[] aY, int[] aU, int[] aV)
+	public static int yuvToRgbFloat(int[] aY, int[] aU, int[] aV, int aOffset)
 	{
-		for (int i = 0; i < aRGB.length; i++)
-		{
-			int Y = aY[i];
-			int U = aU[i];
-			int V = aV[i];
+		int Y = aY[aOffset];
+		int U = aU[aOffset];
+		int V = aV[aOffset];
 
-			int R = clamp(Y + 1.40200 * (V - 128));
-			int G = clamp(Y - 0.34414 * (U - 128) - 0.71414 * (V - 128));
-			int B = clamp(Y + 1.77200 * (U - 128));
+		int R = clamp(Y + 1.40200 * (V - 128));
+		int G = clamp(Y - 0.34414 * (U - 128) - 0.71414 * (V - 128));
+		int B = clamp(Y + 1.77200 * (U - 128));
 
-			aRGB[i] = (R << 16) + (G << 8) + B;
-		}
+		return (R << 16) + (G << 8) + B;
 	}
 
 

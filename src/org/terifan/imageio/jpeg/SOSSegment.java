@@ -45,6 +45,7 @@ public class SOSSegment
 		mJPEG.Se = aBitStream.readInt8();
 		mJPEG.Ah = aBitStream.readBits(4);
 		mJPEG.Al = aBitStream.readBits(4);
+		mJPEG.comps_in_scan = getNumComponents();
 
 //		if (VERBOSE)
 		{

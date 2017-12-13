@@ -1,73 +1,35 @@
 package org.terifan.imageio.jpeg;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
 
 public class JPEGImage
 {
-	private final int mWidth;
-	private final int mHeight;
-	private final int mMCUWidth;
-	private final int mMCUHeight;
-	private final int mComponents;
-	private final Point mLastMCUPosition;
+	private int mWidth;
+	private int mHeight;
+	private int mMCUWidth;
+	private int mMCUHeight;
+	private int mComponents;
 	private int [] mRaster;
-	private boolean mIsDamaged;
-	private boolean mDecodingErrors;
 	private BufferedImage mImage;
 
 
-	public JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aDensitiesUnits, int aDensityX, int aDensityY, int aComponents)
+	public JPEGImage(int aWidth, int aHeight, int aMaxSamplingX, int aMaxSamplingY, int aComponents)
 	{
 		mWidth = aWidth;
 		mHeight = aHeight;
 		mMCUWidth = 8 * aMaxSamplingX;
 		mMCUHeight = 8 * aMaxSamplingY;
-		mLastMCUPosition = new Point();
 		mComponents = aComponents;
 		mImage = new BufferedImage(mWidth, mHeight, BufferedImage.TYPE_INT_RGB);
 		mRaster = ((DataBufferInt)mImage.getRaster().getDataBuffer()).getData();
-	}
-
-	public boolean isDamaged()
-	{
-		return mIsDamaged;
-	}
-
-
-	public boolean isDecodingErrors()
-	{
-		return mDecodingErrors;
 	}
 
 
 	public BufferedImage getImage()
 	{
 		return mImage;
-	}
-
-
-	public void setDamaged()
-	{
-		mIsDamaged = true;
-
-		int w = mLastMCUPosition.x + mMCUWidth;
-		for (int y = mLastMCUPosition.y, yy = y * mWidth; y < mHeight; y++, yy += mWidth)
-		{
-			for (int x = w; x < mWidth; x++)
-			{
-				mRaster[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
-			}
-		}
-		for (int y = mLastMCUPosition.y + mMCUHeight, yy = y * mWidth; y < mHeight; y++, yy += mWidth)
-		{
-			for (int x = 0; x < w; x++)
-			{
-				mRaster[x + yy] = (((x >> 3) & 1) ^ ((y >> 3) & 1)) == 0 ? 0xffe0e0e0 : 0xffffffff;
-			}
-		}
 	}
 
 

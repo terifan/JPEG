@@ -13,7 +13,6 @@ import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.SOSSegment;
-import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
 import org.terifan.imageio.jpeg.test.Debug;
 
 
@@ -175,12 +174,12 @@ public class JPEGImageWriter
 		{
 			for (int x = 0; x < 8; x++, i++)
 			{
-				int v = 
+				int v =
 					  aSrc[16 * (y + 0) + 2 * x + 0]
 					+ aSrc[16 * (y + 0) + 2 * x + 1]
 					+ aSrc[16 * (y + 1) + 2 * x + 0]
 					+ aSrc[16 * (y + 1) + 2 * x + 1];
-	
+
 				aDst[i] = (v + 2) / 4;
 			}
 		}
@@ -193,10 +192,10 @@ public class JPEGImageWriter
 		{
 			for (int x = 0; x < 8; x++)
 			{
-				int v = 
+				int v =
 					  aSrc[16 * (y + 0) + aOffsetX + x]
 					+ aSrc[16 * (y + 1) + aOffsetX + x];
-	
+
 				aDst[y*16+x+aOffsetX] = (v + 1) / 2;
 			}
 		}

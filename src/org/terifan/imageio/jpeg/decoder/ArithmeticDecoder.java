@@ -66,7 +66,6 @@ public class ArithmeticDecoder extends Decoder
 		int c = mBitStream.readInt8();
 		if (pc==255 && c!=0)
 		{
-			System.out.println("#"+c);
 			xx++;
 		}
 		if (xx > 0)

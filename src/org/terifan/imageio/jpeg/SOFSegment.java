@@ -44,6 +44,7 @@ public class SOFSegment
 		mHeight = aBitStream.readInt16();
 		mWidth = aBitStream.readInt16();
 		mComponents = new ComponentInfo[aBitStream.readInt8()];
+		mJPEG.num_components = getNumComponents();
 
 		if (mPrecision != 8)
 		{
@@ -173,5 +174,24 @@ public class SOFSegment
 		int maxSamplingY = getMaxVerSampling();
 
 		return (mHeight + 8 * maxSamplingY - 1) / (8 * maxSamplingY);
+	}
+
+
+	public ComponentInfo getComponentByScan(int aScanComponentIndex)
+	{
+		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			for (int frameComponentIndex = 0; frameComponentIndex < mJPEG.num_components; frameComponentIndex++)
+			{
+				ComponentInfo comp = getComponent(frameComponentIndex);
+
+				if (comp.getComponentIndex() == aScanComponentIndex)
+				{
+					return comp;
+				}
+			}
+		}
+
+		throw new IllegalStateException();
 	}
 }

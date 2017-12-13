@@ -1,11 +1,11 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.io.InputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
@@ -13,6 +13,7 @@ import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
+import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.test.Debug;
 import static org.terifan.imageio.jpeg.test.Debug.printTables;
@@ -209,54 +210,36 @@ public class JPEGImageReader
 
 		try
 		{
-			mJPEG.comps_in_scan = mSOSSegment.getNumComponents();
-			mJPEG.num_components = mSOFSegment.getNumComponents();
-
-			mJPEG.blocks_in_MCU = 0;
-
-			for (int scanComponentIndex = 0, j = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
-			{
-				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
-				{
-					if (mSOFSegment.getComponent(frameComponentIndex).getComponentIndex() == mSOSSegment.getComponent(scanComponentIndex))
-					{
-						ComponentInfo comp = mSOFSegment.getComponent(frameComponentIndex);
-
-						mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-					}
-				}
-			}
-
 			int maxSamplingX = mSOFSegment.getMaxHorSampling();
 			int maxSamplingY = mSOFSegment.getMaxVerSampling();
 			int numHorMCU = mSOFSegment.getHorMCU();
 			int numVerMCU = mSOFSegment.getVerMCU();
-			
-			System.out.println(maxSamplingX+" "+maxSamplingY+" "+numHorMCU+" "+numVerMCU);
+
+			mJPEG.blocks_in_MCU = 0;
+
+			for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+			{
+				ComponentInfo comp = mSOFSegment.getComponentByScan(mSOSSegment.getComponent(scanComponentIndex));
+				mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			}
 
 			mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
 			mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
 
 			for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
-				for (int frameComponentIndex = 0; frameComponentIndex < mSOFSegment.getNumComponents(); frameComponentIndex++)
+				ComponentInfo comp = mSOFSegment.getComponentByScan(mSOSSegment.getComponent(scanComponentIndex));
+				comp.setTableAC(mSOSSegment.getACTable(scanComponentIndex));
+				comp.setTableDC(mSOSSegment.getDCTable(scanComponentIndex));
+
+				mJPEG.cur_comp_info[scanComponentIndex] = comp;
+
+				for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
 				{
-					if (mSOFSegment.getComponent(frameComponentIndex).getComponentIndex() == mSOSSegment.getComponent(scanComponentIndex))
-					{
-						ComponentInfo comp = mSOFSegment.getComponent(frameComponentIndex);
-						comp.setTableAC(mSOSSegment.getACTable(scanComponentIndex));
-						comp.setTableDC(mSOSSegment.getDCTable(scanComponentIndex));
-
-						mJPEG.cur_comp_info[scanComponentIndex] = comp;
-
-						for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
-						{
-							mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
-						}
-
-						System.out.println("  SOF: "+comp);
-					}
+					mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 				}
+
+				System.out.println("  SOF: "+comp);
 			}
 
 			if (mImage == null)
@@ -265,7 +248,7 @@ public class JPEGImageReader
 
 				mDecoder.jinit_decoder(mJPEG);
 
-				mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.mDensitiesUnits, mJPEG.mDensityX, mJPEG.mDensityY, mJPEG.num_components);
+				mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
 			}
 
 			mDecoder.start_pass(mJPEG);
@@ -276,7 +259,7 @@ public class JPEGImageReader
 
 			try
 			{
-				if (mJPEG.num_components == 1)
+				if (mJPEG.comps_in_scan == 1)
 				{
 					ComponentInfo comp = mJPEG.cur_comp_info[0];
 					int samplingX = comp.getHorSampleFactor();
@@ -315,7 +298,7 @@ public class JPEGImageReader
 								Debug.printTables(mcu);
 								System.out.println();
 							}
-							
+
 							for (int component = 0, blockIndex = 0; component < mJPEG.comps_in_scan; component++)
 							{
 								ComponentInfo comp = mJPEG.cur_comp_info[component];
@@ -346,7 +329,7 @@ public class JPEGImageReader
 			{
 				System.out.println("unread_marker=" + mJPEG.unread_marker);
 			}
-			
+
 			if (mStop || !mJPEG.mProgressive || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
 			{
 				if (mJPEG.mProgressive && mJPEG.unread_marker != 217)
@@ -406,13 +389,11 @@ public class JPEGImageReader
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			mImage.setDamaged();
 			throw e;
 		}
 
 		mBitStream.align();
 	}
-
 
 
 	public void debugprint(int aMcuX, int aMcuY)
