@@ -229,6 +229,15 @@ public class JPEGImageReader
 
 		mJPEG.blocks_in_MCU = 0;
 
+		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
+		{
+			ComponentInfo comp = mSOFSegment.getComponent(scanComponentIndex);
+			comp.setFirst(mJPEG.blocks_in_MCU);
+			mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+		}
+
+		mJPEG.blocks_in_MCU = 0;
+
 		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 		{
 			ComponentInfo comp = mSOFSegment.getComponentByScan(mSOSSegment.getComponent(scanComponentIndex));
@@ -271,28 +280,27 @@ public class JPEGImageReader
 
 			if (mJPEG.comps_in_scan == 1)
 			{
-//				ComponentInfo comp = mJPEG.cur_comp_info[0];
-//				int samplingX = comp.getHorSampleFactor();
-//				int samplingY = comp.getVerSampleFactor();
-//				int compIndex = mSOSSegment.getComponent(0) - 1;
-//
-//				for (int loop = 0; mJPEG.unread_marker==0; loop++)
-//				{
-//					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
-//					{
-//						for (int blockY = 0; blockY < samplingY; blockY++)
-//						{
-//							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-//							{
-//								for (int blockX = 0; blockX < samplingX; blockX++)
-//								{
-//									mDecoder.decode_mcu(mJPEG, mcu);
-//									accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][blockY][blockX][compIndex]);
-//								}
-//							}
-//						}
-//					}
-//				}
+				ComponentInfo comp = mJPEG.cur_comp_info[0];
+				int f = comp.getFirst();
+				System.out.println(f);
+				
+				for (int loop = 0; mJPEG.unread_marker==0; loop++)
+				{
+					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+					{
+						for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+						{
+							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+							{
+								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
+								{
+									mDecoder.decode_mcu(mJPEG, mcu);
+									accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][f+2*blockY+blockX]);
+								}
+							}
+						}
+					}
+				}
 			}
 			else
 			{
@@ -304,10 +312,7 @@ public class JPEGImageReader
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{
-							for (int i = 0; i < 64; i++)
-							{
-								mDctCoefficients[mcuY][mcuX][blockIndex][i] += mcu[blockIndex][i];
-							}
+							accumBuffer(mcu[blockIndex], mDctCoefficients[mcuY][mcuX][blockIndex]);
 						}
 					}
 				}
@@ -359,8 +364,8 @@ public class JPEGImageReader
 							for (int x = 0; x < 8; x++)
 							{
 								int lu = coefficients[mcuY][mcuX][blockY*2+blockX][y * 8 + x];
-								int cb = coefficients[mcuY][mcuX][4][y * 8 + x];
-								int cr = coefficients[mcuY][mcuX][5][y * 8 + x];
+								int cb = coefficients[mcuY][mcuX][4][8*blockY*4+y/2 * 8 + x/2+4*blockX];
+								int cr = coefficients[mcuY][mcuX][5][8*blockY*4+y/2 * 8 + x/2+4*blockX];
 
 								mImage.getRaster()[(y + mcuY * mcuHeight + 8 * blockY) * mSOFSegment.getWidth() + mcuX * mcuWidth + 8 * blockX + x] = ColorSpace.yuvToRgbFP(lu, cb, cr);
 							}

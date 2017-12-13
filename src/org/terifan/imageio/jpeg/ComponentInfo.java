@@ -20,6 +20,7 @@ public class ComponentInfo
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
 	private int mTableDC; // DC entropy table selector (0..3)
 	private int mTableAC; // AC entropy table selector (0..3)
+	private int mFirst;
 
 
 	public ComponentInfo()
@@ -129,5 +130,17 @@ public class ComponentInfo
 		}
 
 		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
+	}
+
+
+	public void setFirst(int aBlocks_in_MCU)
+	{
+		mFirst = aBlocks_in_MCU;
+	}
+
+
+	public int getFirst()
+	{
+		return mFirst;
 	}
 }
