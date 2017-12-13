@@ -292,12 +292,12 @@ public class JPEGImageReader
 						{
 							mDecoder.decode_mcu(mJPEG, mcu);
 
-							if (mcuY == 0 && mcuX == 0)
-							{
-								System.out.println("READER " + mJPEG.mArithmetic);
-								Debug.printTables(mcu);
-								System.out.println();
-							}
+//							if (mcuY == 0 && mcuX == 0)
+//							{
+//								System.out.println("READER " + mJPEG.mArithmetic);
+//								Debug.printTables(mcu);
+//								System.out.println();
+//							}
 
 							for (int component = 0, blockIndex = 0; component < mJPEG.comps_in_scan; component++)
 							{

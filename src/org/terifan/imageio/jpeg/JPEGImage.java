@@ -33,16 +33,36 @@ public class JPEGImage
 	}
 
 
-	private void copyBlock(int[] aCoefficients, int[] aBuffer, int aWidth, int aDst)
+	private void copyBlock(int[] aSrc, int[] aDst, int aDstOffset)
 	{
-		for (int src = 0; src < 64; aDst += aWidth, src += 8)
+		for (int src = 0; src < 64; aDstOffset += mMCUWidth, src += 8)
 		{
-			System.arraycopy(aCoefficients, src, aBuffer, aDst, 8);
+			System.arraycopy(aSrc, src, aDst, aDstOffset, 8);
 		}
 	}
 
 
-	private void scaleBlock(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
+	private void upsample8x16(int[] aSrc, int[] aDst, int aDstOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
+	{
+		try
+		{
+			for (int y = 0, dst = aDstOffset; y < 8; y++, dst+=mMCUWidth)
+			{
+				for (int x = 0, src = 0; x < 8; x++, dst++)
+				{
+					aDst[dst] = aDst[dst + mMCUWidth] = aSrc[src];
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			System.out.println("ERROR: " + aMcuWidth + " " + aMcuHeight + " " + aSamplingX + " " + aSamplingY);
+			throw e;
+		}
+	}
+
+
+	private void upsample16x16(int[] aCoefficients, int[] aBuffer, int aOffset, int aMcuWidth, int aMcuHeight, int aSamplingX, int aSamplingY)
 	{
 		try
 		{
@@ -59,13 +79,13 @@ public class JPEGImage
 		}
 		catch (Exception e)
 		{
-			System.out.println(aMcuWidth + " " + aMcuHeight + " " + aSamplingX + " " + aSamplingY);
+			System.out.println("ERROR: " + aMcuWidth + " " + aMcuHeight + " " + aSamplingX + " " + aSamplingY);
 			throw e;
 		}
 	}
 
 
-	public void setData(int cx, int cy, int aSamplingX, int aSamplingY, int[] aCoefficients, int[] aBuffer)
+	public void setData(int aBlockX, int aBlockY, int aSamplingX, int aSamplingY, int[] aCoefficients, int[] aBuffer)
 	{
 		if (mMCUWidth == 8 && mMCUHeight == 8)
 		{
@@ -73,11 +93,15 @@ public class JPEGImage
 		}
 		else if (mMCUWidth == 8 * aSamplingX && mMCUHeight == 8 * aSamplingY)
 		{
-			copyBlock(aCoefficients, aBuffer, mMCUWidth, 8 * cx + 8 * cy * mMCUWidth);
+			copyBlock(aCoefficients, aBuffer, 8 * aBlockX + 8 * aBlockY * mMCUWidth);
+		}
+		else if (aSamplingX == 2)
+		{
+			upsample8x16(aCoefficients, aBuffer, aBlockX * 8 + aBlockY * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
 		}
 		else
 		{
-			scaleBlock(aCoefficients, aBuffer, cx * 8 + cy * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
+			upsample16x16(aCoefficients, aBuffer, aBlockX * 8 + aBlockY * 8 * mMCUWidth, mMCUWidth, mMCUHeight, aSamplingX, aSamplingY);
 		}
 	}
 

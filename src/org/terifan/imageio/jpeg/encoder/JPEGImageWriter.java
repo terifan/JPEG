@@ -47,8 +47,8 @@ public class JPEGImageWriter
 
 		SOFSegment mSOFSegment = new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8,
 			lu=new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2),
-			cb=new ComponentInfo(ComponentInfo.CB, 2, 1, 2, 1),
-			cr=new ComponentInfo(ComponentInfo.CR, 3, 1, 2, 1)
+			cb=new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1),
+			cr=new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1)
 		).write(mBitStream);
 
 		new DACSegment(mJPEG).write(mBitStream);
@@ -145,16 +145,14 @@ public class JPEGImageWriter
 					}
 				}
 
-				if (mcuY == 0 && mcuX == 0)
-				{
-					System.out.println("WRITER " + mJPEG.mArithmetic);
-					Debug.printTables(buffer[mcuY][mcuX]);
-					System.out.println();
-				}
+//				if (mcuY == 0 && mcuX == 0)
+//				{
+//					System.out.println("WRITER " + mJPEG.mArithmetic);
+//					Debug.printTables(buffer[mcuY][mcuX]);
+//					System.out.println();
+//				}
 			}
 		}
-
-
 
 		ArithmeticEncoder encoder = new ArithmeticEncoder(mBitStream);
 		encoder.jinit_encoder(mJPEG);
