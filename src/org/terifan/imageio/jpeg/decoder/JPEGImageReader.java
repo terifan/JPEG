@@ -295,7 +295,7 @@ public class JPEGImageReader
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
 									mDecoder.decode_mcu(mJPEG, mcu);
-									accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][f+2*blockY+blockX]);
+									accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][f + comp.getHorSampleFactor() * blockY + blockX]);
 								}
 							}
 						}
@@ -339,22 +339,21 @@ public class JPEGImageReader
 	{
 		int[][][][] coefficients = mDctCoefficients.clone();
 
+		int[] blockLookup = {0,0,0,0,1,2};
+		
 		for (int mcuY = 0; mcuY < aNumVerMCU; mcuY++)
 		{
 			for (int mcuX = 0; mcuX < aNumHorMCU; mcuX++)
 			{
-				for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
+				for (int blockIndex = 0; blockIndex < blockLookup.length; blockIndex++)
 				{
-					ComponentInfo comp = mSOFSegment.getComponent(mJPEG.MCU_membership[blockIndex]);
+					ComponentInfo comp = mSOFSegment.getComponent(blockLookup[blockIndex]);
 
 					QuantizationTable quantizationTable = mJPEG.mQuantizationTables[comp.getQuantizationTableId()];
 
 					aIdct.transform(coefficients[mcuY][mcuX][blockIndex], quantizationTable);
 				}
-			}
 
-			for (int mcuX = 0; mcuX < aNumHorMCU; mcuX++)
-			{
 				for (int blockY = 0; blockY < aMaxSamplingY; blockY++)
 				{
 					for (int blockX = 0; blockX < aMaxSamplingX; blockX++)
@@ -363,9 +362,9 @@ public class JPEGImageReader
 						{
 							for (int x = 0; x < 8; x++)
 							{
-								int lu = coefficients[mcuY][mcuX][blockY*2+blockX][y * 8 + x];
-								int cb = coefficients[mcuY][mcuX][4][8*blockY*4+y/2 * 8 + x/2+4*blockX];
-								int cr = coefficients[mcuY][mcuX][5][8*blockY*4+y/2 * 8 + x/2+4*blockX];
+								int lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
+								int cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+								int cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
 
 								mImage.getRaster()[(y + mcuY * mcuHeight + 8 * blockY) * mSOFSegment.getWidth() + mcuX * mcuWidth + 8 * blockX + x] = ColorSpace.yuvToRgbFP(lu, cb, cr);
 							}
