@@ -47,8 +47,8 @@ public class JPEGImageWriter
 
 		SOFSegment mSOFSegment = new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8,
 			lu=new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2),
-			cb=new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1),
-			cr=new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1)
+			cb=new ComponentInfo(ComponentInfo.CB, 2, 1, 2, 1),
+			cr=new ComponentInfo(ComponentInfo.CR, 3, 1, 2, 1)
 		).write(mBitStream);
 
 		new DACSegment(mJPEG).write(mBitStream);
@@ -70,7 +70,12 @@ public class JPEGImageWriter
 
 		new SOSSegment(mJPEG).write(mBitStream);
 
-		mJPEG.blocks_in_MCU = 6;
+		mJPEG.blocks_in_MCU = 0;
+		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = mJPEG.cur_comp_info[scanComponentIndex];
+			mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+		}
 
 		mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
 		mJPEG.MCU_membership[0] = 0;
@@ -84,23 +89,24 @@ public class JPEGImageWriter
 		int maxSamplingY = mSOFSegment.getMaxVerSampling();
 		int numHorMCU = mSOFSegment.getHorMCU();
 		int numVerMCU = mSOFSegment.getVerMCU();
+		int mcuWidth = 8 * maxSamplingX;
+		int mcuHeight = 8 * maxSamplingY;
 
-
-		FDCT fdct = new FDCTIntegerFast();
+		FDCT fdct = new FDCTFloat();
 
 		int[][][][] buffer = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
 
-		int[] raster = new int[8 * maxSamplingX * 8 * maxSamplingY];
-		int[][] colors = new int[mJPEG.num_components][8 * maxSamplingX * 8 * maxSamplingY];
+		int[] raster = new int[mcuWidth * mcuHeight];
+		int[][] colors = new int[mJPEG.num_components][mcuWidth * mcuHeight];
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{
 			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 			{
-				int bx = mcuX * 8 * maxSamplingX;
-				int by = mcuY * 8 * maxSamplingY;
+				int bx = mcuX * mcuWidth;
+				int by = mcuY * mcuHeight;
 
-				aImage.getRGB(bx, by, 8 * maxSamplingX, 8 * maxSamplingY, raster, 0, 8 * maxSamplingX);
+				aImage.getRGB(bx, by, mcuWidth, mcuHeight, raster, 0, mcuWidth);
 
 				ColorSpace.rgbToYuvFloat(raster, colors[0], colors[1], colors[2]);
 
@@ -127,7 +133,7 @@ public class JPEGImageWriter
 							}
 							else if (samplingX == 2 && samplingY == 2)
 							{
-								copyBlock(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, maxSamplingX);
+								copyBlock(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, mcuWidth);
 							}
 							else
 							{
@@ -175,10 +181,10 @@ public class JPEGImageWriter
 			for (int x = 0; x < 8; x++, i++)
 			{
 				int v =
-					  aSrc[16 * (y + 0) + 2 * x + 0]
-					+ aSrc[16 * (y + 0) + 2 * x + 1]
-					+ aSrc[16 * (y + 1) + 2 * x + 0]
-					+ aSrc[16 * (y + 1) + 2 * x + 1];
+					  aSrc[16 * (2 * y + 0) + 2 * x + 0]
+					+ aSrc[16 * (2 * y + 0) + 2 * x + 1]
+					+ aSrc[16 * (2 * y + 1) + 2 * x + 0]
+					+ aSrc[16 * (2 * y + 1) + 2 * x + 1];
 
 				aDst[i] = (v + 2) / 4;
 			}
@@ -193,10 +199,10 @@ public class JPEGImageWriter
 			for (int x = 0; x < 8; x++)
 			{
 				int v =
-					  aSrc[16 * (y + 0) + aOffsetX + x]
-					+ aSrc[16 * (y + 1) + aOffsetX + x];
+					  aSrc[16 * (2 * y + 0) + aOffsetX + x]
+					+ aSrc[16 * (2 * y + 1) + aOffsetX + x];
 
-				aDst[y*16+x+aOffsetX] = (v + 1) / 2;
+				aDst[y * 8 + x] = (v + 1) / 2;
 			}
 		}
 	}
