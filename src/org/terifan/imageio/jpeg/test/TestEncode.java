@@ -17,7 +17,7 @@ public class TestEncode
 
 			BufferedImage src = JPEGImageReader.read(TestEncode.class.getResourceAsStream("Swallowtail.jpg"));
 
-			new JPEGImageWriter().write(src, 55, baos);
+			new JPEGImageWriter(baos).write(src, 55);
 
 			System.out.println("---------> "+baos.size());
 //			Debug.hexDump(baos.toByteArray());

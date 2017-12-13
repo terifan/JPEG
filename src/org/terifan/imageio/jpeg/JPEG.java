@@ -35,6 +35,8 @@ public class JPEG
 
 	public boolean mArithmetic;
 	public boolean mProgressive;
+	public int num_hor_mcu;
+	public int num_ver_mcu;
 
 
 	public JPEG()

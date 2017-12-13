@@ -13,7 +13,6 @@ import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.SOSSegment;
-import org.terifan.imageio.jpeg.test.Debug;
 
 
 public class JPEGImageWriter
@@ -22,10 +21,16 @@ public class JPEGImageWriter
 	private JPEG mJPEG;
 
 
-	public void write(BufferedImage aImage, int aQuality, OutputStream aOutputStream) throws IOException
+	public JPEGImageWriter(OutputStream aOutputStream)
 	{
 		mJPEG = new JPEG();
 
+		mBitStream = new BitOutputStream(aOutputStream);
+	}
+
+
+	public void write(BufferedImage aImage, int aQuality) throws IOException
+	{
 		mJPEG.mQuantizationTables = new QuantizationTable[2];
 		mJPEG.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(aQuality, 0);
 		mJPEG.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(aQuality, 1);
@@ -35,7 +40,9 @@ public class JPEGImageWriter
 		mJPEG.arith_dc_U = new int[]{1,1};
 		mJPEG.arith_ac_K = new int[]{5,5};
 
-		mBitStream = new BitOutputStream(aOutputStream);
+		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2);
+		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1);
+		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1);
 
 		mBitStream.writeInt16(JPEGConstants.SOI);
 
@@ -43,13 +50,7 @@ public class JPEGImageWriter
 
 		new DQTSegment(mJPEG).write(mBitStream);
 
-		ComponentInfo lu, cb, cr;
-
-		SOFSegment mSOFSegment = new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8,
-			lu=new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2),
-			cb=new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1),
-			cr=new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1)
-		).write(mBitStream);
+		SOFSegment mSOFSegment = new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8, lu, cb, cr).write(mBitStream);
 
 		new DACSegment(mJPEG).write(mBitStream);
 
@@ -91,10 +92,13 @@ public class JPEGImageWriter
 		int numVerMCU = mSOFSegment.getVerMCU();
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
+		
+		mJPEG.num_hor_mcu = mSOFSegment.getHorMCU();
+		mJPEG.num_ver_mcu = mSOFSegment.getVerMCU();
 
 		FDCT fdct = new FDCTFloat();
 
-		int[][][][] buffer = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
+		int[][][][] coefficients = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
 
 		int[] raster = new int[mcuWidth * mcuHeight];
 		int[][] colors = new int[mJPEG.num_components][mcuWidth * mcuHeight];
@@ -125,50 +129,49 @@ public class JPEGImageWriter
 						{
 							if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample16x16(buffer[mcuY][mcuX][blockIndex], colors[componentIndex]);
+								downsample16x16(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex]);
 							}
 							else if (samplingX == 2 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample8x16(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX);
+								downsample8x16(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX);
 							}
 							else if (samplingX == 2 && samplingY == 2)
 							{
-								copyBlock(buffer[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, mcuWidth);
+								copyBlock(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, mcuWidth);
 							}
 							else
 							{
 								throw new UnsupportedOperationException(samplingX+" "+samplingY+" "+maxSamplingX+" "+maxSamplingY);
 							}
 
-							fdct.transform(buffer[mcuY][mcuX][blockIndex], quantizationTable);
+							fdct.transform(coefficients[mcuY][mcuX][blockIndex], quantizationTable);
 						}
 					}
 				}
-
-//				if (mcuY == 0 && mcuX == 0)
-//				{
-//					System.out.println("WRITER " + mJPEG.mArithmetic);
-//					Debug.printTables(buffer[mcuY][mcuX]);
-//					System.out.println();
-//				}
 			}
 		}
 
-		ArithmeticEncoder encoder = new ArithmeticEncoder(mBitStream);
-		encoder.jinit_encoder(mJPEG);
-		encoder.start_pass(mJPEG, false);
-
-		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
-		{
-			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-			{
-				encoder.encode_mcu(mJPEG, buffer[mcuY][mcuX]);
-			}
-		}
-
-		encoder.finish_pass(mJPEG);
+		encode(mJPEG, coefficients);
 
 		mBitStream.writeInt16(JPEGConstants.EOI);
+	}
+
+
+	public void encode(JPEG aJPEG, int[][][][] aCoefficients) throws IOException
+	{
+		ArithmeticEncoder encoder = new ArithmeticEncoder(mBitStream);
+		encoder.jinit_encoder(aJPEG);
+		encoder.start_pass(aJPEG, false);
+
+		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+		{
+			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+			{
+				encoder.encode_mcu(mJPEG, aCoefficients[mcuY][mcuX]);
+			}
+		}
+
+		encoder.finish_pass(aJPEG);
 	}
 
 

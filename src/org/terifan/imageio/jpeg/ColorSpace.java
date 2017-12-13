@@ -82,6 +82,20 @@ public final class ColorSpace
 	}
 
 
+	public static int yuvToRgbFP(int aY, int aCb, int aCr)
+	{
+		int y = aY;
+		int cb = aCb - 128;
+		int cr = aCr - 128;
+
+		int r = clamp(y + ((FP_HALF +                  FP_140200 * cr) >> FP_SCALEBITS));
+		int g = clamp(y - ((FP_HALF + FP_034414 * cb + FP_071414 * cr) >> FP_SCALEBITS));
+		int b = clamp(y + ((FP_HALF + FP_177200 * cb                 ) >> FP_SCALEBITS));
+
+		return 0xff000000 | (r << 16) + (g << 8) + b;
+	}
+
+
 	public static int yuvToRgbFloat(int[] aY, int[] aU, int[] aV, int aOffset)
 	{
 		int Y = aY[aOffset];
