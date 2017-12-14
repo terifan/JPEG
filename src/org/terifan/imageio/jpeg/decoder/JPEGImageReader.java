@@ -117,6 +117,13 @@ public class JPEGImageReader
 					case APP0:
 						new APP0Segment(mJPEG).read(mBitStream);
 						break;
+					case APP1:
+					case APP2:
+					case APP12:
+					case APP13:
+						// TODO
+						mBitStream.skipBytes(mBitStream.readInt16() - 2); // skip length
+						break;
 					case APP14:
 						new APP14Segment(mJPEG).read(mBitStream);
 						break;
@@ -161,17 +168,9 @@ public class JPEGImageReader
 					case SOF15: // Differential lossless, arithmetic
 						throw new IOException("Image encoding not supported.");
 					case SOS:
-					{
-//						System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 						mSOSSegment = new SOSSegment(mJPEG).read(mBitStream);
 						readRaster();
-//						if (image.isDamaged() || !true)
-//						{
-//							return image.getImage();
-//						}
-
 						break;
-					}
 					case DRI:
 						mBitStream.skipBytes(2); // skip length
 						mJPEG.restart_interval = mBitStream.readInt16();
@@ -213,7 +212,7 @@ public class JPEGImageReader
 			throw new IllegalStateException(e);
 		}
 
-		int restartMarkerIndex = 0;
+//		System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 
 		int maxSamplingX = mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = mSOFSegment.getMaxVerSampling();
@@ -252,8 +251,6 @@ public class JPEGImageReader
 			{
 				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 			}
-
-			System.out.println("  SOF: "+comp);
 		}
 
 		if (mImage == null)

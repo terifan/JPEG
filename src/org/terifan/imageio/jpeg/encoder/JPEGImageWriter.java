@@ -3,6 +3,7 @@ package org.terifan.imageio.jpeg.encoder;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -202,13 +203,27 @@ public class JPEGImageWriter
 			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
-		aJPEG.MCU_membership[0] = 0;
-		aJPEG.MCU_membership[1] = 0;
-		aJPEG.MCU_membership[2] = 0;
-		aJPEG.MCU_membership[3] = 0;
-		aJPEG.MCU_membership[4] = 1;
-		aJPEG.MCU_membership[5] = 2;
+//		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
+//		aJPEG.MCU_membership[0] = 0;
+//		aJPEG.MCU_membership[1] = 0;
+//		aJPEG.MCU_membership[2] = 0;
+//		aJPEG.MCU_membership[3] = 0;
+//		aJPEG.MCU_membership[4] = 1;
+//		aJPEG.MCU_membership[5] = 2;
+
+//		int[] blockLookup = new int[12];
+//
+//		int cp = 0;
+//		int cii = 0;
+//		for (ComponentInfo ci : mJPEG.components)
+//		{
+//			for (int i = 0; i < ci.getVerSampleFactor() * ci.getHorSampleFactor(); i++, cp++)
+//			{
+//				blockLookup[cp] = cii;
+//			}
+//			cii++;
+//		}
+//		blockLookup = Arrays.copyOfRange(blockLookup, 0, cp);
 
 		aJPEG.num_hor_mcu = mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = mSOFSegment.getVerMCU();

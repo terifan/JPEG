@@ -13,6 +13,11 @@ public class Transcode
 	{
 		JPEG jpeg = JPEGImageReader.decode(aInputStream);
 
+		if (jpeg.components == null)
+		{
+			throw new IllegalStateException("Error decoding source image");
+		}
+		
 		JPEGImageWriter writer = new JPEGImageWriter(aOutputStream);
 		writer.create(jpeg);
 		writer.encode(jpeg);

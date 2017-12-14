@@ -22,7 +22,7 @@ public class TestTranscode
 
 			new Transcode().transcode(TestTranscode.class.getResourceAsStream("Swallowtail.jpg"), baos);
 
-			System.out.println("---------> "+baos.size());
+			System.out.println("---------> " + baos.size());
 
 			BufferedImage image1 = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
 
@@ -58,17 +58,20 @@ public class TestTranscode
 		{
 			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
 			{
-				System.out.println(file);
-
 				try (FileInputStream in = new FileInputStream(file))
 				{
-					JPEGImageReader.read(in);
+					try
+					{
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-//					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//
-//					new Transcode().transcode(in, baos);
-//
-//					System.out.println("XXXXXXXXXXXXXXX " + baos.size()+"\t"+file.length());
+						new Transcode().transcode(in, baos);
+
+						System.out.printf("%8d %8d %s%n", baos.size(), file.length(), file);
+					}
+					catch (Throwable e)
+					{
+						e.printStackTrace(System.out);
+					}
 				}
 			}
 		}
