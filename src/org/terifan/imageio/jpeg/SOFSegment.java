@@ -190,7 +190,7 @@ public class SOFSegment
 			{
 				ComponentInfo comp = getComponent(frameComponentIndex);
 
-				if (comp.getComponentIndex() == aScanComponentIndex)
+				if (comp.getComponentId() == aScanComponentIndex)
 				{
 					return comp;
 				}

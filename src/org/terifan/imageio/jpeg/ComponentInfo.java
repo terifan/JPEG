@@ -13,8 +13,8 @@ public class ComponentInfo
 	public final static int I = 4;
 	public final static int Q = 5;
 
-	private int mComponentId; // identifier for this component (0..255)
-	private int mComponentIndex; // its index in SOF or cinfo->comp_info[]
+	private int mComponentIndex; // identifier for this component (0..255)
+	private int mComponentId; // its index in SOF or cinfo->comp_info[]
 	private int mQuantizationTableId;
 	private int mHorSampleFactor; // horizontal sampling factor (1..4)
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
@@ -28,20 +28,20 @@ public class ComponentInfo
 	}
 
 
-	public ComponentInfo(int aComponentId, int aComponentIndex, int aQuantizationTableId, int aHorSampleFactor, int aVerSampleFactor)
+	public ComponentInfo(int aComponentIndex, int aComponentId, int aQuantizationTableId, int aHorSampleFactor, int aVerSampleFactor)
 	{
-		mComponentId = aComponentId;
 		mComponentIndex = aComponentIndex;
+		mComponentId = aComponentId;
 		mQuantizationTableId = aQuantizationTableId;
 		mHorSampleFactor = aHorSampleFactor;
 		mVerSampleFactor = aVerSampleFactor;
 	}
 
 
-	public ComponentInfo read(BitInputStream aInputStream, int aComponentId) throws IOException
+	public ComponentInfo read(BitInputStream aInputStream, int aComponentIndex) throws IOException
 	{
-		mComponentId = aComponentId;
-		mComponentIndex = aInputStream.readInt8();
+		mComponentIndex = aComponentIndex;
+		mComponentId = aInputStream.readInt8();
 		mHorSampleFactor = aInputStream.readBits(4);
 		mVerSampleFactor = aInputStream.readBits(4);
 		mQuantizationTableId = aInputStream.readInt8();
@@ -52,7 +52,7 @@ public class ComponentInfo
 
 	public ComponentInfo write(BitOutputStream aBitStream) throws IOException
 	{
-		aBitStream.writeInt8(mComponentIndex);
+		aBitStream.writeInt8(mComponentId);
 		aBitStream.writeBits(mHorSampleFactor, 4);
 		aBitStream.writeBits(mVerSampleFactor, 4);
 		aBitStream.writeInt8(mQuantizationTableId);
@@ -61,15 +61,15 @@ public class ComponentInfo
 	}
 
 
-	public int getComponentId()
-	{
-		return mComponentId;
-	}
-
-
 	public int getComponentIndex()
 	{
 		return mComponentIndex;
+	}
+
+
+	public int getComponentId()
+	{
+		return mComponentId;
 	}
 
 
@@ -120,7 +120,7 @@ public class ComponentInfo
 	{
 		String component;
 
-		switch (mComponentIndex)
+		switch (mComponentId)
 		{
 			case Y: component = "Y"; break;
 			case CB: component = "Cb"; break;
@@ -129,7 +129,7 @@ public class ComponentInfo
 			default: component = "Q"; break;
 		}
 
-		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentId;
+		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentIndex;
 	}
 
 

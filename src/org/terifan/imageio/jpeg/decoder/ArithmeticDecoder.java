@@ -736,7 +736,7 @@ xx = 0;
      */
 	  for (ci = 0; ci < cinfo.comps_in_scan; ci++)
 	  {
-		  int cindex = cinfo.cur_comp_info[ci].getComponentIndex() - 1;
+		  int cindex = cinfo.cur_comp_info[ci].getComponentId() - 1;
 		  int[] coef_bit_ptr = cinfo.coef_bits[cindex];
 		  if (cinfo.Ss != 0 && coef_bit_ptr[0] < 0) // AC without prior DC scan
 		  {

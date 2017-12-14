@@ -89,7 +89,7 @@ public class SOSSegment
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
-			aBitStream.writeInt8(mJPEG.cur_comp_info[i].getComponentId() + 1);
+			aBitStream.writeInt8(mJPEG.cur_comp_info[i].getComponentId());
 			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableDC(), 4);
 			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableAC(), 4);
 		}
