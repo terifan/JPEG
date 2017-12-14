@@ -106,10 +106,10 @@ public class HuffmanDecoder extends Decoder
 		{
 			return false;
 		}
-
+		
 		if (value > 0)
 		{
-			mPreviousDCValue[aComponent] += aTableDC.readCoefficient(mBitStream, value);
+			mPreviousDCValue[aComponent] += aTableDC.readCoefficient(mBitStream, value) << aJPEG.Al;
 		}
 
 		aCoefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
@@ -132,7 +132,7 @@ if (aTableAC==null)return true;
 
 			if (codeLength > 0)
 			{
-				aCoefficients[NATURAL_ORDER[offset]] = aTableAC.readCoefficient(mBitStream, codeLength);
+				aCoefficients[NATURAL_ORDER[offset]] = aTableAC.readCoefficient(mBitStream, codeLength) << aJPEG.Al;
 			}
 			else if (zeroCount == 0)
 			{
