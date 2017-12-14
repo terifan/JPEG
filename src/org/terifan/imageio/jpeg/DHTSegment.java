@@ -54,7 +54,7 @@ public class DHTSegment
 			code <<= 1;
 		}
 
-		if (VERBOSE)
+//		if (VERBOSE)
 		{
 			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + "]");
 		}

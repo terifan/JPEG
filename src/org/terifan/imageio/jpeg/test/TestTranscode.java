@@ -56,22 +56,36 @@ public class TestTranscode
 	{
 		try
 		{
-			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
+			for (File file : new File("D:\\Pictures\\Wallpapers").listFiles())
 			{
+				byte[] data = new byte[(int)file.length()];
 				try (FileInputStream in = new FileInputStream(file))
 				{
-					try
-					{
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					in.read(data);
+				}
+				
+				System.out.println(file);
+				
+				try
+				{
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-						new Transcode().transcode(in, baos);
+					new Transcode().transcode(new ByteArrayInputStream(data), baos);
 
-						System.out.printf("%8d %8d %s%n", baos.size(), file.length(), file);
-					}
-					catch (Throwable e)
+					System.out.printf("%8d %8d %s%n", baos.size(), file.length(), file);
+
+					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
 					{
-						e.printStackTrace(System.out);
+						baos.writeTo(fos);
 					}
+
+					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
+					{
+						fos.write(data);
+					}
+				}
+				catch (Throwable e)
+				{
 				}
 			}
 		}

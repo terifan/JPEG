@@ -102,7 +102,7 @@ public class JPEGImageReader
 					}
 				}
 
-				if (VERBOSE)
+//				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
@@ -144,7 +144,11 @@ public class JPEGImageReader
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
-						throw new IOException("Image encoding not supported: Progressive, Huffman");
+						mDecoder = new HuffmanDecoder(mBitStream);
+						mBitStream.setHandleEscapeChars(true);
+						mJPEG.mProgressive = true;
+						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
+						break;
 					case SOF9: // Extended sequential, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(false);
@@ -251,6 +255,8 @@ public class JPEGImageReader
 			{
 				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 			}
+			
+			System.out.println(comp);
 		}
 
 		if (mImage == null)

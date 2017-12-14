@@ -96,11 +96,11 @@ public class HuffmanDecoder extends Decoder
 	}
 
 
-	boolean decodeImpl(JPEG aJPEG, int[] aCoefficients, int aComponent, DHTSegment dcTable, DHTSegment acTable) throws IOException
+	boolean decodeImpl(JPEG aJPEG, int[] aCoefficients, int aComponent, DHTSegment aTableDC, DHTSegment aTableAC) throws IOException
 	{
 		Arrays.fill(aCoefficients, 0);
 
-		int value = dcTable.decodeSymbol(mBitStream);
+		int value = aTableDC.decodeSymbol(mBitStream);
 
 		if (value == -1)
 		{
@@ -109,14 +109,16 @@ public class HuffmanDecoder extends Decoder
 
 		if (value > 0)
 		{
-			mPreviousDCValue[aComponent] += dcTable.readCoefficient(mBitStream, value);
+			mPreviousDCValue[aComponent] += aTableDC.readCoefficient(mBitStream, value);
 		}
 
 		aCoefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
 
+if (aTableAC==null)return true;
+		
 		for (int offset = 1; offset < 64; offset++)
 		{
-			value = acTable.decodeSymbol(mBitStream);
+			value = aTableAC.decodeSymbol(mBitStream);
 
 			if (value == -1)
 			{
@@ -130,7 +132,7 @@ public class HuffmanDecoder extends Decoder
 
 			if (codeLength > 0)
 			{
-				aCoefficients[NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength);
+				aCoefficients[NATURAL_ORDER[offset]] = aTableAC.readCoefficient(mBitStream, codeLength);
 			}
 			else if (zeroCount == 0)
 			{
