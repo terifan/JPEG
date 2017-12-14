@@ -5,7 +5,6 @@ import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.io.InputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
@@ -16,8 +15,6 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
-import org.terifan.imageio.jpeg.test.Debug;
-import static org.terifan.imageio.jpeg.test.Debug.printTables;
 
 
 public class JPEGImageReader
@@ -283,7 +280,7 @@ public class JPEGImageReader
 				ComponentInfo comp = mJPEG.cur_comp_info[0];
 				int f = comp.getFirst();
 				System.out.println(f);
-				
+
 				for (int loop = 0; mJPEG.unread_marker==0; loop++)
 				{
 					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
@@ -295,7 +292,7 @@ public class JPEGImageReader
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
 									mDecoder.decode_mcu(mJPEG, mcu);
-									accumBuffer(mcu[0], mDctCoefficients[mcuY][mcuX][f + comp.getHorSampleFactor() * blockY + blockX]);
+									addBlocks(mcu[0], mDctCoefficients[mcuY][mcuX][f + comp.getHorSampleFactor() * blockY + blockX]);
 								}
 							}
 						}
@@ -312,7 +309,7 @@ public class JPEGImageReader
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{
-							accumBuffer(mcu[blockIndex], mDctCoefficients[mcuY][mcuX][blockIndex]);
+							addBlocks(mcu[blockIndex], mDctCoefficients[mcuY][mcuX][blockIndex]);
 						}
 					}
 				}
@@ -340,7 +337,7 @@ public class JPEGImageReader
 		int[][][][] coefficients = mDctCoefficients.clone();
 
 		int[] blockLookup = {0,0,0,0,1,2};
-		
+
 		for (int mcuY = 0; mcuY < aNumVerMCU; mcuY++)
 		{
 			for (int mcuX = 0; mcuX < aNumHorMCU; mcuX++)
@@ -376,6 +373,15 @@ public class JPEGImageReader
 	}
 
 
+	private void addBlocks(int[] aSrc, int[] aDst)
+	{
+		for (int i = 0; i < 64; i++)
+		{
+			aDst[i] += aSrc[i];
+		}
+	}
+
+
 	public JPEG getJPEG()
 	{
 		return mJPEG;
@@ -386,13 +392,13 @@ public class JPEGImageReader
 	{
 		return mDctCoefficients;
 	}
-	
-	
-	public void debugprint(int aMcuX, int aMcuY)
-	{
+
+
+//	public void debugprint(int aMcuX, int aMcuY)
+//	{
 //		printTables(new int[][]{mDctCoefficients[aMcuY][aMcuX][0][0][0], mDctCoefficients[aMcuY][aMcuX][0][1][0], mDctCoefficients[aMcuY][aMcuX][1][0][0], mDctCoefficients[aMcuY][aMcuX][1][1][0], mDctCoefficients[aMcuY][aMcuX][0][0][1], mDctCoefficients[aMcuY][aMcuX][0][0][2]});
-		System.out.println();
-	}
+//		System.out.println();
+//	}
 
 
 	//				if (mRestartInterval > 0 && (((mcuIndex += numHorMCU) % mRestartInterval) == 0))
@@ -414,15 +420,6 @@ public class JPEGImageReader
 	//						}
 	//					}
 	//				}
-
-
-	private void accumBuffer(int[] aSrc, int[] aDst)
-	{
-		for (int i = 0; i < 64; i++)
-		{
-			aDst[i] += aSrc[i];
-		}
-	}
 
 
 	public void hexdump() throws IOException
