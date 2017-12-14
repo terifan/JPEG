@@ -24,13 +24,6 @@ public final class ColorSpace
 	private final static int[] CR_G_TAB = new int[256];
 	private final static int[] CB_G_TAB = new int[256];
 
-	public static enum ColorSpaceType
-	{
-		YCBCR,
-		YCCK,
-		RGB
-	}
-
 //	private final static int[] RANGE_LIMIT = new int[257 + 256 + 257];
 
 	static

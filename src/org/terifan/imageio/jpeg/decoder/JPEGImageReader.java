@@ -7,6 +7,7 @@ import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
@@ -15,6 +16,7 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.Subsampling;
 
 
 public class JPEGImageReader
@@ -101,7 +103,7 @@ public class JPEGImageReader
 					}
 				}
 
-//				if (VERBOSE)
+				if (VERBOSE)
 				{
 					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
 				}
@@ -134,9 +136,9 @@ public class JPEGImageReader
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
-						throw new IOException("Image encoding not supported.");
+						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
-						throw new IOException("Image encoding not supported.");
+						throw new IOException("Image encoding not supported: Progressive, Huffman");
 					case SOF9: // Extended sequential, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(false);
@@ -161,7 +163,7 @@ public class JPEGImageReader
 						throw new IOException("Image encoding not supported.");
 					case SOS:
 					{
-						System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
+//						System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 						mSOSSegment = new SOSSegment(mJPEG).read(mBitStream);
 						readRaster();
 //						if (image.isDamaged() || !true)
@@ -188,7 +190,7 @@ public class JPEGImageReader
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 		}
 		finally
 		{
@@ -331,8 +333,21 @@ public class JPEGImageReader
 
 	private void updateImage(int aNumVerMCU, int aNumHorMCU, IDCT aIdct, int aMaxSamplingX, int aMaxSamplingY, int mcuWidth, int mcuHeight)
 	{
-		int[] blockLookup = {0,0,0,0,1,2};
-//		int[] blockLookup = {0,1,2};
+		int[] blockLookup = new int[12];
+
+		System.out.println(mJPEG.components.length);
+
+		int cp = 0;
+		int cii = 0;
+		for (ComponentInfo ci : mJPEG.components)
+		{
+			for (int i = 0; i < ci.getVerSampleFactor() * ci.getHorSampleFactor(); i++, cp++)
+			{
+				blockLookup[cp] = cii;
+			}
+			cii++;
+		}
+		blockLookup = Arrays.copyOfRange(blockLookup, 0, cp);
 
 		for (int mcuY = 0; mcuY < aNumVerMCU; mcuY++)
 		{
@@ -355,15 +370,31 @@ public class JPEGImageReader
 						{
 							for (int x = 0; x < 8; x++)
 							{
-								// 4:4:4
-//								int lu = mJPEG.mCoefficients[mcuY][mcuX][0][y * 8 + x];
-//								int cb = mJPEG.mCoefficients[mcuY][mcuX][1][y * 8 + x];
-//								int cr = mJPEG.mCoefficients[mcuY][mcuX][2][y * 8 + x];
-
-								// 4:2:0
-								int lu = mJPEG.mCoefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
-								int cb = mJPEG.mCoefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-								int cr = mJPEG.mCoefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+								int lu;
+								int cb;
+								int cr;
+								if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+								{
+									lu = mJPEG.mCoefficients[mcuY][mcuX][0][y * 8 + x];
+									cb = mJPEG.mCoefficients[mcuY][mcuX][1][y * 8 + x];
+									cr = mJPEG.mCoefficients[mcuY][mcuX][2][y * 8 + x];
+								}
+								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 2 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+								{
+									lu = mJPEG.mCoefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
+									cb = mJPEG.mCoefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									cr = mJPEG.mCoefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+								}
+								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+								{
+									lu = mJPEG.mCoefficients[mcuY][mcuX][blockX][y * 8 + x];
+									cb = mJPEG.mCoefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									cr = mJPEG.mCoefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+								}
+								else
+								{
+									throw new IllegalStateException("Unsupported subsampling");
+								}
 
 								int rx = mcuX * mcuWidth + 8 * blockX + x;
 								int ry = y + mcuY * mcuHeight + 8 * blockY;

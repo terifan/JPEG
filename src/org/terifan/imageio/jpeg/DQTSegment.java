@@ -30,8 +30,6 @@ public class DQTSegment
 
 			mJPEG.mQuantizationTables[table.getIdentity()] = table;
 
-			System.out.println("****"+table);
-
 			length -= 1 + table.getPrecision() * 64;
 
 			if (length < 0)

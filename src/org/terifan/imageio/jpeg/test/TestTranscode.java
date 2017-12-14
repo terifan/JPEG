@@ -54,20 +54,27 @@ public class TestTranscode
 
 	public static void main(String... args)
 	{
-			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
-			{
 		try
 		{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
+			{
+				System.out.println(file);
 
-				new Transcode().transcode(new FileInputStream(file), baos);
+				try (FileInputStream in = new FileInputStream(file))
+				{
+					JPEGImageReader.read(in);
 
-				System.out.println("XXXXXXXXXXXXXXX " + baos.size()+"\t"+file.length());
+//					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//					new Transcode().transcode(in, baos);
+//
+//					System.out.println("XXXXXXXXXXXXXXX " + baos.size()+"\t"+file.length());
+				}
+			}
 		}
 		catch (Throwable e)
 		{
 			e.printStackTrace(System.out);
 		}
-			}
 	}
 }
