@@ -3,6 +3,8 @@ package org.terifan.imageio.jpeg.test;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
@@ -10,7 +12,7 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 public class TestTranscode
 {
-	public static void main(String... args)
+	public static void xmain(String... args)
 	{
 		try
 		{
@@ -47,5 +49,25 @@ public class TestTranscode
 		{
 			e.printStackTrace(System.out);
 		}
+	}
+
+
+	public static void main(String... args)
+	{
+			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
+			{
+		try
+		{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+				new Transcode().transcode(new FileInputStream(file), baos);
+
+				System.out.println("XXXXXXXXXXXXXXX " + baos.size()+"\t"+file.length());
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+			}
 	}
 }
