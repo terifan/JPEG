@@ -1,22 +1,21 @@
 package org.terifan.imageio.jpeg;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.encoder.JPEGImageWriter;
 
 
-public class Transcode 
+public class Transcode
 {
-	public void transcode(InputStream aInputStream) throws IOException
+	public void transcode(InputStream aInputStream, OutputStream aOutputStream) throws IOException
 	{
-		JPEGImageReader reader = new JPEGImageReader().load(aInputStream);
-		
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		JPEG jpeg = JPEGImageReader.decode(aInputStream);
 
-		JPEGImageWriter writer = new JPEGImageWriter(out);
-
-		writer.encode(reader.getJPEG(), reader.getDctCoefficients());
+		JPEGImageWriter writer = new JPEGImageWriter(aOutputStream);
+		writer.create(jpeg);
+		writer.encode(jpeg);
+		writer.finish(jpeg);
 	}
 }

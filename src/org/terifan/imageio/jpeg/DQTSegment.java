@@ -23,12 +23,14 @@ public class DQTSegment
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
-		
+
 		do
 		{
 			QuantizationTable table = readTable(aBitStream);
 
 			mJPEG.mQuantizationTables[table.getIdentity()] = table;
+
+			System.out.println("****"+table);
 
 			length -= 1 + table.getPrecision() * 64;
 
@@ -39,8 +41,8 @@ public class DQTSegment
 		}
 		while (length > 0);
 	}
-	
-	
+
+
 	private QuantizationTable readTable(BitInputStream aBitStream) throws IOException
 	{
 		int temp = aBitStream.readInt8();
@@ -79,11 +81,16 @@ public class DQTSegment
 		return new QuantizationTable(identity, precision, table);
 	}
 
-	
+
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		for (QuantizationTable table : mJPEG.mQuantizationTables)
 		{
+			if (table == null)
+			{
+				continue;
+			}
+
 			aBitStream.writeInt16(JPEGConstants.DQT);
 			aBitStream.writeInt16(2 + 1 + 64 * table.getPrecision());
 
@@ -92,7 +99,7 @@ public class DQTSegment
 			for (int i = 0; i < 64; i++)
 			{
 				double v = table.getDivisors()[NATURAL_ORDER[i]];
-				
+
 				if (table.getPrecision() == PRECISION_16_BITS)
 				{
 					v *= 256;

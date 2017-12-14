@@ -86,19 +86,29 @@ public class JPEGImageWriter
 		mJPEG.MCU_membership[4] = 1;
 		mJPEG.MCU_membership[5] = 2;
 
-		int maxSamplingX = mSOFSegment.getMaxHorSampling();
-		int maxSamplingY = mSOFSegment.getMaxVerSampling();
-		int numHorMCU = mSOFSegment.getHorMCU();
-		int numVerMCU = mSOFSegment.getVerMCU();
-		int mcuWidth = 8 * maxSamplingX;
-		int mcuHeight = 8 * maxSamplingY;
-		
 		mJPEG.num_hor_mcu = mSOFSegment.getHorMCU();
 		mJPEG.num_ver_mcu = mSOFSegment.getVerMCU();
 
 		FDCT fdct = new FDCTFloat();
 
-		int[][][][] coefficients = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
+		sampleImage(mSOFSegment, aImage, fdct);
+
+		encode(mJPEG);
+
+		mBitStream.writeInt16(JPEGConstants.EOI);
+	}
+
+
+	private void sampleImage(SOFSegment aMSOFSegment, BufferedImage aImage, FDCT aFdct) throws UnsupportedOperationException
+	{
+		int maxSamplingX = aMSOFSegment.getMaxHorSampling();
+		int maxSamplingY = aMSOFSegment.getMaxVerSampling();
+		int numHorMCU = aMSOFSegment.getHorMCU();
+		int numVerMCU = aMSOFSegment.getVerMCU();
+		int mcuWidth = 8 * maxSamplingX;
+		int mcuHeight = 8 * maxSamplingY;
+
+		mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
 
 		int[] raster = new int[mcuWidth * mcuHeight];
 		int[][] colors = new int[mJPEG.num_components][mcuWidth * mcuHeight];
@@ -116,8 +126,7 @@ public class JPEGImageWriter
 
 				for (int componentIndex = 0, blockIndex = 0; componentIndex < mJPEG.comps_in_scan; componentIndex++)
 				{
-					ComponentInfo comp = mSOFSegment.getComponent(componentIndex);
-
+					ComponentInfo comp = aMSOFSegment.getComponent(componentIndex);
 					int samplingX = comp.getHorSampleFactor();
 					int samplingY = comp.getVerSampleFactor();
 
@@ -129,35 +138,90 @@ public class JPEGImageWriter
 						{
 							if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample16x16(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex]);
+								downsample16x16(mJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[componentIndex]);
 							}
 							else if (samplingX == 2 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample8x16(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX);
+								downsample8x16(mJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX);
 							}
 							else if (samplingX == 2 && samplingY == 2)
 							{
-								copyBlock(coefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, mcuWidth);
+								copyBlock(mJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[componentIndex], 8 * blockX, 8 * blockY, mcuWidth);
 							}
 							else
 							{
 								throw new UnsupportedOperationException(samplingX+" "+samplingY+" "+maxSamplingX+" "+maxSamplingY);
 							}
-
-							fdct.transform(coefficients[mcuY][mcuX][blockIndex], quantizationTable);
+							aFdct.transform(mJPEG.mCoefficients[mcuY][mcuX][blockIndex], quantizationTable);
 						}
 					}
 				}
 			}
 		}
+	}
 
-		encode(mJPEG, coefficients);
 
+	public void create(JPEG aJPEG) throws IOException
+	{
+		aJPEG.mArithmetic = true;
+
+		aJPEG.arith_dc_L = new int[]{0,0};
+		aJPEG.arith_dc_U = new int[]{1,1};
+		aJPEG.arith_ac_K = new int[]{5,5};
+
+		mBitStream.writeInt16(JPEGConstants.SOI);
+
+		new APP0Segment(aJPEG).write(mBitStream);
+
+		new DQTSegment(aJPEG).write(mBitStream);
+
+		SOFSegment mSOFSegment = new SOFSegment(aJPEG, aJPEG.width, aJPEG.height, 8, aJPEG.components).write(mBitStream);
+
+		new DACSegment(aJPEG).write(mBitStream);
+
+		aJPEG.comps_in_scan = 3;
+		aJPEG.cur_comp_info = aJPEG.components;
+		aJPEG.Ss = 0;
+		aJPEG.Se = 63;
+		aJPEG.Ah = 0;
+		aJPEG.Al = 0;
+
+		aJPEG.cur_comp_info[0].setTableDC(0);
+		aJPEG.cur_comp_info[0].setTableAC(0);
+		aJPEG.cur_comp_info[1].setTableDC(1);
+		aJPEG.cur_comp_info[1].setTableAC(1);
+		aJPEG.cur_comp_info[2].setTableDC(1);
+		aJPEG.cur_comp_info[2].setTableAC(1);
+
+		new SOSSegment(aJPEG).write(mBitStream);
+
+		aJPEG.blocks_in_MCU = 0;
+		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = aJPEG.cur_comp_info[scanComponentIndex];
+			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+		}
+
+		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
+		aJPEG.MCU_membership[0] = 0;
+		aJPEG.MCU_membership[1] = 0;
+		aJPEG.MCU_membership[2] = 0;
+		aJPEG.MCU_membership[3] = 0;
+		aJPEG.MCU_membership[4] = 1;
+		aJPEG.MCU_membership[5] = 2;
+
+		aJPEG.num_hor_mcu = mSOFSegment.getHorMCU();
+		aJPEG.num_ver_mcu = mSOFSegment.getVerMCU();
+	}
+
+
+	public void finish(JPEG aJPEG) throws IOException
+	{
 		mBitStream.writeInt16(JPEGConstants.EOI);
 	}
 
 
-	public void encode(JPEG aJPEG, int[][][][] aCoefficients) throws IOException
+	public void encode(JPEG aJPEG) throws IOException
 	{
 		ArithmeticEncoder encoder = new ArithmeticEncoder(mBitStream);
 		encoder.jinit_encoder(aJPEG);
@@ -167,7 +231,7 @@ public class JPEGImageWriter
 		{
 			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
 			{
-				encoder.encode_mcu(mJPEG, aCoefficients[mcuY][mcuX]);
+				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX]);
 			}
 		}
 

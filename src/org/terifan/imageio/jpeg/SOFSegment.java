@@ -56,6 +56,11 @@ public class SOFSegment
 			mComponents[i] = new ComponentInfo().read(aBitStream, i);
 		}
 
+		mJPEG.width = mWidth;
+		mJPEG.height = mHeight;
+		mJPEG.components = mComponents;
+		mJPEG.precision = mPrecision;
+
 		if (VERBOSE)
 		{
 			System.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
@@ -192,6 +197,6 @@ public class SOFSegment
 			}
 		}
 
-		throw new IllegalStateException();
+		throw new IllegalStateException(mJPEG.comps_in_scan+" "+mJPEG.num_components);
 	}
 }

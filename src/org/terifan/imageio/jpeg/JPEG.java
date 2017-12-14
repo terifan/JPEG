@@ -37,6 +37,12 @@ public class JPEG
 	public boolean mProgressive;
 	public int num_hor_mcu;
 	public int num_ver_mcu;
+	public int width;
+	public int height;
+	public int precision;
+	public ComponentInfo[] components;
+
+	public int[][][][] mCoefficients;
 
 
 	public JPEG()
@@ -46,5 +52,11 @@ public class JPEG
 		  arith_dc_U[i] = 1;
 		  arith_ac_K[i] = 5;
 		}
+	}
+
+
+	public int[][][][] getCoefficients()
+	{
+		return mCoefficients;
 	}
 }

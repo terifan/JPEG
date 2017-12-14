@@ -20,7 +20,7 @@ public class ComponentInfo
 	private int mVerSampleFactor; // vertical sampling factor (1..4)
 	private int mTableDC; // DC entropy table selector (0..3)
 	private int mTableAC; // AC entropy table selector (0..3)
-	private int mFirst;
+	private int mComponentBlockOffset;
 
 
 	public ComponentInfo()
@@ -133,14 +133,14 @@ public class ComponentInfo
 	}
 
 
-	public void setFirst(int aBlocks_in_MCU)
+	public void setComponentBlockOffset(int aComponentBlockOffset)
 	{
-		mFirst = aBlocks_in_MCU;
+		mComponentBlockOffset = aComponentBlockOffset;
 	}
 
 
-	public int getFirst()
+	public int getComponentBlockOffset()
 	{
-		return mFirst;
+		return mComponentBlockOffset;
 	}
 }
