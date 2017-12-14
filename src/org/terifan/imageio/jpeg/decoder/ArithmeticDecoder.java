@@ -547,7 +547,7 @@ private boolean x(JPEG cinfo, int[][] MCU_data) throws IOException
  */
 
 	@Override
-boolean decode_mcu(JPEG cinfo, int[][] MCU_data) throws IOException
+boolean decodeMCU(JPEG cinfo, int[][] MCU_data) throws IOException
 {
 	for (int[] d : MCU_data)
 	{
@@ -701,7 +701,7 @@ final static int x_decode_mcu=0;
  */
 
 	@Override
-void start_pass(JPEG cinfo)
+void startPass(JPEG cinfo)
 {
 xx = 0;
 
@@ -828,7 +828,7 @@ xx = 0;
  */
 
 	@Override
-void finish_pass(JPEG cinfo)
+void finishPass(JPEG cinfo)
 {
   /* no work necessary here */
 }
@@ -839,7 +839,7 @@ void finish_pass(JPEG cinfo)
  */
 
 	@Override
-void jinit_decoder(JPEG cinfo)
+void initialize(JPEG cinfo)
 {
   ArithEntropyState entropy = new ArithEntropyState();
 

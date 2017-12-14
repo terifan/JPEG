@@ -15,11 +15,11 @@ public abstract class Decoder
 	}
 
 
-	abstract void jinit_decoder(JPEG cinfo);
+	abstract void initialize(JPEG cinfo);
 
-	abstract void finish_pass(JPEG cinfo);
+	abstract void finishPass(JPEG cinfo);
 
-	abstract void start_pass(JPEG cinfo);
+	abstract void startPass(JPEG cinfo);
 
-	abstract boolean decode_mcu(JPEG cinfo, int[][] aCoefficients) throws IOException;
+	abstract boolean decodeMCU(JPEG cinfo, int[][] aCoefficients) throws IOException;
 }

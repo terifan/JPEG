@@ -83,7 +83,7 @@ public class DHTSegment
 	{
 		int s = mLookup[aInputStream.peekBits(mMaxLength)];
 		aInputStream.skipBits(s >> 16);
-		return s & 65535;
+		return s & 0xff;
 	}
 
 

@@ -261,12 +261,12 @@ public class JPEGImageReader
 		{
 			mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
 
-			mDecoder.jinit_decoder(mJPEG);
+			mDecoder.initialize(mJPEG);
 
 			mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
 		}
 
-		mDecoder.start_pass(mJPEG);
+		mDecoder.startPass(mJPEG);
 
 		try
 		{
@@ -287,7 +287,7 @@ public class JPEGImageReader
 							{
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
-									mDecoder.decode_mcu(mJPEG, mcu);
+									mDecoder.decodeMCU(mJPEG, mcu);
 									addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
 								}
 							}
@@ -301,7 +301,7 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						mDecoder.decode_mcu(mJPEG, mcu);
+						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{
@@ -334,8 +334,6 @@ public class JPEGImageReader
 	private void updateImage(int aNumVerMCU, int aNumHorMCU, IDCT aIdct, int aMaxSamplingX, int aMaxSamplingY, int mcuWidth, int mcuHeight)
 	{
 		int[] blockLookup = new int[12];
-
-		System.out.println(mJPEG.components.length);
 
 		int cp = 0;
 		int cii = 0;

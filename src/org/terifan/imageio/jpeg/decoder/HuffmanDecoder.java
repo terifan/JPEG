@@ -25,36 +25,36 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void jinit_decoder(JPEG aCinfo)
+	void initialize(JPEG aJPEG)
 	{
 	}
 
 
 	@Override
-	void start_pass(JPEG aCinfo)
+	void startPass(JPEG aJPEG)
 	{
 	}
 
 
 	@Override
-	void finish_pass(JPEG aCinfo)
+	void finishPass(JPEG aJPEG)
 	{
 	}
 
 
 	@Override
-	boolean decode_mcu(JPEG aCinfo, int[][] aCoefficients) throws IOException
+	boolean decodeMCU(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		for (int blockIndex = 0; blockIndex < aCinfo.blocks_in_MCU; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
-			int component = aCinfo.MCU_membership[blockIndex];
+			int component = aJPEG.MCU_membership[blockIndex];
 
-			ComponentInfo comp = aCinfo.cur_comp_info[component];
+			ComponentInfo comp = aJPEG.cur_comp_info[component];
 
 			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
 			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
-			if (!decodeImpl(aCinfo, aCoefficients[blockIndex], component, dcTable, acTable))
+			if (!decodeImpl(aJPEG, aCoefficients[blockIndex], component, dcTable, acTable))
 			{
 				return false;
 			}
@@ -64,26 +64,7 @@ public class HuffmanDecoder extends Decoder
 	}
 
 
-//		for (int component = 0; component < numComponents; component++)
-//		{
-//			ComponentInfo comp = mSOFMarkerSegment.getComponent(component);
-//			int samplingX = comp.getTableDC();
-//			int samplingY = comp.getTableAC();
-//
-//			for (int cy = 0; cy < samplingY; cy++)
-//			{
-//				for (int cx = 0; cx < samplingX; cx++)
-//				{
-//					if (!readDCTCofficients(aCoefficients[cy][cx][component], component))
-//					{
-//						return false;
-//					}
-//				}
-//			}
-//		}
-
-
-	boolean decodeImpl(JPEG aCinfo, int[] aCoefficients, int aComponent, DHTSegment dcTable, DHTSegment acTable) throws IOException
+	boolean decodeImpl(JPEG aJPEG, int[] aCoefficients, int aComponent, DHTSegment dcTable, DHTSegment acTable) throws IOException
 	{
 		Arrays.fill(aCoefficients, 0);
 

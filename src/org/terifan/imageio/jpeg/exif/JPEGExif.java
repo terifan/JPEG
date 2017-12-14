@@ -40,8 +40,6 @@ public class JPEGExif
 			int len = reader.getShort() & 0xffff;
 			int pos = reader.byteBuffer.position();
 
-			//			System.out.println(pos+"\t"+len+"\t"+Integer.toHexString(code));
-
 			if (code == 0xFFE1)
 			{
 				if (reader.getInt() == EXIF_HEADER)
@@ -103,8 +101,6 @@ public class JPEGExif
 				int length = reader.getInt();
 				int value = reader.getInt();
 				Object output;
-
-//				System.out.printf("tag=%04X length=%-4d value=%-4d format=%s\n", tag, length, value, format);
 
 				if (tag == ExifTag.PADDING.mCode) // ignore padding
 				{
