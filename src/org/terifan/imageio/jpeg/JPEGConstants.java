@@ -33,8 +33,10 @@ public class JPEGConstants
 	public final static int MAX_COMPS_IN_SCAN = 4;	/* JPEG limit on # of components in one scan */
 	public final static int MAX_SAMP_FACTOR = 4;	/* JPEG limit on sampling factors */
 	public final static int DCTSIZE = 8;
-	public final static int DCTSIZE2 = 64;
-	
+	public final static int DCTSIZE2 = 8 * 8;
+	public final static int DC_STAT_BINS = 64;
+	public final static int AC_STAT_BINS = 256;
+
 	public final static int APP0 = 0xFFE0;   // JFIF APP0 segment marker
 	public final static int APP1 = 0xFFE1;
 	public final static int APP2 = 0xFFE2;

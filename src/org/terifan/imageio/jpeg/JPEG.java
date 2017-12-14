@@ -43,6 +43,7 @@ public class JPEG
 	public ComponentInfo[] components;
 
 	public int[][][][] mCoefficients;
+	public int restartMarkerIndex;
 
 
 	public JPEG()

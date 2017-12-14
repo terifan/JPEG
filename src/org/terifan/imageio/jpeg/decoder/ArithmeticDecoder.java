@@ -208,7 +208,7 @@ int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOExceptio
  * Check for a restart marker & resynchronize decoder.
  */
 
-void process_restart(JPEG cinfo)
+private void process_restart(JPEG cinfo)
 {
   ArithEntropyState entropy = cinfo.entropy;
   int ci;

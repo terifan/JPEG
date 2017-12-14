@@ -2,6 +2,7 @@ package org.terifan.imageio.jpeg.decoder;
 
 import static org.terifan.imageio.jpeg.JPEGConstants.MAX_COMPS_IN_SCAN;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import static org.terifan.imageio.jpeg.JPEGConstants.DC_STAT_BINS;
 
 
 public class ArithEntropyState
@@ -10,7 +11,7 @@ public class ArithEntropyState
 	public int a;  // A register, normalized size of coding interval
 	public int ct; // bit shift counter, # of bits left in bit buffer part of C. init: ct = -16, run: ct = 0..7, error: ct = -1
 	public int[] last_dc_val = new int[MAX_COMPS_IN_SCAN]; // last DC coef for each component
-	public int[] dc_context = new int[MAX_COMPS_IN_SCAN];  // context index for DC conditioning
+	public int[] dc_context = new int[DC_STAT_BINS];  // context index for DC conditioning
 
 	public int restarts_to_go;	// MCUs left in this restart interval
 

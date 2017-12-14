@@ -24,7 +24,6 @@ public class JPEGImageReader
 	final static int MAX_CHANNELS = 3;
 
 	private BitInputStream mBitStream;
-	private int mRestartInterval;
 	private SOFSegment mSOFSegment;
 	private SOSSegment mSOSSegment;
 	private Class<? extends IDCT> mIDCT;
@@ -175,7 +174,7 @@ public class JPEGImageReader
 					}
 					case DRI:
 						mBitStream.skipBytes(2); // skip length
-						mRestartInterval = mBitStream.readInt16();
+						mJPEG.restart_interval = mBitStream.readInt16();
 						break;
 					case COM:
 						mBitStream.skipBytes(mBitStream.readInt16() - 2);
@@ -316,7 +315,7 @@ public class JPEGImageReader
 			e.printStackTrace(System.out);
 			mStop = true;
 		}
-
+		
 		if (mStop || !mJPEG.mProgressive || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
 		{
 			mStop = true;
@@ -424,27 +423,6 @@ public class JPEGImageReader
 //		printTables(new int[][]{mDctCoefficients[aMcuY][aMcuX][0][0][0], mDctCoefficients[aMcuY][aMcuX][0][1][0], mDctCoefficients[aMcuY][aMcuX][1][0][0], mDctCoefficients[aMcuY][aMcuX][1][1][0], mDctCoefficients[aMcuY][aMcuX][0][0][1], mDctCoefficients[aMcuY][aMcuX][0][0][2]});
 //		System.out.println();
 //	}
-
-
-	//				if (mRestartInterval > 0 && (((mcuIndex += numHorMCU) % mRestartInterval) == 0))
-	//				{
-	//					if (mcuIndex < numHorMCU * numVerMCU - 1) // Don't check restart marker when all MCUs are loaded
-	//					{
-	//						mBitStream.align();
-	//
-	//						int restartMarker = mBitStream.readInt16();
-	//						if (restartMarker != 0xFFD0 + (restartMarkerIndex & 7))
-	//						{
-	//							throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + (restartMarkerIndex & 7)));
-	//						}
-	//						restartMarkerIndex++;
-	//
-	//						for (int i = 0; i < MAX_CHANNELS; i++)
-	//						{
-	//							mPreviousDCValue[i] = 0;
-	//						}
-	//					}
-	//				}
 
 
 	public void hexdump() throws IOException
