@@ -77,18 +77,101 @@ public class HuffmanDecoder extends Decoder
 			aJPEG.entropy.restarts_to_go--;
 		}
 
+		if (aJPEG.mProgressive)
+		{
+			if (aJPEG.Ah == 0)
+			{
+				return aJPEG.Ss == 0 ? decode_mcu_DC_first(aJPEG, aCoefficients) : decode_mcu_AC_first(aJPEG, aCoefficients);
+			}
+
+			return aJPEG.Ss == 0 ? decode_mcu_DC_refine(aJPEG, aCoefficients) : decode_mcu_AC_refine(aJPEG, aCoefficients);
+		}
+
+		return decodeImpl(aJPEG, aCoefficients);
+	}
+
+
+	private boolean decode_mcu_DC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
+	{
 		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
-			int component = aJPEG.MCU_membership[blockIndex];
-
-			ComponentInfo comp = aJPEG.cur_comp_info[component];
+			int ci = aJPEG.MCU_membership[blockIndex];
+			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
 			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
-			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
-			if (!decodeImpl(aJPEG, aCoefficients[blockIndex], component, dcTable, acTable))
+			Arrays.fill(aCoefficients[blockIndex], 0);
+
+			int value = dcTable.decodeSymbol(mBitStream);
+
+			if (value == -1)
 			{
 				return false;
+			}
+
+			if (value > 0)
+			{
+				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+			}
+
+			aCoefficients[blockIndex][NATURAL_ORDER[0]] = mPreviousDCValue[ci];
+		}
+
+		return true;
+	}
+
+	int EOBRUN;
+
+	private boolean decode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
+	{
+//		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		{
+		int blockIndex = 0;
+
+			Arrays.fill(aCoefficients[blockIndex], 0);
+
+			if (EOBRUN > 0)
+			{
+				EOBRUN--;
+				return true;
+			}
+
+			int ci = aJPEG.MCU_membership[blockIndex];
+			ComponentInfo comp = aJPEG.cur_comp_info[ci];
+
+			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+
+			for (int k = aJPEG.Ss; k <= aJPEG.Se; k++)
+			{
+				int value = acTable.decodeSymbol(mBitStream);
+
+				if (value == -1)
+				{
+					return false;
+				}
+
+				int r = value >> 4;
+				int s = value & 15;
+
+				if (s > 0)
+				{
+					k += r;
+
+					aCoefficients[blockIndex][NATURAL_ORDER[k]] = acTable.readCoefficient(mBitStream, s) << aJPEG.Al;
+				}
+				else
+				{
+					if (r != 15)
+					{
+						if (r == 0)
+						{
+							System.out.println("#");
+							EOBRUN += mBitStream.readBits(r) - 1;
+						}
+					}
+					break;
+				}
+				k += 15;
 			}
 		}
 
@@ -96,51 +179,72 @@ public class HuffmanDecoder extends Decoder
 	}
 
 
-	boolean decodeImpl(JPEG aJPEG, int[] aCoefficients, int aComponent, DHTSegment aTableDC, DHTSegment aTableAC) throws IOException
+	private boolean decode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		Arrays.fill(aCoefficients, 0);
+		return decodeImpl(aJPEG, aCoefficients);
+	}
 
-		int value = aTableDC.decodeSymbol(mBitStream);
 
-		if (value == -1)
+	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
+	{
+		return decodeImpl(aJPEG, aCoefficients);
+	}
+
+
+	private boolean decodeImpl(JPEG aJPEG, int[][] aCoefficients) throws IOException
+	{
+		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
-			return false;
-		}
-		
-		if (value > 0)
-		{
-			mPreviousDCValue[aComponent] += aTableDC.readCoefficient(mBitStream, value) << aJPEG.Al;
-		}
+			int ci = aJPEG.MCU_membership[blockIndex];
+			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-		aCoefficients[NATURAL_ORDER[0]] = mPreviousDCValue[aComponent];
+			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
+			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
-if (aTableAC==null)return true;
-		
-		for (int offset = 1; offset < 64; offset++)
-		{
-			value = aTableAC.decodeSymbol(mBitStream);
+			Arrays.fill(aCoefficients[blockIndex], 0);
+
+			int value = dcTable.decodeSymbol(mBitStream);
 
 			if (value == -1)
 			{
 				return false;
 			}
 
-			int zeroCount = value >> 4;
-			int codeLength = value & 15;
-
-			offset += zeroCount;
-
-			if (codeLength > 0)
+			if (value > 0)
 			{
-				aCoefficients[NATURAL_ORDER[offset]] = aTableAC.readCoefficient(mBitStream, codeLength) << aJPEG.Al;
+				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
-			else if (zeroCount == 0)
+
+			aCoefficients[blockIndex][NATURAL_ORDER[0]] = mPreviousDCValue[ci];
+
+			if (acTable == null) continue;
+
+			for (int offset = 1; offset < 64; offset++)
 			{
-				break; // EOB found.
-			}
-			else if (zeroCount != 15)
-			{
-				throw new IOException("Error reading JPEG stream; ZeroCount must be 0 or 15 when codeLength equals 0.");
+				value = acTable.decodeSymbol(mBitStream);
+
+				if (value == -1)
+				{
+					return false;
+				}
+
+				int zeroCount = value >> 4;
+				int codeLength = value & 15;
+
+				offset += zeroCount;
+
+				if (codeLength > 0)
+				{
+					aCoefficients[blockIndex][NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength) << aJPEG.Al;
+				}
+				else if (zeroCount == 0)
+				{
+					break; // EOB found.
+				}
+				else if (zeroCount != 15)
+				{
+					throw new IOException("Error reading JPEG stream; ZeroCount must be 0 or 15 when codeLength equals 0.");
+				}
 			}
 		}
 

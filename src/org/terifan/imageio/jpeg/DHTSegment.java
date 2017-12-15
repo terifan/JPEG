@@ -94,6 +94,7 @@ public class DHTSegment
 		if (symbol < 1 << (aLength - 1))
 		{
 			return symbol + (-1 << aLength) + 1;
+//			return symbol + ((1 << aLength) - 1);
 		}
 
 		return symbol;

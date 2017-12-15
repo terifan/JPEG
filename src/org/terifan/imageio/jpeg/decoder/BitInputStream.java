@@ -11,11 +11,31 @@ public class BitInputStream
 	private int mBitBufferLength;
 	private int mStreamOffset;
 	private boolean mHandleEscapeChars;
+	private boolean mHandleMarkers;
+	private int mUnreadMarker;
 
 
 	public BitInputStream(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
+	}
+
+
+	public int getUnreadMarker()
+	{
+		return mUnreadMarker;
+	}
+
+
+	public void setUnreadMarker(int aUnreadMarker)
+	{
+		mUnreadMarker = aUnreadMarker;
+	}
+
+
+	public void setHandleMarkers(boolean aHandleMarkers)
+	{
+		mHandleMarkers = aHandleMarkers;
 	}
 
 
@@ -103,6 +123,11 @@ public class BitInputStream
 				if (value == 0)
 				{
 					value = 255;
+				}
+				else if (mHandleMarkers)
+				{
+					mUnreadMarker = value;
+					continue;
 				}
 				else
 				{

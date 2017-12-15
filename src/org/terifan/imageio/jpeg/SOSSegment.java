@@ -30,7 +30,7 @@ public class SOSSegment
 
 		if (6 + 2 * mJPEG.comps_in_scan != segmentLength)
 		{
-			throw new IOException("Error in JPEG stream; illegal SOS segment size.");
+			throw new IOException("Error in JPEG stream; illegal SOS segment size: " + segmentLength);
 		}
 
 		mComponentIds = new int[mJPEG.comps_in_scan];

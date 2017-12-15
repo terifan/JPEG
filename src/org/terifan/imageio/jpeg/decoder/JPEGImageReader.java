@@ -5,8 +5,12 @@ import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
@@ -16,7 +20,6 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
-import org.terifan.imageio.jpeg.Subsampling;
 
 
 public class JPEGImageReader
@@ -82,6 +85,11 @@ public class JPEGImageReader
 					nextSegment = 0xff00 + mJPEG.unread_marker;
 					mJPEG.unread_marker = 0;
 				}
+				else if (mJPEG != null && mBitStream.getUnreadMarker() != 0)
+				{
+					nextSegment = 0xff00 + mBitStream.getUnreadMarker();
+					mBitStream.setUnreadMarker(0);
+				}
 				else
 				{
 					nextSegment = mBitStream.readInt16();
@@ -146,6 +154,7 @@ public class JPEGImageReader
 					case SOF2: // Progressive, Huffman
 						mDecoder = new HuffmanDecoder(mBitStream);
 						mBitStream.setHandleEscapeChars(true);
+						mBitStream.setHandleMarkers(true);
 						mJPEG.mProgressive = true;
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
@@ -255,7 +264,7 @@ public class JPEGImageReader
 			{
 				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 			}
-			
+
 			System.out.println(comp);
 		}
 
@@ -279,7 +288,7 @@ public class JPEGImageReader
 				ComponentInfo comp = mJPEG.cur_comp_info[0];
 				int componentBlockOffset = comp.getComponentBlockOffset();
 
-				for (int loop = 0; mJPEG.unread_marker==0; loop++)
+				for (int loop = 0; ((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0); loop++)
 				{
 					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 					{
@@ -287,6 +296,8 @@ public class JPEGImageReader
 						{
 							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 							{
+								System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX);
+
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
 									mDecoder.decodeMCU(mJPEG, mcu);
@@ -303,6 +314,8 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
+						System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX);
+
 						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
@@ -318,10 +331,13 @@ public class JPEGImageReader
 			e.printStackTrace(System.out);
 			mStop = true;
 		}
-		
-		if (mStop || !mJPEG.mProgressive || mProgressiveLevel++ == 99 || mJPEG.unread_marker == 217)
+
+//		if (mStop || !mJPEG.mProgressive || mProgressiveLevel == 99 || mJPEG.unread_marker == 217)
 		{
-			mStop = true;
+			if (mJPEG.unread_marker == 217 || mBitStream.getUnreadMarker() == 217)
+			{
+				mStop = true;
+			}
 
 			if (mUpdateImage)
 			{
@@ -329,12 +345,33 @@ public class JPEGImageReader
 			}
 		}
 
+		mProgressiveLevel++;
 		mBitStream.align();
 	}
 
 
 	private void updateImage(int aNumVerMCU, int aNumHorMCU, IDCT aIdct, int aMaxSamplingX, int aMaxSamplingY, int mcuWidth, int mcuHeight)
 	{
+		int[][][][] coefficients = mJPEG.mCoefficients;
+
+		try
+		{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try (ObjectOutputStream oos = new ObjectOutputStream(baos))
+			{
+				oos.writeObject(coefficients);
+			}
+			try (ObjectInputStream oos = new ObjectInputStream (new ByteArrayInputStream(baos.toByteArray())))
+			{
+				coefficients = (int[][][][])oos.readObject();
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.out);
+		}
+
+
 		int[] blockLookup = new int[12];
 
 		int cp = 0;
@@ -359,7 +396,7 @@ public class JPEGImageReader
 
 					QuantizationTable quantizationTable = mJPEG.mQuantizationTables[comp.getQuantizationTableId()];
 
-					aIdct.transform(mJPEG.mCoefficients[mcuY][mcuX][blockIndex], quantizationTable);
+					aIdct.transform(coefficients[mcuY][mcuX][blockIndex], quantizationTable);
 				}
 
 				for (int blockY = 0; blockY < aMaxSamplingY; blockY++)
@@ -375,21 +412,21 @@ public class JPEGImageReader
 								int cr;
 								if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
 								{
-									lu = mJPEG.mCoefficients[mcuY][mcuX][0][y * 8 + x];
-									cb = mJPEG.mCoefficients[mcuY][mcuX][1][y * 8 + x];
-									cr = mJPEG.mCoefficients[mcuY][mcuX][2][y * 8 + x];
+									lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+									cb = coefficients[mcuY][mcuX][1][y * 8 + x];
+									cr = coefficients[mcuY][mcuX][2][y * 8 + x];
 								}
 								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 2 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
 								{
-									lu = mJPEG.mCoefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
-									cb = mJPEG.mCoefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-									cr = mJPEG.mCoefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
+									cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
 								}
 								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
 								{
-									lu = mJPEG.mCoefficients[mcuY][mcuX][blockX][y * 8 + x];
-									cb = mJPEG.mCoefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-									cr = mJPEG.mCoefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
+									cb = coefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									cr = coefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
 								}
 								else
 								{
