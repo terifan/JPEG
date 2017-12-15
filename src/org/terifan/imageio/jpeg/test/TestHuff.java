@@ -12,10 +12,12 @@ public class TestHuff
 	{
 		try
 		{
-			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def-prog.jpg");
+//			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt-prog.jpg");
+//			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def-prog.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari.jpg");
+			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
 
 			try (InputStream input = jpegResource.openStream())
 			{

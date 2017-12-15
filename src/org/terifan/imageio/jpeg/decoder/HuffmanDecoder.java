@@ -114,7 +114,7 @@ public class HuffmanDecoder extends Decoder
 				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
 
-			aCoefficients[blockIndex][NATURAL_ORDER[0]] = mPreviousDCValue[ci];
+			aCoefficients[blockIndex][0] = mPreviousDCValue[ci];
 		}
 
 		return true;
@@ -124,37 +124,35 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-//		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
-		{
 		int blockIndex = 0;
 
-			int ci = aJPEG.MCU_membership[blockIndex];
+		int ci = aJPEG.MCU_membership[blockIndex];
 
-			Arrays.fill(aCoefficients[blockIndex], 0);
+		Arrays.fill(aCoefficients[blockIndex], 0);
 
-			if (EOBRUN > 0)
-			{
-				EOBRUN--;
-				return true;
-			}
-
+		if (EOBRUN > 0)
+		{
+			EOBRUN--;
+		}
+		else
+		{
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
 			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 			for (int k = aJPEG.Ss; k <= aJPEG.Se; k++)
 			{
-				int value = acTable.decodeSymbol(mBitStream);
+				int s = acTable.decodeSymbol(mBitStream);
 
-				if (value == -1)
+				if (s == -1)
 				{
 					return false;
 				}
 
-				int r = value >> 4;
-				int s = value & 15;
+				int r = s >> 4;
+				s &= 15;
 
-				if (s > 0)
+				if (s != 0)
 				{
 					k += r;
 
@@ -164,14 +162,15 @@ public class HuffmanDecoder extends Decoder
 				{
 					if (r != 15)
 					{
-						if (r == 0)
+						if (r != 0)
 						{
+							EOBRUN = 1 << r;
 							EOBRUN += mBitStream.readBits(r) - 1;
 						}
+						break;
 					}
-					break;
+					k += 15;
 				}
-				k += 15;
 			}
 		}
 
@@ -181,13 +180,136 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		return decodeImpl(aJPEG, aCoefficients);
+		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		{
+			aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
+		}
+
+		return true;
 	}
 
 
 	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		return decodeImpl(aJPEG, aCoefficients);
+		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
+		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
+
+		int ci = aJPEG.MCU_membership[0];
+		ComponentInfo comp = aJPEG.cur_comp_info[ci];
+
+		DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+
+		int k = aJPEG.Ss;
+
+		if (EOBRUN == 0)
+		{
+			do
+			{
+				int s = acTable.decodeSymbol(mBitStream);
+				int r = s >> 4;
+				s &= 15;
+
+				if (s != 0)
+				{
+					if (s != 1) // size of new coef should always be 1
+					{
+						throw new IllegalArgumentException();
+					}
+					if (mBitStream.readBits(1) != 0)
+					{
+						s = p1;		// newly nonzero coef is positive
+					}
+					else
+					{
+						s = m1;		// newly nonzero coef is negative
+					}
+				}
+				else
+				{
+					if (r != 15)
+					{
+						EOBRUN = 1 << r; // EOBr, run length is 2^r + appended bits
+						if (r != 0)
+						{
+							r = mBitStream.readBits(r);
+							EOBRUN += r;
+						}
+						break;
+						// rest of block is handled by EOB logic
+					}
+					// note s = 0 for processing ZRL
+				}
+				// Advance over already-nonzero coefs and r still-zero coefs, appending correction bits to the nonzeroes.  A correction bit is 1 if the absolute value of the coefficient must be increased.
+				do
+				{
+					int thiscoef = aCoefficients[0][NATURAL_ORDER[k]];
+					if (thiscoef != 0)
+					{
+						if (mBitStream.readBits(1) != 0)
+						{
+							if ((thiscoef & p1) == 0)
+							{
+								if (thiscoef >= 0) // do nothing if already set it
+								{
+									aCoefficients[0][NATURAL_ORDER[k]] += p1;
+								}
+								else
+								{
+									aCoefficients[0][NATURAL_ORDER[k]] += m1;
+								}
+							}
+						}
+					}
+					else
+					{
+						if (--r < 0)
+						{
+							break; // reached target zero coefficient
+						}
+					}
+					k++;
+				}
+				while (k <= aJPEG.Se);
+				if (s != 0)
+				{
+					aCoefficients[0][NATURAL_ORDER[k]] = s; // Output newly nonzero coefficient
+				}
+				k++;
+			}
+			while (k <= aJPEG.Se);
+		}
+
+		if (EOBRUN != 0)
+		{
+			// Scan any remaining coefficient positions after the end-of-band (the last newly nonzero coefficient, if any). Append a correction bit to each already-nonzero coefficient.  A correction bit is 1 if the absolute value of the coefficient must be increased.
+			do
+			{
+				int thiscoef = aCoefficients[0][NATURAL_ORDER[k]];
+				if (thiscoef != 0)
+				{
+					if (mBitStream.readBits(1) != 0)
+					{
+						if ((thiscoef & p1) == 0)
+						{
+							if (thiscoef >= 0) // do nothing if already changed it
+							{
+								aCoefficients[0][NATURAL_ORDER[k]] += p1;
+							}
+							else
+							{
+								aCoefficients[0][NATURAL_ORDER[k]] += m1;
+							}
+						}
+					}
+				}
+				k++;
+			}
+			while (k <= aJPEG.Se);
+			
+			EOBRUN--; // Count one block completed in EOB run
+		}
+
+		return true;
 	}
 
 

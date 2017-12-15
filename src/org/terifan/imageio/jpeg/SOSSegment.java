@@ -24,13 +24,13 @@ public class SOSSegment
 
 	public SOSSegment read(BitInputStream aBitStream) throws IOException
 	{
-		int segmentLength = aBitStream.readInt16();
+		int length = aBitStream.readInt16();
 
 		mJPEG.comps_in_scan = aBitStream.readInt8();
 
-		if (6 + 2 * mJPEG.comps_in_scan != segmentLength)
+		if (6 + 2 * mJPEG.comps_in_scan != length)
 		{
-			throw new IOException("Error in JPEG stream; illegal SOS segment size: " + segmentLength);
+			throw new IOException("Error in JPEG stream; illegal SOS segment size: " + length + ", offset " + aBitStream.getStreamOffset());
 		}
 
 		mComponentIds = new int[mJPEG.comps_in_scan];

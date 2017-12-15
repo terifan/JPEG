@@ -282,13 +282,14 @@ public class JPEGImageReader
 		try
 		{
 			int[][] mcu = new int[mJPEG.blocks_in_MCU][64];
+			int[][][] mcu2 = new int[numHorMCU][mJPEG.blocks_in_MCU][64];
 
 			if (mJPEG.comps_in_scan == 1)
 			{
 				ComponentInfo comp = mJPEG.cur_comp_info[0];
 				int componentBlockOffset = comp.getComponentBlockOffset();
 
-				for (int loop = 0; ((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0); loop++)
+//				for (int loop = 0; ((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0); loop++)
 				{
 					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 					{
@@ -296,10 +297,10 @@ public class JPEGImageReader
 						{
 							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 							{
-								System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX+" "+loop);
-
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
+									if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
+
 									mDecoder.decodeMCU(mJPEG, mcu);
 									addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
 								}
@@ -314,8 +315,8 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX);
-
+						if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
+						
 						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
@@ -334,6 +335,7 @@ public class JPEGImageReader
 
 //		if (mStop || !mJPEG.mProgressive || mProgressiveLevel == 99 || mJPEG.unread_marker == 217)
 		{
+//			if (mJPEG.unread_marker == 217 || mBitStream.getUnreadMarker() == 217 || mProgressiveLevel==0)
 			if (mJPEG.unread_marker == 217 || mBitStream.getUnreadMarker() == 217)
 			{
 				mStop = true;

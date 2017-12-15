@@ -46,7 +46,7 @@ public class DHTSegment
 
 				for (int k = 0, sz = 1 << (mMaxLength - length); k < sz; k++)
 				{
-					mLookup[(code << (mMaxLength - length)) | k] = value + (length << 16);
+					mLookup[(code << (mMaxLength - length)) | k] = (length << 16) + value;
 				}
 
 				code++;

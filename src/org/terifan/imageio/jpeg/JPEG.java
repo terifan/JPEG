@@ -44,6 +44,7 @@ public class JPEG
 
 	public int[][][][] mCoefficients;
 	public int restartMarkerIndex;
+	public int xx;
 
 
 	public JPEG()
