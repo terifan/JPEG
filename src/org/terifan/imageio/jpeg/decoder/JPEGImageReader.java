@@ -296,7 +296,7 @@ public class JPEGImageReader
 						{
 							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 							{
-								System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX);
+								System.out.println(mProgressiveLevel+" "+mJPEG.comps_in_scan+" "+mcuY+" "+mcuX+" "+loop);
 
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{

@@ -128,6 +128,8 @@ public class HuffmanDecoder extends Decoder
 		{
 		int blockIndex = 0;
 
+			int ci = aJPEG.MCU_membership[blockIndex];
+
 			Arrays.fill(aCoefficients[blockIndex], 0);
 
 			if (EOBRUN > 0)
@@ -136,7 +138,6 @@ public class HuffmanDecoder extends Decoder
 				return true;
 			}
 
-			int ci = aJPEG.MCU_membership[blockIndex];
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
 			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
@@ -165,7 +166,6 @@ public class HuffmanDecoder extends Decoder
 					{
 						if (r == 0)
 						{
-							System.out.println("#");
 							EOBRUN += mBitStream.readBits(r) - 1;
 						}
 					}
