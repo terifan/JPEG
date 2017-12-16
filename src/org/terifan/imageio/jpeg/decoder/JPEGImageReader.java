@@ -282,28 +282,26 @@ public class JPEGImageReader
 		try
 		{
 			int[][] mcu = new int[mJPEG.blocks_in_MCU][64];
-			int[][][] mcu2 = new int[numHorMCU][mJPEG.blocks_in_MCU][64];
 
 			if (mJPEG.comps_in_scan == 1)
 			{
 				ComponentInfo comp = mJPEG.cur_comp_info[0];
 				int componentBlockOffset = comp.getComponentBlockOffset();
 
-//				for (int loop = 0; ((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0); loop++)
+				for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 				{
-					for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+					for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 					{
-						for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 						{
-							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
-								{
-									if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
+//								System.out.println(mcuY+" "+mcuX+" "+blockY+" "+blockX);
 
-									mDecoder.decodeMCU(mJPEG, mcu);
-									addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
-								}
+								if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
+
+								mDecoder.decodeMCU(mJPEG, mcu);
+								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
 							}
 						}
 					}

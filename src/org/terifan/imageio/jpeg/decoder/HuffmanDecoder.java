@@ -37,6 +37,34 @@ public class HuffmanDecoder extends Decoder
 
 		aJPEG.entropy = entropy;
 		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+
+		EOBRUN = 0;
+
+		if (aJPEG.mProgressive)
+		{
+			if (aJPEG.Ah == 0)
+			{
+				if (aJPEG.Ss == 0)
+				{
+					System.out.println("decode_mcu_DC_first");
+				}
+				else
+				{
+					System.out.println("decode_mcu_AC_first");
+				}
+			}
+			else
+			{
+				if (aJPEG.Ss == 0)
+				{
+					System.out.println("decode_mcu_DC_refine");
+				}
+				else
+				{
+					System.out.println("decode_mcu_AC_refine");
+				}
+			}
+		}
 	}
 
 
@@ -81,10 +109,19 @@ public class HuffmanDecoder extends Decoder
 		{
 			if (aJPEG.Ah == 0)
 			{
-				return aJPEG.Ss == 0 ? decode_mcu_DC_first(aJPEG, aCoefficients) : decode_mcu_AC_first(aJPEG, aCoefficients);
+				if (aJPEG.Ss == 0)
+				{
+					return decode_mcu_DC_first(aJPEG, aCoefficients);
+				}
+				return decode_mcu_AC_first(aJPEG, aCoefficients);
 			}
 
-			return aJPEG.Ss == 0 ? decode_mcu_DC_refine(aJPEG, aCoefficients) : decode_mcu_AC_refine(aJPEG, aCoefficients);
+			if (aJPEG.Ss == 0)
+			{
+				return decode_mcu_DC_refine(aJPEG, aCoefficients);
+			}
+
+			return decode_mcu_AC_refine(aJPEG, aCoefficients);
 		}
 
 		return decodeImpl(aJPEG, aCoefficients);
