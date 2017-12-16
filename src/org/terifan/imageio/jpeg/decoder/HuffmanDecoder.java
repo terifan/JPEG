@@ -237,6 +237,9 @@ public class HuffmanDecoder extends Decoder
 		DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 		int k = aJPEG.Ss;
+		int[] coefficients = aCoefficients[0];
+
+//		Arrays.fill(coefficients, 0);
 
 		if (EOBRUN == 0)
 		{
@@ -279,7 +282,7 @@ public class HuffmanDecoder extends Decoder
 				// Advance over already-nonzero coefs and r still-zero coefs, appending correction bits to the nonzeroes.  A correction bit is 1 if the absolute value of the coefficient must be increased.
 				do
 				{
-					int thiscoef = aCoefficients[0][NATURAL_ORDER[k]];
+					int thiscoef = coefficients[NATURAL_ORDER[k]];
 					if (thiscoef != 0)
 					{
 						if (mBitStream.readBits(1) != 0)
@@ -288,11 +291,11 @@ public class HuffmanDecoder extends Decoder
 							{
 								if (thiscoef >= 0) // do nothing if already set it
 								{
-									aCoefficients[0][NATURAL_ORDER[k]] += p1;
+									coefficients[NATURAL_ORDER[k]] += p1;
 								}
 								else
 								{
-									aCoefficients[0][NATURAL_ORDER[k]] += m1;
+									coefficients[NATURAL_ORDER[k]] += m1;
 								}
 							}
 						}
@@ -309,7 +312,7 @@ public class HuffmanDecoder extends Decoder
 				while (k <= aJPEG.Se);
 				if (s != 0)
 				{
-					aCoefficients[0][NATURAL_ORDER[k]] = s; // Output newly nonzero coefficient
+					coefficients[NATURAL_ORDER[k]] = s; // Output newly nonzero coefficient
 				}
 				k++;
 			}
@@ -321,7 +324,7 @@ public class HuffmanDecoder extends Decoder
 			// Scan any remaining coefficient positions after the end-of-band (the last newly nonzero coefficient, if any). Append a correction bit to each already-nonzero coefficient.  A correction bit is 1 if the absolute value of the coefficient must be increased.
 			do
 			{
-				int thiscoef = aCoefficients[0][NATURAL_ORDER[k]];
+				int thiscoef = coefficients[NATURAL_ORDER[k]];
 				if (thiscoef != 0)
 				{
 					if (mBitStream.readBits(1) != 0)
@@ -330,11 +333,11 @@ public class HuffmanDecoder extends Decoder
 						{
 							if (thiscoef >= 0) // do nothing if already changed it
 							{
-								aCoefficients[0][NATURAL_ORDER[k]] += p1;
+								coefficients[NATURAL_ORDER[k]] += p1;
 							}
 							else
 							{
-								aCoefficients[0][NATURAL_ORDER[k]] += m1;
+								coefficients[NATURAL_ORDER[k]] += m1;
 							}
 						}
 					}

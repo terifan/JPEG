@@ -80,12 +80,7 @@ public class JPEGImageReader
 
 			while (!mStop)
 			{
-				if (mJPEG != null && mJPEG.unread_marker != 0)
-				{
-					nextSegment = 0xff00 + mJPEG.unread_marker;
-					mJPEG.unread_marker = 0;
-				}
-				else if (mJPEG != null && mBitStream.getUnreadMarker() != 0)
+				if (mBitStream.getUnreadMarker() != 0)
 				{
 					nextSegment = 0xff00 + mBitStream.getUnreadMarker();
 					mBitStream.setUnreadMarker(0);
@@ -94,14 +89,14 @@ public class JPEGImageReader
 				{
 					nextSegment = mBitStream.readInt16();
 
-					while ((nextSegment & 0xFF00) == 0)
-					{
-						nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
-					}
+//					while ((nextSegment & 0xFF00) == 0)
+//					{
+//						nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
+//					}
 
-					if ((nextSegment >> 8) != 255)
+					if ((nextSegment & 0xFF00) != 0xFF00)
 					{
-						System.out.println("######### Bad input #########");
+						System.out.println("Bad input at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
 
 						hexdump();
 
@@ -296,9 +291,9 @@ public class JPEGImageReader
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-//								System.out.println(mcuY+" "+mcuX+" "+blockY+" "+blockX);
+								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX);
 
-								if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
+								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
 								mDecoder.decodeMCU(mJPEG, mcu);
 								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
@@ -313,8 +308,10 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						if (!(((mDecoder instanceof ArithmeticDecoder) && mJPEG.unread_marker==0) || ((mDecoder instanceof HuffmanDecoder) && mBitStream.getUnreadMarker() == 0))) throw new IllegalStateException();
-						
+						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
+
+						if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
+
 						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
@@ -333,8 +330,8 @@ public class JPEGImageReader
 
 //		if (mStop || !mJPEG.mProgressive || mProgressiveLevel == 99 || mJPEG.unread_marker == 217)
 		{
-//			if (mJPEG.unread_marker == 217 || mBitStream.getUnreadMarker() == 217 || mProgressiveLevel==0)
-			if (mJPEG.unread_marker == 217 || mBitStream.getUnreadMarker() == 217)
+//			if (mBitStream.getUnreadMarker() == 217 || mProgressiveLevel==0)
+			if (mBitStream.getUnreadMarker() == 217)
 			{
 				mStop = true;
 			}

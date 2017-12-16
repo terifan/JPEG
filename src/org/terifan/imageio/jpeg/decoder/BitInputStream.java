@@ -126,7 +126,7 @@ public class BitInputStream
 				}
 				else if (mHandleMarkers)
 				{
-					mUnreadMarker = value;
+					setUnreadMarker(value);
 					continue;
 				}
 				else

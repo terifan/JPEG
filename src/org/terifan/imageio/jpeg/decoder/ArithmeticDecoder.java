@@ -136,7 +136,7 @@ int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOExceptio
   while (entropy.a < 0x8000) {
     if (--entropy.ct < 0) {
       /* Need to fetch next data byte */
-      if (cinfo.unread_marker!=0)
+      if (mBitStream.getUnreadMarker()!=0)
 	data = 0;		/* stuff zero data */
       else {
 	data = get_byte(cinfo);	/* read next input byte */
@@ -152,7 +152,7 @@ int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOExceptio
 	     * The convention is to supply zero data
 	     * then until decoding is complete.
 	     */
-	    cinfo.unread_marker = data;
+	    mBitStream.setUnreadMarker(data);
 	    data = 0;
 	  }
 	}

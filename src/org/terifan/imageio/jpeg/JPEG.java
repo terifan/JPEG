@@ -24,7 +24,6 @@ public class JPEG
 	public int lim_Se = DCTSIZE2 - 1;
 
 	public int restart_interval;
-	public int unread_marker;
 	public int[][] coef_bits;
 
 	public int mDensitiesUnits;
