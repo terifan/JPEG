@@ -12,6 +12,7 @@ public class TestHuff
 	{
 		try
 		{
+//			URL jpegResource = TestAri.class.getResource("bad image.jpg");
 			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt-prog.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def-prog.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def.jpg");

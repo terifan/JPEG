@@ -89,6 +89,8 @@ public class HuffmanDecoder extends Decoder
 				{
 					mPreviousDCValue[aJPEG.MCU_membership[ci]] = 0;
 				}
+				
+				EOBRUN = 0;
 
 				mBitStream.align();
 
@@ -102,6 +104,7 @@ public class HuffmanDecoder extends Decoder
 				aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
 
 			}
+
 			aJPEG.entropy.restarts_to_go--;
 		}
 
@@ -219,7 +222,10 @@ public class HuffmanDecoder extends Decoder
 	{
 		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
-			aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
+			if (mBitStream.readBits(1) != 0)
+			{
+				aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
+			}
 		}
 
 		return true;
@@ -230,7 +236,7 @@ public class HuffmanDecoder extends Decoder
 	{
 		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
-
+		
 		int ci = aJPEG.MCU_membership[0];
 		ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
