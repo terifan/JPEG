@@ -89,7 +89,7 @@ public class HuffmanDecoder extends Decoder
 				{
 					mPreviousDCValue[aJPEG.MCU_membership[ci]] = 0;
 				}
-				
+
 				EOBRUN = 0;
 
 				mBitStream.align();
