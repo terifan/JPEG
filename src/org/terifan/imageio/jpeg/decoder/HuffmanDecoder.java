@@ -239,8 +239,6 @@ public class HuffmanDecoder extends Decoder
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
 
-//		Arrays.fill(coefficients, 0);
-
 		if (EOBRUN == 0)
 		{
 			do
@@ -345,7 +343,7 @@ public class HuffmanDecoder extends Decoder
 				k++;
 			}
 			while (k <= aJPEG.Se);
-			
+
 			EOBRUN--; // Count one block completed in EOB run
 		}
 

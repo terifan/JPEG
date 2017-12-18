@@ -10,14 +10,64 @@ import java.util.ArrayList;
 public class JPEGExif
 {
 	private static final int EXIF_HEADER = 0x45786966;
+	private final ArrayList<ExifEntry> mEntries;
 
 
-	private JPEGExif()
+	private JPEGExif(ArrayList<ExifEntry> aEntries)
 	{
+		mEntries = aEntries;
 	}
 
 
-	public static Exif extract(byte [] aImageData) throws IOException
+	public ArrayList<ExifEntry> list()
+	{
+		return mEntries;
+	}
+
+
+	public ExifEntry get(ExifTag aType)
+	{
+		for (ExifEntry entry : mEntries)
+		{
+			if (entry.getTag() == aType)
+			{
+				return entry;
+			}
+		}
+
+		return null;
+	}
+
+
+	public <T> T value(ExifTag aType, Class<T> aCls)
+	{
+		for (ExifEntry entry : mEntries)
+		{
+			if (entry.getTag() == aType)
+			{
+				return (T)entry.getValue();
+			}
+		}
+
+		return null;
+	}
+
+
+	public String value(ExifTag aType)
+	{
+		for (ExifEntry entry : mEntries)
+		{
+			if (entry.getTag() == aType)
+			{
+				return entry.getValue().toString();
+			}
+		}
+
+		return null;
+	}
+
+
+	public static JPEGExif extract(byte [] aImageData) throws IOException
 	{
 		Reader reader = new Reader(aImageData);
 
@@ -59,7 +109,7 @@ public class JPEGExif
 			reader.byteBuffer.position(pos + len - 2);
 		}
 
-		return new Exif(entries);
+		return new JPEGExif(entries);
 	}
 
 

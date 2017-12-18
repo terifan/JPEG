@@ -220,7 +220,7 @@ public class JPEGImageReader
 			throw new IllegalStateException(e);
 		}
 
-//		System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
+		System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 
 		int maxSamplingX = mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = mSOFSegment.getMaxVerSampling();
@@ -291,7 +291,7 @@ public class JPEGImageReader
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX);
+//								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX);
 
 								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
@@ -308,7 +308,7 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
+//						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
 
 						if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 

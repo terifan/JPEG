@@ -17,9 +17,11 @@ public class TestAri
 //			URL jpegResource = TestAri.class.getResource("sample.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt.jpg");
-//			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
+//			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-def-prog.jpg");
+//			URL jpegResource = TestAri.class.getResource("Swallowtail-huff-opt-prog.jpg");
+			URL jpegResource = TestAri.class.getResource("7glyqHJ.jpg");
 //			URL jpegResource = TestAri.class.getResource("Swallowtail-ari.jpg");
-			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
+//			URL jpegResource = TestAri.class.getResource("Swallowtail-ari-prog.jpg");
 //			URL jpegResource = TestAri.class.getResource("untitled.jpg");
 
 //			URL jpegResource = new File("D:\\Pictures\\Wallpapers High Quality\\1080p-wallpapers-landscape-10.jpg").toURL();
