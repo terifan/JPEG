@@ -301,7 +301,7 @@ public class JPEGImageReader
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-//								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
+								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
 
 								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 

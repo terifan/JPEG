@@ -56,7 +56,7 @@ public class DHTSegment
 				String s2 = "";
 				for (int z = length; --z >= 0; )
 				{
-					s2 += 1 & ((code * sz + sz-1) >> z);
+					s2 += 1 & ((code * sz | (sz-1)) >> z);
 				}
 				System.out.printf("%"+mMaxLength+"s -- %"+mMaxLength+"s [%d] = %d%n", s, s2, length, symbol);
 
@@ -106,18 +106,7 @@ public class DHTSegment
 
 		if (l == 0)
 		{
-//			code = aBitStream.readBits(1);
-//
-//			while (code > htbl->maxcode[l])
-//			{
-//			  code <<= 1;
-//			  code |= aBitStream.readBits(1);
-//			  l++;
-//			}
-//
-//			return code;
-
-			throw new IllegalStateException(p+" -- ("+code+" >> 16) == 0");
+			throw new IllegalStateException(p+" "+s+" "+l+" -- ("+code+" >> 16) == 0");
 		}
 
 		aBitStream.skipBits(l);

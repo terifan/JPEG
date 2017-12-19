@@ -153,7 +153,7 @@ public class BitInputStream
 			mBitBufferLength += 8;
 		}
 
-		return (mBitBuffer >>> (mBitBufferLength - aLength));
+		return mBitBuffer >>> (mBitBufferLength - aLength);
 	}
 
 
@@ -204,7 +204,7 @@ public class BitInputStream
 	{
 		mStreamOffset++;
 		int v = mInputStream.read();
-//		System.out.print("("+v+") ");
+		System.out.print("("+v+") ");
 		return v;
 	}
 
