@@ -39,7 +39,7 @@ public class JPEGExif
 	}
 
 
-	public <T> T value(ExifTag aType, Class<T> aCls)
+	public <T> T value2(ExifTag aType, Class<T> aCls)
 	{
 		for (ExifEntry entry : mEntries)
 		{
