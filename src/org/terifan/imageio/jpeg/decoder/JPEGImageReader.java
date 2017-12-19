@@ -297,6 +297,8 @@ public class JPEGImageReader
 
 								mDecoder.decodeMCU(mJPEG, mcu);
 								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
+
+								System.out.println();
 							}
 						}
 					}
@@ -313,6 +315,8 @@ public class JPEGImageReader
 						if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
 						mDecoder.decodeMCU(mJPEG, mcu);
+
+						System.out.println();
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{

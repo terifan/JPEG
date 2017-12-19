@@ -51,6 +51,7 @@ public class BitInputStream
 		{
 			return readBits(8);
 		}
+
 		return read();
 	}
 
@@ -61,16 +62,15 @@ public class BitInputStream
 		{
 			return readBits(16);
 		}
-		else
+
+		int a = read();
+		int b = read();
+		if (b == -1)
 		{
-			int a = read();
-			int b = read();
-			if (b == -1)
-			{
-				return -1;
-			}
-			return (a << 8) + b;
+			return -1;
 		}
+
+		return (a << 8) + b;
 	}
 
 
@@ -96,6 +96,9 @@ public class BitInputStream
 	{
 		int value = peekBits(aLength);
 		skipBits(aLength);
+
+		System.out.print(value+" ");
+
 		return value;
 	}
 
@@ -193,7 +196,9 @@ public class BitInputStream
 	private int read() throws IOException
 	{
 		mStreamOffset++;
-		return mInputStream.read();
+		int v = mInputStream.read();
+		System.out.print("("+v+") ");
+		return v;
 	}
 
 

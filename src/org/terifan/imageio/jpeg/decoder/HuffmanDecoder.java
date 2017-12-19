@@ -234,9 +234,11 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
+System.out.print("#"+EOBRUN+"# ");
+
 		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
-		
+
 		int ci = aJPEG.MCU_membership[0];
 		ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
@@ -253,6 +255,7 @@ public class HuffmanDecoder extends Decoder
 				int r = s >> 4;
 				s &= 15;
 
+System.out.print("*"+s+"* ");
 				if (s != 0)
 				{
 					if (s != 1) // size of new coef should always be 1
@@ -272,17 +275,21 @@ public class HuffmanDecoder extends Decoder
 				{
 					if (r != 15)
 					{
+System.out.print("!"+r+"! ");
 						EOBRUN = 1 << r; // EOBr, run length is 2^r + appended bits
 						if (r != 0)
 						{
 							r = mBitStream.readBits(r);
 							EOBRUN += r;
 						}
+System.out.print("%"+EOBRUN+"% ");
 						break;
 						// rest of block is handled by EOB logic
 					}
 					// note s = 0 for processing ZRL
 				}
+System.out.print("/"+s+"/ ");
+
 				// Advance over already-nonzero coefs and r still-zero coefs, appending correction bits to the nonzeroes.  A correction bit is 1 if the absolute value of the coefficient must be increased.
 				do
 				{
@@ -291,6 +298,7 @@ public class HuffmanDecoder extends Decoder
 					{
 						if (mBitStream.readBits(1) != 0)
 						{
+System.out.print("&"+(thiscoef & p1)+"& ");
 							if ((thiscoef & p1) == 0)
 							{
 								if (thiscoef >= 0) // do nothing if already set it
