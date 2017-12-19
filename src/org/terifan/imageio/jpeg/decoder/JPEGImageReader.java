@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
@@ -52,6 +53,15 @@ public class JPEGImageReader
 		reader.mUpdateImage = false;
 		reader.readImpl();
 		return reader.mJPEG;
+	}
+
+
+	public static BufferedImage read(URL aInputStream) throws IOException
+	{
+		try (InputStream input = aInputStream.openStream())
+		{
+			return new JPEGImageReader(input, IDCTIntegerFast.class).readImpl();
+		}
 	}
 
 
@@ -291,14 +301,14 @@ public class JPEGImageReader
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-//								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX);
+//								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
 
 								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
 								mDecoder.decodeMCU(mJPEG, mcu);
 								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
 
-								System.out.println();
+//								System.out.println();
 							}
 						}
 					}

@@ -15,11 +15,11 @@ public abstract class Decoder
 	}
 
 
-	abstract void initialize(JPEG cinfo);
+	abstract void initialize(JPEG cinfo) throws IOException;
 
-	abstract void finishPass(JPEG cinfo);
+	abstract void finishPass(JPEG cinfo) throws IOException;
 
-	abstract void startPass(JPEG cinfo);
+	abstract void startPass(JPEG cinfo) throws IOException;
 
 	abstract boolean decodeMCU(JPEG cinfo, int[][] aCoefficients) throws IOException;
 }

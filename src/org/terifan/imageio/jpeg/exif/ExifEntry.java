@@ -57,6 +57,6 @@ public class ExifEntry
 	@Override
 	public String toString()
 	{
-		return String.format("tag=%04X format=%-9s type=%-26s value=%s", mCode, mFormat, ExifTag.decode(mCode), mValue);
+		return String.format("tag=%X format=%s type=%s value=%s", mCode, mFormat, ExifTag.decode(mCode), mValue);
 	}
 }

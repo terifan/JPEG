@@ -52,7 +52,7 @@ public class BitInputStream
 			return readBits(8);
 		}
 
-		return read();
+		return readImpl();
 	}
 
 
@@ -63,8 +63,8 @@ public class BitInputStream
 			return readBits(16);
 		}
 
-		int a = read();
-		int b = read();
+		int a = readImpl();
+		int b = readImpl();
 		if (b == -1)
 		{
 			return -1;
@@ -76,9 +76,15 @@ public class BitInputStream
 
 	public void skipBits(int aLength) throws IOException
 	{
+		skipBitsImpl(aLength);
+	}
+
+
+	public void skipBitsImpl(int aLength) throws IOException
+	{
 		while (aLength > 24)
 		{
-			skipBits(24);
+			skipBitsImpl(24);
 			aLength -= 24;
 		}
 
@@ -95,9 +101,9 @@ public class BitInputStream
 	public int readBits(int aLength) throws IOException
 	{
 		int value = peekBits(aLength);
-		skipBits(aLength);
+		skipBitsImpl(aLength);
 
-		System.out.print(value+" ");
+//		System.out.print("#"+aLength+"="+value+"# ");
 
 		return value;
 	}
@@ -105,11 +111,13 @@ public class BitInputStream
 
 	public int peekBits(int aLength) throws IOException
 	{
+//		System.out.print("/"+aLength+":"+mBitBufferLength+"/ ");
+
 		assert aLength > 0 && aLength <= 24;
 
 		while (mBitBufferLength < aLength)
 		{
-			int value = read();
+			int value = readImpl();
 			if (value == -1)
 			{
 				break;
@@ -117,7 +125,7 @@ public class BitInputStream
 
 			if (mHandleEscapeChars && value == 255)
 			{
-				value = read();
+				value = readImpl();
 				if (value == -1)
 				{
 					break;
@@ -153,7 +161,7 @@ public class BitInputStream
 	{
 		if (mBitBufferLength != 0)
 		{
-			skipBits(aByteCount << 3);
+			skipBitsImpl(aByteCount << 3);
 		}
 		else
 		{
@@ -174,12 +182,11 @@ public class BitInputStream
 
 
 	/**
-	 * Skipping remaining bits in the current byte so that the stream gets
-	 * aligned to next byte.
+	 * Skipping remaining bits in the current byte so that the stream gets aligned to next byte.
 	 */
 	public void align() throws IOException
 	{
-		skipBits(mBitBufferLength & 7);
+		skipBitsImpl(mBitBufferLength & 7);
 	}
 
 
@@ -193,11 +200,11 @@ public class BitInputStream
 	}
 
 
-	private int read() throws IOException
+	private int readImpl() throws IOException
 	{
 		mStreamOffset++;
 		int v = mInputStream.read();
-		System.out.print("("+v+") ");
+//		System.out.print("("+v+") ");
 		return v;
 	}
 

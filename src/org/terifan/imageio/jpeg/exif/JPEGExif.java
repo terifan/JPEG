@@ -423,4 +423,11 @@ public class JPEGExif
 
 		return dirBuffer.toByteArray();
 	}
+
+
+	@Override
+	public String toString()
+	{
+		return mEntries.toString();
+	}
 }

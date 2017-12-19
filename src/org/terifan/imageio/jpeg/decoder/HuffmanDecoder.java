@@ -31,12 +31,14 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void startPass(JPEG aJPEG)
+	void startPass(JPEG aJPEG) throws IOException
 	{
 		ArithEntropyState entropy = new ArithEntropyState();
 
 		aJPEG.entropy = entropy;
 		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+
+		mBitStream.align();
 
 		EOBRUN = 0;
 
@@ -167,8 +169,9 @@ public class HuffmanDecoder extends Decoder
 		int blockIndex = 0;
 
 		int ci = aJPEG.MCU_membership[blockIndex];
+		int[] coefficients = aCoefficients[blockIndex];
 
-		Arrays.fill(aCoefficients[blockIndex], 0);
+		Arrays.fill(coefficients, 0);
 
 		if (EOBRUN > 0)
 		{
@@ -196,7 +199,7 @@ public class HuffmanDecoder extends Decoder
 				{
 					k += r;
 
-					aCoefficients[blockIndex][NATURAL_ORDER[k]] = acTable.readCoefficient(mBitStream, s) << aJPEG.Al;
+					coefficients[NATURAL_ORDER[k]] = acTable.readCoefficient(mBitStream, s) << aJPEG.Al;
 				}
 				else
 				{
@@ -222,6 +225,8 @@ public class HuffmanDecoder extends Decoder
 	{
 		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
+			Arrays.fill(aCoefficients[blockIndex], 0);
+
 			if (mBitStream.readBits(1) != 0)
 			{
 				aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
@@ -234,7 +239,7 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-System.out.print("#"+EOBRUN+"# ");
+//System.out.print("#"+EOBRUN+"# ");
 
 		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
@@ -247,6 +252,8 @@ System.out.print("#"+EOBRUN+"# ");
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
 
+		Arrays.fill(coefficients, 0);
+
 		if (EOBRUN == 0)
 		{
 			do
@@ -255,7 +262,8 @@ System.out.print("#"+EOBRUN+"# ");
 				int r = s >> 4;
 				s &= 15;
 
-System.out.print("*"+s+"* ");
+//				System.out.print("!"+r+":"+s+"! ");
+
 				if (s != 0)
 				{
 					if (s != 1) // size of new coef should always be 1
@@ -275,20 +283,17 @@ System.out.print("*"+s+"* ");
 				{
 					if (r != 15)
 					{
-System.out.print("!"+r+"! ");
 						EOBRUN = 1 << r; // EOBr, run length is 2^r + appended bits
 						if (r != 0)
 						{
 							r = mBitStream.readBits(r);
 							EOBRUN += r;
 						}
-System.out.print("%"+EOBRUN+"% ");
 						break;
 						// rest of block is handled by EOB logic
 					}
 					// note s = 0 for processing ZRL
 				}
-System.out.print("/"+s+"/ ");
 
 				// Advance over already-nonzero coefs and r still-zero coefs, appending correction bits to the nonzeroes.  A correction bit is 1 if the absolute value of the coefficient must be increased.
 				do
@@ -298,7 +303,6 @@ System.out.print("/"+s+"/ ");
 					{
 						if (mBitStream.readBits(1) != 0)
 						{
-System.out.print("&"+(thiscoef & p1)+"& ");
 							if ((thiscoef & p1) == 0)
 							{
 								if (thiscoef >= 0) // do nothing if already set it

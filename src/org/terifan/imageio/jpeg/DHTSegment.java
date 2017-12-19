@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
@@ -37,16 +38,31 @@ public class DHTSegment
 
 		mLookup = new int[1 << mMaxLength];
 
+		System.out.println("------------------");
+
 		for (int i = 0, code = 0; i < 16; i++)
 		{
 			for (int j = 0; j < counts[i]; j++)
 			{
 				int length = i + 1;
-				int value = aInputStream.readInt8();
+				int symbol = aInputStream.readInt8();
+				int sz = 1 << (mMaxLength - length);
 
-				for (int k = 0, sz = 1 << (mMaxLength - length); k < sz; k++)
+				String s = "";
+				for (int z = length; --z >= 0; )
 				{
-					mLookup[(code << (mMaxLength - length)) | k] = (length << 16) + value;
+					s += 1 & ((code * sz) >> z);
+				}
+				String s2 = "";
+				for (int z = length; --z >= 0; )
+				{
+					s2 += 1 & ((code * sz + sz-1) >> z);
+				}
+				System.out.printf("%"+mMaxLength+"s -- %"+mMaxLength+"s [%d] = %d%n", s, s2, length, symbol);
+
+				for (int k = 0; k < sz; k++)
+				{
+					mLookup[(code * sz) | k] = (length << 16) + symbol;
 				}
 
 				code++;
@@ -54,9 +70,11 @@ public class DHTSegment
 			code <<= 1;
 		}
 
+		System.out.println("------------------");
+
 //		if (VERBOSE)
 		{
-			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + "]");
+			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + ", maxLength=" + mMaxLength + "]");
 		}
 	}
 
@@ -79,11 +97,32 @@ public class DHTSegment
 	}
 
 
-	public int decodeSymbol(BitInputStream aInputStream) throws IOException
+	public int decodeSymbol(BitInputStream aBitStream) throws IOException
 	{
-		int s = mLookup[aInputStream.peekBits(mMaxLength)];
-		aInputStream.skipBits(s >> 16);
-		return s & 0xff;
+		int p = aBitStream.peekBits(mMaxLength);
+		int s = mLookup[p];
+		int l = s >> 16;
+		int code = s & 0xffff;
+
+		if (l == 0)
+		{
+//			code = aBitStream.readBits(1);
+//
+//			while (code > htbl->maxcode[l])
+//			{
+//			  code <<= 1;
+//			  code |= aBitStream.readBits(1);
+//			  l++;
+//			}
+//
+//			return code;
+
+			throw new IllegalStateException(p+" -- ("+code+" >> 16) == 0");
+		}
+
+		aBitStream.skipBits(l);
+//		System.out.print("%"+(s >> 16)+"="+(s&0xff)+"% ");
+		return code;
 	}
 
 
@@ -94,7 +133,6 @@ public class DHTSegment
 		if (symbol < 1 << (aLength - 1))
 		{
 			return symbol + (-1 << aLength) + 1;
-//			return symbol + ((1 << aLength) - 1);
 		}
 
 		return symbol;
