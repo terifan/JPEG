@@ -108,14 +108,14 @@ public class DHTSegment
 
 		if (l == 0)
 		{
-			aBitStream.drop();
+//			aBitStream.drop();
+//
+//			p = aBitStream.peekBits(mMaxLength);
+//			s = mLookup[p];
+//			l = s >> 16;
+//			code = s & 0xffff;
 
-			p = aBitStream.peekBits(mMaxLength);
-			s = mLookup[p];
-			l = s >> 16;
-			code = s & 0xffff;
-
-//			throw new IllegalStateException(p+" "+s+" "+l+" -- ("+code+" >> 16) == 0");
+			throw new IllegalStateException(p+" "+s+" "+l+" -- ("+code+" >> 16) == 0");
 		}
 
 		aBitStream.skipBits(l);

@@ -249,11 +249,11 @@ public class BitInputStream
 	}
 
 
-	public void drop()
-	{
-		System.out.println("#######"+(mBitBuffer & 0xff));
-
-		mBitBuffer >>= 8;
-		mBitBufferLength-=8;
-	}
+//	public void drop()
+//	{
+//		System.out.println("#######"+(mBitBuffer & 0xff));
+//
+//		mBitBuffer >>= 8;
+//		mBitBufferLength-=8;
+//	}
 }

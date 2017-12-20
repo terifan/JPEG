@@ -27,15 +27,15 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	void initialize(JPEG aJPEG)
 	{
+		ArithEntropyState entropy = new ArithEntropyState();
+
+		aJPEG.entropy = entropy;
 	}
 
 
 	@Override
 	void startPass(JPEG aJPEG) throws IOException
 	{
-		ArithEntropyState entropy = new ArithEntropyState();
-
-		aJPEG.entropy = entropy;
 		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
 
 		mBitStream.align();
