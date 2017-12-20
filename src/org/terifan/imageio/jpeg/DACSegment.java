@@ -21,6 +21,8 @@ public class DACSegment
 	{
 		int length = aBitStream.readInt16() - 2;
 
+		System.out.println("DACMarkerSegment");
+
 		while (length > 0)
 		{
 			int index = aBitStream.readInt8();

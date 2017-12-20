@@ -18,9 +18,11 @@ public class DHTSegment
 	private int mMaxLength;
 
 
-	public DHTSegment(BitInputStream aInputStream) throws IOException
+	public DHTSegment(BitInputStream aBitStream) throws IOException
 	{
-		int temp = aInputStream.readInt8();
+		System.out.println("****"+aBitStream.getStreamOffset());
+
+		int temp = aBitStream.readInt8();
 		mIdentity = temp & 0x07;
 		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
 
@@ -28,7 +30,7 @@ public class DHTSegment
 
 		for (int i = 0; i < 16; i++)
 		{
-			counts[i] = aInputStream.readInt8();
+			counts[i] = aBitStream.readInt8();
 			mNumSymbols += counts[i];
 			if (counts[i] > 0)
 			{
@@ -45,7 +47,7 @@ public class DHTSegment
 			for (int j = 0; j < counts[i]; j++)
 			{
 				int length = i + 1;
-				int symbol = aInputStream.readInt8();
+				int symbol = aBitStream.readInt8();
 				int sz = 1 << (mMaxLength - length);
 
 				String s = "";
@@ -106,11 +108,17 @@ public class DHTSegment
 
 		if (l == 0)
 		{
-			throw new IllegalStateException(p+" "+s+" "+l+" -- ("+code+" >> 16) == 0");
+			aBitStream.drop();
+
+			p = aBitStream.peekBits(mMaxLength);
+			s = mLookup[p];
+			l = s >> 16;
+			code = s & 0xffff;
+
+//			throw new IllegalStateException(p+" "+s+" "+l+" -- ("+code+" >> 16) == 0");
 		}
 
 		aBitStream.skipBits(l);
-//		System.out.print("%"+(s >> 16)+"="+(s&0xff)+"% ");
 		return code;
 	}
 

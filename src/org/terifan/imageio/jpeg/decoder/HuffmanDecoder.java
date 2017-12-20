@@ -110,6 +110,11 @@ public class HuffmanDecoder extends Decoder
 			aJPEG.entropy.restarts_to_go--;
 		}
 
+		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		{
+			Arrays.fill(aCoefficients[blockIndex], 0);
+		}
+
 		if (aJPEG.mProgressive)
 		{
 			if (aJPEG.Ah == 0)
@@ -142,8 +147,6 @@ public class HuffmanDecoder extends Decoder
 
 			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
 
-			Arrays.fill(aCoefficients[blockIndex], 0);
-
 			int value = dcTable.decodeSymbol(mBitStream);
 
 			if (value == -1)
@@ -170,8 +173,6 @@ public class HuffmanDecoder extends Decoder
 
 		int ci = aJPEG.MCU_membership[blockIndex];
 		int[] coefficients = aCoefficients[blockIndex];
-
-		Arrays.fill(coefficients, 0);
 
 		if (EOBRUN > 0)
 		{
@@ -225,8 +226,6 @@ public class HuffmanDecoder extends Decoder
 	{
 		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
-			Arrays.fill(aCoefficients[blockIndex], 0);
-
 			if (mBitStream.readBits(1) != 0)
 			{
 				aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
@@ -251,8 +250,6 @@ public class HuffmanDecoder extends Decoder
 
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
-
-		Arrays.fill(coefficients, 0);
 
 		if (EOBRUN == 0)
 		{

@@ -43,15 +43,15 @@ public class JPEG
 
 	public int[][][][] mCoefficients;
 	public int restartMarkerIndex;
-	public int xx;
 
 
 	public JPEG()
 	{
-		for (int i = 0; i < NUM_ARITH_TBLS; i++) {
-		  arith_dc_L[i] = 0;
-		  arith_dc_U[i] = 1;
-		  arith_ac_K[i] = 5;
+		for (int i = 0; i < NUM_ARITH_TBLS; i++)
+		{
+			arith_dc_L[i] = 0;
+			arith_dc_U[i] = 1;
+			arith_ac_K[i] = 5;
 		}
 	}
 

@@ -92,7 +92,7 @@ public class JPEGImageReader
 			{
 				if (mBitStream.getUnreadMarker() != 0)
 				{
-					nextSegment = 0xff00 + mBitStream.getUnreadMarker();
+					nextSegment = 0xff00 | mBitStream.getUnreadMarker();
 					mBitStream.setUnreadMarker(0);
 				}
 				else
@@ -106,7 +106,7 @@ public class JPEGImageReader
 
 					if ((nextSegment & 0xFF00) != 0xFF00)
 					{
-						System.out.println("Bad input at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
+						System.out.println("Expected JPEG marker at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
 
 						hexdump();
 
@@ -117,7 +117,7 @@ public class JPEGImageReader
 
 //				if (VERBOSE)
 				{
-					System.out.println(Integer.toString(nextSegment, 16) + " " + getSOFDescription(nextSegment));
+					System.out.println(Integer.toString(nextSegment, 16) + " -- " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+") -- " + getSOFDescription(nextSegment));
 				}
 
 				if (nextSegment == EOI)
@@ -151,27 +151,32 @@ public class JPEGImageReader
 						break;
 					case SOF0: // Baseline
 						mDecoder = new HuffmanDecoder(mBitStream);
-						mBitStream.setHandleEscapeChars(true);
+//						mBitStream.setHandleEscapeChars(true);
+//						mBitStream.setHandleMarkers(true);
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
 						mDecoder = new HuffmanDecoder(mBitStream);
-						mBitStream.setHandleEscapeChars(true);
-						mBitStream.setHandleMarkers(true);
+//						mBitStream.setHandleEscapeChars(true);
+//						mBitStream.setHandleMarkers(true);
 						mJPEG.mProgressive = true;
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF9: // Extended sequential, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
-						mBitStream.setHandleEscapeChars(false);
+//						mBitStream.setHandleEscapeChars(false);
+//						mBitStream.setHandleEscapeChars(true);
+//						mBitStream.setHandleMarkers(true);
 						mJPEG.mArithmetic = true;
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF10: // Progressive, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
-						mBitStream.setHandleEscapeChars(false);
+//						mBitStream.setHandleEscapeChars(false);
+//						mBitStream.setHandleEscapeChars(true);
+//						mBitStream.setHandleMarkers(true);
 						mJPEG.mArithmetic = true;
 						mJPEG.mProgressive = true;
 						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
@@ -187,7 +192,9 @@ public class JPEGImageReader
 						throw new IOException("Image encoding not supported.");
 					case SOS:
 						mSOSSegment = new SOSSegment(mJPEG).read(mBitStream);
+						mBitStream.setHandleMarkers(true);
 						readRaster();
+						mBitStream.setHandleMarkers(false);
 						break;
 					case DRI:
 						mBitStream.skipBytes(2); // skip length
@@ -229,8 +236,6 @@ public class JPEGImageReader
 		{
 			throw new IllegalStateException(e);
 		}
-
-		System.out.println("======== " + mBitStream.getStreamOffset() + " / " + mProgressiveLevel + " ========================================================================================================================================================================");
 
 		int maxSamplingX = mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = mSOFSegment.getMaxVerSampling();
@@ -326,7 +331,7 @@ public class JPEGImageReader
 
 						mDecoder.decodeMCU(mJPEG, mcu);
 
-						System.out.println();
+//						System.out.println();
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{
@@ -344,7 +349,7 @@ public class JPEGImageReader
 
 //		if (mStop || !mJPEG.mProgressive || mProgressiveLevel == 99 || mJPEG.unread_marker == 217)
 		{
-//			if (mBitStream.getUnreadMarker() == 217 || mProgressiveLevel==0)
+//			if (mBitStream.getUnreadMarker() == 217 || mProgressiveLevel==2)
 			if (mBitStream.getUnreadMarker() == 217)
 			{
 				mStop = true;
@@ -358,6 +363,8 @@ public class JPEGImageReader
 
 		mProgressiveLevel++;
 		mBitStream.align();
+
+		System.out.println("======== " + mBitStream.getStreamOffset() + "("+Integer.toHexString(mBitStream.getStreamOffset())+") / " + mProgressiveLevel + " ========================================================================================================================================================================");
 	}
 
 

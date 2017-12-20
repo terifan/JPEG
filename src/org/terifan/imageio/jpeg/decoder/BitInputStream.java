@@ -10,7 +10,6 @@ public class BitInputStream
 	private int mBitBuffer;
 	private int mBitBufferLength;
 	private int mStreamOffset;
-	private boolean mHandleEscapeChars;
 	private boolean mHandleMarkers;
 	private int mUnreadMarker;
 
@@ -36,12 +35,6 @@ public class BitInputStream
 	public void setHandleMarkers(boolean aHandleMarkers)
 	{
 		mHandleMarkers = aHandleMarkers;
-	}
-
-
-	public void setHandleEscapeChars(boolean aHandleEscapeChars)
-	{
-		mHandleEscapeChars = aHandleEscapeChars;
 	}
 
 
@@ -113,43 +106,84 @@ public class BitInputStream
 	{
 //		System.out.print("/"+aLength+":"+mBitBufferLength+"/ ");
 
-		assert aLength > 0 && aLength <= 24;
-
 		while (mBitBufferLength < aLength)
 		{
-			int value = readImpl();
-			if (value == -1)
+			int data;
+
+//			if (mHandleMarkers)
+//			{
+//				if (getUnreadMarker() != 0)
+//				{
+//					data = 0;
+//				}
+//				else
+//				{
+//					data = readImpl();
+//					/* read next input byte */
+//					if (data == 0xFF)
+//					{
+//						/* zero stuff or marker code */
+//						do
+//						{
+//							data = readImpl();
+//						}
+//						while (data == 0xFF);
+//						/* swallow extra 0xFF bytes */
+//						if (data == 0)
+//						{
+//							data = 0xFF;	/* discard stuffed zero byte */
+//						}
+//						else
+//						{
+//							/* Note: Different from the Huffman decoder, hitting
+//							* a marker while processing the compressed data
+//							* segment is legal in arithmetic coding.
+//							* The convention is to supply zero data
+//							* then until decoding is complete.
+//							 */
+//							setUnreadMarker(data);
+//							data = 0;
+//						}
+//					}
+//				}
+//			}
+//			else
 			{
-				break;
+				data = readImpl();
 			}
 
-			if (mHandleEscapeChars && value == 255)
+			if (data == 0xff)
 			{
-				value = readImpl();
-				if (value == -1)
+				do
 				{
-					break;
+					data = readImpl();
 				}
+				while (data == 0xff);
 
-				if (value == 0)
+				if (data == 0)
 				{
-					value = 255;
+					data = 0xff;
 				}
-				else if (mHandleMarkers)
-				{
-					setUnreadMarker(value);
-					continue;
-				}
+//				else if (mHandleMarkers)
+//				{
+//					setUnreadMarker(data);
+//
+//					mBitBuffer <<= 8;
+//					mBitBuffer += 0;
+//					mBitBufferLength += 8;
+//
+//					throw new IOException();
+//				}
 				else
 				{
 					mBitBuffer <<= 8;
-					mBitBuffer += 255;
+					mBitBuffer += 0xff;
 					mBitBufferLength += 8;
 				}
 			}
 
 			mBitBuffer <<= 8;
-			mBitBuffer += value;
+			mBitBuffer += data;
 			mBitBufferLength += 8;
 		}
 
@@ -204,7 +238,7 @@ public class BitInputStream
 	{
 		mStreamOffset++;
 		int v = mInputStream.read();
-		System.out.print("("+v+") ");
+//		System.out.print("("+v+") ");
 		return v;
 	}
 
@@ -212,5 +246,14 @@ public class BitInputStream
 	public int getStreamOffset()
 	{
 		return mStreamOffset;
+	}
+
+
+	public void drop()
+	{
+		System.out.println("#######"+(mBitBuffer & 0xff));
+
+		mBitBuffer >>= 8;
+		mBitBufferLength-=8;
 	}
 }
