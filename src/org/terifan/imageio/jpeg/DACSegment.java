@@ -23,6 +23,10 @@ public class DACSegment
 
 		System.out.println("DACMarkerSegment");
 
+//		mJPEG.arith_dc_L = new int[NUM_ARITH_TBLS];
+//		mJPEG.arith_dc_U = new int[NUM_ARITH_TBLS];
+//		mJPEG.arith_ac_K = new int[NUM_ARITH_TBLS];
+		
 		while (length > 0)
 		{
 			int index = aBitStream.readInt8();

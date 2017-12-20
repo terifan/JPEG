@@ -39,27 +39,15 @@ public class ArithmeticDecoder extends Decoder
 	String JWRN_BOGUS_PROGRESSION = "JWRN_BOGUS_PROGRESSION";
 
 
-	void ERREXIT(Object... o)
+	private void ERREXIT(Object... o)
 	{
 		throw new IllegalStateException("" + Arrays.asList(o));
 	}
 
 
-	void WARNMS(Object... o)
+	private void WARNMS(Object... o)
 	{
 		throw new IllegalStateException("" + Arrays.asList(o));
-	}
-
-
-	void MEMZERO(int[] arr, int off, int len)
-	{
-		Arrays.fill(arr, off, off + len, 0);
-	}
-
-
-	int IRIGHT_SHIFT(int n, int q)
-	{
-		return n >> q;
 	}
 
 
@@ -118,8 +106,6 @@ public class ArithmeticDecoder extends Decoder
 		{
 			if (--entropy.ct < 0)
 			{
-//				data = mBitStream.readInt8();
-
 				/* Need to fetch next data byte */
 				if (mBitStream.getUnreadMarker() != 0)
 				{
@@ -247,15 +233,14 @@ public class ArithmeticDecoder extends Decoder
 			compptr = cinfo.cur_comp_info[ci];
 			if (!cinfo.mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0))
 			{
-				MEMZERO(entropy.dc_stats[compptr.getTableDC()], 0, DC_STAT_BINS);
+				Arrays.fill(entropy.dc_stats[compptr.getTableDC()], 0);
 				/* Reset DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!cinfo.mProgressive && cinfo.lim_Se != 0)
-				|| (cinfo.mProgressive && cinfo.Ss != 0))
+			if ((!cinfo.mProgressive && cinfo.lim_Se != 0) || (cinfo.mProgressive && cinfo.Ss != 0))
 			{
-				MEMZERO(entropy.ac_stats[compptr.getTableAC()], 0, AC_STAT_BINS);
+				Arrays.fill(entropy.ac_stats[compptr.getTableAC()], 0);
 			}
 		}
 
@@ -353,11 +338,11 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << cinfo.arith_dc_L[tbl]) >> 1))
+				if (m < ((1 << cinfo.arith_dc_L[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;		   /* zero diff category */
 				}
-				else if (m > (int)((1L << cinfo.arith_dc_U[tbl]) >> 1))
+				else if (m > ((1 << cinfo.arith_dc_U[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 12 + (sign * 4); /* large diff category */
 				}
@@ -995,10 +980,7 @@ public class ArithmeticDecoder extends Decoder
 				{
 					ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
 				}
-				if (entropy.dc_stats[tbl] == null)
-				{
-					entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
-				}
+				entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
 				/* Initialize DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
@@ -1010,10 +992,8 @@ public class ArithmeticDecoder extends Decoder
 				{
 					ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
 				}
-//				if (entropy.ac_stats[tbl] == null) // ???????????????????????????????????????????????????????????????????????????????????
-				{
-					entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
-				}
+				
+				entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
 			}
 		}
 
@@ -1046,10 +1026,8 @@ public class ArithmeticDecoder extends Decoder
 		ArithEntropyState entropy = new ArithEntropyState();
 		cinfo.entropy = entropy;
 
-		int i;
-
 		/* Mark tables unallocated */
-		for (i = 0; i < NUM_ARITH_TBLS; i++)
+		for (int i = 0; i < NUM_ARITH_TBLS; i++)
 		{
 			entropy.dc_stats[i] = null;
 			entropy.ac_stats[i] = null;
@@ -1063,11 +1041,10 @@ public class ArithmeticDecoder extends Decoder
 		if (cinfo.mProgressive)
 		{
 			/* Create progression status table */
-			int ci;
 			cinfo.coef_bits = new int[cinfo.num_components][DCTSIZE2];
-			for (ci = 0; ci < cinfo.num_components; ci++)
+			for (int ci = 0; ci < cinfo.num_components; ci++)
 			{
-				for (i = 0; i < DCTSIZE2; i++)
+				for (int i = 0; i < DCTSIZE2; i++)
 				{
 					cinfo.coef_bits[ci][i] = -1;
 				}

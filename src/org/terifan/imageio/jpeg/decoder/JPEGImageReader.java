@@ -308,7 +308,7 @@ public class JPEGImageReader
 							{
 //								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
 
-								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
+//								if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
 								mDecoder.decodeMCU(mJPEG, mcu);
 								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
@@ -327,7 +327,7 @@ public class JPEGImageReader
 					{
 //						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
 
-						if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
+//						if (mBitStream.getUnreadMarker() != 0) throw new IllegalStateException();
 
 						mDecoder.decodeMCU(mJPEG, mcu);
 
@@ -485,28 +485,28 @@ public class JPEGImageReader
 
 	public void hexdump() throws IOException
 	{
-//		int streamOffset = mBitStream.getStreamOffset();
-//
-//		int cnt = 0;
-//		int b1 = 0;
-//		for (int r = 0; r < 1000; r++)
-//		{
-//			for (int c = 0; c < 64; c++, cnt++)
-//			{
-//				int b0 = mBitStream.readInt8();
-//				System.out.printf("%02x ", b0);
-//
-//				if (b1 == 255 && b0 != 0)
-//				{
-//					System.out.println();
-//					System.out.println("=> "+streamOffset+" +" + cnt + " ("+Integer.toHexString(streamOffset)+")");
-//					return;
-//				}
-//
-//				b1 = b0;
-//				if ((c % 8) == 7) System.out.print(" ");
-//			}
-//			System.out.println();
-//		}
+		int streamOffset = mBitStream.getStreamOffset();
+
+		int cnt = 0;
+		int b1 = 0;
+		for (int r = 0; r < 1000; r++)
+		{
+			for (int c = 0; c < 96; c++, cnt++)
+			{
+				int b0 = mBitStream.readInt8();
+				System.out.printf("%02x ", b0);
+
+				if (b1 == 255 && b0 != 0)
+				{
+					System.out.println();
+					System.out.println("=> "+streamOffset+" +" + cnt + " ("+Integer.toHexString(streamOffset)+")");
+					return;
+				}
+
+				b1 = b0;
+				if ((c % 8) == 7) System.out.print(" ");
+			}
+			System.out.println();
+		}
 	}
 }
