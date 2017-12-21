@@ -49,14 +49,17 @@ public class TestTranscodeBatch
 
 					System.out.printf("%8d %8d %8d %s%n", baos.size(), file.length(), err, file);
 
-					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
+					if (err == 0)
 					{
-						baos.writeTo(fos);
-					}
+						try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
+						{
+							baos.writeTo(fos);
+						}
 
-					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
-					{
-						fos.write(data);
+						try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
+						{
+							fos.write(data);
+						}
 					}
 				}
 				catch (Throwable e)
