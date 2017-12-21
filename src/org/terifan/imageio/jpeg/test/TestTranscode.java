@@ -64,8 +64,6 @@ public class TestTranscode
 					in.read(data);
 				}
 
-				System.out.println(file);
-
 				try
 				{
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -86,6 +84,8 @@ public class TestTranscode
 				}
 				catch (Throwable e)
 				{
+					System.out.println(file);
+					e.printStackTrace(System.out);
 				}
 			}
 		}
