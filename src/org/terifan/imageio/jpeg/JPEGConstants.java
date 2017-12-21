@@ -201,7 +201,7 @@ public class JPEGConstants
 		}
 	}
 
-	private static int V(int i,int a,int b,int c,int d) 
+	private static int V(int i,int a,int b,int c,int d)
 	{
 		return ((a << 16) | (c << 8) | (d << 7) | b);
 	}

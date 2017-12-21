@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg.encoder;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -14,6 +13,7 @@ import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.SOSSegment;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
 public class JPEGImageWriter
@@ -165,6 +165,7 @@ public class JPEGImageWriter
 	public void create(JPEG aJPEG) throws IOException
 	{
 		aJPEG.mArithmetic = true;
+		aJPEG.mProgressive = false;
 
 		aJPEG.arith_dc_L = new int[]{0,0};
 		aJPEG.arith_dc_U = new int[]{1,1};
@@ -180,37 +181,58 @@ public class JPEGImageWriter
 
 		new DACSegment(aJPEG).write(mBitStream);
 
-		aJPEG.comps_in_scan = 3;
-		aJPEG.cur_comp_info = aJPEG.components;
+		aJPEG.comps_in_scan = aJPEG.components.length;
+
+//		aJPEG.cur_comp_info[0].setTableDC(0);
+//		aJPEG.cur_comp_info[0].setTableAC(0);
+//		aJPEG.cur_comp_info[1].setTableDC(1);
+//		aJPEG.cur_comp_info[1].setTableAC(1);
+//		aJPEG.cur_comp_info[2].setTableDC(1);
+//		aJPEG.cur_comp_info[2].setTableAC(1);
+
+		SOSSegment mSOSSegment = new SOSSegment(aJPEG, ComponentInfo.Y, ComponentInfo.CB, ComponentInfo.CR);
+
+		mSOSSegment.setTableDC(0, 0);
+		mSOSSegment.setTableAC(0, 0);
+		mSOSSegment.setTableDC(1, 1);
+		mSOSSegment.setTableAC(1, 1);
+		mSOSSegment.setTableDC(2, 1);
+		mSOSSegment.setTableAC(2, 1);
+
+//		aJPEG.blocks_in_MCU = 0;
+//		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
+//		{
+//			ComponentInfo comp = aJPEG.cur_comp_info[scanComponentIndex];
+//			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+//		}
+
+		JPEGImageReader.prepareMCU(aJPEG, mSOFSegment, mSOSSegment);
+
 		aJPEG.Ss = 0;
 		aJPEG.Se = 63;
 		aJPEG.Ah = 0;
 		aJPEG.Al = 0;
 
-		aJPEG.cur_comp_info[0].setTableDC(0);
-		aJPEG.cur_comp_info[0].setTableAC(0);
-		aJPEG.cur_comp_info[1].setTableDC(1);
-		aJPEG.cur_comp_info[1].setTableAC(1);
-		aJPEG.cur_comp_info[2].setTableDC(1);
-		aJPEG.cur_comp_info[2].setTableAC(1);
+		mSOSSegment.write(mBitStream);
 
-		new SOSSegment(aJPEG).write(mBitStream);
-
-		aJPEG.blocks_in_MCU = 0;
-		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
-		{
-			ComponentInfo comp = aJPEG.cur_comp_info[scanComponentIndex];
-			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-		}
-
-//		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
-//		aJPEG.MCU_membership[0] = 0;
-//		aJPEG.MCU_membership[1] = 0;
-//		aJPEG.MCU_membership[2] = 0;
-//		aJPEG.MCU_membership[3] = 0;
-//		aJPEG.MCU_membership[4] = 1;
-//		aJPEG.MCU_membership[5] = 2;
-
+//		if (aJPEG.cur_comp_info[0].getHorSampleFactor() == 1)
+//		{
+//			aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
+//			aJPEG.MCU_membership[0] = 0;
+//			aJPEG.MCU_membership[1] = 1;
+//			aJPEG.MCU_membership[2] = 2;
+//		}
+//		else
+//		{
+//			aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
+//			aJPEG.MCU_membership[0] = 0;
+//			aJPEG.MCU_membership[1] = 0;
+//			aJPEG.MCU_membership[2] = 0;
+//			aJPEG.MCU_membership[3] = 0;
+//			aJPEG.MCU_membership[4] = 1;
+//			aJPEG.MCU_membership[5] = 2;
+//		}
+//
 //		int[] blockLookup = new int[12];
 //
 //		int cp = 0;

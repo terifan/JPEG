@@ -18,7 +18,6 @@ import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
@@ -232,32 +231,7 @@ public class JPEGImageReader
 			first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		mJPEG.blocks_in_MCU = 0;
-
-		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
-		{
-			ComponentInfo comp = mSOFSegment.getComponentByScan(mSOSSegment.getComponent(scanComponentIndex));
-			mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-		}
-
-		mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
-		mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
-
-		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
-		{
-			ComponentInfo comp = mSOFSegment.getComponentByScan(mSOSSegment.getComponent(scanComponentIndex));
-			comp.setTableAC(mSOSSegment.getACTable(scanComponentIndex));
-			comp.setTableDC(mSOSSegment.getDCTable(scanComponentIndex));
-
-			mJPEG.cur_comp_info[scanComponentIndex] = comp;
-
-			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
-			{
-				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
-			}
-
-			if (VERBOSE) System.out.println(comp);
-		}
+		prepareMCU(mJPEG, mSOFSegment, mSOSSegment);
 
 		if (mImage == null)
 		{
@@ -292,8 +266,6 @@ public class JPEGImageReader
 								mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX];
 
 								mDecoder.decodeMCU(mJPEG, mcu);
-
-//								addBlocks(mcu[0], mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX]);
 							}
 						}
 					}
@@ -311,7 +283,10 @@ public class JPEGImageReader
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
 						{
-							addBlocks(mcu[blockIndex], mJPEG.mCoefficients[mcuY][mcuX][blockIndex]);
+							for (int i = 0; i < 64; i++)
+							{
+								mJPEG.mCoefficients[mcuY][mcuX][blockIndex][i] += mcu[blockIndex][i];
+							}
 						}
 					}
 				}
@@ -327,6 +302,37 @@ public class JPEGImageReader
 		mBitStream.align();
 
 		if (VERBOSE) System.out.println("======== " + mBitStream.getStreamOffset() + "("+Integer.toHexString(mBitStream.getStreamOffset())+") / " + mProgressiveLevel + " ========================================================================================================================================================================");
+	}
+
+
+	public static void prepareMCU(JPEG aJPEG, SOFSegment aSOFSegment, SOSSegment aSOSSegment)
+	{
+		aJPEG.blocks_in_MCU = 0;
+
+		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = aSOFSegment.getComponentByScan(aSOSSegment.getComponent(scanComponentIndex));
+			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+		}
+
+		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
+		aJPEG.cur_comp_info = new ComponentInfo[aJPEG.comps_in_scan];
+
+		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = aSOFSegment.getComponentByScan(aSOSSegment.getComponent(scanComponentIndex));
+			comp.setTableAC(aSOSSegment.getACTable(scanComponentIndex));
+			comp.setTableDC(aSOSSegment.getDCTable(scanComponentIndex));
+
+			aJPEG.cur_comp_info[scanComponentIndex] = comp;
+
+			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
+			{
+				aJPEG.MCU_membership[blockIndex] = scanComponentIndex;
+			}
+
+			if (VERBOSE) System.out.println(comp);
+		}
 	}
 
 
@@ -443,15 +449,6 @@ public class JPEGImageReader
 					}
 				}
 			}
-		}
-	}
-
-
-	private void addBlocks(int[] aSrc, int[] aDst)
-	{
-		for (int i = 0; i < 64; i++)
-		{
-			aDst[i] += aSrc[i];
 		}
 	}
 

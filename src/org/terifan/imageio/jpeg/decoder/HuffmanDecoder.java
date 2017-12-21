@@ -129,11 +129,6 @@ public class HuffmanDecoder extends Decoder
 			return decode_mcu_AC_refine(aJPEG, aCoefficients);
 		}
 
-		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
-		{
-			Arrays.fill(aCoefficients[blockIndex], 0);
-		}
-
 		return decodeImpl(aJPEG, aCoefficients);
 	}
 
@@ -144,6 +139,8 @@ public class HuffmanDecoder extends Decoder
 		{
 			int ci = aJPEG.MCU_membership[blockIndex];
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
+
+			Arrays.fill(aCoefficients[blockIndex], 0);
 
 			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
 

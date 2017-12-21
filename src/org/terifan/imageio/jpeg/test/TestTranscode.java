@@ -12,7 +12,7 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 public class TestTranscode
 {
-	public static void xmain(String... args)
+	public static void main(String... args)
 	{
 		try
 		{
@@ -44,50 +44,6 @@ public class TestTranscode
 				}
 			}
 			System.out.println(err);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
-
-
-	public static void main(String... args)
-	{
-		try
-		{
-			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
-			{
-				byte[] data = new byte[(int)file.length()];
-				try (FileInputStream in = new FileInputStream(file))
-				{
-					in.read(data);
-				}
-
-				try
-				{
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-					new Transcode().transcode(new ByteArrayInputStream(data), baos);
-
-					System.out.printf("%8d %8d %s%n", baos.size(), file.length(), file);
-
-					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
-					{
-						baos.writeTo(fos);
-					}
-
-					try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
-					{
-						fos.write(data);
-					}
-				}
-				catch (Throwable e)
-				{
-					System.out.println(file);
-					e.printStackTrace(System.out);
-				}
-			}
 		}
 		catch (Throwable e)
 		{

@@ -14,11 +14,12 @@ public class SOSSegment
 	private JPEG mJPEG;
 
 
-	public SOSSegment(JPEG aJPEG)
+	public SOSSegment(JPEG aJPEG, int... aComponents)
 	{
 		mJPEG = aJPEG;
 		mTableDC = new int[4];
 		mTableAC = new int[4];
+		mComponentIds = aComponents;
 	}
 
 
