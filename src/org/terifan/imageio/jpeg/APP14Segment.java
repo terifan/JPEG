@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 
 
@@ -36,10 +37,10 @@ public class APP14Segment
 						mColorSpace = ColorSpaceType.YCBCR;
 						break;
 					case 2:
-						mColorSpace = ColorSpaceType.YCCK;
+						mColorSpace = ColorSpaceType.YCCK; // CMYK
 						break;
 					default:
-						mColorSpace = ColorSpaceType.RGB;
+						mColorSpace = ColorSpaceType.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
 						break;
 				}
 			}
@@ -47,6 +48,12 @@ public class APP14Segment
 
 		int remaining = offset + length - aBitStream.getStreamOffset();
 
+		if (VERBOSE)
+		{
+			System.out.println("Adobe APP14 marker segment");
+			System.out.println("  Color space " + mColorSpace);
+		}
+		
 		if (remaining < 0)
 		{
 			throw new IOException("Expected offset " + (offset + length) + ", actual " + aBitStream.getStreamOffset());

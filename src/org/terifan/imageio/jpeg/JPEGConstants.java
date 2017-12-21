@@ -38,8 +38,8 @@ public class JPEGConstants
 	public final static int AC_STAT_BINS = 256;
 
 	public final static int APP0 = 0xFFE0;   // JFIF APP0 segment marker
-	public final static int APP1 = 0xFFE1;
-	public final static int APP2 = 0xFFE2;
+	public final static int APP1 = 0xFFE1;   // Exif metadata
+	public final static int APP2 = 0xFFE2;   // flashPix data
 	public final static int APP3 = 0xFFE3;
 	public final static int APP4 = 0xFFE4;
 	public final static int APP5 = 0xFFE5;
@@ -50,8 +50,8 @@ public class JPEGConstants
 	public final static int APP10 = 0xFFEA;
 	public final static int APP11 = 0xFFEB;
 	public final static int APP12 = 0xFFEC;
-	public final static int APP13 = 0xFFED;
-	public final static int APP14 = 0xFFEE;
+	public final static int APP13 = 0xFFED; // XML metadata
+	public final static int APP14 = 0xFFEE; // Adobe color profile
 	public final static int APP15 = 0xFFEF;
 	public final static int COM = 0xFFFE;   // Comment
 	public final static int DAC = 0xFFCC;   // Define Arithmetic Table
@@ -121,11 +121,11 @@ public class JPEGConstants
 			case SOF15:
 				return "Differential lossless, arithmetic coding";
 			case APP0:
-				return "APP0";
+				return "JFIF image header";
 			case APP1:
-				return "APP1";
+				return "Exif metadata";
 			case APP2:
-				return "APP2";
+				return "FlashPix data";
 			case APP3:
 				return "APP3";
 			case APP4:
@@ -147,9 +147,9 @@ public class JPEGConstants
 			case APP12:
 				return "APP12";
 			case APP13:
-				return "APP13";
+				return "XML metadata";
 			case APP14:
-				return "APP14";
+				return "Adobe color profile segment";
 			case APP15:
 				return "APP15";
 			case COM:

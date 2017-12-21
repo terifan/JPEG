@@ -5,17 +5,52 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import org.terifan.imageio.jpeg.JPEGConstants;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
+import org.terifan.imageio.jpeg.decoder.BitInputStream;
 
 
 public class JPEGExif
 {
-	private static final int EXIF_HEADER = 0x45786966;
-	private final ArrayList<ExifEntry> mEntries;
+	private ArrayList<ExifEntry> mEntries;
 
 
-	private JPEGExif(ArrayList<ExifEntry> aEntries)
+	public JPEGExif()
 	{
-		mEntries = aEntries;
+		mEntries = new ArrayList<>();
+	}
+
+
+	private JPEGExif(byte[] aImageData) throws IOException
+	{
+		this();
+
+		Reader reader = new Reader(aImageData);
+
+		if (reader.readInt16() != JPEGConstants.SOI)
+		{
+			throw new IOException("Not a JPEG file");
+		}
+
+		for (;;)
+		{
+			int code = reader.readInt16();
+
+			if (code == JPEGConstants.EOI || code == JPEGConstants.SOS)
+			{
+				break;
+			}
+
+			int len = reader.readInt16();
+			int pos = reader.byteBuffer.position();
+
+			if (code == JPEGConstants.APP1)
+			{
+				parse2(reader, len - 2);
+			}
+
+			reader.byteBuffer.position(pos + len - 2);
+		}
 	}
 
 
@@ -25,11 +60,11 @@ public class JPEGExif
 	}
 
 
-	public ExifEntry get(ExifTag aType)
+	public ExifEntry get(ExifTag aTag)
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aType)
+			if (entry.getTag() == aTag)
 			{
 				return entry;
 			}
@@ -39,11 +74,19 @@ public class JPEGExif
 	}
 
 
-	public <T> T value2(ExifTag aType, Class<T> aCls)
+	public JPEGExif add(ExifEntry aTag)
+	{
+		mEntries.add(aTag);
+
+		return this;
+	}
+
+
+	public <T> T value(ExifTag aTag, Class<T> aType)
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aType)
+			if (entry.getTag() == aTag)
 			{
 				return (T)entry.getValue();
 			}
@@ -53,11 +96,11 @@ public class JPEGExif
 	}
 
 
-	public String value(ExifTag aType)
+	public String value(ExifTag aTag)
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aType)
+			if (entry.getTag() == aTag)
 			{
 				return entry.getValue().toString();
 			}
@@ -69,55 +112,91 @@ public class JPEGExif
 
 	public static JPEGExif extract(byte [] aImageData) throws IOException
 	{
-		Reader reader = new Reader(aImageData);
-
-		ArrayList<ExifEntry> entries = new ArrayList<>();
-
-		if (reader.getShort() != 0xffd8)
-		{
-			throw new IOException("Not a JPEG file");
-		}
-
-		for (;;)
-		{
-			int code = reader.getShort() & 0xffff;
-
-			if (code == 0xFFD9 || code == 0xFFDA)
-			{
-				break;
-			}
-
-			int len = reader.getShort() & 0xffff;
-			int pos = reader.byteBuffer.position();
-
-			if (code == 0xFFE1)
-			{
-				if (reader.getInt() == EXIF_HEADER)
-				{
-					if (reader.getShort() != 0)
-					{
-						throw new IOException("Bad TIFF header data");
-					}
-
-					byte [] exif = new byte[len - 6];
-					reader.byteBuffer.get(exif, 0, len - 6);
-
-					extractImpl(exif, entries);
-				}
-			}
-
-			reader.byteBuffer.position(pos + len - 2);
-		}
-
-		return new JPEGExif(entries);
+		return new JPEGExif(aImageData);
 	}
 
 
-	private static void extractImpl(byte [] aExifData, ArrayList<ExifEntry> oEntries) throws IOException
+	private void parse2(Reader aReader, int aLen) throws IOException
+	{
+		String header = "";
+		
+		while (aLen-- > 0)
+		{
+			int c = aReader.readInt8();
+			if (c == 0)
+			{
+				break;
+			}
+			header += (char)c;
+		}
+		
+		if (header.equals("Exif"))
+		{
+			if (aReader.readInt16() != 0)
+			{
+				throw new IOException("Bad TIFF header data");
+			}
+
+			byte[] exif = new byte[aLen - 1];
+
+			aReader.byteBuffer.get(exif);
+
+			parseImpl(exif);
+		}
+	}
+
+
+	public void read(BitInputStream aBitStream) throws IOException
+	{
+		int len = aBitStream.readInt16() - 2;
+
+		String header = "";
+		
+		while (len-- > 0)
+		{
+			int c = aBitStream.readInt8();
+			if (c == 0)
+			{
+				break;
+			}
+			header += (char)c;
+		}
+
+		if (header.equals("Exif"))
+		{
+			if (aBitStream.readInt8() != 0)
+			{
+				throw new IOException("Bad TIFF header data");
+			}
+
+			byte[] exif = new byte[len - 1];
+
+			for (int i = 0; i < exif.length; i++)
+			{
+				exif[i] = (byte)aBitStream.readInt8();
+
+//				System.out.printf("%02x ", exif[i]);
+			}
+			
+			parseImpl(exif);
+		}
+		else
+		{
+			aBitStream.skipBytes(len);
+
+			if (VERBOSE)
+			{
+				System.out.printf("  Unsupported APP1 segment content (%s)%n", header);
+			}
+		}
+	}
+
+
+	private void parseImpl(byte [] aExifData) throws IOException
 	{
 		Reader reader = new Reader(aExifData);
 
-		switch (reader.getShort())
+		switch (reader.readInt16())
 		{
 			case 0x4d4d: // "MM"
 			case 0x6d6d: // "mm"
@@ -131,25 +210,25 @@ public class JPEGExif
 				throw new IOException("Bad TIFF encoding header");
 		}
 
-		if (reader.getShort() != 0x002a)
+		if (reader.readInt16() != 0x002a)
 		{
 			throw new IOException("Bad TIFF encoding header");
 		}
-		if (reader.getInt() != 0x00000008)
+		if (reader.readInt32() != 0x00000008)
 		{
 			throw new IOException("Bad TIFF encoding header");
 		}
 
 		for (;;)
 		{
-			int entryCount = reader.getShort();
+			int entryCount = reader.readInt16();
 
 			for (int i = 0; i < entryCount; i++)
 			{
-				int tag = reader.getShort();
-				ExifFormat format = ExifFormat.values()[reader.getShort() - 1];
-				int length = reader.getInt();
-				int value = reader.getInt();
+				int tag = reader.readInt16();
+				ExifFormat format = ExifFormat.values()[reader.readInt16() - 1];
+				int length = reader.readInt32();
+				int value = reader.readInt32();
 				Object output;
 
 				if (tag == ExifTag.PADDING.mCode) // ignore padding
@@ -195,7 +274,7 @@ public class JPEGExif
 						break;
 					case URATIONAL:
 						reader.byteBuffer.position(value);
-						output = reader.getInt() / (double)reader.getInt();
+						output = reader.readInt32() / (double)reader.readInt32();
 						break;
 					case UNDEFINED:
 						output = new byte[length - 1];
@@ -203,17 +282,20 @@ public class JPEGExif
 						reader.byteBuffer.get((byte[])output);
 						break;
 					default:
-						System.out.printf("tag=%04X length=%-4d value=%-4d format=%s\n", tag, length, value, format);
+						if (VERBOSE)
+						{
+							System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s\n", tag, length, value, format);
+						}
 						output = null;
 						break;
 				}
 
-				oEntries.add(new ExifEntry(aExifData, format, tag, output));
+				mEntries.add(new ExifEntry(aExifData, format, tag, output));
 
 				reader.byteBuffer.position(pos);
 			}
 
-			int nextIFD = reader.getInt();
+			int nextIFD = reader.readInt32();
 
 			if (nextIFD == 0)
 			{
@@ -225,113 +307,23 @@ public class JPEGExif
 	}
 
 
-	private static class Reader
-	{
-		boolean bigEndian = true;
-		ByteBuffer byteBuffer;
-
-
-		public Reader(byte [] aData)
-		{
-			byteBuffer = ByteBuffer.wrap(aData);
-		}
-
-
-		public int getShort()
-		{
-			if (bigEndian)
-			{
-				return byteBuffer.getShort() & 0xffff;
-			}
-			return Short.reverseBytes(byteBuffer.getShort()) & 0xffff;
-		}
-
-
-		public int getInt()
-		{
-			if (bigEndian)
-			{
-				return byteBuffer.getInt();
-			}
-			return Integer.reverseBytes(byteBuffer.getInt());
-		}
-	}
-
-
-	public static byte [] replace(byte [] aImageData, byte [] aNewMetaData) throws IOException
-	{
-		ByteArrayOutputStream dosBuffer = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(dosBuffer);
-
-		ByteBuffer dis = ByteBuffer.wrap(aImageData);
-
-		if (dis.getShort() != (short)0xFFD8)
-		{
-			throw new IOException("Not a JPEG file");
-		}
-
-		dos.writeShort(0xFFD8);
-
-		for (;;)
-		{
-			int pos = dis.position();
-			int code = dis.getShort() & 0xffff;
-
-			if (code == 0xFFDB && aNewMetaData != null && aNewMetaData.length > 0) // insert Exif data
-			{
-				dos.writeShort(0xFFE1);
-				dos.writeShort(aNewMetaData.length + 2);
-				dos.write(aNewMetaData);
-
-				aNewMetaData = null;
-			}
-
-			if (code == 0xFFDA || code == 0xFFD9) // copy remaining bytes and return
-			{
-				byte [] tmp = new byte[aImageData.length - dis.position()];
-				dis.get(tmp, 0, tmp.length);
-
-				dos.writeShort(code);
-				dos.write(tmp);
-
-				break;
-			}
-
-			int len = dis.getShort() & 0xffff;
-
-			if (code != 0xFFE1 && code != 0xFFED && code != 0xFFE2) // ignore app chunks containing metadata
-			{
-				byte [] tmp = new byte[len + 2];
-				dis.position(pos);
-				dis.get(tmp, 0, tmp.length);
-
-				dos.write(tmp);
-			}
-
-			dis.position(pos + len + 2);
-		}
-
-		return dosBuffer.toByteArray();
-	}
-
-
-	public static byte [] encode(ArrayList<ExifEntry> aEntries) throws IOException
+	public byte [] encode() throws IOException
 	{
 		ByteArrayOutputStream dataBuffer = new ByteArrayOutputStream();
 		DataOutputStream data = new DataOutputStream(dataBuffer);
 
 		ByteArrayOutputStream dirBuffer = new ByteArrayOutputStream();
 		DataOutputStream dir = new DataOutputStream(dirBuffer);
-		dir.writeInt(EXIF_HEADER); // "Exif"
+		dir.write("Exif".getBytes());
 		dir.writeShort(0x0000);
 		dir.writeShort(0x4d4d);
 		dir.writeShort(0x002a);
 		dir.writeInt(0x00000008);
-		dir.writeShort(aEntries.size());
+		dir.writeShort(mEntries.size());
 
 		int dataOffset = 1024 - 6;
 
-		for (ExifEntry entry : aEntries)
+		for (ExifEntry entry : mEntries)
 		{
 			dir.writeShort(entry.getCode());
 			dir.writeShort(entry.getFormat().ordinal() + 1);
@@ -422,6 +414,112 @@ public class JPEGExif
 		dataBuffer.writeTo(dir);
 
 		return dirBuffer.toByteArray();
+	}
+
+
+	/**
+	 * Replace first APP1 segment with the provided data.
+	 * 
+	 * @param aImageData
+	 *   the JPEG image
+	 * @param aNewMetaData
+	 *   the new EXIF data or null
+	 * @return
+	 *   the new JPEG image
+	 */
+	public static byte [] replace(byte [] aImageData, byte [] aNewMetaData) throws IOException
+	{
+		ByteArrayOutputStream dosBuffer = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(dosBuffer);
+
+		ByteBuffer dis = ByteBuffer.wrap(aImageData);
+
+		if (dis.getShort() != (short)JPEGConstants.SOI)
+		{
+			throw new IOException("Not a JPEG file");
+		}
+
+		dos.writeShort(JPEGConstants.SOI);
+
+		for (;;)
+		{
+			int pos = dis.position();
+			int code = dis.getShort() & 0xffff;
+
+			if (code == JPEGConstants.DQT && aNewMetaData != null && aNewMetaData.length > 0) // insert Exif data right before first quantization table
+			{
+				dos.writeShort(JPEGConstants.APP1);
+				dos.writeShort(aNewMetaData.length + 2);
+				dos.write(aNewMetaData);
+
+				aNewMetaData = null;
+			}
+
+			if (code == JPEGConstants.SOS || code == JPEGConstants.EOI) // copy remaining bytes and return
+			{
+				byte [] tmp = new byte[aImageData.length - dis.position()];
+				dis.get(tmp, 0, tmp.length);
+
+				dos.writeShort(code);
+				dos.write(tmp);
+
+				break;
+			}
+
+			int len = dis.getShort() & 0xffff;
+
+			if (code != JPEGConstants.APP1 && code != JPEGConstants.APP2 && code != JPEGConstants.APP13) // ignore app chunks containing metadata
+			{
+				byte [] tmp = new byte[len + 2];
+				dis.position(pos);
+				dis.get(tmp, 0, tmp.length);
+
+				dos.write(tmp);
+			}
+
+			dis.position(pos + len + 2);
+		}
+
+		return dosBuffer.toByteArray();
+	}
+
+
+	private static class Reader
+	{
+		boolean bigEndian = true;
+		ByteBuffer byteBuffer;
+
+
+		public Reader(byte [] aData)
+		{
+			byteBuffer = ByteBuffer.wrap(aData);
+		}
+
+
+		public int readInt8()
+		{
+			return byteBuffer.get() & 0xff;
+		}
+
+
+		public int readInt16()
+		{
+			if (bigEndian)
+			{
+				return byteBuffer.getShort() & 0xffff;
+			}
+			return Short.reverseBytes(byteBuffer.getShort()) & 0xffff;
+		}
+
+
+		public int readInt32()
+		{
+			if (bigEndian)
+			{
+				return byteBuffer.getInt();
+			}
+			return Integer.reverseBytes(byteBuffer.getInt());
+		}
 	}
 
 

@@ -166,6 +166,7 @@ public class JPEGImageWriter
 	{
 		aJPEG.mArithmetic = true;
 		aJPEG.mProgressive = false;
+		aJPEG.restart_interval = 0;
 
 		aJPEG.arith_dc_L = new int[]{0,0};
 		aJPEG.arith_dc_U = new int[]{1,1};
@@ -199,6 +200,8 @@ public class JPEGImageWriter
 		mSOSSegment.setTableDC(2, 1);
 		mSOSSegment.setTableAC(2, 1);
 
+		
+		
 //		aJPEG.blocks_in_MCU = 0;
 //		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 //		{

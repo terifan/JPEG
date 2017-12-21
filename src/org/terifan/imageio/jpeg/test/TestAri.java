@@ -25,7 +25,7 @@ public class TestAri
 //			URL jpegResource = TestAri.class.getResource("untitled.jpg");
 
 //			URL jpegResource = new File("D:\\Pictures\\Wallpapers High Quality\\1080p-wallpapers-landscape-10.jpg").toURL();
-			URL jpegResource = new File("D:\\Pictures\\Wallpapers High Quality\\1920x1080-Wallpaper-Backgrounds.jpg").toURL();
+			URL jpegResource = new File("D:\\Pictures\\Wallpapers High Quality\\1080p-wallpapers-landscape-10.jpg").toURL();
 
 			try (InputStream input = jpegResource.openStream())
 			{

@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class APP0Segment 
+public class APP0Segment
 {
 	private JPEG mJPEG;
 
@@ -38,7 +38,7 @@ public class APP0Segment
 
 				if ((version >> 8) != 1)
 				{
-					throw new IOException("Error in JPEG stream; unsupported version: " + (version>>8) + "." + (version&255));
+					throw new IOException("Error in JPEG stream; unsupported version: " + (version >> 8) + "." + (version & 255));
 				}
 
 				mJPEG.mDensitiesUnits = aBitStream.readInt8();
@@ -51,7 +51,10 @@ public class APP0Segment
 
 				if (VERBOSE)
 				{
-					System.out.println("Ignoring thumbnail " + thumbnailSize + " bytes");
+					if (thumbnailSize > 0)
+					{
+						System.out.println("Ignoring thumbnail " + thumbnailSize + " bytes");
+					}
 				}
 
 				if (length != 16 + thumbnailSize)
@@ -73,15 +76,18 @@ public class APP0Segment
 
 				if (VERBOSE)
 				{
-					System.out.println("Ignoring thumbnail " + (length-8) + " bytes");
+					if (length - 8 > 0)
+					{
+						System.out.println("Ignoring thumbnail " + (length - 8) + " bytes");
+					}
 				}
 				break;
 			default:
 				throw new IOException("Unsupported APP0 extension: " + type);
 		}
 	}
-	
-	
+
+
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.APP0);

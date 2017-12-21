@@ -5,8 +5,11 @@ import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -21,6 +24,7 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.exif.JPEGExif;
 
 
 public class JPEGImageReader
@@ -56,9 +60,18 @@ public class JPEGImageReader
 	}
 
 
+	public static BufferedImage read(File aFile) throws IOException
+	{
+		try (InputStream input = new BufferedInputStream(new FileInputStream(aFile)))
+		{
+			return new JPEGImageReader(input, IDCTIntegerFast.class).readImpl();
+		}
+	}
+
+
 	public static BufferedImage read(URL aInputStream) throws IOException
 	{
-		try (InputStream input = aInputStream.openStream())
+		try (InputStream input = new BufferedInputStream(aInputStream.openStream()))
 		{
 			return new JPEGImageReader(input, IDCTIntegerFast.class).readImpl();
 		}
@@ -106,6 +119,8 @@ public class JPEGImageReader
 
 					if ((nextSegment & 0xFF00) != 0xFF00)
 					{
+						updateImage();
+						
 						System.out.println("Expected JPEG marker at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
 
 						hexdump();
@@ -126,6 +141,16 @@ public class JPEGImageReader
 						new APP0Segment(mJPEG).read(mBitStream);
 						break;
 					case APP1:
+						try
+						{
+							new JPEGExif().read(mBitStream);
+						}
+						catch (Throwable e)
+						{
+							System.out.println("Error reading metadata");
+							e.printStackTrace(System.err);
+						}
+						break;
 					case APP2:
 					case APP12:
 					case APP13:
@@ -278,6 +303,9 @@ public class JPEGImageReader
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
 //						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
+
+//						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
+//							mcu[blockIndex] = mJPEG.mCoefficients[mcuY][mcuX][blockIndex];
 
 						mDecoder.decodeMCU(mJPEG, mcu);
 

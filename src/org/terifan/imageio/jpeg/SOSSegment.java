@@ -51,34 +51,41 @@ public class SOSSegment
 
 		if (VERBOSE)
 		{
-			System.out.println("SOSMarkerSegment");
-			System.out.println("  numcomponents=" + mJPEG.comps_in_scan);
-			for (int i = 0; i < mJPEG.comps_in_scan; i++)
-			{
-				String component;
-				switch (mComponentIds[i])
-				{
-					case ComponentInfo.Y:
-						component = "Y";
-						break;
-					case ComponentInfo.CB:
-						component = "Cb";
-						break;
-					case ComponentInfo.CR:
-						component = "Cr";
-						break;
-					case ComponentInfo.I:
-						component = "I";
-						break;
-					default:
-						component = "Q";
-				}
-
-				System.out.println("  SOS: component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al);
-			}
+			log();
 		}
 
 		return this;
+	}
+
+
+	public void log()
+	{
+		System.out.println("SOSMarkerSegment");
+		System.out.println("  numcomponents=" + mJPEG.comps_in_scan);
+
+		for (int i = 0; i < mJPEG.comps_in_scan; i++)
+		{
+			String component;
+			switch (mComponentIds[i])
+			{
+				case ComponentInfo.Y:
+					component = "Y";
+					break;
+				case ComponentInfo.CB:
+					component = "Cb";
+					break;
+				case ComponentInfo.CR:
+					component = "Cr";
+					break;
+				case ComponentInfo.I:
+					component = "I";
+					break;
+				default:
+					component = "Q";
+			}
+			
+			System.out.println("  SOS: component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al);
+		}
 	}
 
 

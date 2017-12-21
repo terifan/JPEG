@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.exif.JPEGExif;
 
 
 public class TestTranscodeBatch
@@ -45,7 +46,6 @@ public class TestTranscodeBatch
 							}
 						}
 					}
-					System.out.println(err);
 
 					System.out.printf("%8d %8d %8d %s%n", baos.size(), file.length(), err, file);
 
@@ -56,6 +56,8 @@ public class TestTranscodeBatch
 							baos.writeTo(fos);
 						}
 
+						data = JPEGExif.replace(data, null);
+						
 						try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
 						{
 							fos.write(data);

@@ -1,5 +1,8 @@
 package org.terifan.imageio.jpeg;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,9 +13,18 @@ import org.terifan.imageio.jpeg.encoder.JPEGImageWriter;
 
 public class Transcode
 {
+	public void transcode(File aFile, OutputStream aOutputStream) throws IOException
+	{
+		try (InputStream in = new BufferedInputStream(new FileInputStream(aFile)))
+		{
+			transcode(in, aOutputStream);
+		}
+	}
+
+
 	public void transcode(URL aInputStream, OutputStream aOutputStream) throws IOException
 	{
-		try (InputStream in = aInputStream.openStream())
+		try (InputStream in = new BufferedInputStream(aInputStream.openStream()))
 		{
 			transcode(in, aOutputStream);
 		}
