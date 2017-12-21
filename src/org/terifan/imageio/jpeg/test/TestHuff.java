@@ -26,7 +26,7 @@ public class TestHuff
 
 			BufferedImage myImage1 = null; //JPEGImageReader.read(TestHuff.class.getResource("Swallowtail-huff-opt.jpg"));
 
-			BufferedImage javaImage = ImageIO.read(TestHuff.class.getResource("Swallowtail-huff-opt.jpg"));
+			BufferedImage javaImage = ImageIO.read(TestHuff.class.getResource("Swallowtail-huff-opt-prog.jpg"));
 
 			BufferedImage diff = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 

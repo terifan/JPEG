@@ -6,6 +6,7 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.decoder.JPEGImageReader.MAX_CHANNELS;
 
 
@@ -42,28 +43,31 @@ public class HuffmanDecoder extends Decoder
 
 		EOBRUN = 0;
 
-		if (aJPEG.mProgressive)
+		if (VERBOSE)
 		{
-			if (aJPEG.Ah == 0)
+			if (aJPEG.mProgressive)
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.Ah == 0)
 				{
-					System.out.println("decode_mcu_DC_first");
+					if (aJPEG.Ss == 0)
+					{
+						System.out.println("decode_mcu_DC_first");
+					}
+					else
+					{
+						System.out.println("decode_mcu_AC_first");
+					}
 				}
 				else
 				{
-					System.out.println("decode_mcu_AC_first");
-				}
-			}
-			else
-			{
-				if (aJPEG.Ss == 0)
-				{
-					System.out.println("decode_mcu_DC_refine");
-				}
-				else
-				{
-					System.out.println("decode_mcu_AC_refine");
+					if (aJPEG.Ss == 0)
+					{
+						System.out.println("decode_mcu_DC_refine");
+					}
+					else
+					{
+						System.out.println("decode_mcu_AC_refine");
+					}
 				}
 			}
 		}
@@ -83,10 +87,6 @@ public class HuffmanDecoder extends Decoder
 		{
 			if (aJPEG.entropy.restarts_to_go == 0)
 			{
-//				for (int ci = 0; ci < aJPEG.num_components; ci++)
-//				{
-//					mPreviousDCValue[ci] = 0;
-//				}
 				for (int ci = 0; ci < aJPEG.comps_in_scan; ci++)
 				{
 					mPreviousDCValue[aJPEG.MCU_membership[ci]] = 0;
@@ -110,11 +110,6 @@ public class HuffmanDecoder extends Decoder
 			aJPEG.entropy.restarts_to_go--;
 		}
 
-		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
-		{
-			Arrays.fill(aCoefficients[blockIndex], 0);
-		}
-
 		if (aJPEG.mProgressive)
 		{
 			if (aJPEG.Ah == 0)
@@ -132,6 +127,11 @@ public class HuffmanDecoder extends Decoder
 			}
 
 			return decode_mcu_AC_refine(aJPEG, aCoefficients);
+		}
+
+		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		{
+			Arrays.fill(aCoefficients[blockIndex], 0);
 		}
 
 		return decodeImpl(aJPEG, aCoefficients);
@@ -238,8 +238,6 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-//System.out.print("#"+EOBRUN+"# ");
-
 		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
 
@@ -258,8 +256,6 @@ public class HuffmanDecoder extends Decoder
 				int s = acTable.decodeSymbol(mBitStream);
 				int r = s >> 4;
 				s &= 15;
-
-//				System.out.print("!"+r+":"+s+"! ");
 
 				if (s != 0)
 				{

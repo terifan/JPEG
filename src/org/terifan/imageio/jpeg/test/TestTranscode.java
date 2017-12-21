@@ -16,11 +16,11 @@ public class TestTranscode
 	{
 		try
 		{
-			BufferedImage image0 = JPEGImageReader.read(TestTranscode.class.getResourceAsStream("Swallowtail.jpg"));
+			BufferedImage image0 = JPEGImageReader.read(TestTranscode.class.getResource("Swallowtail-huff-opt.jpg"));
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-			new Transcode().transcode(TestTranscode.class.getResourceAsStream("Swallowtail.jpg"), baos);
+			new Transcode().transcode(TestTranscode.class.getResource("Swallowtail-huff-opt.jpg"), baos);
 
 			System.out.println("---------> " + baos.size());
 
@@ -56,16 +56,16 @@ public class TestTranscode
 	{
 		try
 		{
-			for (File file : new File("D:\\Pictures\\Wallpapers").listFiles())
+			for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
 			{
 				byte[] data = new byte[(int)file.length()];
 				try (FileInputStream in = new FileInputStream(file))
 				{
 					in.read(data);
 				}
-				
+
 				System.out.println(file);
-				
+
 				try
 				{
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -48,7 +48,7 @@ public class SOSSegment
 		mJPEG.Al = aBitStream.readBits(4);
 		mJPEG.comps_in_scan = getNumComponents();
 
-//		if (VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("SOSMarkerSegment");
 			System.out.println("  numcomponents=" + mJPEG.comps_in_scan);

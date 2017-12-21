@@ -7,6 +7,7 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
 
@@ -558,11 +559,10 @@ public class ArithmeticDecoder extends Decoder
 		block = MCU_data[0];
 		tbl = cinfo.cur_comp_info[0].getTableAC();
 
-		p1 = 1 << cinfo.Al;
-		/* 1 in the bit position being coded */
-		m1 = (-1) << cinfo.Al;
-		/* -1 in the bit position being coded */
-		/* Establish EOBx (previous stage end-of-block) index */
+		p1 = 1 << cinfo.Al; // 1 in the bit position being coded
+		m1 = -1 << cinfo.Al; // -1 in the bit position being coded
+
+		// Establish EOBx (previous stage end-of-block) index
 		kex = cinfo.Se;
 		do
 		{
@@ -658,11 +658,6 @@ public class ArithmeticDecoder extends Decoder
 	@Override
 	boolean decodeMCU(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
-		for (int[] d : MCU_data)
-		{
-			Arrays.fill(d, 0);
-		}
-
 		if (cinfo.entropy.decode_mcu != x_decode_mcu)
 		{
 			if (!x(cinfo, MCU_data))
@@ -670,6 +665,11 @@ public class ArithmeticDecoder extends Decoder
 				throw new IllegalStateException("bad code");
 			}
 			return true;
+		}
+
+		for (int[] d : MCU_data)
+		{
+			Arrays.fill(d, 0);
 		}
 
 		ArithEntropyState entropy = cinfo.entropy;
@@ -934,24 +934,24 @@ public class ArithmeticDecoder extends Decoder
 				if (cinfo.Ss == 0)
 				{
 					entropy.decode_mcu = x_decode_mcu_DC_first;
-					System.out.println("  start scan decode_mcu_DC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  start scan decode_mcu_DC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
 				}
 				else
 				{
 					entropy.decode_mcu = x_decode_mcu_AC_first;
-					System.out.println("  start scan decode_mcu_AC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  start scan decode_mcu_AC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
 				}
 			}
 			else
 			{
 				if (cinfo.Ss == 0)
 				{
-					System.out.println("  start scan decode_mcu_DC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  start scan decode_mcu_DC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_DC_refine;
 				}
 				else
 				{
-					System.out.println("  start scan decode_mcu_AC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  start scan decode_mcu_AC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_AC_refine;
 				}
 			}
@@ -992,7 +992,7 @@ public class ArithmeticDecoder extends Decoder
 				{
 					ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
 				}
-				
+
 				entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
 			}
 		}

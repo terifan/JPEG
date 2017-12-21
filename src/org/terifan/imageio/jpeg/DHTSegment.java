@@ -20,8 +20,6 @@ public class DHTSegment
 
 	public DHTSegment(BitInputStream aBitStream) throws IOException
 	{
-		System.out.println("****"+aBitStream.getStreamOffset());
-
 		int temp = aBitStream.readInt8();
 		mIdentity = temp & 0x07;
 		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
@@ -40,7 +38,7 @@ public class DHTSegment
 
 		mLookup = new int[1 << mMaxLength];
 
-		System.out.println("------------------");
+//		System.out.println("------------------");
 
 		for (int i = 0, code = 0; i < 16; i++)
 		{
@@ -50,17 +48,17 @@ public class DHTSegment
 				int symbol = aBitStream.readInt8();
 				int sz = 1 << (mMaxLength - length);
 
-				String s = "";
-				for (int z = length; --z >= 0; )
-				{
-					s += 1 & ((code * sz) >> z);
-				}
-				String s2 = "";
-				for (int z = length; --z >= 0; )
-				{
-					s2 += 1 & ((code * sz | (sz-1)) >> z);
-				}
-				System.out.printf("%"+mMaxLength+"s -- %"+mMaxLength+"s [%d] = %d%n", s, s2, length, symbol);
+//				String s = "";
+//				for (int z = length; --z >= 0; )
+//				{
+//					s += 1 & ((code * sz) >> z);
+//				}
+//				String s2 = "";
+//				for (int z = length; --z >= 0; )
+//				{
+//					s2 += 1 & ((code * sz | (sz-1)) >> z);
+//				}
+//				System.out.printf("%"+mMaxLength+"s -- %"+mMaxLength+"s [%d] = %d%n", s, s2, length, symbol);
 
 				for (int k = 0; k < sz; k++)
 				{
@@ -72,9 +70,9 @@ public class DHTSegment
 			code <<= 1;
 		}
 
-		System.out.println("------------------");
+//		System.out.println("------------------");
 
-//		if (VERBOSE)
+		if (VERBOSE)
 		{
 			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + ", maxLength=" + mMaxLength + "]");
 		}

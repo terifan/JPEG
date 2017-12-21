@@ -2,6 +2,7 @@ package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
@@ -21,12 +22,8 @@ public class DACSegment
 	{
 		int length = aBitStream.readInt16() - 2;
 
-		System.out.println("DACMarkerSegment");
+		if (VERBOSE) System.out.println("DACMarkerSegment");
 
-//		mJPEG.arith_dc_L = new int[NUM_ARITH_TBLS];
-//		mJPEG.arith_dc_U = new int[NUM_ARITH_TBLS];
-//		mJPEG.arith_ac_K = new int[NUM_ARITH_TBLS];
-		
 		while (length > 0)
 		{
 			int index = aBitStream.readInt8();
@@ -40,7 +37,7 @@ public class DACSegment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-				System.out.println("  arith_ac_K[" + index + "]=" + val);
+				if (VERBOSE) System.out.println("  arith_ac_K[" + index + "]=" + val);
 
 				mJPEG.arith_ac_K[index - NUM_ARITH_TBLS] = val;
 			}
@@ -49,8 +46,11 @@ public class DACSegment
 				mJPEG.arith_dc_U[index] = val >> 4;
 				mJPEG.arith_dc_L[index] = val & 0x0F;
 
-				System.out.println("  arith_dc_L[" + index + "]=" + mJPEG.arith_dc_L[index]);
-				System.out.println("  arith_dc_U[" + index + "]=" + mJPEG.arith_dc_U[index]);
+				if (VERBOSE)
+				{
+					System.out.println("  arith_dc_L[" + index + "]=" + mJPEG.arith_dc_L[index]);
+					System.out.println("  arith_dc_U[" + index + "]=" + mJPEG.arith_dc_U[index]);
+				}
 
 				if (mJPEG.arith_dc_L[index] > mJPEG.arith_dc_U[index])
 				{
