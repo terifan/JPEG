@@ -63,11 +63,13 @@ public class DQTSegment
 
 		if (VERBOSE)
 		{
-			System.out.println("DQTMarkerSegment[identity=" + identity + ", precision=" + (precision == PRECISION_8_BITS ? 8 : 16) + "]");
+			System.out.println("DQTMarkerSegment");
+			System.out.println("  identity=" + identity);
+			System.out.println("  precision=" + (precision == PRECISION_8_BITS ? 8 : 16) + " bits");
 
 			for (int row = 0, i = 0; row < 8; row++)
 			{
-				System.out.print(" ");
+				System.out.print("  ");
 				for (int col = 0; col < 8; col++, i++)
 				{
 					System.out.printf("%7.3f ", table[i]);

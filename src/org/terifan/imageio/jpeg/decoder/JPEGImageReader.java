@@ -120,7 +120,7 @@ public class JPEGImageReader
 					if ((nextSegment & 0xFF00) != 0xFF00)
 					{
 						updateImage();
-						
+
 						System.out.println("Expected JPEG marker at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
 
 						hexdump();
@@ -304,9 +304,6 @@ public class JPEGImageReader
 					{
 //						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
 
-//						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
-//							mcu[blockIndex] = mJPEG.mCoefficients[mcuY][mcuX][blockIndex];
-
 						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
@@ -346,6 +343,11 @@ public class JPEGImageReader
 		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
 		aJPEG.cur_comp_info = new ComponentInfo[aJPEG.comps_in_scan];
 
+		if (VERBOSE)
+		{
+			System.out.println("MCU");
+		}
+
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 		{
 			ComponentInfo comp = aSOFSegment.getComponentByScan(aSOSSegment.getComponent(scanComponentIndex));
@@ -359,7 +361,10 @@ public class JPEGImageReader
 				aJPEG.MCU_membership[blockIndex] = scanComponentIndex;
 			}
 
-			if (VERBOSE) System.out.println(comp);
+			if (VERBOSE)
+			{
+				System.out.println("  " + comp);
+			}
 		}
 	}
 

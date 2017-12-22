@@ -119,7 +119,7 @@ public class JPEGExif
 	private void parse2(Reader aReader, int aLen) throws IOException
 	{
 		String header = "";
-		
+
 		while (aLen-- > 0)
 		{
 			int c = aReader.readInt8();
@@ -129,7 +129,7 @@ public class JPEGExif
 			}
 			header += (char)c;
 		}
-		
+
 		if (header.equals("Exif"))
 		{
 			if (aReader.readInt16() != 0)
@@ -151,7 +151,7 @@ public class JPEGExif
 		int len = aBitStream.readInt16() - 2;
 
 		String header = "";
-		
+
 		while (len-- > 0)
 		{
 			int c = aBitStream.readInt8();
@@ -177,7 +177,7 @@ public class JPEGExif
 
 //				System.out.printf("%02x ", exif[i]);
 			}
-			
+
 			parseImpl(exif);
 		}
 		else
@@ -229,7 +229,7 @@ public class JPEGExif
 				ExifFormat format = ExifFormat.values()[reader.readInt16() - 1];
 				int length = reader.readInt32();
 				int value = reader.readInt32();
-				Object output;
+				Object output = null;
 
 				if (tag == ExifTag.PADDING.mCode) // ignore padding
 				{
@@ -241,7 +241,6 @@ public class JPEGExif
 				switch (format)
 				{
 					case UBYTE:
-					{
 						if (length == 4)
 						{
 							output = "" + Character.reverseBytes((char)(value >> 16));
@@ -257,15 +256,15 @@ public class JPEGExif
 							output = new String(dst);
 						}
 						break;
-					}
 					case STRING:
-					{
-						byte [] dst = new byte[length - 1];
-						reader.byteBuffer.position(value);
-						reader.byteBuffer.get(dst);
-						output = new String(dst);
+						if (validRange(value, length, tag, reader))
+						{
+							byte [] dst = new byte[length - 1];
+							reader.byteBuffer.position(value);
+							reader.byteBuffer.get(dst);
+							output = new String(dst);
+						}
 						break;
-					}
 					case USHORT:
 						output = (value >> 16) & 0xffff;
 						break;
@@ -273,13 +272,19 @@ public class JPEGExif
 						output = value;
 						break;
 					case URATIONAL:
-						reader.byteBuffer.position(value);
-						output = reader.readInt32() / (double)reader.readInt32();
+						if (validRange(value, length, tag, reader))
+						{
+							reader.byteBuffer.position(value);
+							output = reader.readInt32() / (double)reader.readInt32();
+						}
 						break;
 					case UNDEFINED:
-						output = new byte[length - 1];
-						reader.byteBuffer.position(value);
-						reader.byteBuffer.get((byte[])output);
+						if (validRange(value, length, tag, reader))
+						{
+							output = new byte[length - 1];
+							reader.byteBuffer.position(value);
+							reader.byteBuffer.get((byte[])output);
+						}
 						break;
 					default:
 						if (VERBOSE)
@@ -290,7 +295,10 @@ public class JPEGExif
 						break;
 				}
 
-				mEntries.add(new ExifEntry(aExifData, format, tag, output));
+				if (output != null)
+				{
+					mEntries.add(new ExifEntry(aExifData, format, tag, output));
+				}
 
 				reader.byteBuffer.position(pos);
 			}
@@ -419,7 +427,7 @@ public class JPEGExif
 
 	/**
 	 * Replace first APP1 segment with the provided data.
-	 * 
+	 *
 	 * @param aImageData
 	 *   the JPEG image
 	 * @param aNewMetaData
@@ -481,6 +489,22 @@ public class JPEGExif
 		}
 
 		return dosBuffer.toByteArray();
+	}
+
+
+	private boolean validRange(int aOffset, int aLength, int aTag, Reader aReader)
+	{
+		if (aOffset < 0 || aOffset + aLength >= aReader.byteBuffer.capacity())
+		{
+			if (VERBOSE)
+			{
+				System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.byteBuffer.capacity(), ExifTag.decode(aTag), aTag);
+			}
+
+			return false;
+		}
+
+		return true;
 	}
 
 

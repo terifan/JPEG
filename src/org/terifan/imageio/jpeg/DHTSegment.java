@@ -74,7 +74,11 @@ public class DHTSegment
 
 		if (VERBOSE)
 		{
-			System.out.println("DHTMarkerSegment[identity=" + mIdentity + ", type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numsymbols=" + mNumSymbols + ", maxLength=" + mMaxLength + "]");
+			System.out.println("DHTMarkerSegment");
+			System.out.println("  identity=" + mIdentity);
+			System.out.println("  type=" + (mType == TYPE_AC ? "AC" : "DC"));
+			System.out.println("  numsymbols=" + mNumSymbols);
+			System.out.println("  maxLength=" + mMaxLength);
 		}
 	}
 

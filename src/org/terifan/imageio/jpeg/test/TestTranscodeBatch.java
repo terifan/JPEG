@@ -27,6 +27,8 @@ public class TestTranscodeBatch
 
 				try
 				{
+					System.out.println("-- " + file + " --------------------------");
+
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 					BufferedImage image0 = JPEGImageReader.read(new ByteArrayInputStream(data));
@@ -57,7 +59,7 @@ public class TestTranscodeBatch
 						}
 
 						data = JPEGExif.replace(data, null);
-						
+
 						try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
 						{
 							fos.write(data);

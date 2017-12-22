@@ -51,22 +51,22 @@ public class HuffmanDecoder extends Decoder
 				{
 					if (aJPEG.Ss == 0)
 					{
-						System.out.println("decode_mcu_DC_first");
+						System.out.println("  decode_mcu_DC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
 					}
 					else
 					{
-						System.out.println("decode_mcu_AC_first");
+						System.out.println("  decode_mcu_AC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
 					}
 				}
 				else
 				{
 					if (aJPEG.Ss == 0)
 					{
-						System.out.println("decode_mcu_DC_refine");
+						System.out.println("  decode_mcu_DC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
 					}
 					else
 					{
-						System.out.println("decode_mcu_AC_refine");
+						System.out.println("  decode_mcu_AC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
 					}
 				}
 			}

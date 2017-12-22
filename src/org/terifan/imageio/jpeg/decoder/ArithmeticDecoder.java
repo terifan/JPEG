@@ -934,24 +934,24 @@ public class ArithmeticDecoder extends Decoder
 				if (cinfo.Ss == 0)
 				{
 					entropy.decode_mcu = x_decode_mcu_DC_first;
-					if (VERBOSE) System.out.println("  start scan decode_mcu_DC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  decode_mcu_DC_first, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 				}
 				else
 				{
 					entropy.decode_mcu = x_decode_mcu_AC_first;
-					if (VERBOSE) System.out.println("  start scan decode_mcu_AC_first [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  decode_mcu_AC_first, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 				}
 			}
 			else
 			{
 				if (cinfo.Ss == 0)
 				{
-					if (VERBOSE) System.out.println("  start scan decode_mcu_DC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  decode_mcu_DC_refine, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_DC_refine;
 				}
 				else
 				{
-					if (VERBOSE) System.out.println("  start scan decode_mcu_AC_refine [" + cinfo.Ss + "-" + cinfo.Se + "] scale " + cinfo.Al);
+					if (VERBOSE) System.out.println("  decode_mcu_AC_refine, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_AC_refine;
 				}
 			}

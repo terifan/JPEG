@@ -3,7 +3,7 @@ package org.terifan.imageio.jpeg;
 
 public class JPEGConstants
 {
-	public final static boolean VERBOSE = false;
+	public final static boolean VERBOSE = !false;
 
 	public final static int[] NATURAL_ORDER =
 	{
