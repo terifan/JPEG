@@ -63,18 +63,24 @@ public class SOFSegment
 
 		if (VERBOSE)
 		{
-			System.out.println("SOFMarkerSegment");
-			System.out.println("  precision=" + mPrecision + " bits");
-			System.out.println("  dimensions=" + mWidth + "x" + mHeight);
-			System.out.println("  numComponents=" + mComponents.length);
-
-			for (ComponentInfo mComponent : mComponents)
-			{
-				System.out.println("    " + mComponent);
-			}
+			log();
 		}
 
 		return this;
+	}
+
+
+	public void log()
+	{
+		System.out.println("SOFMarkerSegment");
+		System.out.println("  precision=" + mPrecision + " bits");
+		System.out.println("  dimensions=" + mWidth + "x" + mHeight);
+		System.out.println("  numComponents=" + mComponents.length);
+
+		for (ComponentInfo mComponent : mComponents)
+		{
+			System.out.println("    " + mComponent);
+		}
 	}
 
 

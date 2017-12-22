@@ -101,10 +101,9 @@ public class HuffmanDecoder extends Decoder
 				{
 					throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + aJPEG.restartMarkerIndex));
 				}
+
 				aJPEG.restartMarkerIndex = (aJPEG.restartMarkerIndex + 1) & 7;
-
 				aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
-
 			}
 
 			aJPEG.entropy.restarts_to_go--;
@@ -166,17 +165,15 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		int blockIndex = 0;
-
-		int ci = aJPEG.MCU_membership[blockIndex];
-		int[] coefficients = aCoefficients[blockIndex];
-
 		if (EOBRUN > 0)
 		{
 			EOBRUN--;
 		}
 		else
 		{
+			int ci = aJPEG.MCU_membership[0];
+			int[] coefficients = aCoefficients[0];
+
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
 			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];

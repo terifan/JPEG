@@ -48,17 +48,12 @@ public class DHTSegment
 				int symbol = aBitStream.readInt8();
 				int sz = 1 << (mMaxLength - length);
 
-//				String s = "";
-//				for (int z = length; --z >= 0; )
-//				{
-//					s += 1 & ((code * sz) >> z);
-//				}
-//				String s2 = "";
-//				for (int z = length; --z >= 0; )
-//				{
-//					s2 += 1 & ((code * sz | (sz-1)) >> z);
-//				}
-//				System.out.printf("%"+mMaxLength+"s -- %"+mMaxLength+"s [%d] = %d%n", s, s2, length, symbol);
+				String s = "";
+				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
+				{
+					s += 1 & ((code * sz) >> (mMaxLength-k-1));
+				}
+				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
 
 				for (int k = 0; k < sz; k++)
 				{

@@ -11,6 +11,8 @@ public class JPEG
 	public int[] arith_dc_U = new int[NUM_ARITH_TBLS];
 	public int[] arith_ac_K = new int[NUM_ARITH_TBLS];
 
+	public SOFSegment mSOFSegment;
+
 	public int Ss;
 	public int Se;
 	public int Ah;

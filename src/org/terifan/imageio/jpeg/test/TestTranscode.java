@@ -16,7 +16,15 @@ public class TestTranscode
 	{
 		try
 		{
-			File file = new File("D:\\Pictures\\Wallpapers High Quality\\Fall-Desktop-Wallpaper-Widescreen-1080p.jpg");
+			// progressive huffman 1x1 - D:\Pictures\Wallpapers High Quality\1920x1080-Wallpaper-Backgrounds.jpg
+			// progressive huffman 1x1 - D:\Pictures\Wallpapers High Quality\1920x1080-Wallpaper-HD-05-Download.jpg
+			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\7glyqHJ.jpg
+			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\Fall-Desktop-Wallpaper-Widescreen-1080p.jpg
+			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\wallpaper-1920-1080-Arkhipo-Osipovka-Russia-pics-Ni765423.jpg
+			// progressive huffman 4x1 - D:\Pictures\Wallpapers High Quality\sea-cliff.jpg
+			//
+
+			File file = new File("D:\\Pictures\\Wallpapers High Quality\\7glyqHJ.jpg");
 
 			BufferedImage image0 = JPEGImageReader.read(file);
 

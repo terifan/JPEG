@@ -32,7 +32,6 @@ public class JPEGImageReader
 	final static int MAX_CHANNELS = 3;
 
 	private BitInputStream mBitStream;
-	private SOFSegment mSOFSegment;
 	private SOSSegment mSOSSegment;
 	private Class<? extends IDCT> mIDCT;
 	private boolean mStop;
@@ -171,25 +170,25 @@ public class JPEGImageReader
 						break;
 					case SOF0: // Baseline
 						mDecoder = new HuffmanDecoder(mBitStream);
-						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
+						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
 						mDecoder = new HuffmanDecoder(mBitStream);
 						mJPEG.mProgressive = true;
-						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
+						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF9: // Extended sequential, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mJPEG.mArithmetic = true;
-						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
+						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF10: // Progressive, arithmetic
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mJPEG.mArithmetic = true;
 						mJPEG.mProgressive = true;
-						mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
+						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF3: // Lossless, Huffman
 					case SOF5: // Differential sequential, Huffman
@@ -244,19 +243,19 @@ public class JPEGImageReader
 
 	private void readRaster() throws IOException
 	{
-		int maxSamplingX = mSOFSegment.getMaxHorSampling();
-		int maxSamplingY = mSOFSegment.getMaxVerSampling();
-		int numHorMCU = mSOFSegment.getHorMCU();
-		int numVerMCU = mSOFSegment.getVerMCU();
+		int maxSamplingX = mJPEG.mSOFSegment.getMaxHorSampling();
+		int maxSamplingY = mJPEG.mSOFSegment.getMaxVerSampling();
+		int numHorMCU = mJPEG.mSOFSegment.getHorMCU();
+		int numVerMCU = mJPEG.mSOFSegment.getVerMCU();
 
 		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
 		{
-			ComponentInfo comp = mSOFSegment.getComponent(scanComponentIndex);
+			ComponentInfo comp = mJPEG.mSOFSegment.getComponent(scanComponentIndex);
 			comp.setComponentBlockOffset(first);
 			first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		prepareMCU(mJPEG, mSOFSegment, mSOSSegment);
+		prepareMCU(mJPEG, mJPEG.mSOFSegment, mSOSSegment);
 
 		if (mImage == null)
 		{
@@ -264,7 +263,7 @@ public class JPEGImageReader
 
 			mDecoder.initialize(mJPEG);
 
-			mImage = new JPEGImage(mSOFSegment.getWidth(), mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
+			mImage = new JPEGImage(mJPEG.mSOFSegment.getWidth(), mJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
 		}
 
 		mDecoder.startPass(mJPEG);
@@ -276,7 +275,6 @@ public class JPEGImageReader
 			if (mJPEG.comps_in_scan == 1)
 			{
 				ComponentInfo comp = mJPEG.cur_comp_info[0];
-				int componentBlockOffset = comp.getComponentBlockOffset();
 
 				for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 				{
@@ -288,7 +286,7 @@ public class JPEGImageReader
 							{
 //								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
 
-								mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][componentBlockOffset + comp.getHorSampleFactor() * blockY + blockX];
+								mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
 								mDecoder.decodeMCU(mJPEG, mcu);
 							}
@@ -371,10 +369,10 @@ public class JPEGImageReader
 
 	private void updateImage()
 	{
-		int maxSamplingX = mSOFSegment.getMaxHorSampling();
-		int maxSamplingY = mSOFSegment.getMaxVerSampling();
-		int numHorMCU = mSOFSegment.getHorMCU();
-		int numVerMCU = mSOFSegment.getVerMCU();
+		int maxSamplingX = mJPEG.mSOFSegment.getMaxHorSampling();
+		int maxSamplingY = mJPEG.mSOFSegment.getMaxVerSampling();
+		int numHorMCU = mJPEG.mSOFSegment.getHorMCU();
+		int numVerMCU = mJPEG.mSOFSegment.getVerMCU();
 
 		IDCT idct;
 		try
@@ -429,7 +427,7 @@ public class JPEGImageReader
 			{
 				for (int blockIndex = 0; blockIndex < blockLookup.length; blockIndex++)
 				{
-					ComponentInfo comp = mSOFSegment.getComponent(blockLookup[blockIndex]);
+					ComponentInfo comp = mJPEG.mSOFSegment.getComponent(blockLookup[blockIndex]);
 
 					QuantizationTable quantizationTable = mJPEG.mQuantizationTables[comp.getQuantizationTableId()];
 
@@ -473,9 +471,9 @@ public class JPEGImageReader
 								int rx = mcuX * mcuWidth + 8 * blockX + x;
 								int ry = y + mcuY * mcuHeight + 8 * blockY;
 
-								if (rx < mSOFSegment.getWidth() && ry < mSOFSegment.getHeight())
+								if (rx < mJPEG.width && ry < mJPEG.height)
 								{
-									mImage.getRaster()[ry * mSOFSegment.getWidth() + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+									mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
 								}
 							}
 						}
