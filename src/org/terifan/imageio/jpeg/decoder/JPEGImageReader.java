@@ -112,11 +112,6 @@ public class JPEGImageReader
 				{
 					nextSegment = mBitStream.readInt16();
 
-//					while ((nextSegment & 0xFF00) == 0)
-//					{
-//						nextSegment = ((0xFF & nextSegment) << 8) | mBitStream.readInt8();
-//					}
-
 					if ((nextSegment & 0xFF00) != 0xFF00)
 					{
 						updateImage();
@@ -126,7 +121,7 @@ public class JPEGImageReader
 						hexdump();
 
 						break;
-	//					throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
+//						throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 					}
 				}
 
@@ -147,7 +142,7 @@ public class JPEGImageReader
 						}
 						catch (Throwable e)
 						{
-							System.out.println("Error reading metadata");
+							System.err.println("Error reading metadata");
 							e.printStackTrace(System.err);
 						}
 						break;
