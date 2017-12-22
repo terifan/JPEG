@@ -241,11 +241,15 @@ public class JPEGExif
 				switch (format)
 				{
 					case UBYTE:
-						if (length == 4)
+						if (length <= 2)
+						{
+							output = "";
+						}
+						else if (length == 4)
 						{
 							output = "" + Character.reverseBytes((char)(value >> 16));
 						}
-						else if (length > 0)
+						else
 						{
 							reader.byteBuffer.position(value);
 							char [] dst = new char[length / 2 - 1];
