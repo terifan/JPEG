@@ -61,7 +61,7 @@ public class SOSSegment
 	public void log()
 	{
 		System.out.println("SOSMarkerSegment");
-		System.out.println("  numcomponents=" + mJPEG.comps_in_scan);
+		System.out.println("  numComponents=" + mJPEG.comps_in_scan);
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{

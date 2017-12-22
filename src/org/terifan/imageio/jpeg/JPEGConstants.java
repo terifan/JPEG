@@ -3,7 +3,7 @@ package org.terifan.imageio.jpeg;
 
 public class JPEGConstants
 {
-	public final static boolean VERBOSE = false;
+	public static boolean VERBOSE = false;
 
 	public final static int[] NATURAL_ORDER =
 	{
@@ -44,18 +44,18 @@ public class JPEGConstants
 	public final static int SOF1 = 0xFFC1;   // Extended sequential, Huffman
 	public final static int SOF2 = 0xFFC2;   // Progressive, Huffman
 	public final static int SOF3 = 0xFFC3;   // Lossless, Huffman
-	public final static int DHT = 0xFFC4;   // Define Huffman Table
+	public final static int DHT = 0xFFC4;    // Define Huffman Table
 	public final static int SOF5 = 0xFFC5;   // Differential sequential, Huffman
 	public final static int SOF6 = 0xFFC6;   // Differential progressive, Huffman
 	public final static int SOF7 = 0xFFC7;   // Differential lossless, Huffman
-	public final static int JPG = 0xFFC8;   // Reserved, fatal error
+	public final static int JPG = 0xFFC8;    // Reserved, fatal error
 	public final static int SOF9 = 0xFFC9;   // Extended sequential, arithmetic
-	public final static int SOF10 = 0xFFCA;   // Progressive, arithmetic
-	public final static int SOF11 = 0xFFCB;   // Lossless, Unsupported; arithmetic
-	public final static int DAC = 0xFFCC;   // Define Arithmetic Table
-	public final static int SOF13 = 0xFFCD;   // Differential sequential, arithmetic
-	public final static int SOF14 = 0xFFCE;   // Differential progressive, arithmetic
-	public final static int SOF15 = 0xFFCF;   // Differential lossless, arithmetic
+	public final static int SOF10 = 0xFFCA;  // Progressive, arithmetic
+	public final static int SOF11 = 0xFFCB;  // Lossless, Unsupported; arithmetic
+	public final static int DAC = 0xFFCC;    // Define Arithmetic Table
+	public final static int SOF13 = 0xFFCD;  // Differential sequential, arithmetic
+	public final static int SOF14 = 0xFFCE;  // Differential progressive, arithmetic
+	public final static int SOF15 = 0xFFCF;  // Differential lossless, arithmetic
 
 	public final static int RST0 = 0xFFD0;   // RSTn are used for resync
 	public final static int RST1 = 0xFFD1;

@@ -19,6 +19,7 @@ import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
+import org.terifan.imageio.jpeg.ColorSpaceType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
@@ -257,7 +258,7 @@ public class JPEGImageReader
 
 		if (mImage == null)
 		{
-			mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.blocks_in_MCU][64];
+			mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.mSOFSegment.getMaxBlocksInMCU()][64];
 
 			mDecoder.initialize(mJPEG);
 
@@ -286,8 +287,6 @@ public class JPEGImageReader
 								{
 									if (mcuX < numHorMCU-1 || mcuX * mcuWidth + blockX * 8 < mJPEG.width)
 									{
-//										System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
-
 										mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
 										mDecoder.decodeMCU(mJPEG, mcu);
@@ -304,15 +303,23 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
-//						System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX);
-
 						mDecoder.decodeMCU(mJPEG, mcu);
-
-						for (int blockIndex = 0; blockIndex < mJPEG.blocks_in_MCU; blockIndex++)
+						
+						for (int ci = 0, blockIndex = 0; ci < mJPEG.comps_in_scan; ci++)
 						{
-							for (int i = 0; i < 64; i++)
+							ComponentInfo comp = mJPEG.cur_comp_info[ci];
+
+							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 							{
-								mJPEG.mCoefficients[mcuY][mcuX][blockIndex][i] += mcu[blockIndex][i];
+								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++, blockIndex++)
+								{
+									int[] tmp = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+
+									for (int i = 0; i < 64; i++)
+									{
+										tmp[i] += mcu[blockIndex][i];
+									}
+								}
 							}
 						}
 					}
@@ -504,7 +511,18 @@ public class JPEGImageReader
 
 									if (rx < mJPEG.width && ry < mJPEG.height)
 									{
-										mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+//										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
+//										{
+//											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+//										}
+//										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
+										{
+											mImage.getRaster()[ry * mJPEG.width + rx] = (lu<<16)+(cb<<8)+cr;
+										}
+//										else
+//										{
+//											throw new IllegalStateException("Unsupported color space: " + mJPEG.mColorSpace);
+//										}
 									}
 								}
 							}

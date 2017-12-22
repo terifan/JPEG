@@ -216,4 +216,17 @@ public class SOFSegment
 		}
 		return list;
 	}
+
+
+	public int getMaxBlocksInMCU()
+	{
+		int count = 0;
+
+		for (ComponentInfo ci : mComponents)
+		{
+			count += ci.getHorSampleFactor() * ci.getVerSampleFactor();
+		}
+
+		return count;
+	}
 }

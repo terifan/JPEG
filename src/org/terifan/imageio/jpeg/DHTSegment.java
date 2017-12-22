@@ -95,7 +95,7 @@ public class DHTSegment
 				System.out.println("DHTMarkerSegment");
 				System.out.println("  identity=" + mIdentity);
 				System.out.println("  type=" + (mType == TYPE_AC ? "AC" : "DC"));
-				System.out.println("  numsymbols=" + mNumSymbols);
+				System.out.println("  numSymbols=" + mNumSymbols);
 				System.out.println("  maxLength=" + mMaxLength);
 			}
 		}

@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import org.terifan.imageio.jpeg.JPEG;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.exif.JPEGExif;
@@ -55,6 +55,8 @@ public class TestTranscodeBatch
 								}
 							}
 						}
+						
+						ImageIO.write(image1, "jpg", new File("D:\\temp\\jpg-test\\" + file.getName()));
 
 						System.out.printf("%8d %8d %8d %s%n", baos.size(), file.length(), err, file);
 
