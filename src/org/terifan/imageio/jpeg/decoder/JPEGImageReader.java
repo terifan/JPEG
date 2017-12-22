@@ -511,18 +511,18 @@ public class JPEGImageReader
 
 									if (rx < mJPEG.width && ry < mJPEG.height)
 									{
-//										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
-//										{
-//											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
-//										}
-//										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
+										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
+										{
+											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+										}
+										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
 										{
 											mImage.getRaster()[ry * mJPEG.width + rx] = (lu<<16)+(cb<<8)+cr;
 										}
-//										else
-//										{
-//											throw new IllegalStateException("Unsupported color space: " + mJPEG.mColorSpace);
-//										}
+										else
+										{
+											throw new IllegalStateException("Unsupported color space: " + mJPEG.mColorSpace);
+										}
 									}
 								}
 							}
