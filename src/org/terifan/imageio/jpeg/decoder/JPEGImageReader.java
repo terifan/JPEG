@@ -482,6 +482,12 @@ public class JPEGImageReader
 										cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
 										cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
 									}
+									else if (mJPEG.components[0].getHorSampleFactor() == 4 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									{
+										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
+										cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									}
 									else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
 									{
 										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
@@ -490,7 +496,7 @@ public class JPEGImageReader
 									}
 									else
 									{
-										throw new IllegalStateException("Unsupported subsampling");
+										throw new IllegalStateException("Unsupported subsampling: " + mJPEG.components[0].getHorSampleFactor()+"x"+mJPEG.components[0].getVerSampleFactor()+", " + mJPEG.components[1].getHorSampleFactor()+"x"+mJPEG.components[1].getVerSampleFactor()+", " + mJPEG.components[2].getHorSampleFactor()+"x"+mJPEG.components[2].getVerSampleFactor());
 									}
 
 									int rx = mcuX * mcuWidth + 8 * blockX + x;
@@ -528,6 +534,12 @@ public class JPEGImageReader
 			for (int c = 0; c < 96; c++, cnt++)
 			{
 				int b0 = mBitStream.readInt8();
+
+				if (b0 == -1)
+				{
+					return;
+				}
+
 				System.out.printf("%02x ", b0);
 
 				if (b1 == 255 && b0 != 0)
