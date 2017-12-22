@@ -338,7 +338,7 @@ public class JPEGImageReader
 
 		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 		{
-			ComponentInfo comp = aSOFSegment.getComponentByScan(aSOSSegment.getComponent(scanComponentIndex));
+			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponent(scanComponentIndex));
 			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
@@ -352,7 +352,7 @@ public class JPEGImageReader
 
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 		{
-			ComponentInfo comp = aSOFSegment.getComponentByScan(aSOSSegment.getComponent(scanComponentIndex));
+			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponent(scanComponentIndex));
 			comp.setTableAC(aSOSSegment.getACTable(scanComponentIndex));
 			comp.setTableDC(aSOSSegment.getDCTable(scanComponentIndex));
 
@@ -449,35 +449,57 @@ public class JPEGImageReader
 								int lu;
 								int cb;
 								int cr;
-								if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+								if (mJPEG.components.length == 1)
 								{
-									lu = coefficients[mcuY][mcuX][0][y * 8 + x];
-									cb = coefficients[mcuY][mcuX][1][y * 8 + x];
-									cr = coefficients[mcuY][mcuX][2][y * 8 + x];
-								}
-								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 2 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
-								{
-									lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
-									cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-									cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-								}
-								else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
-								{
-									lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
-									cb = coefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-									cr = coefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1)
+									{
+										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+									}
+									else
+									{
+										throw new IllegalStateException("Unsupported subsampling");
+									}
+
+									int rx = mcuX * mcuWidth + 8 * blockX + x;
+									int ry = y + mcuY * mcuHeight + 8 * blockY;
+
+									if (rx < mJPEG.width && ry < mJPEG.height)
+									{
+										mImage.getRaster()[ry * mJPEG.width + rx] = (lu<<16)+(lu<<8)+lu;
+									}
 								}
 								else
 								{
-									throw new IllegalStateException("Unsupported subsampling");
-								}
+									if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									{
+										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+										cb = coefficients[mcuY][mcuX][1][y * 8 + x];
+										cr = coefficients[mcuY][mcuX][2][y * 8 + x];
+									}
+									else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 2 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									{
+										lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
+										cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									}
+									else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									{
+										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
+										cb = coefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cr = coefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+									}
+									else
+									{
+										throw new IllegalStateException("Unsupported subsampling");
+									}
 
-								int rx = mcuX * mcuWidth + 8 * blockX + x;
-								int ry = y + mcuY * mcuHeight + 8 * blockY;
+									int rx = mcuX * mcuWidth + 8 * blockX + x;
+									int ry = y + mcuY * mcuHeight + 8 * blockY;
 
-								if (rx < mJPEG.width && ry < mJPEG.height)
-								{
-									mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+									if (rx < mJPEG.width && ry < mJPEG.height)
+									{
+										mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+									}
 								}
 							}
 						}

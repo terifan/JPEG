@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
@@ -43,15 +44,16 @@ public class SOFSegment
 		mPrecision = aBitStream.readInt8();
 		mHeight = aBitStream.readInt16();
 		mWidth = aBitStream.readInt16();
-		mComponents = new ComponentInfo[aBitStream.readInt8()];
-		mJPEG.num_components = getNumComponents();
+		mJPEG.num_components = aBitStream.readInt8();
 
 		if (mPrecision != 8)
 		{
 			throw new IOException("mPrecision illegal value: " + mPrecision);
 		}
 
-		for (int i = 0; i < mComponents.length; i++)
+		mComponents = new ComponentInfo[mJPEG.num_components];
+
+		for (int i = 0; i < mJPEG.num_components; i++)
 		{
 			mComponents[i] = new ComponentInfo().read(aBitStream, i);
 		}
@@ -191,21 +193,27 @@ public class SOFSegment
 	}
 
 
-	public ComponentInfo getComponentByScan(int aScanComponentIndex)
+	public ComponentInfo getComponentById(int aComponentId)
 	{
-		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		for (ComponentInfo ci : mComponents)
 		{
-			for (int frameComponentIndex = 0; frameComponentIndex < mJPEG.num_components; frameComponentIndex++)
+			if (ci.getComponentId() == aComponentId)
 			{
-				ComponentInfo comp = getComponent(frameComponentIndex);
-
-				if (comp.getComponentId() == aScanComponentIndex)
-				{
-					return comp;
-				}
+				return ci;
 			}
 		}
 
-		throw new IllegalStateException(mJPEG.comps_in_scan+" "+mJPEG.num_components);
+		throw new IllegalStateException("Component with ID " + aComponentId + " not found: "+Arrays.asList(mComponents)+"");
+	}
+
+
+	public int[] getComponentIds()
+	{
+		int[] list = new int[mComponents.length];
+		for (int i = 0; i < list.length; i++)
+		{
+			list[i] = mComponents[i].getComponentId();
+		}
+		return list;
 	}
 }

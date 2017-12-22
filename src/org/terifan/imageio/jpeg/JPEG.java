@@ -23,6 +23,7 @@ public class JPEG
 	public int mDensityX;
 	public int mDensityY;
 	public int precision;
+	public ColorSpaceType mColorSpace = ColorSpaceType.YCBCR;
 
 	public QuantizationTable[] mQuantizationTables = new QuantizationTable[8];
 	public HuffmanTable[][] mHuffmanTables = new HuffmanTable[4][2];

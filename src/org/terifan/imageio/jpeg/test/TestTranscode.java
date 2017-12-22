@@ -24,7 +24,7 @@ public class TestTranscode
 			// progressive huffman 4x1 - D:\Pictures\Wallpapers High Quality\sea-cliff.jpg
 			//
 
-			File file = new File("D:\\Pictures\\Avril\\Avril-Lavigne-76.jpg");
+			File file = new File("D:\\Pictures\\Roliga bilder\\21-07-01.jpg");
 
 			BufferedImage image0 = JPEGImageReader.read(file);
 

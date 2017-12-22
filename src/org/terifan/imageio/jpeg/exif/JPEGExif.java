@@ -132,7 +132,7 @@ public class JPEGExif
 
 		if (header.equals("Exif"))
 		{
-			if (aReader.readInt16() != 0)
+			if (aReader.readInt8() != 0)
 			{
 				throw new IOException("Bad TIFF header data");
 			}

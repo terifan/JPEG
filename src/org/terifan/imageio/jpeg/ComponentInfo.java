@@ -126,10 +126,12 @@ public class ComponentInfo
 			case CB: component = "Cb"; break;
 			case CR: component = "Cr"; break;
 			case I: component = "I"; break;
-			default: component = "Q"; break;
+			case Q: component = "Q"; break;
+			default:
+				component = "<error>"; break;
 		}
 
-		return "component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentIndex;
+		return "{component=" + component + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor + ", id=" + mComponentIndex + "}";
 	}
 
 

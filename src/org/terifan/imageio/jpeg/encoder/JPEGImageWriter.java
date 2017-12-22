@@ -191,7 +191,7 @@ public class JPEGImageWriter
 //		aJPEG.cur_comp_info[2].setTableDC(1);
 //		aJPEG.cur_comp_info[2].setTableAC(1);
 
-		SOSSegment mSOSSegment = new SOSSegment(aJPEG, ComponentInfo.Y, ComponentInfo.CB, ComponentInfo.CR);
+		SOSSegment mSOSSegment = new SOSSegment(aJPEG, mSOFSegment.getComponentIds());
 
 		mSOSSegment.setTableDC(0, 0);
 		mSOSSegment.setTableAC(0, 0);
@@ -200,8 +200,8 @@ public class JPEGImageWriter
 		mSOSSegment.setTableDC(2, 1);
 		mSOSSegment.setTableAC(2, 1);
 
-		
-		
+
+
 //		aJPEG.blocks_in_MCU = 0;
 //		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 //		{

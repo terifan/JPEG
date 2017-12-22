@@ -80,8 +80,11 @@ public class SOSSegment
 				case ComponentInfo.I:
 					component = "I";
 					break;
-				default:
+				case ComponentInfo.Q:
 					component = "Q";
+					break;
+				default:
+					component = "<error>";
 			}
 
 			System.out.println("    component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al);
