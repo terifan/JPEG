@@ -29,7 +29,7 @@ import org.terifan.imageio.jpeg.exif.JPEGExif;
 
 public class JPEGImageReader
 {
-	final static int MAX_CHANNELS = 3;
+	final static int MAX_CHANNELS = 4;
 
 	private BitInputStream mBitStream;
 	private SOSSegment mSOSSegment;
@@ -163,19 +163,29 @@ public class JPEGImageReader
 						new DQTSegment(mJPEG).read(mBitStream);
 						break;
 					case DHT:
+						if (mDecoder == null)
+						{
+							mDecoder = new HuffmanDecoder(mBitStream);
+						}
 						((HuffmanDecoder)mDecoder).readHuffmanTables();
 						break;
 					case DAC: // Arithmetic Table
 						new DACSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF0: // Baseline
-						mDecoder = new HuffmanDecoder(mBitStream);
+						if (mDecoder == null)
+						{
+							mDecoder = new HuffmanDecoder(mBitStream);
+						}
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
-						mDecoder = new HuffmanDecoder(mBitStream);
+						if (mDecoder == null)
+						{
+							mDecoder = new HuffmanDecoder(mBitStream);
+						}
 						mJPEG.mProgressive = true;
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;

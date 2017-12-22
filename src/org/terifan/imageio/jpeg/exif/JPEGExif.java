@@ -245,7 +245,7 @@ public class JPEGExif
 						{
 							output = "" + Character.reverseBytes((char)(value >> 16));
 						}
-						else
+						else if (length > 0)
 						{
 							reader.byteBuffer.position(value);
 							char [] dst = new char[length / 2 - 1];

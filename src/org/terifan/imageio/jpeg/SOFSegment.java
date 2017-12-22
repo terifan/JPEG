@@ -110,9 +110,9 @@ public class SOFSegment
 		aBitStream.writeInt16(mWidth);
 		aBitStream.writeInt8(mComponents.length);
 
-		for (int i = 0; i < mComponents.length; i++)
+		for (ComponentInfo comp : mComponents)
 		{
-			mComponents[i].write(aBitStream);
+			comp.write(aBitStream);
 		}
 
 		if (VERBOSE)

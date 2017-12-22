@@ -21,7 +21,7 @@ public class TestTranscodeBatch
 			int fail = 0;
 			int ok = 0;
 
-			for (File dir : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.isDirectory()))
+			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
 				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 //				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
@@ -38,9 +38,6 @@ public class TestTranscodeBatch
 
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-//						JPEG decode = JPEGImageReader.decode(new ByteArrayInputStream(data));
-//						System.out.println(decode.mSOFSegment.getMaxHorSampling()+"x"+decode.mSOFSegment.getMaxVerSampling()+" "+decode.mProgressive);
-
 						BufferedImage image0 = JPEGImageReader.read(new ByteArrayInputStream(data));
 
 						new Transcode().transcode(new ByteArrayInputStream(data), baos);
@@ -50,7 +47,7 @@ public class TestTranscodeBatch
 						int err = 0;
 						for (int y = 0; y < image0.getHeight(); y++)
 						{
-							for (int x = 0; x < image0.getHeight(); x++)
+							for (int x = 0; x < image0.getWidth(); x++)
 							{
 								if (image0.getRGB(x, y) != image1.getRGB(x, y))
 								{

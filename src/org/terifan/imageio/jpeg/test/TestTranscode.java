@@ -24,7 +24,7 @@ public class TestTranscode
 			// progressive huffman 4x1 - D:\Pictures\Wallpapers High Quality\sea-cliff.jpg
 			//
 
-			File file = new File("D:\\Pictures\\Wallpapers High Quality\\7glyqHJ.jpg");
+			File file = new File("D:\\Pictures\\Avril\\Avril-Lavigne-76.jpg");
 
 			BufferedImage image0 = JPEGImageReader.read(file);
 
@@ -53,7 +53,7 @@ public class TestTranscode
 			int err = 0;
 			for (int y = 0; y < image0.getHeight(); y++)
 			{
-				for (int x = 0; x < image0.getHeight(); x++)
+				for (int x = 0; x < image0.getWidth(); x++)
 				{
 					if (image0.getRGB(x, y) != image1.getRGB(x, y))
 					{
