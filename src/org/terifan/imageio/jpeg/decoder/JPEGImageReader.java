@@ -20,6 +20,7 @@ import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.DACSegment;
+import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
@@ -163,29 +164,19 @@ public class JPEGImageReader
 						new DQTSegment(mJPEG).read(mBitStream);
 						break;
 					case DHT:
-						if (mDecoder == null)
-						{
-							mDecoder = new HuffmanDecoder(mBitStream);
-						}
-						((HuffmanDecoder)mDecoder).readHuffmanTables();
+						new DHTSegment(mJPEG).read(mBitStream);
 						break;
 					case DAC: // Arithmetic Table
 						new DACSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF0: // Baseline
-						if (mDecoder == null)
-						{
-							mDecoder = new HuffmanDecoder(mBitStream);
-						}
+						mDecoder = new HuffmanDecoder(mBitStream);
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
 					case SOF1: // Extended sequential, Huffman
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 					case SOF2: // Progressive, Huffman
-						if (mDecoder == null)
-						{
-							mDecoder = new HuffmanDecoder(mBitStream);
-						}
+						mDecoder = new HuffmanDecoder(mBitStream);
 						mJPEG.mProgressive = true;
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;

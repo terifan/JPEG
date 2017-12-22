@@ -81,13 +81,14 @@ public class TestTranscodeBatch
 					}
 					catch (Throwable e)
 					{
+						fail++;
 						System.out.println(file);
 						e.printStackTrace(System.out);
 					}
 				}
-
-				System.out.println(ok+" "+fail);
 			}
+
+			System.out.println(ok+" "+fail);
 		}
 		catch (Throwable e)
 		{

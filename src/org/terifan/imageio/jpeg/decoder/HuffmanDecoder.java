@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DHTSegment;
+import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
@@ -13,7 +14,6 @@ import static org.terifan.imageio.jpeg.decoder.JPEGImageReader.MAX_CHANNELS;
 public class HuffmanDecoder extends Decoder
 {
 	private int[] mPreviousDCValue;
-	private DHTSegment[][] mHuffmanTables;
 
 
 	public HuffmanDecoder(BitInputStream aBitStream)
@@ -21,7 +21,6 @@ public class HuffmanDecoder extends Decoder
 		super(aBitStream);
 
 		mPreviousDCValue = new int[MAX_CHANNELS];
-		mHuffmanTables = new DHTSegment[MAX_CHANNELS][2];
 	}
 
 
@@ -141,7 +140,7 @@ public class HuffmanDecoder extends Decoder
 
 			Arrays.fill(aCoefficients[blockIndex], 0);
 
-			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
+			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
 
 			int value = dcTable.decodeSymbol(mBitStream);
 
@@ -176,7 +175,7 @@ public class HuffmanDecoder extends Decoder
 
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 			for (int k = aJPEG.Ss; k <= aJPEG.Se; k++)
 			{
@@ -238,7 +237,7 @@ public class HuffmanDecoder extends Decoder
 		int ci = aJPEG.MCU_membership[0];
 		ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-		DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+		HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
@@ -363,8 +362,8 @@ public class HuffmanDecoder extends Decoder
 			int ci = aJPEG.MCU_membership[blockIndex];
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-			DHTSegment dcTable = mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
-			DHTSegment acTable = mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
+			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
 
 			Arrays.fill(aCoefficients[blockIndex], 0);
 
@@ -414,26 +413,5 @@ public class HuffmanDecoder extends Decoder
 		}
 
 		return true;
-	}
-
-
-	void readHuffmanTables() throws IOException
-	{
-		int length = mBitStream.readInt16() - 2;
-
-		do
-		{
-			DHTSegment dht = new DHTSegment(mBitStream);
-
-			mHuffmanTables[dht.getIdentity()][dht.getType()] = dht;
-
-			length -= 17 + dht.getNumSymbols();
-
-			if (length < 0)
-			{
-				throw new IOException("Error in JPEG stream; illegal DHT segment size.");
-			}
-		}
-		while (length > 0);
 	}
 }
