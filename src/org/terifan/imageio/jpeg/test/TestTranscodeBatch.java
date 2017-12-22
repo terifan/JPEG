@@ -18,10 +18,13 @@ public class TestTranscodeBatch
 	{
 		try
 		{
-//			for (File dir : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.isDirectory()))
+			int fail = 0;
+			int ok = 0;
+
+			for (File dir : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.isDirectory()))
 			{
-//				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
-				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
+				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
@@ -60,6 +63,8 @@ public class TestTranscodeBatch
 
 						if (err == 0)
 						{
+							ok++;
+
 							try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
 							{
 								baos.writeTo(fos);
@@ -72,6 +77,10 @@ public class TestTranscodeBatch
 								fos.write(data);
 							}
 						}
+						else
+						{
+							fail++;
+						}
 					}
 					catch (Throwable e)
 					{
@@ -79,6 +88,8 @@ public class TestTranscodeBatch
 						e.printStackTrace(System.out);
 					}
 				}
+
+				System.out.println(ok+" "+fail);
 			}
 		}
 		catch (Throwable e)

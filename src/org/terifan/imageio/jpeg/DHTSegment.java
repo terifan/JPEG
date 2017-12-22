@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 
@@ -24,9 +23,9 @@ public class DHTSegment
 		mIdentity = temp & 0x07;
 		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
 
-		int[] counts = new int[16];
+		int[] counts = new int[17];
 
-		for (int i = 0; i < 16; i++)
+		for (int i = 1; i <= 16; i++)
 		{
 			counts[i] = aBitStream.readInt8();
 			mNumSymbols += counts[i];
@@ -38,34 +37,26 @@ public class DHTSegment
 
 		mLookup = new int[1 << mMaxLength];
 
-//		System.out.println("------------------");
-
-		for (int i = 0, code = 0; i < 16; i++)
+		for (int length = 1, code = 0; length < 17; length++, code <<= 1)
 		{
-			for (int j = 0; j < counts[i]; j++)
+			for (int j = 0; j < counts[length]; j++, code++)
 			{
-				int length = i + 1;
 				int symbol = aBitStream.readInt8();
-				int sz = 1 << (mMaxLength - length);
+				int shift = 1 << (mMaxLength - length);
 
-				String s = "";
-				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
+//				String s = "";
+//				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
+//				{
+//					s += 1 & ((code * shift) >> (mMaxLength-k-1));
+//				}
+//				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
+
+				for (int k = 0; k < shift; k++)
 				{
-					s += 1 & ((code * sz) >> (mMaxLength-k-1));
+					mLookup[(code * shift) | k] = (length << 16) + symbol;
 				}
-				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
-
-				for (int k = 0; k < sz; k++)
-				{
-					mLookup[(code * sz) | k] = (length << 16) + symbol;
-				}
-
-				code++;
 			}
-			code <<= 1;
 		}
-
-//		System.out.println("------------------");
 
 		if (VERBOSE)
 		{

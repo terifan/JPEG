@@ -247,6 +247,8 @@ public class JPEGImageReader
 		int maxSamplingY = mJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = mJPEG.mSOFSegment.getHorMCU();
 		int numVerMCU = mJPEG.mSOFSegment.getVerMCU();
+		int mcuWidth = 8 * maxSamplingX;
+		int mcuHeight = 8 * maxSamplingY;
 
 		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < mJPEG.num_components; scanComponentIndex++)
 		{
@@ -280,15 +282,21 @@ public class JPEGImageReader
 				{
 					for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 					{
-						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+						if (mcuY < numVerMCU - 1 || mcuY * mcuHeight + blockY * 8 < mJPEG.height)
 						{
-							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
+							for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 							{
-//								System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
+								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
+								{
+									if (mcuX < numHorMCU-1 || mcuX * mcuWidth + blockX * 8 < mJPEG.width)
+									{
+//										System.out.println(mProgressiveLevel+" "+mcuY+" "+mcuX+" "+blockY+" "+blockX+" "+mBitStream.getStreamOffset());
 
-								mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+										mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
-								mDecoder.decodeMCU(mJPEG, mcu);
+										mDecoder.decodeMCU(mJPEG, mcu);
+									}
+								}
 							}
 						}
 					}
