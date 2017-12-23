@@ -115,7 +115,7 @@ public class SOSSegment
 	}
 
 
-	public int getComponent(int aIndex)
+	public int getComponentByIndex(int aIndex)
 	{
 		return mComponentIds[aIndex];
 	}

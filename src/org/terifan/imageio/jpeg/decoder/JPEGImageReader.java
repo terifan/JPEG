@@ -345,7 +345,7 @@ public class JPEGImageReader
 
 		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 		{
-			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponent(scanComponentIndex));
+			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponentByIndex(scanComponentIndex));
 			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
@@ -359,7 +359,7 @@ public class JPEGImageReader
 
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
 		{
-			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponent(scanComponentIndex));
+			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponentByIndex(scanComponentIndex));
 			comp.setTableAC(aSOSSegment.getACTable(scanComponentIndex));
 			comp.setTableDC(aSOSSegment.getDCTable(scanComponentIndex));
 

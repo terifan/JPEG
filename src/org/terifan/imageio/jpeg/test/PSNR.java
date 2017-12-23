@@ -21,7 +21,10 @@ class PSNR
 					int i = 0xff & (aImage1.getRGB(x, y) >> (8 * c));
 					int j = 0xff & (aImage2.getRGB(x, y) >> (8 * c));
 
-					noise[c] += pow(i - j, 2);
+					if (i != j)
+					{
+						noise[c] += pow(i - j, 2);
+					}
 					if (peak[c] < i)
 					{
 						peak[c] = i;
@@ -41,7 +44,7 @@ class PSNR
 //			System.out.println("  PSNR(max=255): " + (10 * log10(255 * 255 / mse)));
 //			System.out.println("  PSNR(max=" + peak[c] + "): " + 10 * log10(pow(peak[c], 2) / mse));
 
-			db += 10 * log10(pow(peak[c], 2) / mse);
+			db += mse == 0 || peak[c] == 0 ? 0 : 10 * log10(pow(peak[c], 2) / mse);
 		}
 
 		return db / 3;
