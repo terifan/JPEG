@@ -7,7 +7,6 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
 
@@ -934,24 +933,20 @@ public class ArithmeticDecoder extends Decoder
 				if (cinfo.Ss == 0)
 				{
 					entropy.decode_mcu = x_decode_mcu_DC_first;
-					if (VERBOSE) System.out.println("  decode_mcu_DC_first, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 				}
 				else
 				{
 					entropy.decode_mcu = x_decode_mcu_AC_first;
-					if (VERBOSE) System.out.println("  decode_mcu_AC_first, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 				}
 			}
 			else
 			{
 				if (cinfo.Ss == 0)
 				{
-					if (VERBOSE) System.out.println("  decode_mcu_DC_refine, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_DC_refine;
 				}
 				else
 				{
-					if (VERBOSE) System.out.println("  decode_mcu_AC_refine, bits " + cinfo.Ss + "-" + cinfo.Se + ", scale " + cinfo.Al);
 					entropy.decode_mcu = x_decode_mcu_AC_refine;
 				}
 			}

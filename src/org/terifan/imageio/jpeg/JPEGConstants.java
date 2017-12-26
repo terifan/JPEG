@@ -29,6 +29,8 @@ public class JPEGConstants
 		35, 36, 48, 49, 57, 58, 62, 63
 	};
 
+	public final static int MAX_CHANNELS = 4;
+
 	public final static int NUM_ARITH_TBLS = 16;
 	/* Arith-coding tables are numbered 0..15 */
 	public final static int MAX_COMPS_IN_SCAN = 4;

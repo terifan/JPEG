@@ -31,8 +31,6 @@ import org.terifan.imageio.jpeg.exif.JPEGExif;
 
 public class JPEGImageReader
 {
-	final static int MAX_CHANNELS = 4;
-
 	private BitInputStream mBitStream;
 	private SOSSegment mSOSSegment;
 	private Class<? extends IDCT> mIDCT;
@@ -263,6 +261,11 @@ public class JPEGImageReader
 			mDecoder.initialize(mJPEG);
 
 			mImage = new JPEGImage(mJPEG.mSOFSegment.getWidth(), mJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
+		}
+
+		if (VERBOSE)
+		{
+			System.out.println("  " + mDecoder.getDecoderInfo(mJPEG));
 		}
 
 		mDecoder.startPass(mJPEG);

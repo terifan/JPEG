@@ -17,17 +17,16 @@ public class TestTranscode
 	{
 		try
 		{
-			// progressive huffman 1x1 - D:\Pictures\Wallpapers High Quality\1920x1080-Wallpaper-Backgrounds.jpg
-			// progressive huffman 1x1 - D:\Pictures\Wallpapers High Quality\1920x1080-Wallpaper-HD-05-Download.jpg
-			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\7glyqHJ.jpg
-			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\Fall-Desktop-Wallpaper-Widescreen-1080p.jpg
-			// progressive huffman 2x2 - D:\Pictures\Wallpapers High Quality\wallpaper-1920-1080-Arkhipo-Osipovka-Russia-pics-Ni765423.jpg
-			// progressive huffman 4x1 - D:\Pictures\Wallpapers High Quality\sea-cliff.jpg
-
 			JPEGConstants.VERBOSE = true;
 
-//			File file = new File("D:\\Pictures\\Wallpapers High Quality\\sea-cliff.jpg");
-			File file = new File("D:\\Pictures\\Wallpapers Fantasy\\dragon-wallpaper-1920x1080-1009013.jpg");
+//			File file = new File("D:\\Pictures\\MLP\\6f4625df512a20dd62bad3f1c6c8accb.jpg");
+//			File file = new File("D:\\Pictures\\MLP\\ba798e6190d118e4c00b73e6d4fa08d9.jpg");
+//			File file = new File("D:\\Pictures\\Wallpapers\\9674_forest.jpg");
+//			File file = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
+//			File file = new File("D:\\Pictures\\Wallpapers\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
+//			File file = new File("D:\\Pictures\\Wallpapers\\girl-wolf-friendship.jpg");
+//			File file = new File("D:\\Pictures\\Wallpapers\\gold-coast-australia.jpg");
+			File file = new File("D:\\Pictures\\Wallpapers\\superb-forest-wallpaper-1920x1080-1009097.jpg");
 
 			BufferedImage image0 = JPEGImageReader.read(file);
 

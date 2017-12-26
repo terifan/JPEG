@@ -6,9 +6,8 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
+import static org.terifan.imageio.jpeg.JPEGConstants.MAX_CHANNELS;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
-import static org.terifan.imageio.jpeg.decoder.JPEGImageReader.MAX_CHANNELS;
 
 
 public class HuffmanDecoder extends Decoder
@@ -41,35 +40,6 @@ public class HuffmanDecoder extends Decoder
 		mBitStream.align();
 
 		EOBRUN = 0;
-
-		if (VERBOSE)
-		{
-			if (aJPEG.mProgressive)
-			{
-				if (aJPEG.Ah == 0)
-				{
-					if (aJPEG.Ss == 0)
-					{
-						System.out.println("  decode_mcu_DC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
-					}
-					else
-					{
-						System.out.println("  decode_mcu_AC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
-					}
-				}
-				else
-				{
-					if (aJPEG.Ss == 0)
-					{
-						System.out.println("  decode_mcu_DC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
-					}
-					else
-					{
-						System.out.println("  decode_mcu_AC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al);
-					}
-				}
-			}
-		}
 	}
 
 
@@ -221,7 +191,7 @@ public class HuffmanDecoder extends Decoder
 		{
 			if (mBitStream.readBits(1) != 0)
 			{
-				aCoefficients[blockIndex][NATURAL_ORDER[0]] |= 1 << aJPEG.Al;
+				aCoefficients[blockIndex][0] |= 1 << aJPEG.Al;
 			}
 		}
 
@@ -379,9 +349,7 @@ public class HuffmanDecoder extends Decoder
 				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
 
-			aCoefficients[blockIndex][NATURAL_ORDER[0]] = mPreviousDCValue[ci];
-
-			if (acTable == null) continue;
+			aCoefficients[blockIndex][0] = mPreviousDCValue[ci];
 
 			for (int offset = 1; offset < 64; offset++)
 			{
