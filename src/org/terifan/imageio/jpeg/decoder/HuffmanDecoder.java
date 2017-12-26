@@ -6,20 +6,14 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
-import static org.terifan.imageio.jpeg.JPEGConstants.MAX_CHANNELS;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 
 
 public class HuffmanDecoder extends Decoder
 {
-	private int[] mPreviousDCValue;
-
-
 	public HuffmanDecoder(BitInputStream aBitStream)
 	{
 		super(aBitStream);
-
-		mPreviousDCValue = new int[MAX_CHANNELS];
 	}
 
 
@@ -58,7 +52,7 @@ public class HuffmanDecoder extends Decoder
 			{
 				for (int ci = 0; ci < aJPEG.comps_in_scan; ci++)
 				{
-					mPreviousDCValue[aJPEG.MCU_membership[ci]] = 0;
+					aJPEG.entropy.last_dc_val[aJPEG.MCU_membership[ci]] = 0;
 				}
 
 				EOBRUN = 0;
@@ -121,10 +115,10 @@ public class HuffmanDecoder extends Decoder
 
 			if (value > 0)
 			{
-				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+				aJPEG.entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
 
-			aCoefficients[blockIndex][0] = mPreviousDCValue[ci];
+			aCoefficients[blockIndex][0] = aJPEG.entropy.last_dc_val[ci];
 		}
 
 		return true;
@@ -346,10 +340,10 @@ public class HuffmanDecoder extends Decoder
 
 			if (value > 0)
 			{
-				mPreviousDCValue[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+				aJPEG.entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
 
-			aCoefficients[blockIndex][0] = mPreviousDCValue[ci];
+			aCoefficients[blockIndex][0] = aJPEG.entropy.last_dc_val[ci];
 
 			for (int offset = 1; offset < 64; offset++)
 			{

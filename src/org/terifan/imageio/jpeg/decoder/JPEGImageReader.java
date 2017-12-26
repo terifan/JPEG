@@ -52,7 +52,7 @@ public class JPEGImageReader
 
 	public static JPEG decode(InputStream aInputStream) throws IOException
 	{
-		JPEGImageReader reader = new JPEGImageReader(aInputStream, IDCTFloat.class);
+		JPEGImageReader reader = new JPEGImageReader(aInputStream, IDCTIntegerFast.class);
 		reader.mUpdateImage = false;
 		reader.readImpl();
 		return reader.mJPEG;
@@ -115,7 +115,7 @@ public class JPEGImageReader
 					{
 						updateImage();
 
-						System.out.println("Expected JPEG marker at " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+")");
+						System.out.println("Expected JPEG marker at " + mBitStream.getStreamOffset() + " (" + Integer.toHexString(mBitStream.getStreamOffset()) + ")");
 
 						hexdump();
 
@@ -126,7 +126,7 @@ public class JPEGImageReader
 
 				if (VERBOSE)
 				{
-					System.out.println(Integer.toString(nextSegment, 16) + " -- " + mBitStream.getStreamOffset() + " ("+Integer.toHexString(mBitStream.getStreamOffset())+") -- " + getSOFDescription(nextSegment));
+					System.out.println(Integer.toString(nextSegment, 16) + " -- " + mBitStream.getStreamOffset() + " (" + Integer.toHexString(mBitStream.getStreamOffset()) + ") -- " + getSOFDescription(nextSegment));
 				}
 
 				switch (nextSegment)
@@ -253,15 +253,46 @@ public class JPEGImageReader
 		}
 
 		prepareMCU(mJPEG, mJPEG.mSOFSegment, mSOSSegment);
-
+		
 		if (mImage == null)
 		{
+//    cid0 = cinfo->comp_info[0].component_id;
+//    cid1 = cinfo->comp_info[1].component_id;
+//    cid2 = cinfo->comp_info[2].component_id;
+//
+//    /* First try to guess from the component IDs */
+//    if      (cid0 == 0x01 && cid1 == 0x02 && cid2 == 0x03)
+//      cinfo->jpeg_color_space = JCS_YCbCr;
+//    else if (cid0 == 0x01 && cid1 == 0x22 && cid2 == 0x23)
+//      cinfo->jpeg_color_space = JCS_BG_YCC;
+//    else if (cid0 == 0x52 && cid1 == 0x47 && cid2 == 0x42)
+//      cinfo->jpeg_color_space = JCS_RGB;	/* ASCII 'R', 'G', 'B' */
+//    else if (cid0 == 0x72 && cid1 == 0x67 && cid2 == 0x62)
+//      cinfo->jpeg_color_space = JCS_BG_RGB;	/* ASCII 'r', 'g', 'b' */
+//    else if (cinfo->saw_JFIF_marker)
+//      cinfo->jpeg_color_space = JCS_YCbCr;	/* assume it's YCbCr */
+//    else if (cinfo->saw_Adobe_marker) {
+//      switch (cinfo->Adobe_transform) {
+//      case 0:
+//	cinfo->jpeg_color_space = JCS_RGB;
+//	break;
+//      case 1:
+//	cinfo->jpeg_color_space = JCS_YCbCr;
+//	break;
+//      default:
+//	WARNMS1(cinfo, JWRN_ADOBE_XFORM, cinfo->Adobe_transform);
+//	cinfo->jpeg_color_space = JCS_YCbCr;	/* assume it's YCbCr */
+//	break;
+//      }
+
 			mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.mSOFSegment.getMaxBlocksInMCU()][64];
 
 			mDecoder.initialize(mJPEG);
 
 			mImage = new JPEGImage(mJPEG.mSOFSegment.getWidth(), mJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
 		}
+
+		Arrays.fill(mJPEG.entropy.last_dc_val,0);
 
 		if (VERBOSE)
 		{
@@ -288,7 +319,7 @@ public class JPEGImageReader
 							{
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
-									if (mcuX < numHorMCU-1 || mcuX * mcuWidth + blockX * 8 < mJPEG.width)
+									if (mcuX < numHorMCU - 1 || mcuX * mcuWidth + blockX * 8 < mJPEG.width)
 									{
 										mcu[0] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
@@ -307,7 +338,7 @@ public class JPEGImageReader
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
 						mDecoder.decodeMCU(mJPEG, mcu);
-						
+
 						for (int ci = 0, blockIndex = 0; ci < mJPEG.comps_in_scan; ci++)
 						{
 							ComponentInfo comp = mJPEG.cur_comp_info[ci];
@@ -338,7 +369,16 @@ public class JPEGImageReader
 		mProgressiveLevel++;
 		mBitStream.align();
 
-		if (VERBOSE) System.out.println("======== " + mBitStream.getStreamOffset() + "("+Integer.toHexString(mBitStream.getStreamOffset())+") / " + mProgressiveLevel + " ========================================================================================================================================================================");
+		if (mProgressiveLevel == 311)
+		{
+			updateImage();
+			mStop = true;
+		}
+
+		if (VERBOSE)
+		{
+			System.out.println("======== " + mBitStream.getStreamOffset() + "(" + Integer.toHexString(mBitStream.getStreamOffset()) + ") / " + mProgressiveLevel + " ========================================================================================================================================================================");
+		}
 	}
 
 
@@ -410,7 +450,7 @@ public class JPEGImageReader
 			{
 				oos.writeObject(coefficients);
 			}
-			try (ObjectInputStream oos = new ObjectInputStream (new ByteArrayInputStream(baos.toByteArray())))
+			try (ObjectInputStream oos = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())))
 			{
 				coefficients = (int[][][][])oos.readObject();
 			}
@@ -419,7 +459,6 @@ public class JPEGImageReader
 		{
 			e.printStackTrace(System.out);
 		}
-
 
 		int[] blockLookup = new int[12];
 
@@ -475,7 +514,7 @@ public class JPEGImageReader
 
 									if (rx < mJPEG.width && ry < mJPEG.height)
 									{
-										mImage.getRaster()[ry * mJPEG.width + rx] = (lu<<16)+(lu<<8)+lu;
+										mImage.getRaster()[ry * mJPEG.width + rx] = (lu << 16) + (lu << 8) + lu;
 									}
 								}
 								else
@@ -506,7 +545,7 @@ public class JPEGImageReader
 									}
 									else
 									{
-										throw new IllegalStateException("Unsupported subsampling: " + mJPEG.components[0].getHorSampleFactor()+"x"+mJPEG.components[0].getVerSampleFactor()+", " + mJPEG.components[1].getHorSampleFactor()+"x"+mJPEG.components[1].getVerSampleFactor()+", " + mJPEG.components[2].getHorSampleFactor()+"x"+mJPEG.components[2].getVerSampleFactor());
+										throw new IllegalStateException("Unsupported subsampling: " + mJPEG.components[0].getHorSampleFactor() + "x" + mJPEG.components[0].getVerSampleFactor() + ", " + mJPEG.components[1].getHorSampleFactor() + "x" + mJPEG.components[1].getVerSampleFactor() + ", " + mJPEG.components[2].getHorSampleFactor() + "x" + mJPEG.components[2].getVerSampleFactor());
 									}
 
 									int rx = mcuX * mcuWidth + 8 * blockX + x;
@@ -516,11 +555,11 @@ public class JPEGImageReader
 									{
 										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
 										{
-											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFP(lu, cb, cr);
+											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFloat(lu, cb, cr);
 										}
 										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
 										{
-											mImage.getRaster()[ry * mJPEG.width + rx] = (lu<<16)+(cb<<8)+cr;
+											mImage.getRaster()[ry * mJPEG.width + rx] = 0xff000000 | (lu << 16) + (cb << 8) + cr;
 										}
 										else
 										{
@@ -542,8 +581,8 @@ public class JPEGImageReader
 //		printTables(new int[][]{mDctCoefficients[aMcuY][aMcuX][0][0][0], mDctCoefficients[aMcuY][aMcuX][0][1][0], mDctCoefficients[aMcuY][aMcuX][1][0][0], mDctCoefficients[aMcuY][aMcuX][1][1][0], mDctCoefficients[aMcuY][aMcuX][0][0][1], mDctCoefficients[aMcuY][aMcuX][0][0][2]});
 //		System.out.println();
 //	}
-
-
+	
+	
 	public void hexdump() throws IOException
 	{
 		int streamOffset = mBitStream.getStreamOffset();
@@ -566,12 +605,15 @@ public class JPEGImageReader
 				if (b1 == 255 && b0 != 0)
 				{
 					System.out.println();
-					System.out.println("=> "+streamOffset+" +" + cnt + " ("+Integer.toHexString(streamOffset)+")");
+					System.out.println("=> " + streamOffset + " +" + cnt + " (" + Integer.toHexString(streamOffset) + ")");
 					return;
 				}
 
 				b1 = b0;
-				if ((c % 8) == 7) System.out.print(" ");
+				if ((c % 8) == 7)
+				{
+					System.out.print(" ");
+				}
 			}
 			System.out.println();
 		}

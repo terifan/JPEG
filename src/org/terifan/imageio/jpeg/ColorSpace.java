@@ -89,11 +89,29 @@ public final class ColorSpace
 	}
 
 
-	public static int yuvToRgbFloat(int[] aY, int[] aU, int[] aV, int aOffset)
+	public static int yuvToRgbFloat(int aY, int aCb, int aCr)
+	{
+		int y = aY;
+		int cb = aCb - 128;
+		int cr = aCr - 128;
+
+//		int R = clamp(y + 2.804 * cr);
+//		int G = clamp(y - 0.688272572 * cb - 1.428272572 * cr);
+//		int B = clamp(y +               cb);
+
+		int R = clamp(y + 1.40200 * cr);
+		int G = clamp(y - 0.34414 * cb - 0.71414 * cr);
+		int B = clamp(y + 1.77200 * cb);
+
+		return (R << 16) + (G << 8) + B;
+	}
+
+
+	public static int yuvToRgbFloat(int[] aY, int[] aCb, int[] aCr, int aOffset)
 	{
 		int Y = aY[aOffset];
-		int U = aU[aOffset];
-		int V = aV[aOffset];
+		int U = aCb[aOffset];
+		int V = aCr[aOffset];
 
 		int R = clamp(Y + 1.40200 * (V - 128));
 		int G = clamp(Y - 0.34414 * (U - 128) - 0.71414 * (V - 128));
@@ -103,7 +121,7 @@ public final class ColorSpace
 	}
 
 
-	public static void rgbToYuvFloat(int[] aRGB, int[] aY, int[] aU, int[] aV)
+	public static void rgbToYuvFloat(int[] aRGB, int[] aY, int[] aCb, int[] aCr)
 	{
 		for (int i = 0; i < aRGB.length; i++)
 		{
@@ -117,8 +135,8 @@ public final class ColorSpace
 			int V = clamp(R * 0.50000 + G * -0.41869 + B * -0.08131 + 128);
 
 			aY[i] = Y;
-			aU[i] = U;
-			aV[i] = V;
+			aCb[i] = U;
+			aCr[i] = V;
 		}
 	}
 

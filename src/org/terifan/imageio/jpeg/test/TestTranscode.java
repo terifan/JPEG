@@ -23,10 +23,17 @@ public class TestTranscode
 //			File file = new File("D:\\Pictures\\MLP\\ba798e6190d118e4c00b73e6d4fa08d9.jpg");
 //			File file = new File("D:\\Pictures\\Wallpapers\\9674_forest.jpg");
 //			File file = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
-//			File file = new File("D:\\Pictures\\Wallpapers\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
 //			File file = new File("D:\\Pictures\\Wallpapers\\girl-wolf-friendship.jpg");
 //			File file = new File("D:\\Pictures\\Wallpapers\\gold-coast-australia.jpg");
-			File file = new File("D:\\Pictures\\Wallpapers\\superb-forest-wallpaper-1920x1080-1009097.jpg");
+
+//			File file = new File("D:\\Pictures\\Wallpapers\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
+//			File file = new File("D:\\temp\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
+
+//			File file = new File("D:\\Pictures\\Wallpapers\\superb-forest-wallpaper-1920x1080-1009097.jpg");
+//			File file = new File("D:\\temp\\superb-forest-wallpaper-1920x1080-1009097.jpg");
+
+//			File file = new File("D:\\Pictures\\Wallpapers fantasy\\dragon-wallpaper-1920x1080-1009013.jpg");
+			File file = new File("D:\\temp\\dragon-wallpaper-1920x1080-1009013.jpg");
 
 			BufferedImage image0 = JPEGImageReader.read(file);
 
