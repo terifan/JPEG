@@ -21,28 +21,27 @@ public class APP14Segment
 		int offset = aBitStream.getStreamOffset();
 		int length = aBitStream.readInt16();
 
-		if (aBitStream.readInt8() == 'A' && aBitStream.readInt8() == 'd' && aBitStream.readInt8() == 'o' && aBitStream.readInt8() == 'b' && aBitStream.readInt8() == 'e' && aBitStream.readInt8() == 0)
+		if (aBitStream.readInt8() == 'A' && aBitStream.readInt8() == 'd' && aBitStream.readInt8() == 'o' && aBitStream.readInt8() == 'b' && aBitStream.readInt8() == 'e')
 		{
-			int version = aBitStream.readInt8();
+			int version = aBitStream.readInt16();
+			int flags0 = aBitStream.readInt16();
+			int flags1 = aBitStream.readInt16();
+			int transform = aBitStream.readInt8();
 
-			if (version == 100)
+			switch (transform)
 			{
-				aBitStream.skipBytes(2); //flags 0
-				aBitStream.skipBytes(2); //flags 1
-
-				switch (aBitStream.readInt8())
-				{
-					case 1:
-						mJPEG.mColorSpace = ColorSpaceType.YCBCR;
-						break;
-					case 2:
-						mJPEG.mColorSpace = ColorSpaceType.YCCK; // CMYK
-						break;
-					default:
-						mJPEG.mColorSpace = ColorSpaceType.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
-						break;
-				}
+				case 1:
+					mJPEG.mColorSpace = ColorSpaceType.YCBCR;
+					break;
+				case 2:
+					mJPEG.mColorSpace = ColorSpaceType.YCCK;
+					break;
+				default:
+					mJPEG.mColorSpace = ColorSpaceType.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
+					break;
 			}
+
+			mJPEG.saw_Adobe_marker = true;
 		}
 
 		int remaining = offset + length - aBitStream.getStreamOffset();

@@ -35,6 +35,8 @@ public class ComponentInfo
 		mQuantizationTableId = aQuantizationTableId;
 		mHorSampleFactor = aHorSampleFactor;
 		mVerSampleFactor = aVerSampleFactor;
+		
+		System.out.println("#" + mComponentId);
 	}
 
 

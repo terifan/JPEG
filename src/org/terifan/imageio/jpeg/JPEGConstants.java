@@ -101,7 +101,7 @@ public class JPEGConstants
 	public final static int JPG5 = 0xFFF5;   // Reserved for JPEG extensions, fatal error
 	public final static int JPG6 = 0xFFF6;   // Reserved for JPEG extensions, fatal error
 	public final static int JPG7 = 0xFFF7;   // Reserved for JPEG extensions, fatal error
-	public final static int JPG8 = 0xFFF8;   // Reserved for JPEG extensions, fatal error
+	public final static int LSE = 0xFFF8;    // LSE inverse color transform specification marker
 	public final static int JPG9 = 0xFFF9;   // Reserved for JPEG extensions, fatal error
 	public final static int JPG10 = 0xFFFA;  // Reserved for JPEG extensions, fatal error
 	public final static int JPG11 = 0xFFFB;  // Reserved for JPEG extensions, fatal error

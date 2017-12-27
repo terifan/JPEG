@@ -67,6 +67,12 @@ public class BitInputStream
 	}
 
 
+	public int readInt32() throws IOException
+	{
+		return (readInt16() << 16) + readInt16();
+	}
+
+
 	public void skipBits(int aLength) throws IOException
 	{
 		skipBitsImpl(aLength);
@@ -249,11 +255,40 @@ public class BitInputStream
 	}
 
 
-//	public void drop()
-//	{
-//		System.out.println("#######"+(mBitBuffer & 0xff));
-//
-//		mBitBuffer >>= 8;
-//		mBitBufferLength-=8;
-//	}
+	public byte[] readBytes(byte[] aBuffer) throws IOException
+	{
+		for (int i = 0; i < aBuffer.length; i++)
+		{
+			aBuffer[i] = (byte)readImpl();
+		}
+		
+		return aBuffer;
+	}
+	
+	
+	public void hexdump(int aLength) throws IOException
+	{
+//		skipBytes(aLength);
+
+		StringBuilder sb = new StringBuilder();
+		
+		for (int i = 0; i < aLength; i++)
+		{
+			int c = readInt8();
+
+			System.out.printf("%02x ", c);
+		
+			sb.append(c < 32 ? '.' : (char)c);
+
+			if ((i % (8*8)) == 63 || i == aLength - 1)
+			{
+				while (i++ < 64) System.out.print(" ");
+				System.out.println("  " + sb);
+			}
+			else if ((i % 8) == 7)
+			{
+				System.out.print(" ");
+			}
+		}
+	}
 }

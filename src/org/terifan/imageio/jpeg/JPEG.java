@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg;
 
+import java.awt.color.ICC_Profile;
 import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
@@ -37,6 +38,8 @@ public class JPEG
 	public int num_components;
 	public int blocks_in_MCU;
 	public int comps_in_scan;
+	public boolean saw_Adobe_marker;
+	public int Adobe_transform;
 
 	public int Ss;
 	public int Se;
@@ -47,6 +50,7 @@ public class JPEG
 
 	public int restart_interval;
 	public int restartMarkerIndex;
+	public ICC_Profile mICCProfile;
 
 
 	public JPEG()

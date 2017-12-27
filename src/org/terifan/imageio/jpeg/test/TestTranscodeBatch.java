@@ -39,30 +39,32 @@ public class TestTranscodeBatch
 
 						ByteArrayOutputStream ariData = new ByteArrayOutputStream();
 
-						BufferedImage imageOriginal = JPEGImageReader.read(new ByteArrayInputStream(data));
+						BufferedImage imageHuff = JPEGImageReader.read(new ByteArrayInputStream(data));
 
-						new Transcode().transcode(new ByteArrayInputStream(data), ariData);
-
-						BufferedImage imageAri = JPEGImageReader.read(new ByteArrayInputStream(ariData.toByteArray()));
+//						new Transcode().transcode(new ByteArrayInputStream(data), ariData);
+//
+//						BufferedImage imageAri = JPEGImageReader.read(new ByteArrayInputStream(ariData.toByteArray()));
 
 						int err = 0;
-						for (int y = 0; y < imageOriginal.getHeight(); y++)
-						{
-							for (int x = 0; x < imageOriginal.getWidth(); x++)
-							{
-								if (imageOriginal.getRGB(x, y) != imageAri.getRGB(x, y))
-								{
-									err++;
-								}
-							}
-						}
+//						for (int y = 0; y < imageOriginal.getHeight(); y++)
+//						{
+//							for (int x = 0; x < imageOriginal.getWidth(); x++)
+//							{
+//								if (imageOriginal.getRGB(x, y) != imageAri.getRGB(x, y))
+//								{
+//									err++;
+//								}
+//							}
+//						}
 
-						ImageIO.write(imageAri, "png", new File("D:\\temp\\jpg-test\\" + file.getName().replace("jpg", "png")));
+//						ImageIO.write(imageAri, "png", new File("D:\\temp\\jpg-test\\" + file.getName().replace("jpg", "png")));
 
 						BufferedImage javaImage = ImageIO.read(file);
-						double epp = MeasureErrorRate.measureError(javaImage, imageAri);
+						double epp = MeasureErrorRate.measureError(javaImage, imageHuff);
+//						double psnr = PSNR.calculate(javaImage, imageAri);
+						double psnr = 0;
 
-						System.out.printf("%8d %8d %8d %8d %5.2f %6.2f %s%n", ariData.size(), file.length(), file.length()-ariData.size(), err, PSNR.calculate(javaImage, imageAri), epp, file);
+						System.out.printf("%6.2f %8d %8d %8d %8d %5.2f %s%n", epp, ariData.size(), file.length(), file.length()-ariData.size(), err, psnr, file);
 
 						if (epp > 10)
 						{
@@ -72,26 +74,26 @@ public class TestTranscodeBatch
 							}
 						}
 
-						BufferedImage delta = new BufferedImage(imageAri.getWidth(), imageAri.getHeight(), BufferedImage.TYPE_INT_RGB);
-						for (int y = 0; y < imageAri.getHeight(); y++)
-						{
-							for (int x = 0; x < imageAri.getWidth(); x++)
-							{
-								int c0 = imageAri.getRGB(x, y);
-								int c1 = javaImage.getRGB(x, y);
-								int r0 = 255 & (c0 >> 16);
-								int g0 = 255 & (c0 >> 8);
-								int b0 = 255 & (c0);
-								int r1 = 255 & (c1 >> 16);
-								int g1 = 255 & (c1 >> 8);
-								int b1 = 255 & (c1);
-								int er = Math.abs(r0 - r1);
-								int eg = Math.abs(g0 - g1);
-								int eb = Math.abs(b0 - b1);
-								delta.setRGB(x, y, (er<<16)+(eg<<8)+eb);
-							}
-						}
-						ImageIO.write(delta, "png", new File("D:\\temp\\jpg-delta\\" + file.getName().replace("jpg", "png")));
+//						BufferedImage delta = new BufferedImage(imageAri.getWidth(), imageAri.getHeight(), BufferedImage.TYPE_INT_RGB);
+//						for (int y = 0; y < imageAri.getHeight(); y++)
+//						{
+//							for (int x = 0; x < imageAri.getWidth(); x++)
+//							{
+//								int c0 = imageAri.getRGB(x, y);
+//								int c1 = javaImage.getRGB(x, y);
+//								int r0 = 255 & (c0 >> 16);
+//								int g0 = 255 & (c0 >> 8);
+//								int b0 = 255 & (c0);
+//								int r1 = 255 & (c1 >> 16);
+//								int g1 = 255 & (c1 >> 8);
+//								int b1 = 255 & (c1);
+//								int er = Math.abs(r0 - r1);
+//								int eg = Math.abs(g0 - g1);
+//								int eb = Math.abs(b0 - b1);
+//								delta.setRGB(x, y, (er<<16)+(eg<<8)+eb);
+//							}
+//						}
+//						ImageIO.write(delta, "png", new File("D:\\temp\\jpg-delta\\" + file.getName().replace("jpg", "png")));
 						
 						if (err == 0)
 						{

@@ -1,5 +1,7 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -18,6 +20,7 @@ import java.net.URL;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
+import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ColorSpaceType;
 import org.terifan.imageio.jpeg.DACSegment;
@@ -27,6 +30,9 @@ import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.exif.JPEGExif;
+import sun.java2d.cmm.CMSManager;
+import sun.java2d.cmm.ColorTransform;
+import sun.java2d.cmm.PCMM;
 
 
 public class JPEGImageReader
@@ -146,6 +152,8 @@ public class JPEGImageReader
 						}
 						break;
 					case APP2:
+						new APP2Segment(mJPEG).read(mBitStream);
+						break;
 					case APP12:
 					case APP13:
 						// TODO
@@ -232,7 +240,40 @@ public class JPEGImageReader
 			mBitStream = null;
 		}
 
-		return mImage == null ? null : mImage.getImage();
+		if (mImage == null)
+		{
+			return null;
+		}
+
+		return colorTransform();
+	}
+
+
+	private BufferedImage colorTransform()
+	{
+		BufferedImage image = mImage.getImage();
+
+		if (mJPEG.mICCProfile != null)
+		{
+			int profileClass = mJPEG.mICCProfile.getProfileClass();
+
+			if ((profileClass != ICC_Profile.CLASS_INPUT) && (profileClass != ICC_Profile.CLASS_DISPLAY) && (profileClass != ICC_Profile.CLASS_OUTPUT) && (profileClass != ICC_Profile.CLASS_COLORSPACECONVERSION) && (profileClass != ICC_Profile.CLASS_NAMEDCOLOR) && (profileClass != ICC_Profile.CLASS_ABSTRACT))
+			{
+				reportError("Failed to perform color transform: Invalid profile type");
+				return image;
+			}
+
+			PCMM module = CMSManager.getModule();
+
+			ColorTransform[] transformList = {
+				module.createTransform(mJPEG.mICCProfile, ColorTransform.Any, ColorTransform.In),
+				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), ColorTransform.Any, ColorTransform.Out)
+			};
+
+			module.createTransform(transformList).colorConvert(image, image);
+		}
+
+		return image;
 	}
 
 
@@ -253,7 +294,7 @@ public class JPEGImageReader
 		}
 
 		prepareMCU(mJPEG, mJPEG.mSOFSegment, mSOSSegment);
-		
+
 		if (mImage == null)
 		{
 //    cid0 = cinfo->comp_info[0].component_id;
@@ -292,7 +333,7 @@ public class JPEGImageReader
 			mImage = new JPEGImage(mJPEG.mSOFSegment.getWidth(), mJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, mJPEG.num_components);
 		}
 
-		Arrays.fill(mJPEG.entropy.last_dc_val,0);
+		Arrays.fill(mJPEG.entropy.last_dc_val, 0);
 
 		if (VERBOSE)
 		{
@@ -498,9 +539,13 @@ public class JPEGImageReader
 								int lu;
 								int cb;
 								int cr;
+
+								int h0 = mJPEG.components[0].getHorSampleFactor();
+								int v0 = mJPEG.components[0].getVerSampleFactor();
+
 								if (mJPEG.components.length == 1)
 								{
-									if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1)
+									if (h0 == 1 && v0 == 1)
 									{
 										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
 									}
@@ -519,33 +564,40 @@ public class JPEGImageReader
 								}
 								else
 								{
-									if (mJPEG.components[0].getHorSampleFactor() == 1 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									int h1 = mJPEG.components[1].getHorSampleFactor();
+									int v1 = mJPEG.components[1].getVerSampleFactor();
+									int h2 = mJPEG.components[2].getHorSampleFactor();
+									int v2 = mJPEG.components[2].getVerSampleFactor();
+									int mh = maxSamplingX;
+									int mv = maxSamplingY;
+
+									if (h0 == 1 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
 									{
 										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
 										cb = coefficients[mcuY][mcuX][1][y * 8 + x];
 										cr = coefficients[mcuY][mcuX][2][y * 8 + x];
 									}
-									else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 2 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									else if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
 									{
 										lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-										cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cb = coefficients[mcuY][mcuX][4][blockY * 8 * v1 / mv * 8 + y * v1 / mv * 8 + x / mh + 8 * h1 / mh * blockX];
+										cr = coefficients[mcuY][mcuX][5][blockY * 8 * v2 / mv * 8 + y * v2 / mv * 8 + x / mh + 8 * h2 / mh * blockX];
 									}
-									else if (mJPEG.components[0].getHorSampleFactor() == 4 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									else if (h0 == 4 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
 									{
 										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][4][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-										cr = coefficients[mcuY][mcuX][5][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cb = coefficients[mcuY][mcuX][4][y / v0 * 8 + x / h0 + 8 * h1 / h0 * blockX];
+										cr = coefficients[mcuY][mcuX][5][y / v0 * 8 + x / h0 + 8 * h2 / h0 * blockX];
 									}
-									else if (mJPEG.components[0].getHorSampleFactor() == 2 && mJPEG.components[0].getVerSampleFactor() == 1 && mJPEG.components[1].getHorSampleFactor() == 1 && mJPEG.components[1].getVerSampleFactor() == 1 && mJPEG.components[2].getHorSampleFactor() == 1 && mJPEG.components[2].getVerSampleFactor() == 1)
+									else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
 									{
 										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][2][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
-										cr = coefficients[mcuY][mcuX][3][8 * blockY * 4 + y / 2 * 8 + x / 2 + 4 * blockX];
+										cb = coefficients[mcuY][mcuX][2][y * 8 + x / 2 + 8 / 2 * blockX];
+										cr = coefficients[mcuY][mcuX][3][y * 8 + x / 2 + 8 / 2 * blockX];
 									}
 									else
 									{
-										throw new IllegalStateException("Unsupported subsampling: " + mJPEG.components[0].getHorSampleFactor() + "x" + mJPEG.components[0].getVerSampleFactor() + ", " + mJPEG.components[1].getHorSampleFactor() + "x" + mJPEG.components[1].getVerSampleFactor() + ", " + mJPEG.components[2].getHorSampleFactor() + "x" + mJPEG.components[2].getVerSampleFactor());
+										throw new IllegalStateException("Unsupported subsampling: " + h0 + "x" + v0 + ", " + h1 + "x" + v1 + ", " + h2 + "x" + v2);
 									}
 
 									int rx = mcuX * mcuWidth + 8 * blockX + x;
@@ -581,8 +633,6 @@ public class JPEGImageReader
 //		printTables(new int[][]{mDctCoefficients[aMcuY][aMcuX][0][0][0], mDctCoefficients[aMcuY][aMcuX][0][1][0], mDctCoefficients[aMcuY][aMcuX][1][0][0], mDctCoefficients[aMcuY][aMcuX][1][1][0], mDctCoefficients[aMcuY][aMcuX][0][0][1], mDctCoefficients[aMcuY][aMcuX][0][0][2]});
 //		System.out.println();
 //	}
-	
-	
 	public void hexdump() throws IOException
 	{
 		int streamOffset = mBitStream.getStreamOffset();
@@ -617,5 +667,11 @@ public class JPEGImageReader
 			}
 			System.out.println();
 		}
+	}
+
+
+	// TODO
+	protected void reportError(String aText)
+	{
 	}
 }
