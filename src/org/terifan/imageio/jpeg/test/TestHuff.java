@@ -14,15 +14,19 @@ public class TestHuff
 	{
 		try
 		{
-			File input = new File("D:\\Pictures\\Wallpapers\\Nature-Full-HD-Wallpaper-national-geographic-7822379-1920-1080.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\RadioChamber_ROW9081025939_1920x1080.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\love-wallpaper-1080p-HD-computer-background.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
+			File input = new File("D:\\Pictures\\Wallpapers\\nissan-skyline-r34.jpg");
 
 			JPEGConstants.VERBOSE = true;
 
 			BufferedImage myImage = JPEGImageReader.read(input);
 			BufferedImage javaImage = ImageIO.read(input);
 
-			ImageIO.write(myImage, "png", new File("d:\\temp\\" + input.getName() + "1.png"));
-			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "2.png"));
+			ImageIO.write(myImage, "png", new File("d:\\temp\\" + input.getName() + "_my.png"));
+			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "_java.png"));
 
 			BufferedImage diff = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 
@@ -30,7 +34,7 @@ public class TestHuff
 			{
 				for (int x = 0; x < javaImage.getWidth(); x++)
 				{
-					int s = 1;
+					int s = 20;
 
 					int c0 = myImage.getRGB(x, y);
 					int c1 = javaImage.getRGB(x, y);
@@ -51,6 +55,10 @@ public class TestHuff
 			g.drawImage(javaImage, 1 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.dispose();
 
+			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(javaImage, myImage));
+
+			ImageIO.write(diff, "png", new File("d:\\temp\\" + input.getName() + "_delta.png"));
+			
 			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)

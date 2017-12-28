@@ -14,10 +14,10 @@ public final class ColorSpace
 
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
-	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402);
-	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.34414);
-	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.71414);
-	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772);
+	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402000);
+	private final static int FP_034414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.344136);
+	private final static int FP_071414 = (int)(0.5 + (1 << FP_SCALEBITS) * 0.714136);
+	private final static int FP_177200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.772000);
 
 	private final static int[] CR_R_TAB = new int[256];
 	private final static int[] CB_B_TAB = new int[256];
@@ -99,9 +99,9 @@ public final class ColorSpace
 //		int G = clamp(y - 0.688272572 * cb - 1.428272572 * cr);
 //		int B = clamp(y +               cb);
 
-		int R = clamp(y + 1.40200 * cr);
-		int G = clamp(y - 0.34414 * cb - 0.71414 * cr);
-		int B = clamp(y + 1.77200 * cb);
+		int R = clamp(y + 1.402000 * cr);
+		int G = clamp(y - 0.344136 * cb - 0.714136 * cr);
+		int B = clamp(y + 1.772000 * cb);
 
 		return (R << 16) + (G << 8) + B;
 	}
@@ -113,9 +113,9 @@ public final class ColorSpace
 		int U = aCb[aOffset];
 		int V = aCr[aOffset];
 
-		int R = clamp(Y + 1.40200 * (V - 128));
-		int G = clamp(Y - 0.34414 * (U - 128) - 0.71414 * (V - 128));
-		int B = clamp(Y + 1.77200 * (U - 128));
+		int R = clamp(Y + 1.402000 * (V - 128));
+		int G = clamp(Y - 0.344136 * (U - 128) - 0.714136 * (V - 128));
+		int B = clamp(Y + 1.772000 * (U - 128));
 
 		return (R << 16) + (G << 8) + B;
 	}

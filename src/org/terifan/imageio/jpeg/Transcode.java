@@ -33,7 +33,7 @@ public class Transcode
 
 	public void transcode(InputStream aInputStream, OutputStream aOutputStream) throws IOException
 	{
-		JPEG jpeg = JPEGImageReader.decode(aInputStream);
+		JPEG jpeg = new JPEGImageReader(aInputStream).decode();
 
 		if (jpeg.components == null)
 		{

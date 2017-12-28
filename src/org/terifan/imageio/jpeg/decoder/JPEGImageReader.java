@@ -48,20 +48,26 @@ public class JPEGImageReader
 	private boolean mUpdateImage;
 
 
-	private JPEGImageReader(InputStream aInputStream, Class<? extends IDCT> aIDCT) throws IOException
+	public JPEGImageReader(InputStream aInputStream) throws IOException
 	{
 		mBitStream = new BitInputStream(aInputStream);
-		mIDCT = aIDCT;
 		mUpdateImage = true;
+		mIDCT = IDCTIntegerSlow.class;
 	}
 
 
-	public static JPEG decode(InputStream aInputStream) throws IOException
+	public JPEGImageReader setIDCT(Class<? extends IDCT> aIDCT)
 	{
-		JPEGImageReader reader = new JPEGImageReader(aInputStream, IDCTIntegerFast.class);
-		reader.mUpdateImage = false;
-		reader.readImpl();
-		return reader.mJPEG;
+		mIDCT = aIDCT;
+		return this;
+	}
+	
+	
+	public JPEG decode() throws IOException
+	{
+		mUpdateImage = false;
+		read();
+		return mJPEG;
 	}
 
 
@@ -69,7 +75,7 @@ public class JPEGImageReader
 	{
 		try (InputStream input = new BufferedInputStream(new FileInputStream(aFile)))
 		{
-			return new JPEGImageReader(input, IDCTIntegerFast.class).readImpl();
+			return new JPEGImageReader(input).read();
 		}
 	}
 
@@ -78,24 +84,18 @@ public class JPEGImageReader
 	{
 		try (InputStream input = new BufferedInputStream(aInputStream.openStream()))
 		{
-			return new JPEGImageReader(input, IDCTIntegerFast.class).readImpl();
+			return new JPEGImageReader(input).read();
 		}
 	}
 
 
 	public static BufferedImage read(InputStream aInputStream) throws IOException
 	{
-		return new JPEGImageReader(aInputStream, IDCTIntegerFast.class).readImpl();
+		return new JPEGImageReader(aInputStream).read();
 	}
 
 
-	public static BufferedImage read(InputStream aInputStream, Class<? extends IDCT> aDecoder) throws IOException
-	{
-		return new JPEGImageReader(aInputStream, aDecoder).readImpl();
-	}
-
-
-	private BufferedImage readImpl() throws IOException
+	public BufferedImage read() throws IOException
 	{
 		try
 		{
@@ -479,8 +479,8 @@ public class JPEGImageReader
 			throw new IllegalStateException(e);
 		}
 
-		int mcuWidth = 8 * maxSamplingX;
-		int mcuHeight = 8 * maxSamplingY;
+		int mcuW = 8 * maxSamplingX;
+		int mcuH = 8 * maxSamplingY;
 
 		int[][][][] coefficients = mJPEG.mCoefficients;
 
@@ -527,7 +527,29 @@ public class JPEGImageReader
 
 					idct.transform(coefficients[mcuY][mcuX][blockIndex], quantizationTable);
 				}
+			}
+		}
 
+		int c0 = mJPEG.mSOFSegment.getComponent(0).getComponentBlockOffset();
+		int c1 = mJPEG.components.length == 1 ? 0 : mJPEG.mSOFSegment.getComponent(1).getComponentBlockOffset();
+		int c2 = mJPEG.components.length == 1 ? 0 : mJPEG.mSOFSegment.getComponent(2).getComponentBlockOffset();
+
+		int h0 = mJPEG.components[0].getHorSampleFactor();
+		int v0 = mJPEG.components[0].getVerSampleFactor();
+		int h1 = mJPEG.components.length == 1 ? 0 : mJPEG.components[1].getHorSampleFactor();
+		int v1 = mJPEG.components.length == 1 ? 0 : mJPEG.components[1].getVerSampleFactor();
+		int h2 = mJPEG.components.length == 1 ? 0 : mJPEG.components[2].getHorSampleFactor();
+		int v2 = mJPEG.components.length == 1 ? 0 : mJPEG.components[2].getVerSampleFactor();
+
+		if (mJPEG.components.length == 1 && (h0 != 1 || v0 != 1))
+		{
+			throw new IllegalStateException("Unsupported subsampling");
+		}
+		
+		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+		{
+			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+			{
 				for (int blockY = 0; blockY < maxSamplingY; blockY++)
 				{
 					for (int blockX = 0; blockX < maxSamplingX; blockX++)
@@ -536,82 +558,89 @@ public class JPEGImageReader
 						{
 							for (int x = 0; x < 8; x++)
 							{
-								int lu;
-								int cb;
-								int cr;
+								int ix = mcuX * mcuW + blockX * 8 + x;
+								int iy = mcuY * mcuH + blockY * 8 + y;
 
-								int h0 = mJPEG.components[0].getHorSampleFactor();
-								int v0 = mJPEG.components[0].getVerSampleFactor();
-
-								if (mJPEG.components.length == 1)
+								if (ix < mJPEG.width && iy < mJPEG.height)
 								{
-									if (h0 == 1 && v0 == 1)
+									if (mJPEG.components.length == 1)
 									{
-										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+										int lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+
+										mImage.getRaster()[iy * mJPEG.width + ix] = (lu << 16) + (lu << 8) + lu;
 									}
 									else
 									{
-										throw new IllegalStateException("Unsupported subsampling");
-									}
+										int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
+										int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
+										int ixh1 = (ix % mcuW) * h1 / maxSamplingX;
+										int iyv1 = (iy % mcuH) * v1 / maxSamplingY;
+										int ixh2 = (ix % mcuW) * h2 / maxSamplingX;
+										int iyv2 = (iy % mcuH) * v2 / maxSamplingY;
 
-									int rx = mcuX * mcuWidth + 8 * blockX + x;
-									int ry = y + mcuY * mcuHeight + 8 * blockY;
+										int lu11 = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
+										int cb11 = coefficients[iy / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (iyv1 / 8)][(ixh1 % 8) + 8 * (iyv1 % 8)];
+										int cr11 = coefficients[iy / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (iyv2 / 8)][(ixh2 % 8) + 8 * (iyv2 % 8)];
 
-									if (rx < mJPEG.width && ry < mJPEG.height)
-									{
-										mImage.getRaster()[ry * mJPEG.width + rx] = (lu << 16) + (lu << 8) + lu;
-									}
-								}
-								else
-								{
-									int h1 = mJPEG.components[1].getHorSampleFactor();
-									int v1 = mJPEG.components[1].getVerSampleFactor();
-									int h2 = mJPEG.components[2].getHorSampleFactor();
-									int v2 = mJPEG.components[2].getVerSampleFactor();
-									int mh = maxSamplingX;
-									int mv = maxSamplingY;
+										if (ix > 0 && iy > 0 && ix < mJPEG.width - 1 && iy < mJPEG.height - 1)
+										{
+											int px = ix - 1;
+											int py = iy - 1;
+											int nx = ix + 1;
+											int ny = iy + 1;
 
-									if (h0 == 1 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-									{
-										lu = coefficients[mcuY][mcuX][0][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][1][y * 8 + x];
-										cr = coefficients[mcuY][mcuX][2][y * 8 + x];
-									}
-									else if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-									{
-										lu = coefficients[mcuY][mcuX][blockY * 2 + blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][4][blockY * 8 * v1 / mv * 8 + y * v1 / mv * 8 + x / mh + 8 * h1 / mh * blockX];
-										cr = coefficients[mcuY][mcuX][5][blockY * 8 * v2 / mv * 8 + y * v2 / mv * 8 + x / mh + 8 * h2 / mh * blockX];
-									}
-									else if (h0 == 4 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-									{
-										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][4][y / v0 * 8 + x / h0 + 8 * h1 / h0 * blockX];
-										cr = coefficients[mcuY][mcuX][5][y / v0 * 8 + x / h0 + 8 * h2 / h0 * blockX];
-									}
-									else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-									{
-										lu = coefficients[mcuY][mcuX][blockX][y * 8 + x];
-										cb = coefficients[mcuY][mcuX][2][y * 8 + x / 2 + 8 / 2 * blockX];
-										cr = coefficients[mcuY][mcuX][3][y * 8 + x / 2 + 8 / 2 * blockX];
-									}
-									else
-									{
-										throw new IllegalStateException("Unsupported subsampling: " + h0 + "x" + v0 + ", " + h1 + "x" + v1 + ", " + h2 + "x" + v2);
-									}
+											if (h0 != h1 || v0 != v1)
+											{
+												int pxh1 = (px % mcuW) * h1 / maxSamplingX;
+												int nxh1 = (nx % mcuW) * h1 / maxSamplingX;
+												int pyv1 = (py % mcuH) * v1 / maxSamplingY;
+												int nyv1 = (ny % mcuH) * v1 / maxSamplingY;
 
-									int rx = mcuX * mcuWidth + 8 * blockX + x;
-									int ry = y + mcuY * mcuHeight + 8 * blockY;
+												int cb00 = coefficients[py / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (pyv1 / 8)][(pxh1 % 8) + 8 * (pyv1 % 8)];
+												int cb10 = coefficients[py / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (pyv1 / 8)][(ixh1 % 8) + 8 * (pyv1 % 8)];
+												int cb20 = coefficients[py / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (pyv1 / 8)][(nxh1 % 8) + 8 * (pyv1 % 8)];
 
-									if (rx < mJPEG.width && ry < mJPEG.height)
-									{
+												int cb01 = coefficients[iy / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (iyv1 / 8)][(pxh1 % 8) + 8 * (iyv1 % 8)];
+												int cb21 = coefficients[iy / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (iyv1 / 8)][(nxh1 % 8) + 8 * (iyv1 % 8)];
+
+												int cb02 = coefficients[ny / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (nyv1 / 8)][(pxh1 % 8) + 8 * (nyv1 % 8)];
+												int cb12 = coefficients[ny / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (nyv1 / 8)][(ixh1 % 8) + 8 * (nyv1 % 8)];
+												int cb22 = coefficients[ny / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (nyv1 / 8)][(nxh1 % 8) + 8 * (nyv1 % 8)];
+
+												cb11 = (cb00 + cb10 + cb20 + cb01 + cb11 + cb21 + cb02 + cb12 + cb22) / 9;
+											}
+
+											if (h0 != h2 || v0 != v2)
+											{
+												int pxh2 = (px % mcuW) * h2 / maxSamplingX;
+												int nxh2 = (nx % mcuW) * h2 / maxSamplingX;
+												int pyv2 = (py % mcuH) * v2 / maxSamplingY;
+												int nyv2 = (ny % mcuH) * v2 / maxSamplingY;
+
+												int cr00 = coefficients[py / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (pyv2 / 8)][(pxh2 % 8) + 8 * (pyv2 % 8)];
+												int cr10 = coefficients[py / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (pyv2 / 8)][(ixh2 % 8) + 8 * (pyv2 % 8)];
+												int cr20 = coefficients[py / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (pyv2 / 8)][(nxh2 % 8) + 8 * (pyv2 % 8)];
+
+												int cr01 = coefficients[iy / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (iyv2 / 8)][(pxh2 % 8) + 8 * (iyv2 % 8)];
+												int cr21 = coefficients[iy / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (iyv2 / 8)][(nxh2 % 8) + 8 * (iyv2 % 8)];
+
+												int cr02 = coefficients[ny / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (nyv2 / 8)][(pxh2 % 8) + 8 * (nyv2 % 8)];
+												int cr12 = coefficients[ny / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (nyv2 / 8)][(ixh2 % 8) + 8 * (nyv2 % 8)];
+												int cr22 = coefficients[ny / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (nyv2 / 8)][(nxh2 % 8) + 8 * (nyv2 % 8)];
+
+												cr11 = (cr00 + cr10 + cr20 + cr01 + cr11 + cr21 + cr02 + cr12 + cr22) / 9;
+											}
+										}
+
+//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (cr << 16) + (cr << 8) + cr;
+										
 										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
 										{
-											mImage.getRaster()[ry * mJPEG.width + rx] = ColorSpace.yuvToRgbFloat(lu, cb, cr);
+											mImage.getRaster()[iy * mJPEG.width + ix] = ColorSpace.yuvToRgbFloat(lu11, cb11, cr11);
 										}
 										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
 										{
-											mImage.getRaster()[ry * mJPEG.width + rx] = 0xff000000 | (lu << 16) + (cb << 8) + cr;
+											mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu11 << 16) + (cb11 << 8) + cr11;
 										}
 										else
 										{
@@ -628,11 +657,6 @@ public class JPEGImageReader
 	}
 
 
-//	public void debugprint(int aMcuX, int aMcuY)
-//	{
-//		printTables(new int[][]{mDctCoefficients[aMcuY][aMcuX][0][0][0], mDctCoefficients[aMcuY][aMcuX][0][1][0], mDctCoefficients[aMcuY][aMcuX][1][0][0], mDctCoefficients[aMcuY][aMcuX][1][1][0], mDctCoefficients[aMcuY][aMcuX][0][0][1], mDctCoefficients[aMcuY][aMcuX][0][0][2]});
-//		System.out.println();
-//	}
 	public void hexdump() throws IOException
 	{
 		int streamOffset = mBitStream.getStreamOffset();
@@ -673,5 +697,33 @@ public class JPEGImageReader
 	// TODO
 	protected void reportError(String aText)
 	{
+	}
+	
+	
+	public String getSubSampling()
+	{
+		StringBuilder sb = new StringBuilder();
+		for (ComponentInfo ci : mJPEG.components)
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(",");
+			}
+			sb.append(ci.getHorSampleFactor()+"x"+ci.getVerSampleFactor());
+		}
+
+		switch (sb.toString())
+		{
+			case "1x1,1x1,1x1":	return "4:4:4"; // 1 1
+			case "1----------":	return "4:4:0"; // 1 2
+			case "2----------":	return "4:4:1"; // 1 4
+			case "2x1,1x1,1x1":	return "4:2:2"; // 2 1
+			case "2x2,1x1,1x1":	return "4:2:0"; // 2 2
+			case "3----------":	return "4:2:1"; // 2 4
+			case "4x1,1x1,1x1":	return "4:1:1"; // 4 1
+			case "4x1,2x1,2x1":	return "4:1:0"; // 4 2
+		}
+
+		return sb.toString();
 	}
 }

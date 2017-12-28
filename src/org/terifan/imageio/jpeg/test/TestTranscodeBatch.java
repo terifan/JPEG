@@ -21,10 +21,10 @@ public class TestTranscodeBatch
 			int fail = 0;
 			int ok = 0;
 
-			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
+//			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
-				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
-//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles())
+//				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
+				for (File file : new File("D:\\Pictures\\Wallpapers").listFiles())
 //				File file = new File("D:\\Pictures\\Wallpapers\\1 (1).jpg");
 				{
 					byte[] data = new byte[(int)file.length()];
@@ -39,7 +39,8 @@ public class TestTranscodeBatch
 
 						ByteArrayOutputStream ariData = new ByteArrayOutputStream();
 
-						BufferedImage imageHuff = JPEGImageReader.read(new ByteArrayInputStream(data));
+						JPEGImageReader reader = new JPEGImageReader(new ByteArrayInputStream(data));
+						BufferedImage imageHuff = reader.read();
 
 //						new Transcode().transcode(new ByteArrayInputStream(data), ariData);
 //
@@ -64,7 +65,7 @@ public class TestTranscodeBatch
 //						double psnr = PSNR.calculate(javaImage, imageAri);
 						double psnr = 0;
 
-						System.out.printf("%6.2f %8d %8d %8d %8d %5.2f %s%n", epp, ariData.size(), file.length(), file.length()-ariData.size(), err, psnr, file);
+						System.out.printf("%s %6.2f %8d %8d %8d %5.2f %s%n", reader.getSubSampling(), epp, ariData.size(), file.length(), err, psnr, file);
 
 						if (epp > 10)
 						{

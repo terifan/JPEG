@@ -26,7 +26,7 @@ public class Test
 
 			try (InputStream input = jpegResource.openStream())
 			{
-				BufferedImage myImage = JPEGImageReader.read(input, IDCTFloat.class);
+				BufferedImage myImage = JPEGImageReader.read(input);
 
 //				BufferedImage diff = new BufferedImage(myImage.getWidth(), myImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 //				for (int y = 0; y < diff.getHeight(); y++)

@@ -27,7 +27,7 @@ public class APP14Segment
 			int flags0 = aBitStream.readInt16();
 			int flags1 = aBitStream.readInt16();
 			int transform = aBitStream.readInt8();
-
+			
 			switch (transform)
 			{
 				case 1:

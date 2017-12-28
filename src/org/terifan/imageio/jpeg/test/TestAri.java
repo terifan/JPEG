@@ -29,7 +29,7 @@ public class TestAri
 
 			try (InputStream input = jpegResource.openStream())
 			{
-				BufferedImage myImage = JPEGImageReader.read(input, IDCTFloat.class);
+				BufferedImage myImage = JPEGImageReader.read(input);
 
 				ImageFrame imagePane = new ImageFrame(myImage);
 			}

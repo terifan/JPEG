@@ -90,9 +90,9 @@ public class TestDCT
 
 			URL jpegResource = Test.class.getResource("Swallowtail.jpg");
 
-			BufferedImage image1 = JPEGImageReader.read(jpegResource.openStream(), IDCTFloat.class);
-			BufferedImage image2 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerFast.class);
-			BufferedImage image3 = JPEGImageReader.read(jpegResource.openStream(), IDCTIntegerSlow.class);
+			BufferedImage image1 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTFloat.class).read();
+			BufferedImage image2 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTIntegerFast.class).read();
+			BufferedImage image3 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTIntegerSlow.class).read();
 
 			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight()*2, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = image.createGraphics();
