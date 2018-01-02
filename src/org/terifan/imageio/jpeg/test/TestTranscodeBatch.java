@@ -100,17 +100,17 @@ public class TestTranscodeBatch
 						{
 							ok++;
 
-							try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
-							{
-								ariData.writeTo(fos);
-							}
-
-							data = JPEGExif.replace(data, null);
-
-							try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
-							{
-								fos.write(data);
-							}
+//							try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-ari\\" + file.getName())))
+//							{
+//								ariData.writeTo(fos);
+//							}
+//
+//							data = JPEGExif.replace(data, null);
+//
+//							try (FileOutputStream fos = new FileOutputStream(new File("D:\\temp\\jpg-huff\\" + file.getName())))
+//							{
+//								fos.write(data);
+//							}
 						}
 						else
 						{

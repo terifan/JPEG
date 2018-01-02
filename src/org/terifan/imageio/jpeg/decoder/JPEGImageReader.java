@@ -546,30 +546,10 @@ public class JPEGImageReader
 			throw new IllegalStateException("Unsupported subsampling");
 		}
 
-		double[][][] w = 
+		for (int iy = 0; iy < mJPEG.height; iy++)
 		{
+			for (int ix = 0; ix < mJPEG.width; ix++)
 			{
-				{0.50,0.50,0.25},
-				{0.50,1.00,0.25},
-				{0.25,0.25,0.25}
-			},
-			{
-				{0.25,0.50,0.50},
-				{0.25,1.00,0.50},
-				{0.25,0.25,0.25}
-			},
-			{
-				{0.25,0.25,0.25},
-				{0.50,1.00,0.25},
-				{0.50,0.50,0.25}
-			},
-			{
-				{0.25,0.25,0.25},
-				{0.25,1.00,0.50},
-				{0.25,0.50,0.50}
-			}
-		};
-
 //		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 //		{
 //			for (int blockY = 0; blockY < maxSamplingY; blockY++)
@@ -582,124 +562,122 @@ public class JPEGImageReader
 //						{
 //							for (int x = 0; x < 8; x++)
 //							{
-		for (int iy = 0; iy < mJPEG.height; iy++)
-		{
-		for (int ix = 0; ix < mJPEG.width; ix++)
-		{
 //								int ix = mcuX * mcuW + blockX * 8 + x;
 //								int iy = mcuY * mcuH + blockY * 8 + y;
-
-								if (ix < mJPEG.width && iy < mJPEG.height)
-								{
+//
+//								if (ix < mJPEG.width && iy < mJPEG.height)
+//								{
 									int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
 									int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
-									int ixh1 = (ix % mcuW) * h1 / maxSamplingX;
-									int iyv1 = (iy % mcuH) * v1 / maxSamplingY;
-									int ixh2 = (ix % mcuW) * h2 / maxSamplingX;
-									int iyv2 = (iy % mcuH) * v2 / maxSamplingY;
+									int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
 
 									if (mJPEG.components.length == 1)
 									{
-										int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
-
 										mImage.getRaster()[iy * mJPEG.width + ix] = (lu << 16) + (lu << 8) + lu;
 									}
 									else
 									{
-										int lu11 = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
-										int cb11 = coefficients[iy / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (iyv1 / 8)][(ixh1 % 8) + 8 * (iyv1 % 8)];
-										int cr11 = coefficients[iy / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (iyv2 / 8)][(ixh2 % 8) + 8 * (iyv2 % 8)];
+										int cb;
+										int cr;
 
-										if (ix > 0 && iy > 0 && ix < mJPEG.width - 1 && iy < mJPEG.height - 1)
+										if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
 										{
-											if (h0 != h1 || v0 != v1)
-											{
-												int px = ix - 1;
-												int py = iy - 1;
-												int nx = ix + 1;
-												int ny = iy + 1;
-
-												int pxh1 = (px % mcuW) * h1 / maxSamplingX;
-												int pyv1 = (py % mcuH) * v1 / maxSamplingY;
-												int nxh1 = (nx % mcuW) * h1 / maxSamplingX;
-												int nyv1 = (ny % mcuH) * v1 / maxSamplingY;
-
-												int c00 = coefficients[py / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (pyv1 / 8)][(pxh1 % 8) + 8 * (pyv1 % 8)];
-												int c10 = coefficients[py / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (pyv1 / 8)][(ixh1 % 8) + 8 * (pyv1 % 8)];
-												int c20 = coefficients[py / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (pyv1 / 8)][(nxh1 % 8) + 8 * (pyv1 % 8)];
-
-												int c01 = coefficients[iy / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (iyv1 / 8)][(pxh1 % 8) + 8 * (iyv1 % 8)];
-												int c11 = cb11;
-												int c21 = coefficients[iy / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (iyv1 / 8)][(nxh1 % 8) + 8 * (iyv1 % 8)];
-
-												int c02 = coefficients[ny / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (nyv1 / 8)][(pxh1 % 8) + 8 * (nyv1 % 8)];
-												int c12 = coefficients[ny / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (nyv1 / 8)][(ixh1 % 8) + 8 * (nyv1 % 8)];
-												int c22 = coefficients[ny / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (nyv1 / 8)][(nxh1 % 8) + 8 * (nyv1 % 8)];
-
-												int z = (ix & 1) + 2 * (iy & 1);
-												cb11 = (int)((w[z][0][0]*c00 + w[z][0][1]*c10 + w[z][0][2]*c20 + w[z][1][0]*c01 + w[z][1][1]*c11 + w[z][1][2]*c21 + w[z][2][0]*c02 + w[z][2][1]*c12 + w[z][2][2]*c22) / (1+5*0.25+3*0.5));
-
-//												cb11 = (int)((c11 + 0.06 * (c00+c20+c02+c22) + 0.33 * (c01+c10+c20+c02)) / (1+0.06*4+0.33*4));
-//												cb11 = (int)((c11 + 0.25 * (c00+c20+c02+c22) + 0.50 * (c01+c10+c20+c02)) / (1+0.25*4+0.50*4));
-//												cb11 = (c00 + c10 + c20 + c01 + c11 + c21 + c02 + c12 + c22) / 9;
-											}
-
-											if (h0 != h2 || v0 != v2)
-											{
-												int px = ix - 1;
-												int py = iy - 1;
-												int nx = ix + 1;
-												int ny = iy + 1;
-
-												int pxh2 = (px % mcuW) * h2 / maxSamplingX;
-												int pyv2 = (py % mcuH) * v2 / maxSamplingY;
-												int nxh2 = (nx % mcuW) * h2 / maxSamplingX;
-												int nyv2 = (ny % mcuH) * v2 / maxSamplingY;
-
-												int c00 = coefficients[py / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (pyv2 / 8)][(pxh2 % 8) + 8 * (pyv2 % 8)];
-												int c10 = coefficients[py / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (pyv2 / 8)][(ixh2 % 8) + 8 * (pyv2 % 8)];
-												int c20 = coefficients[py / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (pyv2 / 8)][(nxh2 % 8) + 8 * (pyv2 % 8)];
-
-												int c01 = coefficients[iy / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (iyv2 / 8)][(pxh2 % 8) + 8 * (iyv2 % 8)];
-												int c11 = cr11;
-												int c21 = coefficients[iy / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (iyv2 / 8)][(nxh2 % 8) + 8 * (iyv2 % 8)];
-
-												int c02 = coefficients[ny / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (nyv2 / 8)][(pxh2 % 8) + 8 * (nyv2 % 8)];
-												int c12 = coefficients[ny / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (nyv2 / 8)][(ixh2 % 8) + 8 * (nyv2 % 8)];
-												int c22 = coefficients[ny / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (nyv2 / 8)][(nxh2 % 8) + 8 * (nyv2 % 8)];
-
-												int z = (ix & 1) + 2 * (iy & 1);
-												cr11 = (int)((w[z][0][0]*c00 + w[z][0][1]*c10 + w[z][0][2]*c20 + w[z][1][0]*c01 + w[z][1][1]*c11 + w[z][1][2]*c21 + w[z][2][0]*c02 + w[z][2][1]*c12 + w[z][2][2]*c22) / (1+5*0.25+3*0.5));
-
-//												cr11 = (int)((c11 + 0.06 * (c00+c20+c02+c22) + 0.33 * (c01+c10+c20+c02)) / (1+0.06*4+0.33*4));
-//												cr11 = (int)((c11 + 0.25 * (c00+c20+c02+c22) + 0.50 * (c01+c10+c20+c02)) / (1+0.25*4+0.50*4));
-//												cr11 = (c00 + c10 + c20 + c01 + c11 + c21 + c02 + c12 + c22) / 9;
-											}
+											cb = upsampleChroma(ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X3);
+											cr = upsampleChroma(ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X3);
+										}
+										else if (h0 == 1 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
+										{
+											cb = upsampleChroma(ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X3);
+											cr = upsampleChroma(ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X3);
+										}
+										else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
+										{
+											cb = upsampleChroma(ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X1);
+											cr = upsampleChroma(ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X1);
+										}
+										else
+										{
+											cb = upsampleChroma(ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X1);
+											cr = upsampleChroma(ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X1);
 										}
 
-//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu11 << 16) + (lu11 << 8) + lu11;
-//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (cr11 << 16) + (cr11 << 8) + cr11;
-										
 										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
 										{
-											mImage.getRaster()[iy * mJPEG.width + ix] = ColorSpace.yuvToRgbFloat(lu11, cb11, cr11);
+											mImage.getRaster()[iy * mJPEG.width + ix] = ColorSpace.yuvToRgbFloat(lu, cb, cr);
 										}
 										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
 										{
-											mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu11 << 16) + (cb11 << 8) + cr11;
+											mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu << 16) + (cb << 8) + cr;
 										}
 										else
 										{
 											throw new IllegalStateException("Unsupported color space: " + mJPEG.mColorSpace);
 										}
 									}
-								}
+//								}
 //							}
 //						}
 //					}
 //				}
 			}
 		}
+	}
+
+	private final static int[][] KERNEL_1X1 = 
+	{
+		{1}
+	};
+
+	private final static int[][] KERNEL_3X3 = 
+	{
+		{1,2,1},
+		{2,4,2},
+		{1,2,1}
+	};
+
+	private final static int[][] KERNEL_1X3 = 
+	{
+		{1},
+		{2},
+		{1}
+	};
+
+	private final static int[][] KERNEL_3X1 = 
+	{
+		{1,2,1}
+	};
+
+
+	private int upsampleChroma(int ix, int iy, int aMcuW, int aMcuH, int aSamplingHor, int aSamplingVer, int aMaxSamplingX, int aMaxSamplingY, int[][][][] aCoefficients, int aComponentOffset, int[][] kernel)
+	{
+		int sum = 0;
+		int total = 0;
+
+		int x = ix - kernel[0].length / 2;
+		int y = iy - kernel.length / 2;
+		int iw = mJPEG.width;
+		int ih = mJPEG.height;
+
+		for (int fy = 0; fy < kernel.length; fy++)
+		{
+			for (int fx = 0; fx < kernel[0].length; fx++)
+			{
+				if (x + fx >= 0 && y + fy >= 0 && x + fx < iw && y + fy < ih)
+				{
+					int bx = ((x + fx) % aMcuW) * aSamplingHor / aMaxSamplingX;
+					int by = ((y + fy) % aMcuH) * aSamplingVer / aMaxSamplingY;
+
+					int w = kernel[fy][fx];
+
+					sum += w * aCoefficients[(y + fy) / aMcuH][(x + fx) / aMcuW][aComponentOffset + (bx / 8) + aSamplingHor * (by / 8)][(bx % 8) + 8 * (by % 8)];
+
+					total += w;
+				}
+			}
+		}
+
+//		return (sum+kernel[0].length*kernel.length-1) / total;
+		return (int)Math.round(sum / (double)total);
 	}
 
 

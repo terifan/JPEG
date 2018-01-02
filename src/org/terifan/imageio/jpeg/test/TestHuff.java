@@ -19,7 +19,9 @@ public class TestHuff
 //			File input = new File("D:\\Pictures\\Wallpapers\\RadioChamber_ROW9081025939_1920x1080.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\love-wallpaper-1080p-HD-computer-background.jpg");
-			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
+			File input = new File("D:\\Pictures\\Wallpapers\\Full%20HD%201080p%20Wallpaper%2023.jpg");
 
 			JPEGConstants.VERBOSE = true;
 
@@ -44,9 +46,9 @@ public class TestHuff
 //					int b = 128 + s * ((255 & (c0 >> 0)) - (255 & (c1 >> 0)));
 					diff.setRGB(x, y, (r << 16) + (g << 8) + b);
 
-					int[] yuv = new int[3];
-					ColorSpace.rgbToYuvFloat(c1, yuv);
-					diff.setRGB(x, y, (yuv[2] << 16) + (yuv[2] << 8) + yuv[2]);
+//					int[] yuv = new int[3];
+//					ColorSpace.rgbToYuvFloat(c1, yuv);
+//					diff.setRGB(x, y, (yuv[2] << 16) + (yuv[2] << 8) + yuv[2]);
 				}
 			}
 
@@ -57,40 +59,11 @@ public class TestHuff
 			g.drawImage(javaImage, 1 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.dispose();
 			
-//			int[] javaCols = new int[3];
-//			int[] myCols = new int[3];
-//			int[] errsum = new int[2];
-//
-//			for (int y = 0; y < 16; y++)
-//			{
-//				for (int z = 0; z < 2; z++)
-//				{
-//					for (int x = 0; x < 16; x++)
-//					{
-//						int jc = javaImage.getRGB(16*4+x, 16*4+y);
-//						int mc = myImage.getRGB(16*4+x, 16*4+y);
-//						
-//						ColorSpace.rgbToYuvFloat(jc, javaCols);
-////						ColorSpace.rgbToYuvFloat(mc, myCols);
-//						int err = javaCols[1]-(0xff & (mc>>(z*8)));
-//
-//						errsum[z] += Math.abs(err);
-//						System.out.printf("%5d ", err);
-//					}
-//					System.out.print("      ");
-//				}
-//				System.out.println();
-//			}
-//			System.out.println();
-//			System.out.println();
-//			System.out.printf("%-103d %d%n", errsum[0], errsum[1]);
-
-
 			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(javaImage, myImage));
 
-//			ImageIO.write(myImage, "png", new File("d:\\temp\\" + input.getName() + "_my.png"));
-//			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "_java.png"));
-//			ImageIO.write(diff, "png", new File("d:\\temp\\" + input.getName() + "_delta.png"));
+			ImageIO.write(myImage, "png", new File("d:\\temp\\" + input.getName() + "_my.png"));
+			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "_java.png"));
+			ImageIO.write(diff, "png", new File("d:\\temp\\" + input.getName() + "_delta.png"));
 			
 			ImageFrame imagePane = new ImageFrame(image);
 		}
