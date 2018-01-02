@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
+import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DACSegment;
@@ -49,6 +50,11 @@ public class JPEGImageWriter
 
 		new APP0Segment(mJPEG).write(mBitStream);
 
+		if (mJPEG.mICCProfile != null)
+		{
+			new APP2Segment(mJPEG).write(mBitStream);
+		}
+		
 		new DQTSegment(mJPEG).write(mBitStream);
 
 		SOFSegment mSOFSegment = new SOFSegment(mJPEG, aImage.getWidth(), aImage.getHeight(), 8, lu, cb, cr).write(mBitStream);
@@ -175,6 +181,11 @@ public class JPEGImageWriter
 		mBitStream.writeInt16(JPEGConstants.SOI);
 
 		new APP0Segment(aJPEG).write(mBitStream);
+
+		if (aJPEG.mICCProfile != null)
+		{
+			new APP2Segment(aJPEG).setType(APP2Segment.ICC_PROFILE).write(mBitStream);
+		}
 
 		new DQTSegment(aJPEG).write(mBitStream);
 

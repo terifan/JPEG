@@ -130,4 +130,14 @@ public class BitOutputStream extends OutputStream
 	{
 		return mStreamOffset;
 	}
+
+
+	/**
+	 * Writes a zero terminated string.
+	 */
+	public void writeString(String aString) throws IOException
+	{
+		write(aString.getBytes());
+		writeInt8(0);
+	}
 }

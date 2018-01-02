@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-public class BitInputStream
+public class BitInputStream extends InputStream
 {
 	private InputStream mInputStream;
 	private int mBitBuffer;
@@ -35,6 +35,13 @@ public class BitInputStream
 	public void setHandleMarkers(boolean aHandleMarkers)
 	{
 		mHandleMarkers = aHandleMarkers;
+	}
+
+
+	@Override
+	public int read() throws IOException
+	{
+		return readInt8();
 	}
 
 
@@ -290,5 +297,18 @@ public class BitInputStream
 				System.out.print(" ");
 			}
 		}
+	}
+
+
+	public String readString() throws IOException
+	{
+		StringBuilder sb = new StringBuilder();
+
+		for (int c; (c = readInt8()) != 0;)
+		{
+			sb.append((char)c);
+		}
+
+		return sb.toString();
 	}
 }

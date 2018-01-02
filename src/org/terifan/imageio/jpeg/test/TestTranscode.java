@@ -1,11 +1,11 @@
 package org.terifan.imageio.jpeg.test;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
@@ -17,62 +17,53 @@ public class TestTranscode
 	{
 		try
 		{
+			File file = new File("D:\\Pictures\\Wallpapers\\mountain-silhouette.jpg");
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
 			JPEGConstants.VERBOSE = true;
+			
+			BufferedImage huffImage = JPEGImageReader.read(file);
 
-//			File file = new File("D:\\Pictures\\MLP\\6f4625df512a20dd62bad3f1c6c8accb.jpg");
-//			File file = new File("D:\\Pictures\\MLP\\ba798e6190d118e4c00b73e6d4fa08d9.jpg");
-//			File file = new File("D:\\Pictures\\Wallpapers\\9674_forest.jpg");
-//			File file = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
-//			File file = new File("D:\\Pictures\\Wallpapers\\girl-wolf-friendship.jpg");
-//			File file = new File("D:\\Pictures\\Wallpapers\\gold-coast-australia.jpg");
+			JPEGConstants.VERBOSE = false;
 
-//			File file = new File("D:\\Pictures\\Wallpapers\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
-//			File file = new File("D:\\temp\\autumn-landscape-wallpaper-1920x1080-1008099.jpg");
+			new Transcode().transcode(file, baos);
 
-//			File file = new File("D:\\Pictures\\Wallpapers\\superb-forest-wallpaper-1920x1080-1009097.jpg");
-//			File file = new File("D:\\temp\\superb-forest-wallpaper-1920x1080-1009097.jpg");
+			BufferedImage ariImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
 
-//			File file = new File("D:\\Pictures\\Wallpapers fantasy\\dragon-wallpaper-1920x1080-1009013.jpg");
-			File file = new File("D:\\temp\\dragon-wallpaper-1920x1080-1009013.jpg");
+			BufferedImage javaImage = ImageIO.read(file);
 
-			BufferedImage image0 = JPEGImageReader.read(file);
+			BufferedImage diff = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-			ImageFrame imagePane = new ImageFrame(image0);
+			for (int y = 0; y < javaImage.getHeight(); y++)
+			{
+				for (int x = 0; x < javaImage.getWidth(); x++)
+				{
+					int s = 20;
 
-//			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//
-//			new Transcode().transcode(file, baos);
-//
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//			System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//
-//			BufferedImage image1 = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
-//
-//			baos.writeTo(new FileOutputStream("d:/test.jpg"));
-//
-//			System.out.println(image1);
-//
-//			ImageFrame imagePane = new ImageFrame(image1);
-//
-//			int err = 0;
-//			for (int y = 0; y < image0.getHeight(); y++)
-//			{
-//				for (int x = 0; x < image0.getWidth(); x++)
-//				{
-//					if (image0.getRGB(x, y) != image1.getRGB(x, y))
-//					{
-//						err++;
-//					}
-//				}
-//			}
-//			System.out.println(err);
+					int c0 = ariImage.getRGB(x, y);
+					int c1 = huffImage.getRGB(x, y);
+					int r = s * Math.abs((255 & (c0 >> 16)) - (255 & (c1 >> 16)));
+					int g = s * Math.abs((255 & (c0 >> 8)) - (255 & (c1 >> 8)));
+					int b = s * Math.abs((255 & (c0 >> 0)) - (255 & (c1 >> 0)));
+					diff.setRGB(x, y, (r << 16) + (g << 8) + b);
+				}
+			}
+
+			BufferedImage image = new BufferedImage(ariImage.getWidth() * 2, ariImage.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
+			Graphics2D g = image.createGraphics();
+			g.drawImage(ariImage, 0 * javaImage.getWidth(), 0 * javaImage.getHeight(), null);
+			g.drawImage(diff, 0 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
+			g.drawImage(javaImage, 1 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
+			g.dispose();
+			
+			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(huffImage, ariImage));
+
+			ImageIO.write(ariImage, "png", new File("d:\\temp\\" + file.getName() + "_my.png"));
+			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
+			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
+			
+			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)
 		{

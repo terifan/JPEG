@@ -24,14 +24,9 @@ public class APP0Segment
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
+		String type = aBitStream.readString();
 
-		StringBuilder type = new StringBuilder();
-		for (int c; (c = aBitStream.readInt8()) != 0;)
-		{
-			type.append((char)c);
-		}
-
-		switch (type.toString())
+		switch (type)
 		{
 			case "JFIF":
 				int version = aBitStream.readInt16();
@@ -92,8 +87,7 @@ public class APP0Segment
 	{
 		aBitStream.writeInt16(JPEGConstants.APP0);
 		aBitStream.writeInt16(16);
-		aBitStream.write("JFIF".getBytes(), 0, 4);
-		aBitStream.writeInt8(0);
+		aBitStream.writeString("JFIF");
 		aBitStream.writeInt16(0x0101); // version
 		aBitStream.writeInt8(mJPEG.mDensitiesUnits);
 		aBitStream.writeInt16(mJPEG.mDensityX);
