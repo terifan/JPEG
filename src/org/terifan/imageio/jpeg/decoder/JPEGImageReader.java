@@ -545,94 +545,140 @@ public class JPEGImageReader
 		{
 			throw new IllegalStateException("Unsupported subsampling");
 		}
-		
-		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+
+		double[][][] w = 
 		{
-			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 			{
-				for (int blockY = 0; blockY < maxSamplingY; blockY++)
-				{
-					for (int blockX = 0; blockX < maxSamplingX; blockX++)
-					{
-						for (int y = 0; y < 8; y++)
-						{
-							for (int x = 0; x < 8; x++)
-							{
-								int ix = mcuX * mcuW + blockX * 8 + x;
-								int iy = mcuY * mcuH + blockY * 8 + y;
+				{0.50,0.50,0.25},
+				{0.50,1.00,0.25},
+				{0.25,0.25,0.25}
+			},
+			{
+				{0.25,0.50,0.50},
+				{0.25,1.00,0.50},
+				{0.25,0.25,0.25}
+			},
+			{
+				{0.25,0.25,0.25},
+				{0.50,1.00,0.25},
+				{0.50,0.50,0.25}
+			},
+			{
+				{0.25,0.25,0.25},
+				{0.25,1.00,0.50},
+				{0.25,0.50,0.50}
+			}
+		};
+
+//		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+//		{
+//			for (int blockY = 0; blockY < maxSamplingY; blockY++)
+//			{
+//				for (int y = 0; y < 8; y++)
+//				{
+//					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+//					{
+//						for (int blockX = 0; blockX < maxSamplingX; blockX++)
+//						{
+//							for (int x = 0; x < 8; x++)
+//							{
+		for (int iy = 0; iy < mJPEG.height; iy++)
+		{
+		for (int ix = 0; ix < mJPEG.width; ix++)
+		{
+//								int ix = mcuX * mcuW + blockX * 8 + x;
+//								int iy = mcuY * mcuH + blockY * 8 + y;
 
 								if (ix < mJPEG.width && iy < mJPEG.height)
 								{
+									int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
+									int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
+									int ixh1 = (ix % mcuW) * h1 / maxSamplingX;
+									int iyv1 = (iy % mcuH) * v1 / maxSamplingY;
+									int ixh2 = (ix % mcuW) * h2 / maxSamplingX;
+									int iyv2 = (iy % mcuH) * v2 / maxSamplingY;
+
 									if (mJPEG.components.length == 1)
 									{
-										int lu = coefficients[mcuY][mcuX][0][y * 8 + x];
+										int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
 
 										mImage.getRaster()[iy * mJPEG.width + ix] = (lu << 16) + (lu << 8) + lu;
 									}
 									else
 									{
-										int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
-										int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
-										int ixh1 = (ix % mcuW) * h1 / maxSamplingX;
-										int iyv1 = (iy % mcuH) * v1 / maxSamplingY;
-										int ixh2 = (ix % mcuW) * h2 / maxSamplingX;
-										int iyv2 = (iy % mcuH) * v2 / maxSamplingY;
-
 										int lu11 = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
 										int cb11 = coefficients[iy / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (iyv1 / 8)][(ixh1 % 8) + 8 * (iyv1 % 8)];
 										int cr11 = coefficients[iy / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (iyv2 / 8)][(ixh2 % 8) + 8 * (iyv2 % 8)];
 
 										if (ix > 0 && iy > 0 && ix < mJPEG.width - 1 && iy < mJPEG.height - 1)
 										{
-											int px = ix - 1;
-											int py = iy - 1;
-											int nx = ix + 1;
-											int ny = iy + 1;
-
 											if (h0 != h1 || v0 != v1)
 											{
+												int px = ix - 1;
+												int py = iy - 1;
+												int nx = ix + 1;
+												int ny = iy + 1;
+
 												int pxh1 = (px % mcuW) * h1 / maxSamplingX;
-												int nxh1 = (nx % mcuW) * h1 / maxSamplingX;
 												int pyv1 = (py % mcuH) * v1 / maxSamplingY;
+												int nxh1 = (nx % mcuW) * h1 / maxSamplingX;
 												int nyv1 = (ny % mcuH) * v1 / maxSamplingY;
 
-												int cb00 = coefficients[py / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (pyv1 / 8)][(pxh1 % 8) + 8 * (pyv1 % 8)];
-												int cb10 = coefficients[py / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (pyv1 / 8)][(ixh1 % 8) + 8 * (pyv1 % 8)];
-												int cb20 = coefficients[py / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (pyv1 / 8)][(nxh1 % 8) + 8 * (pyv1 % 8)];
+												int c00 = coefficients[py / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (pyv1 / 8)][(pxh1 % 8) + 8 * (pyv1 % 8)];
+												int c10 = coefficients[py / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (pyv1 / 8)][(ixh1 % 8) + 8 * (pyv1 % 8)];
+												int c20 = coefficients[py / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (pyv1 / 8)][(nxh1 % 8) + 8 * (pyv1 % 8)];
 
-												int cb01 = coefficients[iy / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (iyv1 / 8)][(pxh1 % 8) + 8 * (iyv1 % 8)];
-												int cb21 = coefficients[iy / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (iyv1 / 8)][(nxh1 % 8) + 8 * (iyv1 % 8)];
+												int c01 = coefficients[iy / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (iyv1 / 8)][(pxh1 % 8) + 8 * (iyv1 % 8)];
+												int c11 = cb11;
+												int c21 = coefficients[iy / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (iyv1 / 8)][(nxh1 % 8) + 8 * (iyv1 % 8)];
 
-												int cb02 = coefficients[ny / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (nyv1 / 8)][(pxh1 % 8) + 8 * (nyv1 % 8)];
-												int cb12 = coefficients[ny / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (nyv1 / 8)][(ixh1 % 8) + 8 * (nyv1 % 8)];
-												int cb22 = coefficients[ny / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (nyv1 / 8)][(nxh1 % 8) + 8 * (nyv1 % 8)];
+												int c02 = coefficients[ny / mcuH][px / mcuW][c1 + (pxh1 / 8) + h1 * (nyv1 / 8)][(pxh1 % 8) + 8 * (nyv1 % 8)];
+												int c12 = coefficients[ny / mcuH][ix / mcuW][c1 + (ixh1 / 8) + h1 * (nyv1 / 8)][(ixh1 % 8) + 8 * (nyv1 % 8)];
+												int c22 = coefficients[ny / mcuH][nx / mcuW][c1 + (nxh1 / 8) + h1 * (nyv1 / 8)][(nxh1 % 8) + 8 * (nyv1 % 8)];
 
-												cb11 = (cb00 + cb10 + cb20 + cb01 + cb11 + cb21 + cb02 + cb12 + cb22) / 9;
+												int z = (ix & 1) + 2 * (iy & 1);
+												cb11 = (int)((w[z][0][0]*c00 + w[z][0][1]*c10 + w[z][0][2]*c20 + w[z][1][0]*c01 + w[z][1][1]*c11 + w[z][1][2]*c21 + w[z][2][0]*c02 + w[z][2][1]*c12 + w[z][2][2]*c22) / (1+5*0.25+3*0.5));
+
+//												cb11 = (int)((c11 + 0.06 * (c00+c20+c02+c22) + 0.33 * (c01+c10+c20+c02)) / (1+0.06*4+0.33*4));
+//												cb11 = (int)((c11 + 0.25 * (c00+c20+c02+c22) + 0.50 * (c01+c10+c20+c02)) / (1+0.25*4+0.50*4));
+//												cb11 = (c00 + c10 + c20 + c01 + c11 + c21 + c02 + c12 + c22) / 9;
 											}
 
 											if (h0 != h2 || v0 != v2)
 											{
+												int px = ix - 1;
+												int py = iy - 1;
+												int nx = ix + 1;
+												int ny = iy + 1;
+
 												int pxh2 = (px % mcuW) * h2 / maxSamplingX;
-												int nxh2 = (nx % mcuW) * h2 / maxSamplingX;
 												int pyv2 = (py % mcuH) * v2 / maxSamplingY;
+												int nxh2 = (nx % mcuW) * h2 / maxSamplingX;
 												int nyv2 = (ny % mcuH) * v2 / maxSamplingY;
 
-												int cr00 = coefficients[py / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (pyv2 / 8)][(pxh2 % 8) + 8 * (pyv2 % 8)];
-												int cr10 = coefficients[py / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (pyv2 / 8)][(ixh2 % 8) + 8 * (pyv2 % 8)];
-												int cr20 = coefficients[py / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (pyv2 / 8)][(nxh2 % 8) + 8 * (pyv2 % 8)];
+												int c00 = coefficients[py / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (pyv2 / 8)][(pxh2 % 8) + 8 * (pyv2 % 8)];
+												int c10 = coefficients[py / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (pyv2 / 8)][(ixh2 % 8) + 8 * (pyv2 % 8)];
+												int c20 = coefficients[py / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (pyv2 / 8)][(nxh2 % 8) + 8 * (pyv2 % 8)];
 
-												int cr01 = coefficients[iy / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (iyv2 / 8)][(pxh2 % 8) + 8 * (iyv2 % 8)];
-												int cr21 = coefficients[iy / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (iyv2 / 8)][(nxh2 % 8) + 8 * (iyv2 % 8)];
+												int c01 = coefficients[iy / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (iyv2 / 8)][(pxh2 % 8) + 8 * (iyv2 % 8)];
+												int c11 = cr11;
+												int c21 = coefficients[iy / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (iyv2 / 8)][(nxh2 % 8) + 8 * (iyv2 % 8)];
 
-												int cr02 = coefficients[ny / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (nyv2 / 8)][(pxh2 % 8) + 8 * (nyv2 % 8)];
-												int cr12 = coefficients[ny / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (nyv2 / 8)][(ixh2 % 8) + 8 * (nyv2 % 8)];
-												int cr22 = coefficients[ny / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (nyv2 / 8)][(nxh2 % 8) + 8 * (nyv2 % 8)];
+												int c02 = coefficients[ny / mcuH][px / mcuW][c2 + (pxh2 / 8) + h2 * (nyv2 / 8)][(pxh2 % 8) + 8 * (nyv2 % 8)];
+												int c12 = coefficients[ny / mcuH][ix / mcuW][c2 + (ixh2 / 8) + h2 * (nyv2 / 8)][(ixh2 % 8) + 8 * (nyv2 % 8)];
+												int c22 = coefficients[ny / mcuH][nx / mcuW][c2 + (nxh2 / 8) + h2 * (nyv2 / 8)][(nxh2 % 8) + 8 * (nyv2 % 8)];
 
-												cr11 = (cr00 + cr10 + cr20 + cr01 + cr11 + cr21 + cr02 + cr12 + cr22) / 9;
+												int z = (ix & 1) + 2 * (iy & 1);
+												cr11 = (int)((w[z][0][0]*c00 + w[z][0][1]*c10 + w[z][0][2]*c20 + w[z][1][0]*c01 + w[z][1][1]*c11 + w[z][1][2]*c21 + w[z][2][0]*c02 + w[z][2][1]*c12 + w[z][2][2]*c22) / (1+5*0.25+3*0.5));
+
+//												cr11 = (int)((c11 + 0.06 * (c00+c20+c02+c22) + 0.33 * (c01+c10+c20+c02)) / (1+0.06*4+0.33*4));
+//												cr11 = (int)((c11 + 0.25 * (c00+c20+c02+c22) + 0.50 * (c01+c10+c20+c02)) / (1+0.25*4+0.50*4));
+//												cr11 = (c00 + c10 + c20 + c01 + c11 + c21 + c02 + c12 + c22) / 9;
 											}
 										}
 
-//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (cr << 16) + (cr << 8) + cr;
+//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu11 << 16) + (lu11 << 8) + lu11;
+//										mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (cr11 << 16) + (cr11 << 8) + cr11;
 										
 										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
 										{
@@ -648,10 +694,10 @@ public class JPEGImageReader
 										}
 									}
 								}
-							}
-						}
-					}
-				}
+//							}
+//						}
+//					}
+//				}
 			}
 		}
 	}
@@ -715,7 +761,7 @@ public class JPEGImageReader
 		switch (sb.toString())
 		{
 			case "1x1,1x1,1x1":	return "4:4:4"; // 1 1
-			case "1----------":	return "4:4:0"; // 1 2
+			case "1x2,1x1,1x1":	return "4:4:0"; // 1 2
 			case "2----------":	return "4:4:1"; // 1 4
 			case "2x1,1x1,1x1":	return "4:2:2"; // 2 1
 			case "2x2,1x1,1x1":	return "4:2:0"; // 2 2

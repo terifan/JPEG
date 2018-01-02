@@ -45,18 +45,18 @@ public class Test
 
 				ImageFrame imagePane = new ImageFrame(myImage);
 
-				System.out.println(PSNR.calculate(myImage, orgImage));
-				MeasureErrorRate.measureError(myImage, orgImage, 0, 0, null);
-
-				System.out.println("------------------------");
-
-				System.out.println(PSNR.calculate(javaImage, orgImage));
-				MeasureErrorRate.measureError(javaImage, orgImage, 0, 0, null);
-
-				System.out.println("------------------------");
-
-				System.out.println(PSNR.calculate(orgImagePaintNet, orgImage));
-				MeasureErrorRate.measureError(orgImagePaintNet, orgImage, 0, 0, null);
+//				System.out.println(PSNR.calculate(myImage, orgImage));
+//				MeasureErrorRate.measureError(myImage, orgImage, 0, 0, null);
+//
+//				System.out.println("------------------------");
+//
+//				System.out.println(PSNR.calculate(javaImage, orgImage));
+//				MeasureErrorRate.measureError(javaImage, orgImage, 0, 0, null);
+//
+//				System.out.println("------------------------");
+//
+//				System.out.println(PSNR.calculate(orgImagePaintNet, orgImage));
+//				MeasureErrorRate.measureError(orgImagePaintNet, orgImage, 0, 0, null);
 			}
 		}
 		catch (Throwable e)

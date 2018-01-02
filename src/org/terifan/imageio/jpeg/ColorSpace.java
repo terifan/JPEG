@@ -141,6 +141,23 @@ public final class ColorSpace
 	}
 
 
+	public static void rgbToYuvFloat(int aRGB, int[] aYCbCr)
+	{
+		int c = aRGB;
+		int R = 255 & (c >> 16);
+		int G = 255 & (c >> 8);
+		int B = 255 & (c);
+
+		int Y = clamp(R * 0.29900 + G * 0.58700 + B * 0.11400);
+		int U = clamp(R * -0.16874 + G * -0.33126 + B * 0.50000 + 128);
+		int V = clamp(R * 0.50000 + G * -0.41869 + B * -0.08131 + 128);
+
+		aYCbCr[0] = Y;
+		aYCbCr[1] = U;
+		aYCbCr[2] = V;
+	}
+
+
 	private static int clamp(int aValue)
 	{
 //		return RANGE_LIMIT[257 + aValue];
