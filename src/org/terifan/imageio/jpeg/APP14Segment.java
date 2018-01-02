@@ -31,13 +31,13 @@ public class APP14Segment
 			switch (transform)
 			{
 				case 1:
-					mJPEG.mColorSpace = ColorSpaceType.YCBCR;
+					mJPEG.mColorSpace = ColorSpace.YCBCR;
 					break;
 				case 2:
-					mJPEG.mColorSpace = ColorSpaceType.YCCK;
+					mJPEG.mColorSpace = ColorSpace.YCCK;
 					break;
 				default:
-					mJPEG.mColorSpace = ColorSpaceType.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
+					mJPEG.mColorSpace = ColorSpace.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
 					break;
 			}
 

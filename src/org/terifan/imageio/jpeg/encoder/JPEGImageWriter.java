@@ -123,7 +123,7 @@ public class JPEGImageWriter
 
 				aImage.getRGB(bx, by, mcuWidth, mcuHeight, raster, 0, mcuWidth);
 
-				ColorSpace.rgbToYuvFloat(raster, colors[0], colors[1], colors[2]);
+				ColorSpace.YCBCR.rgbToYuv(raster, colors[0], colors[1], colors[2]);
 
 				for (int componentIndex = 0, blockIndex = 0; componentIndex < mJPEG.comps_in_scan; componentIndex++)
 				{

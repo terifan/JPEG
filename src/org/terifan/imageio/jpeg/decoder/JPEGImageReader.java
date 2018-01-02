@@ -22,7 +22,6 @@ import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
-import org.terifan.imageio.jpeg.ColorSpaceType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
@@ -569,13 +568,15 @@ public class JPEGImageReader
 //								{
 									int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
 									int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
-									int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
 
-									if (mJPEG.components.length == 1)
+									int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
+									int color;
+
+									if (mJPEG.num_components == 1)
 									{
-										mImage.getRaster()[iy * mJPEG.width + ix] = (lu << 16) + (lu << 8) + lu;
+										color = mJPEG.mColorSpace.yccToRgb(lu, 0, 0);
 									}
-									else
+									else if (mJPEG.num_components == 3)
 									{
 										int cb;
 										int cr;
@@ -601,19 +602,14 @@ public class JPEGImageReader
 											cr = upsampleChroma(ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X1);
 										}
 
-										if (mJPEG.mColorSpace == ColorSpaceType.YCBCR)
-										{
-											mImage.getRaster()[iy * mJPEG.width + ix] = ColorSpace.yuvToRgbFloat(lu, cb, cr);
-										}
-										else if (mJPEG.mColorSpace == ColorSpaceType.RGB)
-										{
-											mImage.getRaster()[iy * mJPEG.width + ix] = 0xff000000 | (lu << 16) + (cb << 8) + cr;
-										}
-										else
-										{
-											throw new IllegalStateException("Unsupported color space: " + mJPEG.mColorSpace);
-										}
+										color = mJPEG.mColorSpace.yccToRgb(lu, cb, cr);
 									}
+									else
+									{
+										throw new IllegalStateException();
+									}
+
+									mImage.getImage().setRGB(ix, iy, color);
 //								}
 //							}
 //						}

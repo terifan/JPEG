@@ -62,6 +62,11 @@ public class SOFSegment
 		mJPEG.height = mHeight;
 		mJPEG.components = mComponents;
 		mJPEG.precision = mPrecision;
+		
+		if (mJPEG.num_components == 1)
+		{
+			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
+		}
 
 		if (VERBOSE)
 		{
