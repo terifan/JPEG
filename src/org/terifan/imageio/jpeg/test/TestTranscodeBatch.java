@@ -22,10 +22,10 @@ public class TestTranscodeBatch
 			int totalCleanLength = 0;
 			int totalAriLength = 0;
 			
-			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
+//			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
-				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
-//				for (File file : new File("D:\\Pictures\\Wallpapers").listFiles())
+//				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
+				for (File file : new File("D:\\Pictures\\y").listFiles())
 //				File file = new File("D:\\Pictures\\Wallpapers\\1 (1).jpg");
 				{
 					byte[] data = new byte[(int)file.length()];
@@ -78,8 +78,8 @@ public class TestTranscodeBatch
 				}
 			}
 
-			System.out.println();			
-			System.out.println(totalOriginalLength + " " + totalCleanLength + " " + totalAriLength);
+			System.out.println();
+			System.out.printf("original=%.2f, clean=%.2f, arithmetic=%.2f (%.2f)%n", totalOriginalLength/1024.0/1024, totalCleanLength/1024.0/1024, totalAriLength/1024.0/1024, 100-totalAriLength*100.0/totalCleanLength);
 		}
 		catch (Throwable e)
 		{

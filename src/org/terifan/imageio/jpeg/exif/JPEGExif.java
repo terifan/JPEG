@@ -214,10 +214,13 @@ public class JPEGExif
 		{
 			throw new IOException("Bad TIFF encoding header");
 		}
-		if (reader.readInt32() != 0x00000008)
-		{
-			throw new IOException("Bad TIFF encoding header");
-		}
+
+		reader.readInt32(); // ???
+
+//		if (reader.readInt32() != 0x00000008)
+//		{
+//			throw new IOException("Bad TIFF encoding header");
+//		}
 
 		for (;;)
 		{

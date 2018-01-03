@@ -7,7 +7,7 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
-import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
+import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 
 
@@ -25,7 +25,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
  *
  * Suspension is not currently supported in this module.
  */
-public class ArithmeticEncoder
+public class ArithmeticEncoder implements Encoder
 {
 	OutputStream mOutputStream;
 
@@ -121,9 +121,12 @@ void emit_byte (int val, JPEG cinfo) throws IOException
  * Finish up at the end of an arithmetic-compressed scan.
  */
 
-void finish_pass (JPEG cinfo) throws IOException
+	@Override
+	public void finish_pass(JPEG cinfo, boolean gather_statistics) throws IOException
 {
- ArithEntropyState e = cinfo.entropy;
+	if (gather_statistics) return;
+	
+ JPEGEntropyState e = cinfo.entropy;
   int temp;
 
   /* Section D.1.8: Termination of encoding */
@@ -208,7 +211,7 @@ void finish_pass (JPEG cinfo) throws IOException
 
 void arith_encode (JPEG cinfo, int[] st, int st_off, int val) throws IOException
 {
-	ArithEntropyState e = cinfo.entropy;
+	JPEGEntropyState e = cinfo.entropy;
   int nl, nm;
   int qe, temp;
   int sv;
@@ -307,11 +310,11 @@ void arith_encode (JPEG cinfo, int[] st, int st_off, int val) throws IOException
 
 void emit_restart (JPEG cinfo, int restart_num) throws IOException
 {
-  ArithEntropyState entropy = cinfo.entropy;
+  JPEGEntropyState entropy = cinfo.entropy;
   int ci;
   ComponentInfo compptr;
 
-  finish_pass(cinfo);
+  finish_pass(cinfo, false);
 
   emit_byte(0xFF, cinfo);
   emit_byte(RST0 + restart_num, cinfo);
@@ -349,7 +352,7 @@ void emit_restart (JPEG cinfo, int restart_num) throws IOException
 
 boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = cinfo.entropy;
+  JPEGEntropyState entropy = cinfo.entropy;
   int[] st;
   int st_off;
   int blkn, ci, tbl;
@@ -439,7 +442,7 @@ boolean encode_mcu_DC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = cinfo.entropy;
+  JPEGEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -545,7 +548,7 @@ boolean encode_mcu_AC_first (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = cinfo.entropy;
+  JPEGEntropyState entropy = cinfo.entropy;
   int[] st;
   int st_off=0;
   int Al, blkn;
@@ -580,7 +583,7 @@ boolean encode_mcu_DC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 
 boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
 {
-  ArithEntropyState entropy = cinfo.entropy;
+  JPEGEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -676,8 +679,11 @@ boolean encode_mcu_AC_refine (JPEG cinfo, int[][] MCU_data) throws IOException
  * Encode and output one MCU's worth of arithmetic-compressed coefficients.
  */
 
-boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
+	@Override
+public boolean encode_mcu (JPEG cinfo, int[][] MCU_data, boolean gather_statistics) throws IOException
 {
+	if (gather_statistics) return true;
+	
 	switch (cinfo.entropy.encode_mcu)
 	{
 		case x_encode_mcu_DC_first:
@@ -690,7 +696,7 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
 			return encode_mcu_AC_refine(cinfo, MCU_data);
 	}
 
-	ArithEntropyState entropy = cinfo.entropy;
+	JPEGEntropyState entropy = cinfo.entropy;
   int[] block;
   int[] st;
   int st_off;
@@ -833,11 +839,11 @@ boolean encode_mcu (JPEG cinfo, int[][] MCU_data) throws IOException
   return true;
 }
 
+final static int x_encode_mcu=0;
 final static int x_encode_mcu_DC_first=1;
 final static int x_encode_mcu_AC_first=2;
 final static int x_encode_mcu_DC_refine=3;
 final static int x_encode_mcu_AC_refine=4;
-final static int x_encode_mcu=0;
 
 /*
  * Initialize for an arithmetic-compressed scan.
@@ -848,9 +854,13 @@ void ERREXIT1(Object... o)
 }
 String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
 
-void start_pass (JPEG cinfo, boolean gather_statistics)
+@Override
+public void start_pass (JPEG cinfo, boolean gather_statistics)
 {
-  ArithEntropyState entropy = cinfo.entropy;
+	if (gather_statistics)
+		return;
+	
+  JPEGEntropyState entropy = cinfo.entropy;
   int ci, tbl;
   ComponentInfo compptr;
 
@@ -917,16 +927,13 @@ void start_pass (JPEG cinfo, boolean gather_statistics)
  * Module initialization routine for arithmetic entropy encoding.
  */
 
-void jinit_encoder (JPEG cinfo)
+	@Override
+public void jinit_encoder (JPEG cinfo)
 {
-  ArithEntropyState entropy = new ArithEntropyState();
+  JPEGEntropyState entropy = new JPEGEntropyState();
 
   cinfo.entropy = entropy;
   int i;
-
-//  cinfo.entropy = entropy.pub;
-//  entropy.pub.start_pass = start_pass;
-//  entropy.pub.finish_pass = finish_pass;
 
   /* Mark tables unallocated */
   for (i = 0; i < NUM_ARITH_TBLS; i++) {

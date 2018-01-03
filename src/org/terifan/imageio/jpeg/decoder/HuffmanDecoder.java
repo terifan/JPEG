@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import org.terifan.imageio.jpeg.JPEGEntropyState;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -11,6 +12,9 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 
 public class HuffmanDecoder extends Decoder
 {
+	private int mEOBRun;
+
+
 	public HuffmanDecoder(BitInputStream aBitStream)
 	{
 		super(aBitStream);
@@ -20,7 +24,7 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	void initialize(JPEG aJPEG)
 	{
-		ArithEntropyState entropy = new ArithEntropyState();
+		JPEGEntropyState entropy = new JPEGEntropyState();
 
 		aJPEG.entropy = entropy;
 	}
@@ -32,8 +36,7 @@ public class HuffmanDecoder extends Decoder
 		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
 
 		mBitStream.align();
-
-		EOBRUN = 0;
+		mEOBRun = 0;
 	}
 
 
@@ -52,12 +55,11 @@ public class HuffmanDecoder extends Decoder
 			{
 				for (int ci = 0; ci < aJPEG.comps_in_scan; ci++)
 				{
-					aJPEG.entropy.last_dc_val[aJPEG.MCU_membership[ci]] = 0;
+					aJPEG.entropy.last_dc_val[ci] = 0;
 				}
 
-				EOBRUN = 0;
-
 				mBitStream.align();
+				mEOBRun = 0;
 
 				int restartMarker = mBitStream.readInt16();
 				if (restartMarker != 0xFFD0 + aJPEG.restartMarkerIndex)
@@ -124,13 +126,12 @@ public class HuffmanDecoder extends Decoder
 		return true;
 	}
 
-	int EOBRUN;
 
 	private boolean decode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		if (EOBRUN > 0)
+		if (mEOBRun > 0)
 		{
-			EOBRUN--;
+			mEOBRun--;
 		}
 		else
 		{
@@ -165,8 +166,8 @@ public class HuffmanDecoder extends Decoder
 					{
 						if (r != 0)
 						{
-							EOBRUN = 1 << r;
-							EOBRUN += mBitStream.readBits(r) - 1;
+							mEOBRun = 1 << r;
+							mEOBRun += mBitStream.readBits(r) - 1;
 						}
 						break;
 					}
@@ -206,7 +207,7 @@ public class HuffmanDecoder extends Decoder
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
 
-		if (EOBRUN == 0)
+		if (mEOBRun == 0)
 		{
 			do
 			{
@@ -233,11 +234,11 @@ public class HuffmanDecoder extends Decoder
 				{
 					if (r != 15)
 					{
-						EOBRUN = 1 << r; // EOBr, run length is 2^r + appended bits
+						mEOBRun = 1 << r; // EOBr, run length is 2^r + appended bits
 						if (r != 0)
 						{
 							r = mBitStream.readBits(r);
-							EOBRUN += r;
+							mEOBRun += r;
 						}
 						break;
 						// rest of block is handled by EOB logic
@@ -285,7 +286,7 @@ public class HuffmanDecoder extends Decoder
 			while (k <= aJPEG.Se);
 		}
 
-		if (EOBRUN != 0)
+		if (mEOBRun != 0)
 		{
 			// Scan any remaining coefficient positions after the end-of-band (the last newly nonzero coefficient, if any). Append a correction bit to each already-nonzero coefficient.  A correction bit is 1 if the absolute value of the coefficient must be increased.
 			do
@@ -312,7 +313,7 @@ public class HuffmanDecoder extends Decoder
 			}
 			while (k <= aJPEG.Se);
 
-			EOBRUN--; // Count one block completed in EOB run
+			mEOBRun--; // Count one block completed in EOB run
 		}
 
 		return true;

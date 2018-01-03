@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
+import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
@@ -95,7 +96,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	int arith_decode(JPEG cinfo, final int[] st, final int st_off) throws IOException
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int nl, nm;
 		int qe, temp;
 		int data;
@@ -220,7 +221,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	private void process_restart(JPEG cinfo)
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		ComponentInfo compptr;
 
 		/* Advance past the RSTn marker */
@@ -272,7 +273,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -382,7 +383,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	boolean decode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -492,7 +493,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	boolean decode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int[] st;
 		int p1, blkn;
 
@@ -531,7 +532,7 @@ public class ArithmeticDecoder extends Decoder
 	 */
 	boolean decode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int[] block;
 		int thiscoef;
 		int[] st;
@@ -671,7 +672,7 @@ public class ArithmeticDecoder extends Decoder
 			Arrays.fill(d, 0);
 		}
 
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		ComponentInfo compptr;
 		int[] block;
 		int[] st;
@@ -866,7 +867,7 @@ public class ArithmeticDecoder extends Decoder
 	@Override
 	void startPass(JPEG cinfo)
 	{
-		ArithEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = cinfo.entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
@@ -1018,7 +1019,7 @@ public class ArithmeticDecoder extends Decoder
 	@Override
 	void initialize(JPEG cinfo)
 	{
-		ArithEntropyState entropy = new ArithEntropyState();
+		JPEGEntropyState entropy = new JPEGEntropyState();
 		cinfo.entropy = entropy;
 
 		/* Mark tables unallocated */

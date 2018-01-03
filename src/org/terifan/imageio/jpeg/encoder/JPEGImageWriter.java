@@ -274,19 +274,32 @@ public class JPEGImageWriter
 
 	public void encode(JPEG aJPEG) throws IOException
 	{
-		ArithmeticEncoder encoder = new ArithmeticEncoder(mBitStream);
+		Encoder encoder = new ArithmeticEncoder(mBitStream);
 		encoder.jinit_encoder(aJPEG);
+
+		encoder.start_pass(aJPEG, true);
+
+		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+		{
+			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+			{
+				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+			}
+		}
+
+		encoder.finish_pass(aJPEG, true);
+
 		encoder.start_pass(aJPEG, false);
 
 		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
 		{
 			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
 			{
-				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX]);
+				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
 			}
 		}
 
-		encoder.finish_pass(aJPEG);
+		encoder.finish_pass(aJPEG, false);
 	}
 
 

@@ -4,7 +4,7 @@ import java.awt.color.ICC_Profile;
 import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import org.terifan.imageio.jpeg.decoder.ArithEntropyState;
+import org.terifan.imageio.jpeg.encoder.HuffmanEncoder.JHUFF_TBL;
 
 
 public class JPEG
@@ -32,7 +32,7 @@ public class JPEG
 	public int[][][][] mCoefficients;
 
 	public ComponentInfo[] components;
-	public ArithEntropyState entropy;
+	public JPEGEntropyState entropy;
 	public int[] MCU_membership;
 	public ComponentInfo[] cur_comp_info;
 	public int num_components;
@@ -52,7 +52,12 @@ public class JPEG
 	public int restartMarkerIndex;
 	public ICC_Profile mICCProfile;
 
-
+	public JHUFF_TBL[] dc_huff_tbl_ptrs;
+	public JHUFF_TBL[] ac_huff_tbl_ptrs;
+	public int[] next_output_byte;
+	public int next_output_byte_offset;
+	public int free_in_buffer;
+	
 	public JPEG()
 	{
 		for (int i = 0; i < NUM_ARITH_TBLS; i++)

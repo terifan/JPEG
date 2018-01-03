@@ -1,11 +1,11 @@
-package org.terifan.imageio.jpeg.decoder;
+package org.terifan.imageio.jpeg;
 
 import static org.terifan.imageio.jpeg.JPEGConstants.MAX_COMPS_IN_SCAN;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import static org.terifan.imageio.jpeg.JPEGConstants.DC_STAT_BINS;
 
 
-public class ArithEntropyState
+public class JPEGEntropyState
 {
 	public int c;  // C register, base of coding interval + input bit buffer
 	public int a;  // A register, normalized size of coding interval

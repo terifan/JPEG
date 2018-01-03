@@ -4,10 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
-import org.terifan.ui.FilterFactory;
 
 
 public class TestHuff
@@ -20,8 +18,7 @@ public class TestHuff
 //			File input = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\love-wallpaper-1080p-HD-computer-background.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
-//			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
-			File input = new File("D:\\Pictures\\Wallpapers\\image.jpg");
+			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
 
 			JPEGConstants.VERBOSE = true;
 
