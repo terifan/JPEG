@@ -223,6 +223,12 @@ public class SOFSegment
 	}
 
 
+	public ComponentInfo[] getComponents()
+	{
+		return mComponents;
+	}
+
+
 	public int getMaxBlocksInMCU()
 	{
 		int count = 0;

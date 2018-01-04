@@ -14,12 +14,12 @@ public class SOSSegment
 	private JPEG mJPEG;
 
 
-	public SOSSegment(JPEG aJPEG, int... aComponents)
+	public SOSSegment(JPEG aJPEG, int... aComponentIds)
 	{
 		mJPEG = aJPEG;
 		mTableDC = new int[4];
 		mTableAC = new int[4];
-		mComponentIds = aComponents;
+		mComponentIds = aComponentIds;
 	}
 
 
@@ -95,15 +95,15 @@ public class SOSSegment
 	public SOSSegment write(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.SOS);
-		aBitStream.writeInt16(2 + 1 + mJPEG.comps_in_scan * 2 + 3);
+		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);
 
-		aBitStream.writeInt8(mJPEG.comps_in_scan);
+		aBitStream.writeInt8(mComponentIds.length);
 
-		for (int i = 0; i < mJPEG.comps_in_scan; i++)
+		for (int i = 0; i < mComponentIds.length; i++)
 		{
-			aBitStream.writeInt8(mJPEG.cur_comp_info[i].getComponentId());
-			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableDC(), 4);
-			aBitStream.writeBits(mJPEG.cur_comp_info[i].getTableAC(), 4);
+			aBitStream.writeInt8(mComponentIds[i]);
+			aBitStream.writeBits(mTableDC[i], 4);
+			aBitStream.writeBits(mTableAC[i], 4);
 		}
 
 		aBitStream.writeInt8(mJPEG.Ss);
@@ -150,5 +150,45 @@ public class SOSSegment
 	{
 		mTableDC[aIndex] = aTableDC;
 		return this;
+	}
+
+
+	public void prepareMCU()
+	{
+		mJPEG.comps_in_scan = mComponentIds.length;
+		mJPEG.blocks_in_MCU = 0;
+
+		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
+			mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+		}
+
+		mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
+		mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
+
+		if (VERBOSE)
+		{
+			System.out.println("MCU");
+		}
+
+		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		{
+			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
+			comp.setTableAC(getACTable(scanComponentIndex));
+			comp.setTableDC(getDCTable(scanComponentIndex));
+
+			mJPEG.cur_comp_info[scanComponentIndex] = comp;
+
+			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
+			{
+				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
+			}
+
+			if (VERBOSE)
+			{
+				System.out.println("  " + comp);
+			}
+		}
 	}
 }

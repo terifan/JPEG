@@ -40,9 +40,13 @@ public class Transcode
 			throw new IllegalStateException("Error decoding source image");
 		}
 
+		jpeg.mArithmetic = true;
+		jpeg.mProgressive = false;
+		jpeg.restart_interval = 0;
+
 		JPEGImageWriter writer = new JPEGImageWriter(aOutputStream);
 		writer.create(jpeg);
-		writer.encode(jpeg);
+		writer.encodeCoefficients(jpeg);
 		writer.finish(jpeg);
 	}
 }

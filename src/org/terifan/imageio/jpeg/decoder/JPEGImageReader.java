@@ -292,7 +292,7 @@ public class JPEGImageReader
 			first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		prepareMCU(mJPEG, mJPEG.mSOFSegment, mSOSSegment);
+		mSOSSegment.prepareMCU();
 
 		if (mImage == null)
 		{
@@ -418,45 +418,6 @@ public class JPEGImageReader
 		if (VERBOSE)
 		{
 			System.out.println("======== " + mBitStream.getStreamOffset() + "(" + Integer.toHexString(mBitStream.getStreamOffset()) + ") / " + mProgressiveLevel + " ========================================================================================================================================================================");
-		}
-	}
-
-
-	public static void prepareMCU(JPEG aJPEG, SOFSegment aSOFSegment, SOSSegment aSOSSegment)
-	{
-		aJPEG.blocks_in_MCU = 0;
-
-		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
-		{
-			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponentByIndex(scanComponentIndex));
-			aJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-		}
-
-		aJPEG.MCU_membership = new int[aJPEG.blocks_in_MCU];
-		aJPEG.cur_comp_info = new ComponentInfo[aJPEG.comps_in_scan];
-
-		if (VERBOSE)
-		{
-			System.out.println("MCU");
-		}
-
-		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.comps_in_scan; scanComponentIndex++)
-		{
-			ComponentInfo comp = aSOFSegment.getComponentById(aSOSSegment.getComponentByIndex(scanComponentIndex));
-			comp.setTableAC(aSOSSegment.getACTable(scanComponentIndex));
-			comp.setTableDC(aSOSSegment.getDCTable(scanComponentIndex));
-
-			aJPEG.cur_comp_info[scanComponentIndex] = comp;
-
-			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
-			{
-				aJPEG.MCU_membership[blockIndex] = scanComponentIndex;
-			}
-
-			if (VERBOSE)
-			{
-				System.out.println("  " + comp);
-			}
 		}
 	}
 

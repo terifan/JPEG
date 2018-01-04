@@ -3,6 +3,7 @@ package org.terifan.imageio.jpeg.test;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.encoder.JPEGImageWriter;
 
@@ -20,8 +21,9 @@ public class TestEncode
 			new JPEGImageWriter(baos).write(src, 55);
 
 			System.out.println("---------> "+baos.size());
-//			Debug.hexDump(baos.toByteArray());
 
+			JPEGConstants.VERBOSE = true;
+			
 			BufferedImage image = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
 
 			System.out.println(image);

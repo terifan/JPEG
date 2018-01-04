@@ -25,11 +25,15 @@ public class TestTranscode
 			
 			BufferedImage huffImage = JPEGImageReader.read(file);
 
-			JPEGConstants.VERBOSE = false;
-
+			System.out.println("=================================================================================================================================================================================");
+			
 			new Transcode().transcode(file, baos);
 
+			System.out.println("=================================================================================================================================================================================");
+
 			BufferedImage ariImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
+
+			JPEGConstants.VERBOSE = false;
 
 			BufferedImage javaImage = ImageIO.read(file);
 
@@ -59,9 +63,9 @@ public class TestTranscode
 			
 			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(huffImage, ariImage));
 
-			ImageIO.write(ariImage, "png", new File("d:\\temp\\" + file.getName() + "_my.png"));
-			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
-			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
+//			ImageIO.write(ariImage, "png", new File("d:\\temp\\" + file.getName() + "_my.png"));
+//			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
+//			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
 			
 			ImageFrame imagePane = new ImageFrame(image);
 		}
