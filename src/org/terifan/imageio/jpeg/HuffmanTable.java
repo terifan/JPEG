@@ -57,6 +57,18 @@ public class HuffmanTable
 		mIndex = aIndex;
 		this.bits = bits;
 		this.huffval = huffval;
+
+		mMaxLength = 0;
+		mNumSymbols = 0;
+
+		for (int i = 1; i <= 16; i++)
+		{
+			mNumSymbols += bits[i];
+			if (bits[i] > 0)
+			{
+				mMaxLength = i + 1;
+			}
+		}
 	}
 
 
@@ -101,15 +113,6 @@ public class HuffmanTable
 			}
 		}
 
-		if (VERBOSE)
-		{
-			System.out.println("DHTMarkerSegment");
-			System.out.println("  identity=" + mIndex);
-			System.out.println("  type=" + (mType == TYPE_AC ? "AC" : "DC"));
-			System.out.println("  numSymbols=" + mNumSymbols);
-			System.out.println("  maxLength=" + mMaxLength);
-		}
-
 		return this;
 	}
 
@@ -123,16 +126,40 @@ public class HuffmanTable
 
 		aOutput.write(mIndex + (mType == TYPE_AC ? 0x10 : 0x00));
 
-		int length = 0;
-		for (int i = 1; i <= 16; i++)
-		  length += bits[i];
+		{
+			int length = 0;
+			for (int i = 1; i <= 16; i++)
+			{
+				length += bits[i];
+			}
 
-		for (int i = 1; i <= 16; i++)
-		  aOutput.write(bits[i]);
+			for (int i = 1; i <= 16; i++)
+			{
+				aOutput.write(bits[i]);
+			}
 
-		for (int i = 0; i < length; i++)
-		  aOutput.write(huffval[i]);
+			for (int i = 0; i < length; i++)
+			{
+				aOutput.write(huffval[i]);
+			}
+		}
 
+//		for (int length = 1, code = 0, n = 0; length < 17; length++, code <<= 1)
+//		{
+//			for (int j = 0; j < bits[length]; j++, code++)
+//			{
+//				int symbol = huffval[n++];
+//				int shift = 1 << (mMaxLength - length);
+//
+//				String s = "";
+//				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
+//				{
+//					s += 1 & ((code * shift) >> (mMaxLength-k-1));
+//				}
+//				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
+//			}
+//		}
+		
 		mSent = true;
 	}
 
@@ -152,6 +179,12 @@ public class HuffmanTable
 	public int getNumSymbols()
 	{
 		return mNumSymbols;
+	}
+
+
+	public int getMaxLength()
+	{
+		return mMaxLength;
 	}
 
 
@@ -182,5 +215,25 @@ public class HuffmanTable
 		}
 
 		return symbol;
+	}
+
+	
+	public void log()
+	{
+		if (VERBOSE)
+		{
+			System.out.println("DHTMarkerSegment");
+			System.out.println("  identity=" + mIndex);
+			System.out.println("  type=" + (mType == TYPE_AC ? "AC" : "DC"));
+			System.out.println("  numSymbols=" + mNumSymbols);
+			System.out.println("  maxLength=" + mMaxLength);
+		}
+	}
+	
+
+	@Override
+	public String toString()
+	{
+		return (mType == TYPE_DC ? "DC" : "AC") + "-" + mIndex;
 	}
 }

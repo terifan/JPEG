@@ -2,6 +2,8 @@ package org.terifan.imageio.jpeg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import static org.terifan.imageio.jpeg.HuffmanTable.TYPE_AC;
+import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 import org.terifan.imageio.jpeg.encoder.HuffmanEncoder;
@@ -45,13 +47,23 @@ public class DHTSegment
 
 		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
 		{
-			table.write(baos);
+			if (table != null)
+			{
+				table.log();
+				
+				table.write(baos);
+			}
 		}
 		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
 		{
-			table.write(baos);
+			if (table != null)
+			{
+				table.log();
+			
+				table.write(baos);
+			}
 		}
-
+		
 //		for (HuffmanTable[] tables : mJPEG.mHuffmanTables)
 //		{
 //			for (HuffmanTable table : tables)
@@ -62,6 +74,8 @@ public class DHTSegment
 
 		aBitStream.writeInt16(JPEGConstants.DHT);
 		aBitStream.writeInt16(2 + baos.size());
-		baos.writeTo(aBitStream);
+//		baos.writeTo(aBitStream);
+
+		aBitStream.write(baos.toByteArray());
 	}
 }

@@ -21,14 +21,16 @@ public class TestTranscode
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-			JPEGConstants.VERBOSE = true;
+//			JPEGConstants.VERBOSE = true;
 			
 			BufferedImage huffImage = JPEGImageReader.read(file);
 
 			System.out.println("=================================================================================================================================================================================");
 			
-			new Transcode().transcode(file, baos);
+			new Transcode().setArithmetic(!false).setOptimizedHuffman(!true).setProgressive(false).transcode(file, baos);
 
+			System.out.println(baos.size());
+			
 			System.out.println("=================================================================================================================================================================================");
 
 			BufferedImage ariImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));

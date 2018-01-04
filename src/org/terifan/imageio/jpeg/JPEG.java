@@ -14,6 +14,7 @@ public class JPEG
 	public SOFSegment mSOFSegment;
 	public boolean mArithmetic;
 	public boolean mProgressive;
+	public boolean mOptimizedHuffman;
 	public int num_hor_mcu;
 	public int num_ver_mcu;
 	public int width;
@@ -50,12 +51,12 @@ public class JPEG
 	public int restartMarkerIndex;
 	public ICC_Profile mICCProfile;
 
-	public HuffmanTable[] dc_huff_tbl_ptrs;
-	public HuffmanTable[] ac_huff_tbl_ptrs;
+	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
+	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
 	
-	public int next_output_byte_offset;
-	public byte[] next_output_byte = new byte[16];
-	public int free_in_buffer = 16;
+//	public int next_output_byte_offset;
+//	public byte[] next_output_byte = new byte[16];
+//	public int free_in_buffer = 16;
 	
 	public JPEG()
 	{

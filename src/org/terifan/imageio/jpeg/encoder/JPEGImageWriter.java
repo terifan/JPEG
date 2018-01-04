@@ -161,25 +161,6 @@ public class JPEGImageWriter
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
-		if (aJPEG.mArithmetic)
-		{
-			aJPEG.arith_dc_L = new int[]{0,0};
-			aJPEG.arith_dc_U = new int[]{1,1};
-			aJPEG.arith_ac_K = new int[]{5,5};
-
-			new DACSegment(aJPEG).write(mBitStream);
-
-			encoder = new ArithmeticEncoder(mBitStream);
-		}
-		else
-		{
-			HuffmanEncoder.std_huff_tables(aJPEG);
-
-			new DHTSegment(aJPEG).write(mBitStream);
-
-			encoder = new HuffmanEncoder(mBitStream);
-		}
-
 		aJPEG.Ss = 0;
 		aJPEG.Se = 63;
 		aJPEG.Ah = 0;
@@ -192,24 +173,54 @@ public class JPEGImageWriter
 		mSOSSegment.setTableAC(1, 1);
 		mSOSSegment.setTableDC(2, 1);
 		mSOSSegment.setTableAC(2, 1);
-		mSOSSegment.write(mBitStream);
-
+	
 		mSOSSegment.prepareMCU();
+	
+		
+		if (aJPEG.mArithmetic)
+		{
+			aJPEG.arith_dc_L = new int[]{0,0};
+			aJPEG.arith_dc_U = new int[]{1,1};
+			aJPEG.arith_ac_K = new int[]{5,5};
 
-		encoder.jinit_encoder(aJPEG);
+			new DACSegment(aJPEG).write(mBitStream);
 
-//		encoder.start_pass(aJPEG, true);
-//
-//		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
-//		{
-//			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
-//			{
-//				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
-//			}
-//		}
-//
-//		encoder.finish_pass(aJPEG, true);
+			encoder = new ArithmeticEncoder(mBitStream);
 
+			encoder.jinit_encoder(aJPEG);
+		}
+		else
+		{
+			encoder = new HuffmanEncoder(mBitStream);
+
+			encoder.jinit_encoder(aJPEG);
+
+			if (aJPEG.mOptimizedHuffman)
+			{
+				encoder.start_pass(aJPEG, true);
+
+				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+				{
+					for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+					{
+						encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+					}
+				}
+
+				encoder.finish_pass(aJPEG, true);
+			}
+			else
+			{
+				HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
+			}
+
+			new DHTSegment(aJPEG).write(mBitStream);
+		}
+
+		
+		mSOSSegment.write(mBitStream);
+	
+		
 		encoder.start_pass(aJPEG, false);
 
 		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
@@ -264,5 +275,13 @@ public class JPEGImageWriter
 		{
 			System.arraycopy(aSrc, aSrcOffsetX + aSrcWidth * (aSrcOffsetY + y), aDst, 8 * y, 8);
 		}
+	}
+
+
+	public JPEGImageWriter setOptimizedHuffman(boolean aOptimizedHuffman)
+	{
+		mJPEG.mOptimizedHuffman = aOptimizedHuffman;
+		
+		return this;
 	}
 }

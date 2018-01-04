@@ -43,7 +43,7 @@ public class HuffmanEncoder implements Encoder
 	int MAX_COEF_BITS = 10;
 
 
-	OutputStream mOutputStream;
+	private OutputStream mOutputStream;
 
 
 	public HuffmanEncoder(OutputStream aOutputStream)
@@ -53,7 +53,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	/* Derived data constructed for each Huffman table */
-	static class c_derived_tbl
+	private static class c_derived_tbl
 	{
 		int[] ehufco = new int[256];
 		/* code for each symbol */
@@ -68,22 +68,16 @@ public class HuffmanEncoder implements Encoder
 	 * The savable_state subrecord contains fields that change within an MCU,
 	 * but must not be updated permanently until we complete the MCU.
 	 */
-	static class savable_state
+	private static class savable_state
 	{
 		int put_buffer;
-		/* current bit-accumulation buffer */
 		int put_bits;
-		/* # of bits now in it */
 		int[] last_dc_val = new int[MAX_COMPS_IN_SCAN];
-		/* last DC coef for each component */
 	};
 
 
-	static class huff_entropy_encoder extends JPEGEntropyState
+	private static class huff_entropy_encoder extends JPEGEntropyState
 	{
-		savable_state saved = new savable_state();
-		/* Bit buffer & DC state at start of MCU */
-
 		/* These fields are NOT loaded into local working state. */
 		int restarts_to_go;
 		/* MCUs left in this restart interval */
@@ -105,9 +99,9 @@ public class HuffmanEncoder implements Encoder
 
 		/* next_output_byte/free_in_buffer are local copies of cinfo.dest fields.
 		 */
-		int next_output_byte_offset;
-		byte[] next_output_byte = new byte[16]; 		/* => next byte to write in buffer */
-		int free_in_buffer = 16; 		/* # of byte spaces remaining in buffer */
+//		int next_output_byte_offset;
+//		byte[] next_output_byte = new byte[16]; 		/* => next byte to write in buffer */
+//		int free_in_buffer = 16; 		/* # of byte spaces remaining in buffer */
 		JPEG cinfo;
 		/* link to cinfo (needed for dump_buffer) */
 
@@ -121,19 +115,24 @@ public class HuffmanEncoder implements Encoder
 		int[] bit_buffer;
 		/* buffer for correction bits (1 per char) */
 		/* packing correction bits tightly would save some space but cost time... */
+		
+		private working_state working_state = new working_state();
+
+		savable_state saved = working_state.cur;
+//		savable_state saved = new savable_state();
+		/* Bit buffer & DC state at start of MCU */
 	}
 
 	/* Working state while writing an MCU (sequential mode).
 	 * This struct contains all the fields that are needed by subroutines.
 	 */
-	static class working_state
+	private static class working_state
 	{
 		int next_output_byte_offset;
-
 		byte[] next_output_byte = new byte[16]; 	/* => next byte to write in buffer */
 		int free_in_buffer = 16; 	/* # of byte spaces remaining in buffer */
 
-		savable_state cur;
+		savable_state cur = new savable_state();
 		/* Current bit buffer & DC state */
 		JPEG cinfo;
 		/* dump_buffer needs access to this */
@@ -144,18 +143,14 @@ public class HuffmanEncoder implements Encoder
 	 * 1000 is already well into the realm of overkill.
 	 * The minimum safe size is 64 bits.
 	 */
-	int MAX_CORR_BITS = 1000;
-
-
-	/* Max # of correction bits I can buffer */
+	private int MAX_CORR_BITS = 1000;
 
 
 	/*
 	 * Compute the derived values for a Huffman table.
 	 * This routine also performs some validation checks on the table.
 	 */
-
-	c_derived_tbl jpeg_make_c_derived_tbl(JPEG cinfo, boolean isDC, int tblno, c_derived_tbl pdtbl)
+	private c_derived_tbl jpeg_make_c_derived_tbl(JPEG cinfo, boolean isDC, int tblno, c_derived_tbl pdtbl)
 	{
 		HuffmanTable htbl;
 		c_derived_tbl dtbl;
@@ -176,7 +171,7 @@ public class HuffmanEncoder implements Encoder
 		htbl = isDC ? cinfo.dc_huff_tbl_ptrs[tblno] : cinfo.ac_huff_tbl_ptrs[tblno];
 		if (htbl == null)
 		{
-			throw new IllegalStateException("JERR_NO_HUFF_TABLE" + tblno);
+			throw new IllegalStateException("JERR_NO_HUFF_TABLE " + tblno);
 		}
 
 		/* Allocate a workspace if we haven't already done so. */
@@ -276,11 +271,13 @@ public class HuffmanEncoder implements Encoder
 	/* Emit a byte */
 	private void emit_byte_e(huff_entropy_encoder entropy, int val) throws IOException
 	{
-		entropy.next_output_byte[entropy.next_output_byte_offset++] = (byte)val;
-		if (--entropy.free_in_buffer == 0)
-		{
-			dump_buffer_e(entropy);
-		}
+		emit_byte_s(entropy.working_state, val);
+		
+//		entropy.next_output_byte[entropy.next_output_byte_offset++] = (byte)val;
+//		if (--entropy.free_in_buffer == 0)
+//		{
+//			dump_buffer_e(entropy);
+//		}
 	}
 
 
@@ -289,17 +286,17 @@ public class HuffmanEncoder implements Encoder
 		mOutputStream.write(state.next_output_byte, 0, state.next_output_byte_offset);
 		
 		state.next_output_byte_offset = 0;
-		state.free_in_buffer = state.cinfo.next_output_byte.length;
+		state.free_in_buffer = state.next_output_byte.length;
 	}
 
 
-	private void dump_buffer_e(huff_entropy_encoder entropy) throws IOException
-	{
-		mOutputStream.write(entropy.next_output_byte, 0, entropy.next_output_byte_offset);
-		
-		entropy.next_output_byte_offset = 0;
-		entropy.free_in_buffer = entropy.cinfo.next_output_byte.length;
-	}
+//	private void dump_buffer_e(huff_entropy_encoder entropy) throws IOException
+//	{
+//		mOutputStream.write(entropy.next_output_byte, 0, entropy.next_output_byte_offset);
+//		
+//		entropy.next_output_byte_offset = 0;
+//		entropy.free_in_buffer = entropy.next_output_byte.length;
+//	}
 
 
 	/* Outputting bits to the file */
@@ -309,7 +306,7 @@ public class HuffmanEncoder implements Encoder
 	 * in one call, and we never retain more than 7 bits in put_buffer
 	 * between calls, so 24 bits are sufficient.
 	 */
-	boolean emit_bits_s(working_state state, int code, int size) throws IOException
+	private void emit_bits_s(working_state state, int code, int size) throws IOException
 	{
 		/* This routine is heavily used, so it's worth coding tightly. */
 		int put_buffer;
@@ -349,13 +346,11 @@ public class HuffmanEncoder implements Encoder
 		state.cur.put_buffer = put_buffer;
 		/* update state variables */
 		state.cur.put_bits = put_bits;
-
-		return true;
 	}
 
 
 	/* Emit some bits, unless we are in gather mode */
-	void emit_bits_e(huff_entropy_encoder entropy, int code, int size) throws IOException
+	private void emit_bits_e(huff_entropy_encoder entropy, int code, int size) throws IOException
 	{
 		/* This routine is heavily used, so it's worth coding tightly. */
 		int put_buffer;
@@ -381,7 +376,7 @@ public class HuffmanEncoder implements Encoder
 		put_buffer <<= 24 - put_bits;
 		/* align incoming bits */
 
- /* and merge with old buffer contents */
+		/* and merge with old buffer contents */
 		put_buffer |= entropy.saved.put_buffer;
 
 		while (put_bits >= 8)
@@ -404,19 +399,17 @@ public class HuffmanEncoder implements Encoder
 	}
 
 
-	boolean flush_bits_s(working_state state) throws IOException
+	private void flush_bits_s(working_state state) throws IOException
 	{
 		emit_bits_s(state, 0x7F, 7);
 		/* fill any partial byte with ones */
 		state.cur.put_buffer = 0;
 		/* and reset bit-buffer to empty */
 		state.cur.put_bits = 0;
-		return true;
 	}
 
 
-	void
-		flush_bits_e(huff_entropy_encoder entropy) throws IOException
+	private void flush_bits_e(huff_entropy_encoder entropy) throws IOException
 	{
 		emit_bits_e(entropy, 0x7F, 7);
 		/* fill any partial byte with ones */
@@ -427,9 +420,9 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Emit (or just count) a Huffman symbol.
+	 * Emit (or just count) a Huffman symbol.
 	 */
-	void emit_dc_symbol(huff_entropy_encoder entropy, int tbl_no, int symbol) throws IOException
+	private void emit_dc_symbol(huff_entropy_encoder entropy, int tbl_no, int symbol) throws IOException
 	{
 		if (entropy.gather_statistics)
 		{
@@ -443,7 +436,7 @@ public class HuffmanEncoder implements Encoder
 	}
 
 
-	void emit_ac_symbol(huff_entropy_encoder entropy, int tbl_no, int symbol) throws IOException
+	private void emit_ac_symbol(huff_entropy_encoder entropy, int tbl_no, int symbol) throws IOException
 	{
 		if (entropy.gather_statistics)
 		{
@@ -458,9 +451,9 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Emit bits from a correction bit buffer.
+	 * Emit bits from a correction bit buffer.
 	 */
-	void emit_buffered_bits(huff_entropy_encoder entropy, int[] bufstart, int bufoffset, int nbits) throws IOException
+	private void emit_buffered_bits(huff_entropy_encoder entropy, int[] bufstart, int bufoffset, int nbits) throws IOException
 	{
 		if (entropy.gather_statistics)
 		{
@@ -477,9 +470,9 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Emit any pending EOBRUN symbol.
+	 * Emit any pending EOBRUN symbol.
 	 */
-	void emit_eobrun(huff_entropy_encoder entropy) throws IOException
+	private void emit_eobrun(huff_entropy_encoder entropy) throws IOException
 	{
 		int temp, nbits;
 
@@ -514,16 +507,13 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Emit a restart marker & resynchronize predictions.
+	 * Emit a restart marker & resynchronize predictions.
 	 */
-	boolean emit_restart_s(working_state state, int restart_num) throws IOException
+	private boolean emit_restart_s(working_state state, int restart_num) throws IOException
 	{
 		int ci;
 
-		if (!flush_bits_s(state))
-		{
-			return false;
-		}
+		flush_bits_s(state);
 
 		emit_byte_s(state, 0xFF);
 		emit_byte_s(state, RST0 + restart_num);
@@ -539,7 +529,7 @@ public class HuffmanEncoder implements Encoder
 	}
 
 
-	void emit_restart_e(huff_entropy_encoder entropy, int restart_num) throws IOException
+	private void emit_restart_e(huff_entropy_encoder entropy, int restart_num) throws IOException
 	{
 		int ci;
 
@@ -573,16 +563,16 @@ public class HuffmanEncoder implements Encoder
  * MCU encoding for DC initial scan (either spectral selection,
  * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int temp, temp2;
 		int nbits;
 		int blkn, ci, tbl;
 
-		entropy.next_output_byte = cinfo.next_output_byte;
-		entropy.next_output_byte_offset = cinfo.next_output_byte_offset;
-		entropy.free_in_buffer = cinfo.free_in_buffer;
+//		entropy.next_output_byte = cinfo.next_output_byte;
+//		entropy.next_output_byte_offset = cinfo.next_output_byte_offset;
+//		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (cinfo.restart_interval != 0)
@@ -646,9 +636,9 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		cinfo.next_output_byte = entropy.next_output_byte;
-		cinfo.next_output_byte_offset = entropy.next_output_byte_offset;
-		cinfo.free_in_buffer = entropy.free_in_buffer;
+//		cinfo.next_output_byte = entropy.next_output_byte;
+//		cinfo.next_output_byte_offset = entropy.next_output_byte_offset;
+//		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (cinfo.restart_interval != 0)
@@ -670,7 +660,7 @@ public class HuffmanEncoder implements Encoder
  * MCU encoding for AC initial scan (either spectral selection,
  * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int[] natural_order;
@@ -680,8 +670,8 @@ public class HuffmanEncoder implements Encoder
 		int r, k;
 		int Se, Al;
 
-		entropy.next_output_byte = cinfo.next_output_byte;
-		entropy.free_in_buffer = cinfo.free_in_buffer;
+//		entropy.next_output_byte = cinfo.next_output_byte;
+//		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (cinfo.restart_interval != 0)
@@ -784,8 +774,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		cinfo.next_output_byte = entropy.next_output_byte;
-		cinfo.free_in_buffer = entropy.free_in_buffer;
+//		cinfo.next_output_byte = entropy.next_output_byte;
+//		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (cinfo.restart_interval != 0)
@@ -808,13 +798,13 @@ public class HuffmanEncoder implements Encoder
  * Note: we assume such scans can be multi-component,
  * although the spec is not very clear on the point.
 	 */
-	boolean encode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int Al, blkn;
 
-		entropy.next_output_byte = cinfo.next_output_byte;
-		entropy.free_in_buffer = cinfo.free_in_buffer;
+//		entropy.next_output_byte = cinfo.next_output_byte;
+//		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (cinfo.restart_interval != 0)
@@ -834,8 +824,8 @@ public class HuffmanEncoder implements Encoder
 			emit_bits_e(entropy, (MCU_data[blkn][0] >> Al), 1);
 		}
 
-		cinfo.next_output_byte = entropy.next_output_byte;
-		cinfo.free_in_buffer = entropy.free_in_buffer;
+//		cinfo.next_output_byte = entropy.next_output_byte;
+//		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (cinfo.restart_interval != 0)
@@ -856,7 +846,7 @@ public class HuffmanEncoder implements Encoder
 	/*
  * MCU encoding for AC successive approximation refinement scan.
 	 */
-	boolean encode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int[] natural_order;
@@ -869,8 +859,8 @@ public class HuffmanEncoder implements Encoder
 		int BR;
 		int[] absvalues = new int[DCTSIZE2];
 
-		entropy.next_output_byte = cinfo.next_output_byte;
-		entropy.free_in_buffer = cinfo.free_in_buffer;
+//		entropy.next_output_byte = cinfo.next_output_byte;
+//		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (cinfo.restart_interval != 0)
@@ -993,8 +983,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		cinfo.next_output_byte = entropy.next_output_byte;
-		cinfo.free_in_buffer = entropy.free_in_buffer;
+//		cinfo.next_output_byte = entropy.next_output_byte;
+//		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (cinfo.restart_interval != 0)
@@ -1013,7 +1003,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	/* Encode a single block's worth of coefficients */
-	boolean encode_one_block(working_state state, int[] block, int last_dc_val, c_derived_tbl dctbl, c_derived_tbl actbl) throws IOException
+	private void encode_one_block(working_state state, int[] block, int last_dc_val, c_derived_tbl dctbl, c_derived_tbl actbl) throws IOException
 	{
 		int temp, temp2;
 		int nbits;
@@ -1028,8 +1018,8 @@ public class HuffmanEncoder implements Encoder
 		{
 			temp = -temp;
 			/* temp is abs value of input */
- /* For a negative input, want temp2 = bitwise complement of abs(input) */
- /* This code assumes we are on a two's complement machine */
+			/* For a negative input, want temp2 = bitwise complement of abs(input) */
+			/* This code assumes we are on a two's complement machine */
 			temp2--;
 		}
 
@@ -1041,7 +1031,7 @@ public class HuffmanEncoder implements Encoder
 			temp >>= 1;
 		}
 		/* Check for out-of-range coefficient values.
-   * Since we're encoding a difference, the range limit is twice as much.
+		 * Since we're encoding a difference, the range limit is twice as much.
 		 */
 		if (nbits > MAX_COEF_BITS + 1)
 		{
@@ -1052,14 +1042,11 @@ public class HuffmanEncoder implements Encoder
 		emit_bits_s(state, dctbl.ehufco[nbits], dctbl.ehufsi[nbits]);
 
 		/* Emit that number of bits of the value, if positive, */
- /* or the complement of its magnitude, if negative. */
+		/* or the complement of its magnitude, if negative. */
 		if (nbits != 0)
 		/* emit_bits rejects calls with size 0 */
 		{
-			if (!emit_bits_s(state, temp2, nbits))
-			{
-				return false;
-			}
+			emit_bits_s(state, temp2, nbits);
 		}
 
 		/* Encode the AC coefficients per section F.1.2.2 */
@@ -1077,10 +1064,7 @@ public class HuffmanEncoder implements Encoder
 				/* if run length > 15, must emit special run-length-16 codes (0xF0) */
 				while (r > 15)
 				{
-					if (!emit_bits_s(state, actbl.ehufco[0xF0], actbl.ehufsi[0xF0]))
-					{
-						return false;
-					}
+					emit_bits_s(state, actbl.ehufco[0xF0], actbl.ehufsi[0xF0]);
 					r -= 16;
 				}
 
@@ -1089,7 +1073,7 @@ public class HuffmanEncoder implements Encoder
 				{
 					temp = -temp;
 					/* temp is abs value of input */
- /* This code assumes we are on a two's complement machine */
+					/* This code assumes we are on a two's complement machine */
 					temp2--;
 				}
 
@@ -1108,17 +1092,11 @@ public class HuffmanEncoder implements Encoder
 
 				/* Emit Huffman symbol for run length / number of bits */
 				temp = (r << 4) + nbits;
-				if (!emit_bits_s(state, actbl.ehufco[temp], actbl.ehufsi[temp]))
-				{
-					return false;
-				}
+				emit_bits_s(state, actbl.ehufco[temp], actbl.ehufsi[temp]);
 
 				/* Emit that number of bits of the value, if positive, */
- /* or the complement of its magnitude, if negative. */
-				if (!emit_bits_s(state, temp2, nbits))
-				{
-					return false;
-				}
+				/* or the complement of its magnitude, if negative. */
+				emit_bits_s(state, temp2, nbits);
 
 				r = 0;
 			}
@@ -1127,31 +1105,26 @@ public class HuffmanEncoder implements Encoder
 		/* If the last coef(s) were zero, emit an end-of-block code */
 		if (r > 0)
 		{
-			if (!emit_bits_s(state, actbl.ehufco[0], actbl.ehufsi[0]))
-			{
-				return false;
-			}
+			emit_bits_s(state, actbl.ehufco[0], actbl.ehufsi[0]);
 		}
-
-		return true;
 	}
 
 
 	/*
  * Encode and output one MCU's worth of Huffman-compressed coefficients.
 	 */
-	boolean encode_mcu_huff(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_huff(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
-		working_state state = new working_state();
+		working_state state = entropy.working_state;
 		int blkn, ci;
 		ComponentInfo compptr;
 
 		/* Load up working state */
-		state.next_output_byte = cinfo.next_output_byte;
-		state.next_output_byte_offset = cinfo.next_output_byte_offset;
-		state.free_in_buffer = cinfo.free_in_buffer;
-		state.cur = entropy.saved;
+//		state.next_output_byte = cinfo.next_output_byte;
+//		state.next_output_byte_offset = cinfo.next_output_byte_offset;
+//		state.free_in_buffer = cinfo.free_in_buffer;
+//		state.cur = entropy.saved;
 		state.cinfo = cinfo;
 
 		/* Emit restart marker if needed */
@@ -1168,21 +1141,15 @@ public class HuffmanEncoder implements Encoder
 		{
 			ci = cinfo.MCU_membership[blkn];
 			compptr = cinfo.cur_comp_info[ci];
-			if (!encode_one_block(state,
-				MCU_data[blkn], state.cur.last_dc_val[ci],
-				entropy.dc_derived_tbls[compptr.getTableDC()],
-				entropy.ac_derived_tbls[compptr.getTableAC()]))
-			{
-				return false;
-			}
+			encode_one_block(state, MCU_data[blkn], state.cur.last_dc_val[ci], entropy.dc_derived_tbls[compptr.getTableDC()], entropy.ac_derived_tbls[compptr.getTableAC()]);
 			/* Update last_dc_val */
 			state.cur.last_dc_val[ci] = MCU_data[blkn][0];
 		}
 
 		/* Completed MCU, so update state */
-		cinfo.next_output_byte = state.next_output_byte;
-		cinfo.free_in_buffer = state.free_in_buffer;
-		entropy.saved = state.cur;
+//		cinfo.next_output_byte = state.next_output_byte;
+//		cinfo.free_in_buffer = state.free_in_buffer;
+//		entropy.saved = state.cur;
 
 		/* Update restart-interval state too */
 		if (cinfo.restart_interval != 0)
@@ -1217,57 +1184,57 @@ public class HuffmanEncoder implements Encoder
 	}
 
 
-	void finish_pass_huff(JPEG cinfo) throws IOException
+	private void finish_pass_huff(JPEG cinfo) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
-		working_state state = new working_state();
+//		working_state state = new working_state();
 
 		if (cinfo.mProgressive)
 		{
-			entropy.next_output_byte[entropy.next_output_byte_offset] = cinfo.next_output_byte[cinfo.next_output_byte_offset];
-			entropy.free_in_buffer = cinfo.free_in_buffer;
+//			entropy.next_output_byte[entropy.next_output_byte_offset] = cinfo.next_output_byte[cinfo.next_output_byte_offset];
+//			entropy.free_in_buffer = cinfo.free_in_buffer;
 
 			/* Flush out any buffered data */
 			emit_eobrun(entropy);
 			flush_bits_e(entropy);
 
-			cinfo.next_output_byte[cinfo.next_output_byte_offset] = entropy.next_output_byte[entropy.next_output_byte_offset];
-			cinfo.free_in_buffer = entropy.free_in_buffer;
+//			cinfo.next_output_byte[cinfo.next_output_byte_offset] = entropy.next_output_byte[entropy.next_output_byte_offset];
+//			cinfo.free_in_buffer = entropy.free_in_buffer;
 		}
 		else
 		{
 			/* Load up working state ... flush_bits needs it */
-			state.next_output_byte = cinfo.next_output_byte;
-			state.free_in_buffer = cinfo.free_in_buffer;
-			state.cur = entropy.saved;
-			state.cinfo = cinfo;
+//			state.next_output_byte = cinfo.next_output_byte;
+//			state.free_in_buffer = cinfo.free_in_buffer;
+//			state.cur = entropy.saved;
+//			state.cinfo = cinfo;
 
 			/* Flush out the last data */
-			if (!flush_bits_s(state))
-			{
-				throw new IllegalStateException("JERR_CANT_SUSPEND");
-			}
+//			flush_bits_s(state);
+			flush_bits_s(entropy.working_state);
 
+			dump_buffer_s(entropy.working_state);
+			
 			/* Update state */
-			cinfo.next_output_byte = state.next_output_byte;
-			cinfo.free_in_buffer = state.free_in_buffer;
-			entropy.saved = state.cur;
+//			cinfo.next_output_byte = state.next_output_byte;
+//			cinfo.free_in_buffer = state.free_in_buffer;
+//			entropy.saved = state.cur;
 		}
 	}
 
 
 	/*
- * Huffman coding optimization.
- *
- * We first scan the supplied data and count the number of uses of each symbol
- * that is to be Huffman-coded. (This process MUST agree with the code above.)
- * Then we build a Huffman coding tree for the observed counts.
- * Symbols which are not needed at all for the particular image are not
- * assigned any code, which saves space in the DHT marker as well as in
- * the compressed data.
+	 * Huffman coding optimization.
+	 *
+	 * We first scan the supplied data and count the number of uses of each symbol
+	 * that is to be Huffman-coded. (This process MUST agree with the code above.)
+	 * Then we build a Huffman coding tree for the observed counts.
+	 * Symbols which are not needed at all for the particular image are not
+	 * assigned any code, which saves space in the DHT marker as well as in
+	 * the compressed data.
 	 */
- /* Process a single block's worth of coefficients */
-	void htest_one_block(JPEG cinfo, int[] block, int last_dc_val, int dc_counts[], int ac_counts[])
+	/* Process a single block's worth of coefficients */
+	private void htest_one_block(JPEG cinfo, int[] block, int last_dc_val, int dc_counts[], int ac_counts[])
 	{
 		int temp;
 		int nbits;
@@ -1290,7 +1257,7 @@ public class HuffmanEncoder implements Encoder
 			temp >>= 1;
 		}
 		/* Check for out-of-range coefficient values.
-   * Since we're encoding a difference, the range limit is twice as much.
+		 * Since we're encoding a difference, the range limit is twice as much.
 		 */
 		if (nbits > MAX_COEF_BITS + 1)
 		{
@@ -1354,10 +1321,10 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Trial-encode one MCU's worth of Huffman-compressed coefficients.
- * No data is actually output, so no suspension return is possible.
+	 * Trial-encode one MCU's worth of Huffman-compressed coefficients.
+	 * No data is actually output, so no suspension return is possible.
 	 */
-	boolean encode_mcu_gather(JPEG cinfo, int[][] MCU_data)
+	private boolean encode_mcu_gather(JPEG cinfo, int[][] MCU_data)
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int blkn, ci;
@@ -1392,32 +1359,32 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Generate the best Huffman code table for the given counts, fill htbl.
- *
- * The JPEG standard requires that no symbol be assigned a codeword of all
- * one bits (so that padding bits added at the end of a compressed segment
- * can't look like a valid code).  Because of the canonical ordering of
- * codewords, this just means that there must be an unused slot in the
- * longest codeword length category.  Section K.2 of the JPEG spec suggests
- * reserving such a slot by pretending that symbol 256 is a valid symbol
- * with count 1.  In theory that's not optimal; giving it count zero but
- * including it in the symbol set anyway should give a better Huffman code.
- * But the theoretically better code actually seems to come out worse in
- * practice, because it produces more all-ones bytes (which incur stuffed
- * zero bytes in the final file).  In any case the difference is tiny.
- *
- * The JPEG standard requires Huffman codes to be no more than 16 bits long.
- * If some symbols have a very small but nonzero probability, the Huffman tree
- * must be adjusted to meet the code length restriction.  We currently use
- * the adjustment method suggested in JPEG section K.2.  This method is *not*
- * optimal; it may not choose the best possible limited-length code.  But
- * typically only very-low-frequency symbols will be given less-than-optimal
- * lengths, so the code is almost optimal.  Experimental comparisons against
- * an optimal limited-length-code algorithm indicate that the difference is
- * microscopic --- usually less than a hundredth of a percent of total size.
- * So the extra complexity of an optimal algorithm doesn't seem worthwhile.
+	 * Generate the best Huffman code table for the given counts, fill htbl.
+	 *
+	 * The JPEG standard requires that no symbol be assigned a codeword of all
+	 * one bits (so that padding bits added at the end of a compressed segment
+	 * can't look like a valid code).  Because of the canonical ordering of
+	 * codewords, this just means that there must be an unused slot in the
+	 * longest codeword length category.  Section K.2 of the JPEG spec suggests
+	 * reserving such a slot by pretending that symbol 256 is a valid symbol
+	 * with count 1.  In theory that's not optimal; giving it count zero but
+	 * including it in the symbol set anyway should give a better Huffman code.
+	 * But the theoretically better code actually seems to come out worse in
+	 * practice, because it produces more all-ones bytes (which incur stuffed
+	 * zero bytes in the final file).  In any case the difference is tiny.
+	 *
+	 * The JPEG standard requires Huffman codes to be no more than 16 bits long.
+	 * If some symbols have a very small but nonzero probability, the Huffman tree
+	 * must be adjusted to meet the code length restriction.  We currently use
+	 * the adjustment method suggested in JPEG section K.2.  This method is *not*
+	 * optimal; it may not choose the best possible limited-length code.  But
+	 * typically only very-low-frequency symbols will be given less-than-optimal
+	 * lengths, so the code is almost optimal.  Experimental comparisons against
+	 * an optimal limited-length-code algorithm indicate that the difference is
+	 * microscopic --- usually less than a hundredth of a percent of total size.
+	 * So the extra complexity of an optimal algorithm doesn't seem worthwhile.
 	 */
-	HuffmanTable jpeg_gen_optimal_table(JPEG cinfo, int[] freq, int aType, int aIndex)
+	private HuffmanTable jpeg_gen_optimal_table(JPEG cinfo, int[] freq, int aType, int aIndex)
 	{
 		int MAX_CLEN = 32;
 		/* assumed maximum initial code length */
@@ -1439,17 +1406,17 @@ public class HuffmanEncoder implements Encoder
 
 		freq[256] = 1;
 		/* make sure 256 has a nonzero count */
- /* Including the pseudo-symbol 256 in the Huffman procedure guarantees
-   * that no real symbol is given code-value of all ones, because 256
-   * will be placed last in the largest codeword category.
+		/* Including the pseudo-symbol 256 in the Huffman procedure guarantees
+		  * that no real symbol is given code-value of all ones, because 256
+		  * will be placed last in the largest codeword category.
 		 */
 
- /* Huffman's basic algorithm to assign optimal code lengths to symbols */
+		/* Huffman's basic algorithm to assign optimal code lengths to symbols */
 
 		for (;;)
 		{
 			/* Find the smallest nonzero frequency, set c1 = its symbol */
- /* In case of ties, take the larger symbol number */
+			/* In case of ties, take the larger symbol number */
 			c1 = -1;
 			v = 1000000000L;
 			for (i = 0; i <= 256; i++)
@@ -1462,7 +1429,7 @@ public class HuffmanEncoder implements Encoder
 			}
 
 			/* Find the next smallest nonzero frequency, set c2 = its symbol */
- /* In case of ties, take the larger symbol number */
+			/* In case of ties, take the larger symbol number */
 			c2 = -1;
 			v = 1000000000L;
 			for (i = 0; i <= 256; i++)
@@ -1495,7 +1462,7 @@ public class HuffmanEncoder implements Encoder
 			others[c1] = c2;
 			/* chain c2 onto c1's tree branch */
 
- /* Increment the codesize of everything in c2's tree branch */
+			/* Increment the codesize of everything in c2's tree branch */
 			codesize[c2]++;
 			while (others[c2] >= 0)
 			{
@@ -1510,7 +1477,7 @@ public class HuffmanEncoder implements Encoder
 			if (codesize[i] != 0)
 			{
 				/* The JPEG standard seems to think that this can't happen, */
- /* but I'm paranoid... */
+				/* but I'm paranoid... */
 				if (codesize[i] > MAX_CLEN)
 				{
 					throw new IllegalStateException("JERR_HUFF_CLEN_OVERFLOW");
@@ -1521,14 +1488,14 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* JPEG doesn't allow symbols with code lengths over 16 bits, so if the pure
-   * Huffman procedure assigned any such lengths, we must adjust the coding.
-   * Here is what the JPEG spec says about how this next bit works:
-   * Since symbols are paired for the longest Huffman code, the symbols are
-   * removed from this length category two at a time.  The prefix for the pair
-   * (which is one bit shorter) is allocated to one of the pair; then,
-   * skipping the BITS entry for that prefix length, a code word from the next
-   * shortest nonzero BITS entry is converted into a prefix for two code words
-   * one bit longer.
+		 * Huffman procedure assigned any such lengths, we must adjust the coding.
+		 * Here is what the JPEG spec says about how this next bit works:
+		 * Since symbols are paired for the longest Huffman code, the symbols are
+		 * removed from this length category two at a time.  The prefix for the pair
+		 * (which is one bit shorter) is allocated to one of the pair; then,
+		 * skipping the BITS entry for that prefix length, a code word from the next
+		 * shortest nonzero BITS entry is converted into a prefix for two code words
+		 * one bit longer.
 		 */
 		for (i = MAX_CLEN; i > 16; i--)
 		{
@@ -1560,15 +1527,11 @@ public class HuffmanEncoder implements Encoder
 		}
 		bits[i]--;
 
-		HuffmanTable htbl = new HuffmanTable(aType, aIndex);
+		int[] huffval = new int[257];
 		
-		/* Return final symbol counts (only for lengths 0..16) */
-//  MEMCOPY(htbl.bits, bits, SIZEOF(htbl.bits));
-		System.arraycopy(bits, 0, htbl.bits, 0, htbl.bits.length);
-
 		/* Return a list of the symbols sorted by code length */
- /* It's not real clear to me why we don't need to consider the codelength
-   * changes made above, but the JPEG spec seems to think this works.
+		/* It's not real clear to me why we don't need to consider the codelength
+		 * changes made above, but the JPEG spec seems to think this works.
 		 */
 		p = 0;
 		for (i = 1; i <= MAX_CLEN; i++)
@@ -1577,21 +1540,20 @@ public class HuffmanEncoder implements Encoder
 			{
 				if (codesize[j] == i)
 				{
-					htbl.huffval[p] = j;
+					huffval[p] = j;
 					p++;
 				}
 			}
 		}
 
-		/* Set sent_table FALSE so updated table will be written to JPEG file. */
-		return htbl;
+		return new HuffmanTable(aType, aIndex, bits, huffval);
 	}
 
 
 	/*
- * Finish up a statistics-gathering pass and create the new Huffman tables.
+	 * Finish up a statistics-gathering pass and create the new Huffman tables.
 	 */
-	void finish_pass_gather(JPEG cinfo) throws IOException
+	private void finish_pass_gather(JPEG cinfo) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
 		int ci, tbl;
@@ -1600,7 +1562,7 @@ public class HuffmanEncoder implements Encoder
 		boolean[] did_ac = new boolean[NUM_HUFF_TBLS];
 
 		/* It's important not to apply jpeg_gen_optimal_table more than once
-   * per table, because it clobbers the input frequency counts!
+		 * per table, because it clobbers the input frequency counts!
 		 */
 		if (cinfo.mProgressive)	/* Flush out buffered data (all we care about is counting the EOB symbol) */
 		{
@@ -1609,6 +1571,7 @@ public class HuffmanEncoder implements Encoder
 
 //  MEMZERO(did_dc, SIZEOF(did_dc));
 //  MEMZERO(did_ac, SIZEOF(did_ac));
+
 		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
 		{
 			compptr = cinfo.cur_comp_info[ci];
@@ -1637,9 +1600,9 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Initialize for a Huffman-compressed scan.
- * If gather_statistics is TRUE, we do not output anything during the scan,
- * just count the Huffman symbols used and generate Huffman code tables.
+	 * Initialize for a Huffman-compressed scan.
+	 * If gather_statistics is TRUE, we do not output anything during the scan,
+	 * just count the Huffman symbols used and generate Huffman code tables.
 	 */
 	@Override
 	public void start_pass(JPEG cinfo, boolean gather_statistics)
@@ -1648,18 +1611,15 @@ public class HuffmanEncoder implements Encoder
 		int ci, tbl;
 		ComponentInfo compptr;
 
-//  if (gather_statistics)
-//    entropy.finish_pass = finish_pass_gather;
-//  else
-//    entropy.finish_pass = finish_pass_huff;
+		entropy.cinfo = cinfo;
+
 		if (cinfo.mProgressive)
 		{
-			entropy.cinfo = cinfo;
 			entropy.gather_statistics = gather_statistics;
 
 			/* We assume jcmaster.c already validated the scan parameters. */
 
- /* Select execution routine */
+			/* Select execution routine */
 			if (cinfo.Ah == 0)
 			{
 				if (cinfo.Ss == 0)
@@ -1790,24 +1750,23 @@ public class HuffmanEncoder implements Encoder
 	@Override
 	public boolean encode_mcu(JPEG cinfo, int[][] MCU_data, boolean gather_statistics) throws IOException
 	{
-		switch (cinfo.entropy.encode_mcu)
-		{
-			case x_encode_mcu_DC_first:
-				return encode_mcu_DC_first(cinfo, MCU_data);
-			case x_encode_mcu_AC_first:
-				return encode_mcu_AC_first(cinfo, MCU_data);
-			case x_encode_mcu_DC_refine:
-				return encode_mcu_DC_refine(cinfo, MCU_data);
-			case x_encode_mcu_AC_refine:
-				return encode_mcu_AC_refine(cinfo, MCU_data);
-		}
-
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+//		switch (cinfo.entropy.encode_mcu)
+//		{
+//			case x_encode_mcu_DC_first:
+//				return encode_mcu_DC_first(cinfo, MCU_data);
+//			case x_encode_mcu_AC_first:
+//				return encode_mcu_AC_first(cinfo, MCU_data);
+//			case x_encode_mcu_DC_refine:
+//				return encode_mcu_DC_refine(cinfo, MCU_data);
+//			case x_encode_mcu_AC_refine:
+//				return encode_mcu_AC_refine(cinfo, MCU_data);
+//		}
 
 		if (gather_statistics)
 		{
 			return encode_mcu_gather(cinfo, MCU_data);
 		}
+
 		return encode_mcu_huff(cinfo, MCU_data);
 	}
 
@@ -1815,7 +1774,7 @@ public class HuffmanEncoder implements Encoder
 
 	/* Set up the standard Huffman tables (cf. JPEG standard section K.3) */
 	/* IMPORTANT: these are only valid for 8-bit data precision! */
-	public static void std_huff_tables(JPEG cinfo)
+	public static void setupStandardHuffmanTables(JPEG cinfo)
 	{
 		int[] bits_dc_luminance = { /* 0-base */ 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
 		int[] val_dc_luminance = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
