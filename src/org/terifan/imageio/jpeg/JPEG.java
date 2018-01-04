@@ -1,10 +1,8 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.color.ICC_Profile;
-import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import org.terifan.imageio.jpeg.encoder.HuffmanEncoder.JHUFF_TBL;
 
 
 public class JPEG
@@ -52,11 +50,12 @@ public class JPEG
 	public int restartMarkerIndex;
 	public ICC_Profile mICCProfile;
 
-	public JHUFF_TBL[] dc_huff_tbl_ptrs;
-	public JHUFF_TBL[] ac_huff_tbl_ptrs;
-	public int[] next_output_byte;
+	public HuffmanTable[] dc_huff_tbl_ptrs;
+	public HuffmanTable[] ac_huff_tbl_ptrs;
+	
 	public int next_output_byte_offset;
-	public int free_in_buffer;
+	public byte[] next_output_byte = new byte[16];
+	public int free_in_buffer = 16;
 	
 	public JPEG()
 	{

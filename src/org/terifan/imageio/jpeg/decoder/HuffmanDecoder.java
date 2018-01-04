@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DHTSegment;
-import org.terifan.imageio.jpeg.DHTSegment.HuffmanTable;
+import org.terifan.imageio.jpeg.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 
@@ -106,7 +106,7 @@ public class HuffmanDecoder extends Decoder
 
 			Arrays.fill(aCoefficients[blockIndex], 0);
 
-			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
+			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 
 			int value = dcTable.decodeSymbol(mBitStream);
 
@@ -140,7 +140,7 @@ public class HuffmanDecoder extends Decoder
 
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
 			for (int k = aJPEG.Ss; k <= aJPEG.Se; k++)
 			{
@@ -202,7 +202,7 @@ public class HuffmanDecoder extends Decoder
 		int ci = aJPEG.MCU_membership[0];
 		ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-		HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+		HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
 		int k = aJPEG.Ss;
 		int[] coefficients = aCoefficients[0];
@@ -327,8 +327,8 @@ public class HuffmanDecoder extends Decoder
 			int ci = aJPEG.MCU_membership[blockIndex];
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
 
-			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][DHTSegment.TYPE_DC];
-			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][DHTSegment.TYPE_AC];
+			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
+			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
 			Arrays.fill(aCoefficients[blockIndex], 0);
 

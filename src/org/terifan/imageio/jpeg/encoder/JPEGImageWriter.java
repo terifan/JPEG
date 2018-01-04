@@ -8,6 +8,7 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DACSegment;
+import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGConstants;
@@ -30,7 +31,7 @@ public class JPEGImageWriter
 	}
 
 
-	public void write(BufferedImage aImage, int aQuality) throws IOException
+	public void write(BufferedImage aImage, int aQuality, boolean aArithmetic) throws IOException
 	{
 		mJPEG.width = aImage.getWidth();
 		mJPEG.height = aImage.getHeight();
@@ -47,7 +48,7 @@ public class JPEGImageWriter
 		mJPEG.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(aQuality, 0);
 		mJPEG.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(aQuality, 1);
 
-		mJPEG.mArithmetic = true;
+		mJPEG.mArithmetic = aArithmetic;
 
 		sampleImage(mJPEG.mSOFSegment, aImage, new FDCTFloat());
 
@@ -155,6 +156,8 @@ public class JPEGImageWriter
 
 	public void encodeCoefficients(JPEG aJPEG) throws IOException
 	{
+		Encoder encoder;
+
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
@@ -165,6 +168,16 @@ public class JPEGImageWriter
 			aJPEG.arith_ac_K = new int[]{5,5};
 
 			new DACSegment(aJPEG).write(mBitStream);
+
+			encoder = new ArithmeticEncoder(mBitStream);
+		}
+		else
+		{
+			HuffmanEncoder.std_huff_tables(aJPEG);
+
+			new DHTSegment(aJPEG).write(mBitStream);
+
+			encoder = new HuffmanEncoder(mBitStream);
 		}
 
 		aJPEG.Ss = 0;
@@ -183,20 +196,19 @@ public class JPEGImageWriter
 
 		mSOSSegment.prepareMCU();
 
-		Encoder encoder = new ArithmeticEncoder(mBitStream);
 		encoder.jinit_encoder(aJPEG);
 
-		encoder.start_pass(aJPEG, true);
-
-		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
-		{
-			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
-			{
-				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
-			}
-		}
-
-		encoder.finish_pass(aJPEG, true);
+//		encoder.start_pass(aJPEG, true);
+//
+//		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+//		{
+//			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+//			{
+//				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+//			}
+//		}
+//
+//		encoder.finish_pass(aJPEG, true);
 
 		encoder.start_pass(aJPEG, false);
 
