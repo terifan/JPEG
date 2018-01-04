@@ -2,11 +2,8 @@ package org.terifan.imageio.jpeg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import static org.terifan.imageio.jpeg.HuffmanTable.TYPE_AC;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
-import org.terifan.imageio.jpeg.encoder.HuffmanEncoder;
 
 
 public class DHTSegment
@@ -35,6 +32,11 @@ public class DHTSegment
 			if (length < 0)
 			{
 				throw new IOException("Error in JPEG stream; illegal DHT segment size.");
+			}
+			
+			if (JPEGConstants.VERBOSE)
+			{
+				table.log();
 			}
 		}
 		while (length > 0);
