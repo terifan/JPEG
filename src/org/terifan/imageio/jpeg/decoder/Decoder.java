@@ -26,26 +26,28 @@ public abstract class Decoder
 
 	public String getDecoderInfo(JPEG aJPEG)
 	{
+		String fn = "decode_mcu";
+
 		if (aJPEG.mProgressive)
 		{
-			if (aJPEG.Ah == 0)
-			{
-				if (aJPEG.Ss == 0)
-				{
-					return "decode_mcu_DC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
-				}
-
-				return "decode_mcu_AC_first, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
-			}
-
 			if (aJPEG.Ss == 0)
 			{
-				return "decode_mcu_DC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
+				fn += "_DC";
 			}
-
-			return "decode_mcu_AC_refine, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
+			else
+			{
+				fn += "_AC";
+			}
+			if (aJPEG.Ah == 0)
+			{
+				fn += "_first";
+			}
+			else
+			{
+				fn += "_refine";
+			}
 		}
 
-		return "decode_mcu, bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
+		return fn + ", bits " + aJPEG.Ss + "-" + aJPEG.Se + ", scale " + aJPEG.Al;
 	}
 }

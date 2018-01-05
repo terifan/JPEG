@@ -61,6 +61,7 @@ public class SOSSegment
 	public void log()
 	{
 		System.out.println("SOSMarkerSegment");
+		System.out.println("  {ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al + "}");
 		System.out.println("  numComponents=" + mJPEG.comps_in_scan);
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
@@ -87,7 +88,7 @@ public class SOSSegment
 					component = "<error>";
 			}
 
-			System.out.println("    component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + ", ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al);
+			System.out.println("    {component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + "}");
 		}
 	}
 

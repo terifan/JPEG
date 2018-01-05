@@ -21,6 +21,7 @@ public class JPEGImageWriter
 {
 	private BitOutputStream mBitStream;
 	private JPEG mJPEG;
+	private ProgressionScript mProgressionScript;
 
 
 	public JPEGImageWriter(OutputStream aOutputStream)
@@ -31,7 +32,7 @@ public class JPEGImageWriter
 	}
 
 
-	public void write(BufferedImage aImage, int aQuality, boolean aArithmetic) throws IOException
+	public void write(BufferedImage aImage, int aQuality) throws IOException
 	{
 		mJPEG.width = aImage.getWidth();
 		mJPEG.height = aImage.getHeight();
@@ -47,8 +48,6 @@ public class JPEGImageWriter
 		mJPEG.mQuantizationTables = new QuantizationTable[2];
 		mJPEG.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(aQuality, 0);
 		mJPEG.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(aQuality, 1);
-
-		mJPEG.mArithmetic = aArithmetic;
 
 		sampleImage(mJPEG.mSOFSegment, aImage, new FDCTFloat());
 
@@ -93,8 +92,6 @@ public class JPEGImageWriter
 			blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 		
-		System.out.println(blocks_in_MCU);
-
 		mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][blocks_in_MCU][64];
 		
 		int[] raster = new int[mcuWidth * mcuHeight];
@@ -156,82 +153,123 @@ public class JPEGImageWriter
 
 	public void encodeCoefficients(JPEG aJPEG) throws IOException
 	{
-		Encoder encoder;
+		if (mJPEG.mProgressive && mProgressionScript == null)
+		{
+			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
+		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
-		aJPEG.Ss = 0;
-		aJPEG.Se = 63;
-		aJPEG.Ah = 0;
-		aJPEG.Al = 0;
-
-		SOSSegment mSOSSegment = new SOSSegment(aJPEG, aJPEG.mSOFSegment.getComponentIds());
-		mSOSSegment.setTableDC(0, 0);
-		mSOSSegment.setTableAC(0, 0);
-		mSOSSegment.setTableDC(1, 1);
-		mSOSSegment.setTableAC(1, 1);
-		mSOSSegment.setTableDC(2, 1);
-		mSOSSegment.setTableAC(2, 1);
-	
-		mSOSSegment.prepareMCU();
-	
-		
-		if (aJPEG.mArithmetic)
+		for (int progressionLevel = 0; progressionLevel < (mJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
 		{
-			aJPEG.arith_dc_L = new int[]{0,0};
-			aJPEG.arith_dc_U = new int[]{1,1};
-			aJPEG.arith_ac_K = new int[]{5,5};
+			Encoder encoder;
 
-			new DACSegment(aJPEG).write(mBitStream);
+			SOSSegment sosSegment;
 
-			encoder = new ArithmeticEncoder(mBitStream);
-
-			encoder.jinit_encoder(aJPEG);
-		}
-		else
-		{
-			encoder = new HuffmanEncoder(mBitStream);
-
-			encoder.jinit_encoder(aJPEG);
-
-			if (aJPEG.mOptimizedHuffman)
+			if (mJPEG.mProgressive)
 			{
-				encoder.start_pass(aJPEG, true);
+				int[][] params = mProgressionScript.getParams().get(progressionLevel);
 
-				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+				aJPEG.Ss = params[1][0];
+				aJPEG.Se = params[1][1];
+				aJPEG.Ah = params[1][2];
+				aJPEG.Al = params[1][3];
+
+				int[] id = new int[params[0].length];
+				for (int i = 0; i < params[0].length; i++)
 				{
-					for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
-					{
-						encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
-					}
+					id[i] = aJPEG.mSOFSegment.getComponent(params[0][i]).getComponentId();
 				}
+				
+				sosSegment = new SOSSegment(aJPEG, id);
+				sosSegment.setTableDC(0, 0);
+				sosSegment.setTableAC(0, 0);
+				sosSegment.setTableDC(1, 1);
+				sosSegment.setTableAC(1, 1);
+				sosSegment.setTableDC(2, 1);
+				sosSegment.setTableAC(2, 1);
 
-				encoder.finish_pass(aJPEG, true);
+				sosSegment.prepareMCU();
+
+				if (JPEGConstants.VERBOSE)
+				{
+					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
+				}
 			}
 			else
 			{
-				HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
+				aJPEG.Ss = 0;
+				aJPEG.Se = 63;
+				aJPEG.Ah = 0;
+				aJPEG.Al = 0;
+
+				sosSegment = new SOSSegment(aJPEG, aJPEG.mSOFSegment.getComponentIds());
+				sosSegment.setTableDC(0, 0);
+				sosSegment.setTableAC(0, 0);
+				sosSegment.setTableDC(1, 1);
+				sosSegment.setTableAC(1, 1);
+				sosSegment.setTableDC(2, 1);
+				sosSegment.setTableAC(2, 1);
+
+				sosSegment.prepareMCU();
 			}
 
-			new DHTSegment(aJPEG).write(mBitStream);
-		}
-
-		
-		mSOSSegment.write(mBitStream);
-	
-		
-		encoder.start_pass(aJPEG, false);
-
-		for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
-		{
-			for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+			if (aJPEG.mArithmetic)
 			{
-				encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
-			}
-		}
+				aJPEG.arith_dc_L = new int[]{0,0};
+				aJPEG.arith_dc_U = new int[]{1,1};
+				aJPEG.arith_ac_K = new int[]{5,5};
 
-		encoder.finish_pass(aJPEG, false);
+				new DACSegment(aJPEG).write(mBitStream);
+
+				encoder = new ArithmeticEncoder(mBitStream);
+
+				encoder.jinit_encoder(aJPEG);
+			}
+			else
+			{
+				encoder = new HuffmanEncoder(mBitStream);
+
+				encoder.jinit_encoder(aJPEG);
+
+				if (aJPEG.mOptimizedHuffman || aJPEG.mProgressive)
+				{
+					encoder.start_pass(aJPEG, true);
+
+					for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+					{
+						for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+						{
+							encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+						}
+					}
+
+					encoder.finish_pass(aJPEG, true);
+				}
+				else
+				{
+					HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
+				}
+
+				new DHTSegment(aJPEG).write(mBitStream);
+			}
+
+
+			sosSegment.write(mBitStream);
+
+			encoder.start_pass(aJPEG, false);
+
+			for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+			{
+				for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+				{
+					encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
+				}
+			}
+
+			encoder.finish_pass(aJPEG, false);
+		}
 	}
 
 
@@ -281,7 +319,20 @@ public class JPEGImageWriter
 	public JPEGImageWriter setOptimizedHuffman(boolean aOptimizedHuffman)
 	{
 		mJPEG.mOptimizedHuffman = aOptimizedHuffman;
-		
+		return this;
+	}
+
+
+	public JPEGImageWriter setProgressive(boolean aProgressive)
+	{
+		mJPEG.mProgressive = aProgressive;
+		return this;
+	}
+
+
+	public JPEGImageWriter setArithmetic(boolean aArithmetic)
+	{
+		mJPEG.mArithmetic = aArithmetic;
 		return this;
 	}
 }

@@ -42,23 +42,24 @@ public class JPEGConstants
 	public final static int DCTSIZE2 = 8 * 8;
 	public final static int DC_STAT_BINS = 64;
 	public final static int AC_STAT_BINS = 256;
+	public final static int MAX_AH_AL = 10; /* BITS_IN_JSAMPLE=8?10:13 */
 
 	public final static int SOF0 = 0xFFC0;   // Baseline
 	public final static int SOF1 = 0xFFC1;   // Extended sequential, Huffman
 	public final static int SOF2 = 0xFFC2;   // Progressive, Huffman
-	public final static int SOF3 = 0xFFC3;   // Lossless, Huffman
 	public final static int DHT = 0xFFC4;    // Define Huffman Table
-	public final static int SOF5 = 0xFFC5;   // Differential sequential, Huffman
-	public final static int SOF6 = 0xFFC6;   // Differential progressive, Huffman
-	public final static int SOF7 = 0xFFC7;   // Differential lossless, Huffman
 	public final static int JPG = 0xFFC8;    // Reserved, fatal error
-	public final static int SOF9 = 0xFFC9;   // Extended sequential, arithmetic
+	public final static int SOF9 = 0xFFC9;   // Sequential, arithmetic
 	public final static int SOF10 = 0xFFCA;  // Progressive, arithmetic
-	public final static int SOF11 = 0xFFCB;  // Lossless, Unsupported; arithmetic
 	public final static int DAC = 0xFFCC;    // Define Arithmetic Table
-	public final static int SOF13 = 0xFFCD;  // Differential sequential, arithmetic
-	public final static int SOF14 = 0xFFCE;  // Differential progressive, arithmetic
-	public final static int SOF15 = 0xFFCF;  // Differential lossless, arithmetic
+	public final static int SOF3 = 0xFFC3;   // Unsupported; Lossless, Huffman
+	public final static int SOF5 = 0xFFC5;   // Unsupported; Differential sequential, Huffman
+	public final static int SOF6 = 0xFFC6;   // Unsupported; Differential progressive, Huffman
+	public final static int SOF7 = 0xFFC7;   // Unsupported; Differential lossless, Huffman
+	public final static int SOF11 = 0xFFCB;  // Unsupported; Lossless, arithmetic
+	public final static int SOF13 = 0xFFCD;  // Unsupported; Differential sequential, arithmetic
+	public final static int SOF14 = 0xFFCE;  // Unsupported; Differential progressive, arithmetic
+	public final static int SOF15 = 0xFFCF;  // Unsupported; Differential lossless, arithmetic
 
 	public final static int RST0 = 0xFFD0;   // RSTn are used for resync
 	public final static int RST1 = 0xFFD1;
@@ -110,6 +111,28 @@ public class JPEGConstants
 	public final static int JPG13 = 0xFFFD;  // Reserved for JPEG extensions, fatal error
 	public final static int COM = 0xFFFE;    // Comment
 
+	public final static String DEFAULT_PROGRESSION_SCRIPT = 
+		"# Initial DC scan for Y,Cb,Cr (lowest bit not sent)\n" +
+		"0,1,2: 0-0,   0, 1 ;\n" +
+		"# First AC scan: send first 5 Y AC coefficients, minus 2 lowest bits:\n" +
+		"0:     1-5,   0, 2 ;\n" +
+		"# Send all Cr,Cb AC coefficients, minus lowest bit:\n" +
+		"# (chroma data is usually too small to be worth subdividing further;\n" +
+		"#  but note we send Cr first since eye is least sensitive to Cb)\n" +
+		"2:     1-63,  0, 1 ;\n" +
+		"1:     1-63,  0, 1 ;\n" +
+		"# Send remaining Y AC coefficients, minus 2 lowest bits:\n" +
+		"0:     6-63,  0, 2 ;\n" +
+		"# Send next-to-lowest bit of all Y AC coefficients:\n" +
+		"0:     1-63,  2, 1 ;\n" +
+		"# At this point we've sent all but the lowest bit of all coefficients.\n" +
+		"# Send lowest bit of DC coefficients\n" +
+		"0,1,2: 0-0,   1, 0 ;\n" +
+		"# Send lowest bit of AC coefficients\n" +
+		"2:     1-63,  1, 0 ;\n" +
+		"1:     1-63,  1, 0 ;\n" +
+		"# Y AC lowest bit scan is last; it's usually the largest scan\n" +
+		"0: 1-63, 1, 0 ;";
 
 	public static String getSOFDescription(int aMarker)
 	{
@@ -123,96 +146,34 @@ public class JPEGConstants
 				return "Progressive, Huffman";
 			case SOF3:
 				return "Lossless, Huffman";
-			case SOF5:
-				return "Differential sequential, Huffman";
-			case SOF6:
-				return "Differential progressive, Huffman";
-			case SOF7:
-				return "Differential lossless, Huffman";
 			case SOF9:
 				return "Extended sequential, arithmetic coding";
 			case SOF10:
 				return "Progressive, arithmetic coding";
 			case SOF11:
 				return "Lossless, arithmetic coding";
-			case SOF13:
-				return "Differential sequential, arithmetic coding";
-			case SOF14:
-				return "Differential progressive, arithmetic coding";
-			case SOF15:
-				return "Differential lossless, arithmetic coding";
 			case APP0:
 				return "JFIF image header";
 			case APP1:
 				return "Exif metadata";
 			case APP2:
 				return "FlashPix data";
-			case APP3:
-				return "APP3";
-			case APP4:
-				return "APP4";
-			case APP5:
-				return "APP5";
-			case APP6:
-				return "APP6";
-			case APP7:
-				return "APP7";
-			case APP8:
-				return "APP8";
-			case APP9:
-				return "APP9";
-			case APP10:
-				return "APP10";
-			case APP11:
-				return "APP11";
-			case APP12:
-				return "APP12";
 			case APP13:
 				return "XML metadata";
 			case APP14:
 				return "Adobe color profile segment";
-			case APP15:
-				return "APP15";
 			case COM:
 				return "Comment";
 			case DAC:
 				return "Define Arithmetic Table";
-			case DHP:
-				return "DHP";
 			case DHT:
 				return "Define Huffman Table";
-			case DNL:
-				return "DNL";
 			case DQT:
 				return "Define Quantization Table";
 			case DRI:
 				return "Define Restart Interval";
 			case EOI:
 				return "End Of Image";
-			case EXP:
-				return "EXP";
-			case JPG:
-				return "JPG";
-			case JPG0:
-				return "JPG0";
-			case JPG13:
-				return "JPG13";
-			case RST0:
-				return "RST0";
-			case RST1:
-				return "RST1";
-			case RST2:
-				return "RST2";
-			case RST3:
-				return "RST3";
-			case RST4:
-				return "RST4";
-			case RST5:
-				return "RST5";
-			case RST6:
-				return "RST6";
-			case RST7:
-				return "RST7";
 			case SOI:
 				return "Start Of Image";
 			case SOS:

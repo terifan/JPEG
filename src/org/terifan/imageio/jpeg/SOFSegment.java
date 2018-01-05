@@ -93,25 +93,32 @@ public class SOFSegment
 
 	public SOFSegment write(BitOutputStream aBitStream) throws IOException
 	{
+		boolean baseline = true;
+		int type;
+
 		if (mJPEG.mArithmetic && mJPEG.mProgressive)
 		{
-			aBitStream.writeInt16(JPEGConstants.SOF10);
+			type = JPEGConstants.SOF10;
 		}
 		else if (mJPEG.mArithmetic)
 		{
-			aBitStream.writeInt16(JPEGConstants.SOF9);
+			type = JPEGConstants.SOF9;
 		}
 		else if (mJPEG.mProgressive)
 		{
-			aBitStream.writeInt16(JPEGConstants.SOF2);
+			type = JPEGConstants.SOF2;
+		}
+		else if (baseline)
+		{
+			type = JPEGConstants.SOF0;
 		}
 		else
 		{
-			aBitStream.writeInt16(JPEGConstants.SOF0);
+			type = JPEGConstants.SOF1;
 		}
 
-		aBitStream.writeInt16(2 + 6 + 3 * 3);
-
+		aBitStream.writeInt16(type);
+		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);
 		aBitStream.writeInt8(mPrecision);
 		aBitStream.writeInt16(mHeight);
 		aBitStream.writeInt16(mWidth);

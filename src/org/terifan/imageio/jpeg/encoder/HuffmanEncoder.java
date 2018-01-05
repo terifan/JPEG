@@ -78,12 +78,6 @@ public class HuffmanEncoder implements Encoder
 
 	private static class huff_entropy_encoder extends JPEGEntropyState
 	{
-		/* These fields are NOT loaded into local working state. */
-		int restarts_to_go;
-		/* MCUs left in this restart interval */
-		int next_restart_num;
-		/* next restart number to write (0-7) */
-
 		/* Pointers to derived tables (these workspaces have image lifespan) */
 		c_derived_tbl[] dc_derived_tbls = new c_derived_tbl[NUM_HUFF_TBLS];
 		c_derived_tbl[] ac_derived_tbls = new c_derived_tbl[NUM_HUFF_TBLS];
@@ -1234,7 +1228,7 @@ public class HuffmanEncoder implements Encoder
 	 * the compressed data.
 	 */
 	/* Process a single block's worth of coefficients */
-	private void htest_one_block(JPEG cinfo, int[] block, int last_dc_val, int dc_counts[], int ac_counts[])
+	private void htest_one_block(JPEG cinfo, int[] block, int last_dc_val, int[] dc_counts, int[] ac_counts)
 	{
 		int temp;
 		int nbits;
@@ -1750,17 +1744,17 @@ public class HuffmanEncoder implements Encoder
 	@Override
 	public boolean encode_mcu(JPEG cinfo, int[][] MCU_data, boolean gather_statistics) throws IOException
 	{
-//		switch (cinfo.entropy.encode_mcu)
-//		{
-//			case x_encode_mcu_DC_first:
-//				return encode_mcu_DC_first(cinfo, MCU_data);
-//			case x_encode_mcu_AC_first:
-//				return encode_mcu_AC_first(cinfo, MCU_data);
-//			case x_encode_mcu_DC_refine:
-//				return encode_mcu_DC_refine(cinfo, MCU_data);
-//			case x_encode_mcu_AC_refine:
-//				return encode_mcu_AC_refine(cinfo, MCU_data);
-//		}
+		switch (cinfo.entropy.encode_mcu)
+		{
+			case x_encode_mcu_DC_first:
+				return encode_mcu_DC_first(cinfo, MCU_data);
+			case x_encode_mcu_AC_first:
+				return encode_mcu_AC_first(cinfo, MCU_data);
+			case x_encode_mcu_DC_refine:
+				return encode_mcu_DC_refine(cinfo, MCU_data);
+			case x_encode_mcu_AC_refine:
+				return encode_mcu_AC_refine(cinfo, MCU_data);
+		}
 
 		if (gather_statistics)
 		{
