@@ -18,7 +18,8 @@ public class TestHuff
 //			File input = new File("D:\\Pictures\\Wallpapers\\apple-wood-1920x1080-wallpaper-3113.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\love-wallpaper-1080p-HD-computer-background.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
-			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
+			File input = new File("D:\\Pictures\\Wallpapers\\image.jpg");
 
 			JPEGConstants.VERBOSE = true;
 

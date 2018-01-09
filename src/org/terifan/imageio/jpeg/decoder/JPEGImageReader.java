@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import java.awt.color.ColorSpace;
 import java.awt.color.ICC_ColorSpace;
 import java.awt.color.ICC_Profile;
 import org.terifan.imageio.jpeg.SOSSegment;
@@ -21,7 +22,6 @@ import java.util.Arrays;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
-import org.terifan.imageio.jpeg.ColorSpace;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
@@ -261,15 +261,40 @@ public class JPEGImageReader
 				reportError("Failed to perform color transform: Invalid profile type");
 				return image;
 			}
+			
+//			PCMM module = CMSManager.getModule();
+//			
+//			ColorTransform[] transformList = {
+//				module.createTransform(mJPEG.mICCProfile, ColorTransform.Any, ColorTransform.In),
+//				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), ColorTransform.Any, ColorTransform.Out)
+//			};
+//
+//			module.createTransform(transformList).colorConvert(image, image);
+			
+			
+			ColorSpace colorSpace2 = ICC_ColorSpace.getInstance(ICC_ColorSpace.CS_sRGB);
+			ColorSpace colorSpace1 = ICC_ColorSpace.getInstance(ICC_ColorSpace.CS_sRGB);
 
-			PCMM module = CMSManager.getModule();
+			float[] colorvalue = new float[3];
 
-			ColorTransform[] transformList = {
-				module.createTransform(mJPEG.mICCProfile, ColorTransform.Any, ColorTransform.In),
-				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), ColorTransform.Any, ColorTransform.Out)
-			};
+			for (int y = 0; y < image.getHeight(); y++)
+			{
+				for (int x = 0; x < image.getWidth(); x++)
+				{
+					int rgb = image.getRGB(x, y);
+					colorvalue[0] = (0xff & (rgb >> 16)) / 255f;
+					colorvalue[1] = (0xff & (rgb >> 8)) / 255f;
+					colorvalue[2] = (0xff & (rgb >> 0)) / 255f;
 
-			module.createTransform(transformList).colorConvert(image, image);
+					colorvalue = colorSpace2.toRGB(colorvalue);
+					colorvalue = colorSpace1.fromRGB(colorvalue);
+
+					int r = (int)(255f * colorvalue[0]);
+					int g = (int)(255f * colorvalue[1]);
+					int b = (int)(255f * colorvalue[2]);
+					image.setRGB(x, y, (r << 16) + (g << 8) + b);
+				}
+			}
 		}
 
 		return image;

@@ -14,7 +14,7 @@ public class TestLoad
 		{
 			JPEGConstants.VERBOSE = true;
 			
-			BufferedImage myImage = JPEGImageReader.read(new File("d:\\mountain-silhouette huff opt prog.jpg"));
+			BufferedImage myImage = JPEGImageReader.read(new File("D:\\Pictures\\Wallpapers\\image.jpg"));
 
 			ImageFrame imagePane = new ImageFrame(myImage);
 		}
