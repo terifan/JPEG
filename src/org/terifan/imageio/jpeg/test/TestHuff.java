@@ -19,7 +19,8 @@ public class TestHuff
 //			File input = new File("D:\\Pictures\\Wallpapers\\love-wallpaper-1080p-HD-computer-background.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\hd-wallpapers-autumn-romantic-wallpaper-nature-1920x1200-wallpaper.jpg");
 //			File input = new File("D:\\Pictures\\Wallpapers\\Park-Autumn.jpg");
-			File input = new File("D:\\Pictures\\Wallpapers\\image.jpg");
+//			File input = new File("D:\\Pictures\\Wallpapers\\image.jpg");
+			File input = new File("D:\\Pictures\\Wallpapers High Quality\\n-RAl6LSAuZgbSPA8EDMx0pVaUw5kjOni8QpLih7I-Y.jpg");
 
 			JPEGConstants.VERBOSE = true;
 
@@ -56,13 +57,13 @@ public class TestHuff
 			g.drawImage(diff, 0 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.drawImage(javaImage, 1 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.dispose();
-			
+
 			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(javaImage, myImage));
 
 			ImageIO.write(myImage, "png", new File("d:\\temp\\" + input.getName() + "_my.png"));
 			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "_java.png"));
 			ImageIO.write(diff, "png", new File("d:\\temp\\" + input.getName() + "_delta.png"));
-			
+
 			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)

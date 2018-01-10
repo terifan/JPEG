@@ -29,9 +29,6 @@ import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.exif.JPEGExif;
-import sun.java2d.cmm.CMSManager;
-import sun.java2d.cmm.ColorTransform;
-import sun.java2d.cmm.PCMM;
 
 
 public class JPEGImageReader
@@ -60,8 +57,8 @@ public class JPEGImageReader
 		mIDCT = aIDCT;
 		return this;
 	}
-	
-	
+
+
 	public JPEG decode() throws IOException
 	{
 		mUpdateImage = false;
@@ -261,19 +258,17 @@ public class JPEGImageReader
 				reportError("Failed to perform color transform: Invalid profile type");
 				return image;
 			}
-			
+
 //			PCMM module = CMSManager.getModule();
-//			
+//
 //			ColorTransform[] transformList = {
 //				module.createTransform(mJPEG.mICCProfile, ColorTransform.Any, ColorTransform.In),
 //				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), ColorTransform.Any, ColorTransform.Out)
 //			};
 //
 //			module.createTransform(transformList).colorConvert(image, image);
-			
-			
-			ColorSpace colorSpace2 = ICC_ColorSpace.getInstance(ICC_ColorSpace.CS_sRGB);
-			ColorSpace colorSpace1 = ICC_ColorSpace.getInstance(ICC_ColorSpace.CS_sRGB);
+
+			ColorSpace colorSpace = new ICC_ColorSpace(mJPEG.mICCProfile);
 
 			float[] colorvalue = new float[3];
 
@@ -286,8 +281,7 @@ public class JPEGImageReader
 					colorvalue[1] = (0xff & (rgb >> 8)) / 255f;
 					colorvalue[2] = (0xff & (rgb >> 0)) / 255f;
 
-					colorvalue = colorSpace2.toRGB(colorvalue);
-					colorvalue = colorSpace1.fromRGB(colorvalue);
+					colorvalue = colorSpace.toRGB(colorvalue);
 
 					int r = (int)(255f * colorvalue[0]);
 					int g = (int)(255f * colorvalue[1]);
@@ -605,26 +599,26 @@ public class JPEGImageReader
 		}
 	}
 
-	private final static int[][] KERNEL_1X1 = 
+	private final static int[][] KERNEL_1X1 =
 	{
 		{1}
 	};
 
-	private final static int[][] KERNEL_3X3 = 
+	private final static int[][] KERNEL_3X3 =
 	{
 		{1,2,1},
 		{2,4,2},
 		{1,2,1}
 	};
 
-	private final static int[][] KERNEL_1X3 = 
+	private final static int[][] KERNEL_1X3 =
 	{
 		{1},
 		{2},
 		{1}
 	};
 
-	private final static int[][] KERNEL_3X1 = 
+	private final static int[][] KERNEL_3X1 =
 	{
 		{1,2,1}
 	};
@@ -704,8 +698,8 @@ public class JPEGImageReader
 	protected void reportError(String aText)
 	{
 	}
-	
-	
+
+
 	public String getSubSampling()
 	{
 		StringBuilder sb = new StringBuilder();

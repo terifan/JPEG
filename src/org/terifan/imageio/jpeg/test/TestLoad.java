@@ -13,7 +13,7 @@ public class TestLoad
 		try
 		{
 			JPEGConstants.VERBOSE = true;
-			
+
 			BufferedImage myImage = JPEGImageReader.read(new File("D:\\Pictures\\Wallpapers\\image.jpg"));
 
 			ImageFrame imagePane = new ImageFrame(myImage);
