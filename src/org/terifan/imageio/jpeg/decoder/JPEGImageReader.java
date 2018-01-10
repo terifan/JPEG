@@ -259,11 +259,11 @@ public class JPEGImageReader
 				return image;
 			}
 
-//			PCMM module = CMSManager.getModule();
+//			sun.java2d.cmm.PCMM module = sun.java2d.cmm.CMSManager.getModule();
 //
-//			ColorTransform[] transformList = {
-//				module.createTransform(mJPEG.mICCProfile, ColorTransform.Any, ColorTransform.In),
-//				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), ColorTransform.Any, ColorTransform.Out)
+//			sun.java2d.cmm.ColorTransform[] transformList = {
+//				module.createTransform(mJPEG.mICCProfile, sun.java2d.cmm.ColorTransform.Any, sun.java2d.cmm.ColorTransform.In),
+//				module.createTransform(ICC_Profile.getInstance(ICC_ColorSpace.CS_sRGB), sun.java2d.cmm.ColorTransform.Any, sun.java2d.cmm.ColorTransform.Out)
 //			};
 //
 //			module.createTransform(transformList).colorConvert(image, image);
@@ -283,9 +283,9 @@ public class JPEGImageReader
 
 					colorvalue = colorSpace.toRGB(colorvalue);
 
-					int r = (int)(255f * colorvalue[0]);
-					int g = (int)(255f * colorvalue[1]);
-					int b = (int)(255f * colorvalue[2]);
+					int r = (int)(255f * colorvalue[0] + 0.5f);
+					int g = (int)(255f * colorvalue[1] + 0.5f);
+					int b = (int)(255f * colorvalue[2] + 0.5f);
 					image.setRGB(x, y, (r << 16) + (g << 8) + b);
 				}
 			}
