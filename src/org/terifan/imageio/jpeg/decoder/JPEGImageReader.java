@@ -9,16 +9,20 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.DQTSegment;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.zip.DeflaterOutputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
@@ -493,6 +497,27 @@ public class JPEGImageReader
 			cii++;
 		}
 		blockLookup = Arrays.copyOfRange(blockLookup, 0, cp);
+
+//		try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\jpeg.data"))))
+//		{
+//			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+//			{
+//				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+//				{
+//					for (int blockIndex = 0; blockIndex < blockLookup.length; blockIndex++)
+//					{
+//						for (int i = 0; i < coefficients[mcuY][mcuX][blockIndex].length; i++)
+//						{
+//							dos.writeShort(coefficients[mcuY][mcuX][blockIndex][i]);
+//						}
+//					}
+//				}
+//			}
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.err);
+//		}
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{
