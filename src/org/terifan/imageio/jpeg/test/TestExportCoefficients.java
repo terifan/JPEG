@@ -1,12 +1,21 @@
 package org.terifan.imageio.jpeg.test;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.DeflaterOutputStream;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import org.terifan.imageio.jpeg.JPEG;
+import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
@@ -55,7 +64,6 @@ public class TestExportCoefficients
 ////					fos.close();
 ////				}
 //			}
-//
 //		}
 //		catch (Throwable e)
 //		{
@@ -68,7 +76,7 @@ public class TestExportCoefficients
 	{
 		try
 		{
-			for (File file : new File("D:\\temp\\y").listFiles(e->e.getName().endsWith(".data")))
+			for (File file : new File("D:\\temp\\x").listFiles(e->e.getName().endsWith(".data")))
 			{
 				File file1 = new File(file.getAbsolutePath().replace(".jpg.data", "-ari.jpg"));
 				File file2 = new File(file.getAbsolutePath().replace(".jpg.data", "-ari-prog.jpg"));
@@ -116,7 +124,7 @@ public class TestExportCoefficients
 	{
 		try
 		{
-			for (File file : new File("D:\\temp\\y").listFiles(e->e.getName().endsWith("-ari.jpg")))
+			for (File file : new File("D:\\temp\\x").listFiles(e->e.getName().endsWith("-ari.jpg")))
 			{
 				try (FileInputStream in = new FileInputStream(file))
 				{
@@ -124,7 +132,7 @@ public class TestExportCoefficients
 
 					int[][][][] coefficients = jpeg.getCoefficients();
 
-					try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\temp\\y\\" + file.getName().replace("-ari.jpg", ".jpg") + ".data"))))
+					try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\temp\\x\\" + file.getName().replace("-ari.jpg", ".jpg") + ".data"))))
 					{
 						dos.writeShort(jpeg.getCoefficients().length);
 						dos.writeShort(jpeg.getCoefficients()[0].length);
