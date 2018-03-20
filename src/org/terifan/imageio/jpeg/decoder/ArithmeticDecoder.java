@@ -110,7 +110,8 @@ public class ArithmeticDecoder extends Decoder
 				/* Need to fetch next data byte */
 				if (mBitStream.getUnreadMarker() != 0)
 				{
-					data = 0;		/* stuff zero data */
+					data = 0;
+					/* stuff zero data */
 				}
 				else
 				{
@@ -127,7 +128,8 @@ public class ArithmeticDecoder extends Decoder
 						/* swallow extra 0xFF bytes */
 						if (data == 0)
 						{
-							data = 0xFF;	/* discard stuffed zero byte */
+							data = 0xFF;
+							/* discard stuffed zero byte */
 						}
 						else
 						{
@@ -147,12 +149,13 @@ public class ArithmeticDecoder extends Decoder
 				/* insert data into C register */
 				if ((entropy.ct += 8) < 0)
 				/* update bit shift counter */
-				/* Need more initial bytes */
+ /* Need more initial bytes */
 				{
 					if (++entropy.ct == 0)
 					/* Got 2 initial bytes . re-init A and exit loop */
 					{
-						entropy.a = 0x8000; /* => e.a = 0x10000L after loop exit */
+						entropy.a = 0x8000;
+						/* => e.a = 0x10000L after loop exit */
 					}
 				}
 			}
@@ -172,7 +175,7 @@ public class ArithmeticDecoder extends Decoder
 		qe >>= 8;
 		/* Next_Index_MPS */
 
-		/* Decode & estimation procedures per sections D.2.4 & D.2.5 */
+ /* Decode & estimation procedures per sections D.2.4 & D.2.5 */
 		temp = entropy.a - qe;
 		entropy.a = temp;
 		temp <<= entropy.ct;
@@ -251,7 +254,7 @@ public class ArithmeticDecoder extends Decoder
 		entropy.ct = -16;
 		/* force reading 2 initial bytes to fill C */
 
-		/* Reset restart counter */
+ /* Reset restart counter */
 		entropy.restarts_to_go = cinfo.restart_interval;
 	}
 
@@ -292,7 +295,8 @@ public class ArithmeticDecoder extends Decoder
 
 		if (entropy.ct == -1)
 		{
-			return true;	/* if error do nothing */
+			return true;
+			/* if error do nothing */
 		}
 
 		/* Outer loop handles each block in the MCU */
@@ -304,7 +308,7 @@ public class ArithmeticDecoder extends Decoder
 
 			/* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
-			/* Table F.4: Point to statistics bin S0 for DC coefficient coding */
+ /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 			st = entropy.dc_stats[tbl];
 			st_off = entropy.dc_context[ci];
 
@@ -316,7 +320,7 @@ public class ArithmeticDecoder extends Decoder
 			else
 			{
 				/* Figure F.21: Decoding nonzero value v */
-				/* Figure F.22: Decoding the sign of v */
+ /* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, st, st_off + 1);
 				st_off += 2;
 				st_off += sign;
@@ -341,15 +345,18 @@ public class ArithmeticDecoder extends Decoder
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
 				if (m < ((1 << cinfo.arith_dc_L[tbl]) >> 1))
 				{
-					entropy.dc_context[ci] = 0;		   /* zero diff category */
+					entropy.dc_context[ci] = 0;
+					/* zero diff category */
 				}
 				else if (m > ((1 << cinfo.arith_dc_U[tbl]) >> 1))
 				{
-					entropy.dc_context[ci] = 12 + (sign * 4); /* large diff category */
+					entropy.dc_context[ci] = 12 + (sign * 4);
+					/* large diff category */
 				}
 				else
 				{
-					entropy.dc_context[ci] = 4 + (sign * 4);  /* small diff category */
+					entropy.dc_context[ci] = 4 + (sign * 4);
+					/* small diff category */
 				}
 				v = m;
 				/* Figure F.24: Decoding the magnitude bit pattern of v */
@@ -402,7 +409,8 @@ public class ArithmeticDecoder extends Decoder
 
 		if (entropy.ct == -1)
 		{
-			return true;	/* if error do nothing */
+			return true;
+			/* if error do nothing */
 		}
 
 		/* There is always only one block per MCU */
@@ -419,7 +427,8 @@ public class ArithmeticDecoder extends Decoder
 			st_off = 3 * k;
 			if (arith_decode(cinfo, st, st_off) != 0)
 			{
-				break;		/* EOB flag */
+				break;
+				/* EOB flag */
 			}
 			for (;;)
 			{
@@ -512,8 +521,7 @@ public class ArithmeticDecoder extends Decoder
 		p1 = 1 << cinfo.Al;
 		/* 1 in the bit position being coded */
 
-		/* Outer loop handles each block in the MCU */
-
+ /* Outer loop handles each block in the MCU */
 		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
 		{
 			/* Encoded data is simply the next bit of the two's-complement DC value */
@@ -552,7 +560,8 @@ public class ArithmeticDecoder extends Decoder
 
 		if (entropy.ct == -1)
 		{
-			return true;	/* if error do nothing */
+			return true;
+			/* if error do nothing */
 		}
 
 		/* There is always only one block per MCU */
@@ -582,7 +591,8 @@ public class ArithmeticDecoder extends Decoder
 			{
 				if (arith_decode(cinfo, st, st_off) != 0)
 				{
-					break;	/* EOB flag */
+					break;
+					/* EOB flag */
 				}
 			}
 			for (;;)
@@ -654,7 +664,6 @@ public class ArithmeticDecoder extends Decoder
 	/*
 	 * Decode one MCU's worth of arithmetic-compressed coefficients.
 	 */
-
 	@Override
 	boolean decodeMCU(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -692,7 +701,8 @@ public class ArithmeticDecoder extends Decoder
 
 		if (entropy.ct == -1)
 		{
-			return true;	/* if error do nothing */
+			return true;
+			/* if error do nothing */
 		}
 
 		/* Outer loop handles each block in the MCU */
@@ -717,7 +727,7 @@ public class ArithmeticDecoder extends Decoder
 			else
 			{
 				/* Figure F.21: Decoding nonzero value v */
-				/* Figure F.22: Decoding the sign of v */
+ /* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, st, st_off + 1);
 				st_off += 2;
 				st_off += sign;
@@ -742,15 +752,18 @@ public class ArithmeticDecoder extends Decoder
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
 				if (m < (int)((1L << cinfo.arith_dc_L[tbl]) >> 1))
 				{
-					entropy.dc_context[ci] = 0;		   /* zero diff category */
+					entropy.dc_context[ci] = 0;
+					/* zero diff category */
 				}
 				else if (m > (int)((1L << cinfo.arith_dc_U[tbl]) >> 1))
 				{
-					entropy.dc_context[ci] = 12 + (sign * 4); /* large diff category */
+					entropy.dc_context[ci] = 12 + (sign * 4);
+					/* large diff category */
 				}
 				else
 				{
-					entropy.dc_context[ci] = 4 + (sign * 4);  /* small diff category */
+					entropy.dc_context[ci] = 4 + (sign * 4);
+					/* small diff category */
 				}
 				v = m;
 				/* Figure F.24: Decoding the magnitude bit pattern of v */
@@ -787,7 +800,8 @@ public class ArithmeticDecoder extends Decoder
 				st_off = 3 * k;
 				if (arith_decode(cinfo, st, st_off) != 0)
 				{
-					break;	/* EOB flag */
+					break;
+					/* EOB flag */
 				}
 				for (;;)
 				{
@@ -806,7 +820,7 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Figure F.21: Decoding nonzero value v */
-				/* Figure F.22: Decoding the sign of v */
+ /* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, entropy.fixed_bin, 0);
 				st_off += 2;
 				/* Figure F.23: Decoding the magnitude category of v */
@@ -863,7 +877,6 @@ public class ArithmeticDecoder extends Decoder
 	/*
 	 * Initialize for an arithmetic-compressed scan.
 	 */
-
 	@Override
 	void startPass(JPEG cinfo)
 	{
@@ -999,7 +1012,7 @@ public class ArithmeticDecoder extends Decoder
 		entropy.ct = -16;
 		/* force reading 2 initial bytes to fill C */
 
-		/* Initialize restart counter */
+ /* Initialize restart counter */
 		entropy.restarts_to_go = cinfo.restart_interval;
 	}
 

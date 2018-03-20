@@ -153,7 +153,7 @@ public class JPEGImageWriter
 
 	public void encodeCoefficients(JPEG aJPEG) throws IOException
 	{
-		if (mJPEG.mProgressive && mProgressionScript == null)
+		if (aJPEG.mProgressive && mProgressionScript == null)
 		{
 			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
 		}
@@ -161,13 +161,17 @@ public class JPEGImageWriter
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
-		for (int progressionLevel = 0; progressionLevel < (mJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
+		System.out.println("----"+aJPEG.mProgressive);
+		
+		for (int progressionLevel = 0; progressionLevel < (aJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
 		{
-			Encoder encoder;
+			Encoder encoder = null;
 
+			System.out.println("#" + progressionLevel);
+			
 			SOSSegment sosSegment;
 
-			if (mJPEG.mProgressive)
+			if (aJPEG.mProgressive)
 			{
 				int[][] params = mProgressionScript.getParams().get(progressionLevel);
 
@@ -223,15 +227,21 @@ public class JPEGImageWriter
 
 				new DACSegment(aJPEG).write(mBitStream);
 
-				encoder = new ArithmeticEncoder(mBitStream);
+				if (encoder == null)
+				{
+					encoder = new ArithmeticEncoder(mBitStream);
 
-				encoder.jinit_encoder(aJPEG);
+					encoder.jinit_encoder(aJPEG);
+				}
 			}
 			else
 			{
-				encoder = new HuffmanEncoder(mBitStream);
+				if (encoder == null)
+				{
+					encoder = new HuffmanEncoder(mBitStream);
 
-				encoder.jinit_encoder(aJPEG);
+					encoder.jinit_encoder(aJPEG);
+				}
 
 				if (aJPEG.mOptimizedHuffman || aJPEG.mProgressive)
 				{

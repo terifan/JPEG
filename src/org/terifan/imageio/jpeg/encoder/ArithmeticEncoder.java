@@ -122,7 +122,7 @@ public class ArithmeticEncoder implements Encoder
 
 
 	/*
- * Finish up at the end of an arithmetic-compressed scan.
+	 * Finish up at the end of an arithmetic-compressed scan.
 	 */
 	@Override
 	public void finish_pass(JPEG cinfo, boolean gather_statistics) throws IOException
@@ -1120,10 +1120,12 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if (cinfo.Ss == 0)
 				{
+					System.out.println("x_encode_mcu_DC_first");
 					entropy.encode_mcu = x_encode_mcu_DC_first;
 				}
 				else
 				{
+					System.out.println("x_encode_mcu_AC_first");
 					entropy.encode_mcu = x_encode_mcu_AC_first;
 				}
 			}
@@ -1131,10 +1133,12 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if (cinfo.Ss == 0)
 				{
+					System.out.println("x_encode_mcu_DC_refine");
 					entropy.encode_mcu = x_encode_mcu_DC_refine;
 				}
 				else
 				{
+					System.out.println("x_encode_mcu_AC_refine");
 					entropy.encode_mcu = x_encode_mcu_AC_refine;
 				}
 			}
