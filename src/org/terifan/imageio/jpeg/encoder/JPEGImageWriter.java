@@ -279,6 +279,8 @@ public class JPEGImageWriter
 			}
 
 			encoder.finish_pass(aJPEG, false);
+			
+			System.out.println(mBitStream.getStreamOffset());
 		}
 	}
 
