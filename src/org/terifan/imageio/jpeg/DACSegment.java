@@ -65,6 +65,7 @@ public class DACSegment
 		}
 	}
 
+	// 00 10 00 10
 
 	public void write(BitOutputStream aBitStream) throws IOException
 	{

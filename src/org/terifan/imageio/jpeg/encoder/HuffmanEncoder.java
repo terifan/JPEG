@@ -221,7 +221,7 @@ public class HuffmanEncoder implements Encoder
 		 * this lets us detect duplicate VAL entries here, and later
 		 * allows emit_bits to detect any attempt to emit such symbols.
 		 */
-//  MEMZERO(dtbl.ehufsi, SIZEOF(dtbl.ehufsi));
+//		MEMZERO(dtbl.ehufsi, SIZEOF(dtbl.ehufsi));
 		Arrays.fill(dtbl.ehufsi, 0);
 
 		/* This is also a convenient place to check for out-of-range
@@ -554,8 +554,8 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * MCU encoding for DC initial scan (either spectral selection,
- * or first pass of successive approximation).
+	 * MCU encoding for DC initial scan (either spectral selection,
+	 * or first pass of successive approximation).
 	 */
 	private boolean encode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -584,7 +584,7 @@ public class HuffmanEncoder implements Encoder
 			tbl = cinfo.cur_comp_info[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
-     * This is simply an arithmetic right shift.
+			 * This is simply an arithmetic right shift.
 			 */
 			temp = MCU_data[blkn][0] >> cinfo.Al;
 
@@ -598,8 +598,8 @@ public class HuffmanEncoder implements Encoder
 			{
 				temp = -temp;
 				/* temp is abs value of input */
- /* For a negative input, want temp2 = bitwise complement of abs(input) */
- /* This code assumes we are on a two's complement machine */
+				/* For a negative input, want temp2 = bitwise complement of abs(input) */
+				/* This code assumes we are on a two's complement machine */
 				temp2--;
 			}
 
@@ -611,7 +611,7 @@ public class HuffmanEncoder implements Encoder
 				temp >>= 1;
 			}
 			/* Check for out-of-range coefficient values.
-     * Since we're encoding a difference, the range limit is twice as much.
+			 * Since we're encoding a difference, the range limit is twice as much.
 			 */
 			if (nbits > MAX_COEF_BITS + 1)
 			{
@@ -622,7 +622,7 @@ public class HuffmanEncoder implements Encoder
 			emit_dc_symbol(entropy, tbl, nbits);
 
 			/* Emit that number of bits of the value, if positive, */
- /* or the complement of its magnitude, if negative. */
+			/* or the complement of its magnitude, if negative. */
 			if (nbits != 0)
 			/* emit_bits rejects calls with size 0 */
 			{
@@ -651,8 +651,8 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * MCU encoding for AC initial scan (either spectral selection,
- * or first pass of successive approximation).
+	 * MCU encoding for AC initial scan (either spectral selection,
+	 * or first pass of successive approximation).
 	 */
 	private boolean encode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -695,9 +695,9 @@ public class HuffmanEncoder implements Encoder
 				continue;
 			}
 			/* We must apply the point transform by Al.  For AC coefficients this
-     * is an integer division with rounding towards 0.  To do this portably
-     * in C, we shift after obtaining the absolute value; so the code is
-     * interwoven with finding the abs value (temp) and output bits (temp2).
+			 * is an integer division with rounding towards 0.  To do this portably
+			 * in C, we shift after obtaining the absolute value; so the code is
+			 * interwoven with finding the abs value (temp) and output bits (temp2).
 			 */
 			if (temp < 0)
 			{
@@ -705,7 +705,7 @@ public class HuffmanEncoder implements Encoder
 				/* temp is abs value of input */
 				temp >>= Al;
 				/* apply the point transform */
- /* For a negative coef, want temp2 = bitwise complement of abs(coef) */
+				/* For a negative coef, want temp2 = bitwise complement of abs(coef) */
 				temp2 = ~temp;
 			}
 			else
@@ -750,7 +750,7 @@ public class HuffmanEncoder implements Encoder
 			emit_ac_symbol(entropy, entropy.ac_tbl_no, (r << 4) + nbits);
 
 			/* Emit that number of bits of the value, if positive, */
- /* or the complement of its magnitude, if negative. */
+			/* or the complement of its magnitude, if negative. */
 			emit_bits_e(entropy, temp2, nbits);
 
 			r = 0;
@@ -788,9 +788,9 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * MCU encoding for DC successive approximation refinement scan.
- * Note: we assume such scans can be multi-component,
- * although the spec is not very clear on the point.
+	 * MCU encoding for DC successive approximation refinement scan.
+	 * Note: we assume such scans can be multi-component,
+	 * although the spec is not very clear on the point.
 	 */
 	private boolean encode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -838,7 +838,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * MCU encoding for AC successive approximation refinement scan.
+	 * MCU encoding for AC successive approximation refinement scan.
 	 */
 	private boolean encode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -873,15 +873,15 @@ public class HuffmanEncoder implements Encoder
 		block = MCU_data[0];
 
 		/* It is convenient to make a pre-pass to determine the transformed
-   * coefficients' absolute values and the EOB position.
+		 * coefficients' absolute values and the EOB position.
 		 */
 		EOB = 0;
 		for (k = cinfo.Ss; k <= Se; k++)
 		{
 			temp = block[natural_order[k]];
 			/* We must apply the point transform by Al.  For AC coefficients this
-     * is an integer division with rounding towards 0.  To do this portably
-     * in C, we shift after obtaining the absolute value.
+			 * is an integer division with rounding towards 0.  To do this portably
+			 * in C, we shift after obtaining the absolute value.
 			 */
 			if (temp < 0)
 			{
@@ -930,9 +930,9 @@ public class HuffmanEncoder implements Encoder
 			}
 
 			/* If the coef was previously nonzero, it only needs a correction bit.
-     * NOTE: a straight translation of the spec's figure G.7 would suggest
-     * that we also need to test r > 15.  But if r > 15, we can only get here
-     * if k > EOB, which implies that this coefficient is not 1.
+			 * NOTE: a straight translation of the spec's figure G.7 would suggest
+			 * that we also need to test r > 15.  But if r > 15, we can only get here
+			 * if k > EOB, which implies that this coefficient is not 1.
 			 */
 			if (temp > 1)
 			{
@@ -967,9 +967,9 @@ public class HuffmanEncoder implements Encoder
 			/* count an EOB */
 			entropy.BE += BR;
 			/* concat my correction bits to older ones */
- /* We force out the EOB if we risk either:
-     * 1. overflow of the EOB counter;
-     * 2. overflow of the correction bit buffer during the next MCU.
+			/* We force out the EOB if we risk either:
+			 * 1. overflow of the EOB counter;
+			 * 2. overflow of the correction bit buffer during the next MCU.
 			 */
 			if (entropy.EOBRUN == 0x7FFF || entropy.BE > (MAX_CORR_BITS - DCTSIZE2 + 1))
 			{
@@ -1105,7 +1105,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Encode and output one MCU's worth of Huffman-compressed coefficients.
+	 * Encode and output one MCU's worth of Huffman-compressed coefficients.
 	 */
 	private boolean encode_mcu_huff(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -1191,6 +1191,8 @@ public class HuffmanEncoder implements Encoder
 			/* Flush out any buffered data */
 			emit_eobrun(entropy);
 			flush_bits_e(entropy);
+			
+			dump_buffer_s(entropy.working_state);
 
 //			cinfo.next_output_byte[cinfo.next_output_byte_offset] = entropy.next_output_byte[entropy.next_output_byte_offset];
 //			cinfo.free_in_buffer = entropy.free_in_buffer;

@@ -193,26 +193,26 @@ public class JPEGImageWriter
 					sosSegment.setTableDC(0, 0);
 					sosSegment.setTableAC(0, 0);
 					sosSegment.setTableDC(1, 1);
-					sosSegment.setTableAC(1, 1);
+					sosSegment.setTableAC(1, 0);
 					sosSegment.setTableDC(2, 1);
-					sosSegment.setTableAC(2, 1);
+					sosSegment.setTableAC(2, 0);
 				}
 				else
 				{
 					sosSegment.setTableDC(0, 0);
 					sosSegment.setTableAC(0, 0);
-					sosSegment.setTableDC(1, 0);
-					sosSegment.setTableAC(1, 1);
-					sosSegment.setTableDC(2, 0);
-					sosSegment.setTableAC(2, 1);
+					sosSegment.setTableDC(1, 1);
+					sosSegment.setTableAC(1, 0);
+					sosSegment.setTableDC(2, 1);
+					sosSegment.setTableAC(2, 0);
 				}
-
-				sosSegment.prepareMCU();
-
-				if (JPEGConstants.VERBOSE)
-				{
-					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
-				}
+//
+//				sosSegment.prepareMCU();
+//
+//				if (JPEGConstants.VERBOSE)
+//				{
+//					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
+//				}
 			}
 			else
 			{
@@ -229,15 +229,43 @@ public class JPEGImageWriter
 				sosSegment.setTableDC(2, 1);
 				sosSegment.setTableAC(2, 1);
 
-				sosSegment.prepareMCU();
+//				sosSegment.prepareMCU();
 			}
 
+			int[][] mcu = new int[aJPEG.blocks_in_MCU][64];
+
+			int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
+			int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
+			int mcuWidth = 8 * maxSamplingX;
+			int mcuHeight = 8 * maxSamplingY;
+			
 			if (aJPEG.mArithmetic)
 			{
-				aJPEG.arith_dc_L = new int[]{0,0};
-				aJPEG.arith_dc_U = new int[]{1,1};
-				aJPEG.arith_ac_K = new int[]{5,5};
-
+				if (progressionLevel == 0)
+				{
+					aJPEG.arith_dc_L = new int[]{0,0};
+					aJPEG.arith_dc_U = new int[]{1,1};
+					aJPEG.arith_ac_K = new int[]{};
+				}
+				else if (progressionLevel == 1)
+				{
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
+					aJPEG.arith_ac_K = new int[]{5};
+				}
+				else if (progressionLevel == 2)
+				{
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
+					aJPEG.arith_ac_K = new int[]{5}; // 17=5 ??
+				}
+				else
+				{
+					aJPEG.arith_dc_L = new int[]{0,0};
+					aJPEG.arith_dc_U = new int[]{1,1};
+					aJPEG.arith_ac_K = new int[]{5,5};
+				}
+				
 				new DACSegment(aJPEG).write(mBitStream);
 
 				if (encoder == null)
@@ -260,11 +288,40 @@ public class JPEGImageWriter
 				{
 					encoder.start_pass(aJPEG, true);
 
-					for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+					if (aJPEG.comps_in_scan == 1)
 					{
-						for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+						ComponentInfo comp = aJPEG.cur_comp_info[0];
+
+						for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
 						{
-							encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+							{
+								if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.height)
+								{
+									for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+									{
+										for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
+										{
+											if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.width)
+											{
+												mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+
+												encoder.encode_mcu(aJPEG, mcu, true);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+						{
+							for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+							{
+								encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+							}
 						}
 					}
 
@@ -279,15 +336,52 @@ public class JPEGImageWriter
 			}
 
 
+				sosSegment.prepareMCU();
+
+				if (JPEGConstants.VERBOSE)
+				{
+					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
+				}
+
+				
 			sosSegment.write(mBitStream);
 
 			encoder.start_pass(aJPEG, false);
 
-			for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+			if (aJPEG.comps_in_scan == 1)
 			{
-				for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+				ComponentInfo comp = aJPEG.cur_comp_info[0];
+
+				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
 				{
-					encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
+					for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+					{
+						if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.height)
+						{
+							for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+							{
+								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
+								{
+									if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.width)
+									{
+										mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+
+										encoder.encode_mcu(aJPEG, mcu, false);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+				{
+					for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+					{
+						encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
+					}
 				}
 			}
 

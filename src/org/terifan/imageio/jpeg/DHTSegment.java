@@ -21,6 +21,11 @@ public class DHTSegment
 	{
 		int length = aBitStream.readInt16() - 2;
 
+		if (length == 0)
+		{
+			return;
+		}
+		
 		do
 		{
 			HuffmanTable table = new HuffmanTable().read(aBitStream);

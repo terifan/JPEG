@@ -440,7 +440,7 @@ public class ArithmeticDecoder extends Decoder
 				st_off += 3;
 				if (k >= cinfo.Se)
 				{
-					WARNMS(cinfo, JWRN_ARITH_BAD_CODE + " - 2");
+					WARNMS(cinfo, JWRN_ARITH_BAD_CODE + " - 2: " + k + ">=" + cinfo.Se);
 					entropy.ct = -1;
 					/* spectral overflow */
 					return true;
