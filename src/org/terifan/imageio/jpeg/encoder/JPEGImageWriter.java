@@ -36,7 +36,7 @@ public class JPEGImageWriter
 	{
 		mJPEG.width = aImage.getWidth();
 		mJPEG.height = aImage.getHeight();
-		
+
 		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2);
 		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1);
 		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1);
@@ -91,9 +91,9 @@ public class JPEGImageWriter
 			ComponentInfo comp = aSOFSegment.getComponent(ci);
 			blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
-		
+
 		mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][blocks_in_MCU][64];
-		
+
 		int[] raster = new int[mcuWidth * mcuHeight];
 		int[][] colors = new int[mJPEG.num_components][mcuWidth * mcuHeight];
 
@@ -162,13 +162,13 @@ public class JPEGImageWriter
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
 		System.out.println("----"+aJPEG.mProgressive);
-		
+
 		for (int progressionLevel = 0; progressionLevel < (aJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
 		{
 			Encoder encoder = null;
 
 			System.out.println("#" + progressionLevel);
-			
+
 			SOSSegment sosSegment;
 
 			if (aJPEG.mProgressive)
@@ -185,14 +185,27 @@ public class JPEGImageWriter
 				{
 					id[i] = aJPEG.mSOFSegment.getComponent(params[0][i]).getComponentId();
 				}
-				
+
 				sosSegment = new SOSSegment(aJPEG, id);
-				sosSegment.setTableDC(0, 0);
-				sosSegment.setTableAC(0, 0);
-				sosSegment.setTableDC(1, 1);
-				sosSegment.setTableAC(1, 1);
-				sosSegment.setTableDC(2, 1);
-				sosSegment.setTableAC(2, 1);
+
+				if (params[0].length == 3)
+				{
+					sosSegment.setTableDC(0, 0);
+					sosSegment.setTableAC(0, 0);
+					sosSegment.setTableDC(1, 1);
+					sosSegment.setTableAC(1, 1);
+					sosSegment.setTableDC(2, 1);
+					sosSegment.setTableAC(2, 1);
+				}
+				else
+				{
+					sosSegment.setTableDC(0, 0);
+					sosSegment.setTableAC(0, 0);
+					sosSegment.setTableDC(1, 0);
+					sosSegment.setTableAC(1, 1);
+					sosSegment.setTableDC(2, 0);
+					sosSegment.setTableAC(2, 1);
+				}
 
 				sosSegment.prepareMCU();
 
