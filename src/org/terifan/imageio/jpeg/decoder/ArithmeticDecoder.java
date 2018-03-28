@@ -149,7 +149,7 @@ public class ArithmeticDecoder extends Decoder
 				/* insert data into C register */
 				if ((entropy.ct += 8) < 0)
 				/* update bit shift counter */
- /* Need more initial bytes */
+				/* Need more initial bytes */
 				{
 					if (++entropy.ct == 0)
 					/* Got 2 initial bytes . re-init A and exit loop */
@@ -175,7 +175,7 @@ public class ArithmeticDecoder extends Decoder
 		qe >>= 8;
 		/* Next_Index_MPS */
 
- /* Decode & estimation procedures per sections D.2.4 & D.2.5 */
+		/* Decode & estimation procedures per sections D.2.4 & D.2.5 */
 		temp = entropy.a - qe;
 		entropy.a = temp;
 		temp <<= entropy.ct;
@@ -214,7 +214,7 @@ public class ArithmeticDecoder extends Decoder
 				/* Estimate_after_MPS */
 			}
 		}
-
+	
 		return sv >> 7;
 	}
 
@@ -254,25 +254,25 @@ public class ArithmeticDecoder extends Decoder
 		entropy.ct = -16;
 		/* force reading 2 initial bytes to fill C */
 
- /* Reset restart counter */
+		/* Reset restart counter */
 		entropy.restarts_to_go = cinfo.restart_interval;
 	}
 
 
 	/*
- * Arithmetic MCU decoding.
- * Each of these routines decodes and returns one MCU's worth of
- * arithmetic-compressed coefficients.
- * The coefficients are reordered from zigzag order into natural array order,
- * but are not dequantized.
- *
- * The i'th block of the MCU is stored into the block pointed to by
- * MCU_data[i].  WE ASSUME THIS AREA IS INITIALLY ZEROED BY THE CALLER.
+	 * Arithmetic MCU decoding.
+	 * Each of these routines decodes and returns one MCU's worth of
+	 * arithmetic-compressed coefficients.
+	 * The coefficients are reordered from zigzag order into natural array order,
+	 * but are not dequantized.
+	 *
+	 * The i'th block of the MCU is stored into the block pointed to by
+	 * MCU_data[i].  WE ASSUME THIS AREA IS INITIALLY ZEROED BY THE CALLER.
 	 */
 
- /*
- * MCU decoding for DC initial scan (either spectral selection,
- * or first pass of successive approximation).
+	/*
+	 * MCU decoding for DC initial scan (either spectral selection,
+	 * or first pass of successive approximation).
 	 */
 	boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
 	{
@@ -308,7 +308,7 @@ public class ArithmeticDecoder extends Decoder
 
 			/* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
- /* Table F.4: Point to statistics bin S0 for DC coefficient coding */
+			/* Table F.4: Point to statistics bin S0 for DC coefficient coding */
 			st = entropy.dc_stats[tbl];
 			st_off = entropy.dc_context[ci];
 
@@ -320,7 +320,7 @@ public class ArithmeticDecoder extends Decoder
 			else
 			{
 				/* Figure F.21: Decoding nonzero value v */
- /* Figure F.22: Decoding the sign of v */
+				/* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, st, st_off + 1);
 				st_off += 2;
 				st_off += sign;
@@ -440,10 +440,10 @@ public class ArithmeticDecoder extends Decoder
 				st_off += 3;
 				if (k >= cinfo.Se)
 				{
-					WARNMS(cinfo, JWRN_ARITH_BAD_CODE + " - 2: " + k + ">=" + cinfo.Se);
-					entropy.ct = -1;
+					throw new IllegalStateException("JWRN_ARITH_BAD_CODE - 2: " + k + ">=" + cinfo.Se);
+//					entropy.ct = -1;
 					/* spectral overflow */
-					return true;
+//					return true;
 				}
 			}
 			/* Figure F.21: Decoding nonzero value v */
@@ -462,10 +462,10 @@ public class ArithmeticDecoder extends Decoder
 					{
 						if ((m <<= 1) == 0x8000)
 						{
-							WARNMS(cinfo, JWRN_ARITH_BAD_CODE + " - 3");
-							entropy.ct = -1;
+							throw new IllegalStateException("JWRN_ARITH_BAD_CODE - 3");
+//							entropy.ct = -1;
 							/* magnitude overflow */
-							return true;
+//							return true;
 						}
 						st_off += 1;
 					}
@@ -521,7 +521,7 @@ public class ArithmeticDecoder extends Decoder
 		p1 = 1 << cinfo.Al;
 		/* 1 in the bit position being coded */
 
- /* Outer loop handles each block in the MCU */
+		/* Outer loop handles each block in the MCU */
 		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
 		{
 			/* Encoded data is simply the next bit of the two's-complement DC value */
@@ -727,7 +727,7 @@ public class ArithmeticDecoder extends Decoder
 			else
 			{
 				/* Figure F.21: Decoding nonzero value v */
- /* Figure F.22: Decoding the sign of v */
+				/* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, st, st_off + 1);
 				st_off += 2;
 				st_off += sign;
@@ -820,7 +820,7 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Figure F.21: Decoding nonzero value v */
- /* Figure F.22: Decoding the sign of v */
+				/* Figure F.22: Decoding the sign of v */
 				sign = arith_decode(cinfo, entropy.fixed_bin, 0);
 				st_off += 2;
 				/* Figure F.23: Decoding the magnitude category of v */
@@ -929,14 +929,14 @@ public class ArithmeticDecoder extends Decoder
 				int cindex = cinfo.cur_comp_info[ci].getComponentId() - 1;
 				if (cinfo.Ss != 0 && cinfo.coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
-					WARNMS(cinfo, JWRN_BOGUS_PROGRESSION + " - AC without prior DC scan", cindex, 0);
+					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
 				}
 				for (int coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++)
 				{
 					int expected = (cinfo.coef_bits[cindex][coefi] < 0) ? 0 : cinfo.coef_bits[cindex][coefi];
 					if (cinfo.Ah != expected)
 					{
-						WARNMS(cinfo, JWRN_BOGUS_PROGRESSION + " - " + cinfo.Ah + " != " + expected, cindex, coefi);
+						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + cinfo.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
 					}
 					cinfo.coef_bits[cindex][coefi] = cinfo.Al;
 				}
@@ -1012,7 +1012,7 @@ public class ArithmeticDecoder extends Decoder
 		entropy.ct = -16;
 		/* force reading 2 initial bytes to fill C */
 
- /* Initialize restart counter */
+		/* Initialize restart counter */
 		entropy.restarts_to_go = cinfo.restart_interval;
 	}
 

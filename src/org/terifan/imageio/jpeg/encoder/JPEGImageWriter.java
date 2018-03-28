@@ -155,7 +155,35 @@ public class JPEGImageWriter
 	{
 		if (aJPEG.mProgressive && mProgressionScript == null)
 		{
-			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
+//			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
+
+//			String s = 
+//				"0,1,2: 0-0,   0, 0 ;\n" +
+//				"0:     1-63,  0, 0 ;\n" +
+//				"2:     1-63,  0, 0 ;\n" +
+//				"1:     1-63,  0, 0 ;\n";
+
+			String s
+				= "0,1,2: 0-0,   0, 1 ;\n"
+				+ "0,1,2: 0-0,   1, 0 ;\n"
+
+				+ "2:     1-63,  0, 0 ;\n"
+				+ "1:     1-63,  0, 0 ;\n"
+
+				+ "0:     1-5,   0, 0 ;\n"
+				+ "0:     6-63,  0, 0 ;\n"
+				
+//				+ "0:     1-5,   0, 2 ;\n"
+//				+ "2:     1-63,  0, 1 ;\n"
+//				+ "1:     1-63,  0, 1 ;\n"
+//				+ "0:     6-63,  0, 2 ;\n"
+//				+ "0:     1-63,  2, 1 ;\n"
+//				+ "2:     1-63,  1, 0 ;\n"
+//				+ "1:     1-63,  1, 0 ;\n"
+//				+ "0:     1-63,  1, 0 ;\n"
+				;
+
+			mProgressionScript = new ProgressionScript(s);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
@@ -335,15 +363,13 @@ public class JPEGImageWriter
 				new DHTSegment(aJPEG).write(mBitStream);
 			}
 
+			sosSegment.prepareMCU();
 
-				sosSegment.prepareMCU();
+			if (JPEGConstants.VERBOSE)
+			{
+				System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
+			}
 
-				if (JPEGConstants.VERBOSE)
-				{
-					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
-				}
-
-				
 			sosSegment.write(mBitStream);
 
 			encoder.start_pass(aJPEG, false);

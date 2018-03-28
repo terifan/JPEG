@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg.test;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 

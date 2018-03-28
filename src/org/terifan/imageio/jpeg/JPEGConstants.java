@@ -132,7 +132,7 @@ public class JPEGConstants
 		"2:     1-63,  1, 0 ;\n" +
 		"1:     1-63,  1, 0 ;\n" +
 		"# Y AC lowest bit scan is last; it's usually the largest scan\n" +
-		"0: 1-63, 1, 0 ;";
+		"0:     1-63,  1, 0 ;";
 
 	public static String getSOFDescription(int aMarker)
 	{
