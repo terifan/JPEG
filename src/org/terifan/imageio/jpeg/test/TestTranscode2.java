@@ -21,7 +21,7 @@ public class TestTranscode2
 			
 			System.out.println("=================================================================================================================================================================================");
 			
-			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-huff-opt.jpg"), baos);
+			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
 			
 			System.out.println(baos.size());
 			
