@@ -155,7 +155,7 @@ public class JPEGImageWriter
 	{
 		if (aJPEG.mProgressive && mProgressionScript == null)
 		{
-//			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
+			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
 
 //			String s = 
 //				"0,1,2: 0-0,   0, 0 ;\n" +
@@ -183,7 +183,7 @@ public class JPEGImageWriter
 //				+ "0:     1-63,  1, 0 ;\n"
 				;
 
-			mProgressionScript = new ProgressionScript(s);
+//			mProgressionScript = new ProgressionScript(s);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
@@ -235,7 +235,7 @@ public class JPEGImageWriter
 					sosSegment.setTableAC(2, 0);
 				}
 //
-//				sosSegment.prepareMCU();
+				sosSegment.prepareMCU();
 //
 //				if (JPEGConstants.VERBOSE)
 //				{
@@ -257,7 +257,7 @@ public class JPEGImageWriter
 				sosSegment.setTableDC(2, 1);
 				sosSegment.setTableAC(2, 1);
 
-//				sosSegment.prepareMCU();
+				sosSegment.prepareMCU();
 			}
 
 			int[][] mcu = new int[aJPEG.blocks_in_MCU][64];
@@ -362,8 +362,6 @@ public class JPEGImageWriter
 
 				new DHTSegment(aJPEG).write(mBitStream);
 			}
-
-			sosSegment.prepareMCU();
 
 			if (JPEGConstants.VERBOSE)
 			{
