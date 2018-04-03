@@ -282,7 +282,7 @@ public class ArithmeticDecoder extends Decoder
 		int st_off;
 		int blkn, ci, tbl, sign;
 		int v, m;
-
+		
 		/* Process restart marker if needed */
 		if (cinfo.restart_interval != 0)
 		{
