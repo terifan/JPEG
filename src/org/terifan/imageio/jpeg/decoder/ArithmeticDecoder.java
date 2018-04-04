@@ -750,12 +750,12 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << cinfo.arith_dc_L[tbl]) >> 1))
+				if (m < ((1 << cinfo.arith_dc_L[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;
 					/* zero diff category */
 				}
-				else if (m > (int)((1L << cinfo.arith_dc_U[tbl]) >> 1))
+				else if (m > ((1 << cinfo.arith_dc_U[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 12 + (sign * 4);
 					/* large diff category */
