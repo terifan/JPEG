@@ -133,13 +133,13 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		JPEGEntropyState e = cinfo.entropy;
-		int temp;
+		long temp;
 
 		/* Section D.1.8: Termination of encoding */
 
 		/* Find the e->c in the coding interval with the largest
 		 * number of trailing zero bits */
-		if ((temp = (int)((e.a - 1 + e.c) & 0xFFFF0000L)) < e.c)
+		if ((temp = ((e.a - 1 + e.c) & 0xFFFF0000L)) < e.c)
 		{
 			e.c = temp + 0x8000;
 		}
@@ -149,7 +149,7 @@ public class ArithmeticEncoder implements Encoder
 		}
 		/* Send remaining bytes to output */
 		e.c <<= e.ct;
-		if ((e.c & 0xF8000000) != 0)
+		if ((e.c & 0xF8000000L) != 0)
 		{
 			/* One final overflow has to be handled */
 			if (e.buffer >= 0)
@@ -209,7 +209,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 		}
 		/* Output final bytes only if they are not 0x00 */
-		if ((e.c & 0x7FFF800) != 0)
+		if ((e.c & 0x7FFF800L) != 0)
 		{
 			if (e.zc != 0)
 			/* output final pending zero bytes */
@@ -220,14 +220,14 @@ public class ArithmeticEncoder implements Encoder
 				}
 				while (--e.zc != 0);
 			}
-			emit_byte((e.c >> 19) & 0xFF, cinfo);
+			emit_byte((int)(e.c >> 19) & 0xFF, cinfo);
 			if (((e.c >> 19) & 0xFF) == 0xFF)
 			{
 				emit_byte(0x00, cinfo);
 			}
 			if ((e.c & 0x7F800) != 0)
 			{
-				emit_byte((e.c >> 11) & 0xFF, cinfo);
+				emit_byte((int)(e.c >> 11) & 0xFF, cinfo);
 				if (((e.c >> 11) & 0xFF) == 0xFF)
 				{
 					emit_byte(0x00, cinfo);
@@ -322,7 +322,7 @@ public class ArithmeticEncoder implements Encoder
 			if (--e.ct == 0)
 			{
 				/* Another byte is ready for output */
-				temp = e.c >> 19;
+				temp = (int)(e.c >> 19);
 				if (temp > 0xFF)
 				{
 					/* Handle overflow over all stacked 0xFF bytes */
@@ -1162,8 +1162,8 @@ public class ArithmeticEncoder implements Encoder
 				}
 				if (entropy.dc_stats[tbl] == null)
 				{
-					entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
 				}
+					entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
 				/* Initialize DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
@@ -1178,13 +1178,13 @@ public class ArithmeticEncoder implements Encoder
 				}
 				if (entropy.ac_stats[tbl] == null)
 				{
+				}
 					entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
-				}
-				if (cinfo.mProgressive)
-				/* Section G.1.3.2: Set appropriate arithmetic conditioning value Kx */
-				{
-					cinfo.arith_ac_K[tbl] = cinfo.Ss + ((8 + cinfo.Se - cinfo.Ss) >> 4);
-				}
+//				if (cinfo.mProgressive)
+//				{
+//					/* Section G.1.3.2: Set appropriate arithmetic conditioning value Kx */
+//					cinfo.arith_ac_K[tbl] = cinfo.Ss + ((8 + cinfo.Se - cinfo.Ss) >> 4);
+//				}
 			}
 		}
 
@@ -1209,9 +1209,8 @@ public class ArithmeticEncoder implements Encoder
 	@Override
 	public void jinit_encoder(JPEG cinfo)
 	{
-		JPEGEntropyState entropy = new JPEGEntropyState();
-
-		cinfo.entropy = entropy;
+		if(cinfo.entropy==null)
+		cinfo.entropy = new JPEGEntropyState();
 		int i;
 
 		/* Mark tables unallocated */

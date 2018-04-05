@@ -7,7 +7,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.DC_STAT_BINS;
 
 public class JPEGEntropyState
 {
-	public int c;  // C register, base of coding interval + input bit buffer
+	public long c;  // C register, base of coding interval + input bit buffer
 	public int a;  // A register, normalized size of coding interval
 	public int ct; // bit shift counter, # of bits left in bit buffer part of C. init: ct = -16, run: ct = 0..7, error: ct = -1
 	public int[] last_dc_val = new int[MAX_COMPS_IN_SCAN]; // last DC coef for each component

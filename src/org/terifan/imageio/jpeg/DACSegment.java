@@ -65,12 +65,26 @@ public class DACSegment
 		}
 	}
 
-	// 00 10 00 10
 
-	public void write(BitOutputStream aBitStream) throws IOException
+	public void write(BitOutputStream aBitStream, SOSSegment aSOSSegment) throws IOException
 	{
+		int ac = 0;
+		for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
+		{
+			boolean found = false;
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+			{
+				found = aSOSSegment.getACTable(scanComponentIndex) == i;
+			}			
+
+			if (found)
+			{
+				ac++;
+			}
+		}
+		
 		aBitStream.writeInt16(JPEGConstants.DAC);
-		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + mJPEG.arith_ac_K.length));
+		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + ac));
 
 		for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
 		{
@@ -79,8 +93,17 @@ public class DACSegment
 		}
 		for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
 		{
-			aBitStream.writeInt8(NUM_ARITH_TBLS + i);
-			aBitStream.writeInt8(mJPEG.arith_ac_K[i]);
+			boolean found = false;
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+			{
+				found = aSOSSegment.getACTable(scanComponentIndex) == i;
+			}			
+
+			if (found)
+			{
+				aBitStream.writeInt8(NUM_ARITH_TBLS + i);
+				aBitStream.writeInt8(mJPEG.arith_ac_K[i]);
+			}
 		}
 	}
 }

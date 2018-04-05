@@ -157,12 +157,12 @@ public class JPEGImageWriter
 		{
 			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
 
-//			String s = 
-//				"0,1,2: 0-0,   0, 0 ;\n" +
-//				"0:     1-63,  0, 0 ;\n" +
-//				"2:     1-63,  0, 0 ;\n" +
-//				"1:     1-63,  0, 0 ;\n";
-
+////			String s = 
+////				"0,1,2: 0-0,   0, 0 ;\n" +
+////				"0:     1-63,  0, 0 ;\n" +
+////				"2:     1-63,  0, 0 ;\n" +
+////				"1:     1-63,  0, 0 ;\n";
+//
 //			String s
 //				= "0,1,2: 0-0,   0, 0 ;\n"
 //				+ "0:     1-5,  0, 0 ;\n"
@@ -197,11 +197,11 @@ public class JPEGImageWriter
 
 		System.out.println("----"+aJPEG.mProgressive);
 
+			Encoder encoder = null;
 		for (int progressionLevel = 0; progressionLevel < (aJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
 		{
-			Encoder encoder = null;
 
-			System.out.println("#" + progressionLevel);
+			System.out.println("LEVEL " + progressionLevel);
 
 			SOSSegment sosSegment;
 
@@ -224,21 +224,29 @@ public class JPEGImageWriter
 
 				if (params[0].length == 3)
 				{
-					sosSegment.setTableDC(0, 0);
-					sosSegment.setTableAC(0, 0);
-					sosSegment.setTableDC(1, 1);
-					sosSegment.setTableAC(1, 0);
-					sosSegment.setTableDC(2, 1);
-					sosSegment.setTableAC(2, 0);
+					if (progressionLevel == 0)
+					{
+						sosSegment.setTableDC(0, 0);
+						sosSegment.setTableAC(0, 0);
+						sosSegment.setTableDC(1, 1);
+						sosSegment.setTableAC(1, 0);
+						sosSegment.setTableDC(2, 1);
+						sosSegment.setTableAC(2, 0);
+					}
+					else
+					{
+						sosSegment.setTableDC(0, 0);
+						sosSegment.setTableAC(0, 0);
+						sosSegment.setTableDC(1, 0);
+						sosSegment.setTableAC(1, 0);
+						sosSegment.setTableDC(2, 0);
+						sosSegment.setTableAC(2, 0);
+					}
 				}
 				else
 				{
 					sosSegment.setTableDC(0, 0);
-					sosSegment.setTableAC(0, 0);
-					sosSegment.setTableDC(1, 1);
-					sosSegment.setTableAC(1, 0);
-					sosSegment.setTableDC(2, 1);
-					sosSegment.setTableAC(2, 0);
+					sosSegment.setTableAC(0, id[0] == 1 ? 0 : 1);
 				}
 
 				sosSegment.prepareMCU();
@@ -275,6 +283,7 @@ public class JPEGImageWriter
 			
 			if (aJPEG.mArithmetic)
 			{
+				boolean dac = true;
 				if (progressionLevel == 0)
 				{
 					aJPEG.arith_dc_L = new int[]{0,0};
@@ -285,22 +294,47 @@ public class JPEGImageWriter
 				{
 					aJPEG.arith_dc_L = new int[]{};
 					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5};
+					aJPEG.arith_ac_K = new int[]{5,5};
 				}
 				else if (progressionLevel == 2)
 				{
 					aJPEG.arith_dc_L = new int[]{};
 					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5}; // 17=5 ??
+					aJPEG.arith_ac_K = new int[]{5,5};
+				}
+				else if (progressionLevel == 3)
+				{
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
+					aJPEG.arith_ac_K = new int[]{5,5};
+				}
+				else if (progressionLevel == 4)
+				{
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
+					aJPEG.arith_ac_K = new int[]{5,5};
+				}
+				else if (progressionLevel == 5)
+				{
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
+					aJPEG.arith_ac_K = new int[]{5,5};
+				}
+				else if (progressionLevel == 6)
+				{
+					dac = false;
 				}
 				else
 				{
-					aJPEG.arith_dc_L = new int[]{0,0};
-					aJPEG.arith_dc_U = new int[]{1,1};
+					aJPEG.arith_dc_L = new int[]{};
+					aJPEG.arith_dc_U = new int[]{};
 					aJPEG.arith_ac_K = new int[]{5,5};
 				}
 				
-				new DACSegment(aJPEG).write(mBitStream);
+				if (dac)
+				{
+					new DACSegment(aJPEG).write(mBitStream, sosSegment);
+				}
 
 				if (encoder == null)
 				{

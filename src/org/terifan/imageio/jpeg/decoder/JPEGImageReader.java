@@ -360,17 +360,6 @@ public class JPEGImageReader
 
 		mDecoder.startPass(mJPEG);
 
-		System.out.println(mJPEG.arith_dc_L[0]+", "+mJPEG.arith_dc_L[1]);
-		System.out.println(mJPEG.arith_dc_U[0]+", "+mJPEG.arith_dc_U[1]);
-		System.out.println(mJPEG.arith_ac_K[0]+", "+mJPEG.arith_ac_K[1]);
-		System.out.println(mJPEG.Ss);
-		System.out.println(mJPEG.Se);
-		System.out.println(mJPEG.Ah);
-		System.out.println(mJPEG.Al);
-		System.out.println(mJPEG.lim_Se);
-		System.out.println(mJPEG.comps_in_scan);
-		System.out.println(mJPEG.cur_comp_info[0]);
-		
 		try
 		{
 			int[][] mcu = new int[mJPEG.blocks_in_MCU][64];
