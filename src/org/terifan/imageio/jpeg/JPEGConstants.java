@@ -184,12 +184,12 @@ public class JPEGConstants
 	}
 
 
-	private static int V(int i, int a, int b, int c, int d)
+	private static long V(int i, long a, long b, long c, long d)
 	{
 		return ((a << 16) | (c << 8) | (d << 7) | b);
 	}
 
-	public final static int[] jpeg_aritab =
+	public final static long[] jpeg_aritab =
 	{
 		/*
 	 * Index, Qe_Value, Next_Index_LPS, Next_Index_MPS, Switch_MPS

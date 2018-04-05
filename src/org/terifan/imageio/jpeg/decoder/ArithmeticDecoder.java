@@ -98,7 +98,8 @@ public class ArithmeticDecoder extends Decoder
 	{
 		JPEGEntropyState entropy = cinfo.entropy;
 		int nl, nm;
-		int qe, temp;
+		long qe;
+		long temp;
 		int data;
 		int sv;
 
@@ -168,10 +169,10 @@ public class ArithmeticDecoder extends Decoder
 		sv = st[st_off];
 		qe = jpeg_aritab[sv & 0x7F];
 		/* => Qe_Value */
-		nl = qe & 0xFF;
+		nl = (int)(qe & 0xFF);
 		qe >>= 8;
 		/* Next_Index_LPS + Switch_MPS */
-		nm = qe & 0xFF;
+		nm = (int)(qe & 0xFF);
 		qe >>= 8;
 		/* Next_Index_MPS */
 

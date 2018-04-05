@@ -220,15 +220,15 @@ public class ArithmeticEncoder implements Encoder
 				}
 				while (--e.zc != 0);
 			}
-			emit_byte((int)(e.c >> 19) & 0xFF, cinfo);
-			if (((e.c >> 19) & 0xFF) == 0xFF)
+			emit_byte((int)(e.c >>> 19) & 0xFF, cinfo);
+			if (((e.c >>> 19) & 0xFF) == 0xFF)
 			{
 				emit_byte(0x00, cinfo);
 			}
 			if ((e.c & 0x7F800) != 0)
 			{
-				emit_byte((int)(e.c >> 11) & 0xFF, cinfo);
-				if (((e.c >> 11) & 0xFF) == 0xFF)
+				emit_byte((int)((e.c >>> 11) & 0xFF), cinfo);
+				if (((e.c >>> 11) & 0xFF) == 0xFF)
 				{
 					emit_byte(0x00, cinfo);
 				}
@@ -262,19 +262,19 @@ public class ArithmeticEncoder implements Encoder
 	{
 		JPEGEntropyState e = cinfo.entropy;
 		int nl, nm;
-		int qe, temp;
+		int temp;
 		int sv;
 
 		/* Fetch values from our compact representation of Table D.3(D.2):
 		 * Qe values and probability estimation state machine
 		 */
 		sv = st_off;
-		qe = jpeg_aritab[st[sv] & 0x7F];
+		long qe = jpeg_aritab[st[sv] & 0x7F];
 		/* => Qe_Value */
-		nl = qe & 0xFF;
+		nl = (int)(qe & 0xFF);
 		qe >>= 8;
 		/* Next_Index_LPS + Switch_MPS */
-		nm = qe & 0xFF;
+		nm = (int)(qe & 0xFF);
 		qe >>= 8;
 		/* Next_Index_MPS */
 
@@ -322,7 +322,7 @@ public class ArithmeticEncoder implements Encoder
 			if (--e.ct == 0)
 			{
 				/* Another byte is ready for output */
-				temp = (int)(e.c >> 19);
+				temp = (int)(e.c >>> 19);
 				if (temp > 0xFF)
 				{
 					/* Handle overflow over all stacked 0xFF bytes */
