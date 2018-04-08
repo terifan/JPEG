@@ -99,12 +99,12 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_DC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
+		JPEGEntropyState entropy = aJPEG.entropy;
+
 		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
 		{
 			int ci = aJPEG.MCU_membership[blockIndex];
 			ComponentInfo comp = aJPEG.cur_comp_info[ci];
-
-			Arrays.fill(aCoefficients[blockIndex], 0);
 
 			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 
@@ -117,10 +117,10 @@ public class HuffmanDecoder extends Decoder
 
 			if (value > 0)
 			{
-				aJPEG.entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+				entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value);
 			}
 
-			aCoefficients[blockIndex][0] = aJPEG.entropy.last_dc_val[ci];
+			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << aJPEG.Al;
 		}
 
 		return true;

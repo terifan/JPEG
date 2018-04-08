@@ -815,7 +815,7 @@ public class HuffmanEncoder implements Encoder
 		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
-			emit_bits_e(entropy, (MCU_data[blkn][0] >> Al), 1);
+			emit_bits_e(entropy, (MCU_data[blkn][0] >> Al) & 1, 1);
 		}
 
 //		cinfo.next_output_byte = entropy.next_output_byte;
