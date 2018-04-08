@@ -367,6 +367,19 @@ public class JPEGImageReader
 				{
 					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 					{
+						for (int ci = 0, blockIndex = 0; ci < mJPEG.comps_in_scan; ci++)
+						{
+							ComponentInfo comp = mJPEG.cur_comp_info[ci];
+
+							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+							{
+								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++, blockIndex++)
+								{
+									mcu[blockIndex] = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+								}
+							}
+						}
+
 						mDecoder.decodeMCU(mJPEG, mcu);
 
 						for (int ci = 0, blockIndex = 0; ci < mJPEG.comps_in_scan; ci++)
@@ -377,12 +390,7 @@ public class JPEGImageReader
 							{
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++, blockIndex++)
 								{
-									int[] tmp = mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
-
-									for (int i = 0; i < 64; i++)
-									{
-										tmp[i] += mcu[blockIndex][i];
-									}
+									mJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX] = mcu[blockIndex];
 								}
 							}
 						}

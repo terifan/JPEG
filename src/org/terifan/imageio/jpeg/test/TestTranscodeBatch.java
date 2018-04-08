@@ -15,27 +15,27 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 public class TestTranscodeBatch
 {
-	public static void main(String... args)
-	{
-		try
-		{
-			JPEG jpeg1 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt.jpg")).decode();
-			JPEG jpeg2 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt-prog.jpg")).decode();
-			
-			System.out.println(Arrays.deepEquals(jpeg1.getCoefficients(), jpeg2.getCoefficients()));
-			
-			BufferedImage image1 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt.jpg"));
-			BufferedImage image2 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt-prog.jpg"));
-			
-			System.out.println(compare(image1, image2));
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
+//	public static void main(String... args)
+//	{
+//		try
+//		{
+//			JPEG jpeg1 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt.jpg")).decode();
+//			JPEG jpeg2 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt-prog.jpg")).decode();
+//			
+//			System.out.println(Arrays.deepEquals(jpeg1.getCoefficients(), jpeg2.getCoefficients()));
+//			
+//			BufferedImage image1 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt.jpg"));
+//			BufferedImage image2 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt-prog.jpg"));
+//			
+//			System.out.println(compare(image1, image2));
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 	
-	public static void cmain(String... args)
+	public static void main(String... args)
 	{
 		try
 		{
@@ -48,8 +48,8 @@ public class TestTranscodeBatch
 //			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
 //				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
-//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().endsWith(".jpg")))
-				File file = new File("D:\\Pictures\\Wallpapers High Quality\\02.jpg");
+				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().endsWith(".jpg")))
+//				File file = new File("D:\\Pictures\\Wallpapers High Quality\\02.jpg");
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
@@ -113,7 +113,7 @@ public class TestTranscodeBatch
 //						new ImageFrame(imageAri);
 //						new ImageFrame(imageAriProg);
 						
-						System.out.println(compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri));
+//						System.out.println(compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri));
 						boolean err = compare(imageAri, imageAriProg) != 0 || compare(imageAri, imageHuff) != 0 || compare(imageAri, imageHuffOpt) != 0 || compare(imageAri, imageHuffProg) != 0;
 
 						System.out.printf("%5s ari=%8d ariProg=%8d huff=%8d huffProg=%8d huffOpt=%8d %s %n", err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), file.getName());
