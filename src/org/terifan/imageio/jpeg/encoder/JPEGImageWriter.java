@@ -155,54 +155,50 @@ public class JPEGImageWriter
 	{
 		if (aJPEG.mProgressive && mProgressionScript == null)
 		{
-			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
+//			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
 
-////			String s = 
-////				"0,1,2: 0-0,   0, 0 ;\n" +
-////				"0:     1-63,  0, 0 ;\n" +
-////				"2:     1-63,  0, 0 ;\n" +
-////				"1:     1-63,  0, 0 ;\n";
-//
+//			String s = 
+//				"0,1,2: 0-0,   0, 0 ;\n" +
+//				"0:     1-63,  0, 0 ;\n" +
+//				"2:     1-63,  0, 0 ;\n" +
+//				"1:     1-63,  0, 0 ;\n";
+
 //			String s
 //				= "0,1,2: 0-0,   0, 0 ;\n"
 //				+ "0:     1-5,  0, 0 ;\n"
 //				+ "0:     6-63,  0, 0 ;\n"
 //				+ "2:     1-63,  0, 0 ;\n"
-//				+ "1:     1-63,  0, 0 ;\n"
-//
-////				= "0,1,2: 0-0,   0, 1 ;\n"
-////				+ "0,1,2: 0-0,   1, 0 ;\n"
-//
-////				+ "2:     1-63,  0, 0 ;\n"
-////				+ "1:     1-63,  0, 0 ;\n"
-////
-////				+ "0:     1-5,   0, 0 ;\n"
-////				+ "0:     6-63,  0, 0 ;\n"
-//				
-////				+ "0:     1-5,   0, 2 ;\n"
-////				+ "2:     1-63,  0, 1 ;\n"
-////				+ "1:     1-63,  0, 1 ;\n"
-////				+ "0:     6-63,  0, 2 ;\n"
-////				+ "0:     1-63,  2, 1 ;\n"
-////				+ "2:     1-63,  1, 0 ;\n"
-////				+ "1:     1-63,  1, 0 ;\n"
-////				+ "0:     1-63,  1, 0 ;\n"
+//				+ "1:     1-63,  0, 0 ;\n";
+
+			String s
+				= "0,1,2: 0-0,   0, 1 ;\n"
+				+ "0,1,2: 0-0,   1, 0 ;\n"
+//				+ "0:     1-5,   0, 0 ;\n"
+//				+ "0:     6-63,  0, 0 ;\n"
+				+ "0:     1-63,  0, 0 ;\n"
+				+ "2:     1-63,  0, 0 ;\n"
+				+ "1:     1-63,  0, 0 ;\n";
+
+//				+ "0:     1-5,   0, 2 ;\n"
+//				+ "2:     1-63,  0, 1 ;\n"
+//				+ "1:     1-63,  0, 1 ;\n"
+//				+ "0:     6-63,  0, 2 ;\n"
+//				+ "0:     1-63,  2, 1 ;\n"
+//				+ "2:     1-63,  1, 0 ;\n"
+//				+ "1:     1-63,  1, 0 ;\n"
+//				+ "0:     1-63,  1, 0 ;\n"
 //				;
 //
-//			mProgressionScript = new ProgressionScript(s);
+			mProgressionScript = new ProgressionScript(s);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
-		System.out.println("----"+aJPEG.mProgressive);
+		Encoder encoder = null;
 
-			Encoder encoder = null;
 		for (int progressionLevel = 0; progressionLevel < (aJPEG.mProgressive ? mProgressionScript.getParams().size() : 1); progressionLevel++)
 		{
-
-			System.out.println("LEVEL " + progressionLevel);
-
 			SOSSegment sosSegment;
 
 			if (aJPEG.mProgressive)
@@ -283,58 +279,11 @@ public class JPEGImageWriter
 			
 			if (aJPEG.mArithmetic)
 			{
-				boolean dac = true;
-				if (progressionLevel == 0)
-				{
-					aJPEG.arith_dc_L = new int[]{0,0};
-					aJPEG.arith_dc_U = new int[]{1,1};
-					aJPEG.arith_ac_K = new int[]{};
-				}
-				else if (progressionLevel == 1)
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				else if (progressionLevel == 2)
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				else if (progressionLevel == 3)
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				else if (progressionLevel == 4)
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				else if (progressionLevel == 5)
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				else if (progressionLevel == 6)
-				{
-					dac = false;
-				}
-				else
-				{
-					aJPEG.arith_dc_L = new int[]{};
-					aJPEG.arith_dc_U = new int[]{};
-					aJPEG.arith_ac_K = new int[]{5,5};
-				}
-				
-				if (dac)
-				{
-					new DACSegment(aJPEG).write(mBitStream, sosSegment);
-				}
+				aJPEG.arith_dc_L = new int[]{0,0};
+				aJPEG.arith_dc_U = new int[]{1,1};
+				aJPEG.arith_ac_K = new int[]{5,5};
+
+				new DACSegment(aJPEG).write(mBitStream, sosSegment);
 
 				if (encoder == null)
 				{
@@ -450,8 +399,6 @@ public class JPEGImageWriter
 			}
 
 			encoder.finish_pass(aJPEG, false);
-			
-			System.out.println(mBitStream.getStreamOffset());
 		}
 	}
 

@@ -1006,6 +1006,9 @@ public class ArithmeticEncoder implements Encoder
 			}
 			tbl = compptr.getTableAC();
 
+			if (tbl >= entropy.ac_stats.length) throw new IllegalArgumentException("ac_stats: " + tbl+" >= "+entropy.ac_stats.length);
+			if (tbl >= cinfo.arith_ac_K.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+cinfo.arith_ac_K.length);
+
 			/* Establish EOB (end-of-block) index */
 			do
 			{
@@ -1120,12 +1123,10 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if (cinfo.Ss == 0)
 				{
-					System.out.println("x_encode_mcu_DC_first");
 					entropy.encode_mcu = x_encode_mcu_DC_first;
 				}
 				else
 				{
-					System.out.println("x_encode_mcu_AC_first");
 					entropy.encode_mcu = x_encode_mcu_AC_first;
 				}
 			}
@@ -1133,12 +1134,10 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if (cinfo.Ss == 0)
 				{
-					System.out.println("x_encode_mcu_DC_refine");
 					entropy.encode_mcu = x_encode_mcu_DC_refine;
 				}
 				else
 				{
-					System.out.println("x_encode_mcu_AC_refine");
 					entropy.encode_mcu = x_encode_mcu_AC_refine;
 				}
 			}

@@ -275,13 +275,12 @@ public class ArithmeticDecoder extends Decoder
 	 * MCU decoding for DC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	boolean decode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean decode_mcu_DC_first(JPEG cinfo, int[][] aCoefficients) throws IOException
 	{
 		JPEGEntropyState entropy = cinfo.entropy;
-		int[] block;
 		int[] st;
 		int st_off;
-		int blkn, ci, tbl, sign;
+		int blockIndex, ci, tbl, sign;
 		int v, m;
 		
 		/* Process restart marker if needed */
@@ -301,10 +300,9 @@ public class ArithmeticDecoder extends Decoder
 		}
 
 		/* Outer loop handles each block in the MCU */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blockIndex = 0; blockIndex < cinfo.blocks_in_MCU; blockIndex++)
 		{
-			block = MCU_data[blkn];
-			ci = cinfo.MCU_membership[blkn];
+			ci = cinfo.MCU_membership[blockIndex];
 			tbl = cinfo.cur_comp_info[ci].getTableDC();
 
 			/* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
@@ -378,7 +376,7 @@ public class ArithmeticDecoder extends Decoder
 			}
 
 			/* Scale and output the DC coefficient (assumes jpeg_natural_order[0]=0) */
-			block[0] = (entropy.last_dc_val[ci] << cinfo.Al);
+			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << cinfo.Al;
 		}
 
 		return true;
@@ -501,11 +499,9 @@ public class ArithmeticDecoder extends Decoder
 	 * Note: we assume such scans can be multi-component,
 	 * although the spec is not very clear on the point.
 	 */
-	boolean decode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean decode_mcu_DC_refine(JPEG cinfo, int[][] aCoefficients) throws IOException
 	{
 		JPEGEntropyState entropy = cinfo.entropy;
-		int[] st;
-		int p1, blkn;
 
 		/* Process restart marker if needed */
 		if (cinfo.restart_interval != 0)
@@ -517,18 +513,18 @@ public class ArithmeticDecoder extends Decoder
 			entropy.restarts_to_go--;
 		}
 
-		st = entropy.fixed_bin;
+		int[] st = entropy.fixed_bin;
 		/* use fixed probability estimation */
-		p1 = 1 << cinfo.Al;
+		int p1 = 1 << cinfo.Al;
 		/* 1 in the bit position being coded */
 
 		/* Outer loop handles each block in the MCU */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (int blockIndex = 0; blockIndex < cinfo.blocks_in_MCU; blockIndex++)
 		{
 			/* Encoded data is simply the next bit of the two's-complement DC value */
 			if (arith_decode(cinfo, st, 0) != 0)
 			{
-				MCU_data[blkn][0] |= p1;
+				aCoefficients[blockIndex][0] |= p1;
 			}
 		}
 

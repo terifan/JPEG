@@ -315,35 +315,6 @@ public class JPEGImageReader
 
 		if (mImage == null)
 		{
-//    cid0 = cinfo->comp_info[0].component_id;
-//    cid1 = cinfo->comp_info[1].component_id;
-//    cid2 = cinfo->comp_info[2].component_id;
-//
-//    /* First try to guess from the component IDs */
-//    if      (cid0 == 0x01 && cid1 == 0x02 && cid2 == 0x03)
-//      cinfo->jpeg_color_space = JCS_YCbCr;
-//    else if (cid0 == 0x01 && cid1 == 0x22 && cid2 == 0x23)
-//      cinfo->jpeg_color_space = JCS_BG_YCC;
-//    else if (cid0 == 0x52 && cid1 == 0x47 && cid2 == 0x42)
-//      cinfo->jpeg_color_space = JCS_RGB;	/* ASCII 'R', 'G', 'B' */
-//    else if (cid0 == 0x72 && cid1 == 0x67 && cid2 == 0x62)
-//      cinfo->jpeg_color_space = JCS_BG_RGB;	/* ASCII 'r', 'g', 'b' */
-//    else if (cinfo->saw_JFIF_marker)
-//      cinfo->jpeg_color_space = JCS_YCbCr;	/* assume it's YCbCr */
-//    else if (cinfo->saw_Adobe_marker) {
-//      switch (cinfo->Adobe_transform) {
-//      case 0:
-//	cinfo->jpeg_color_space = JCS_RGB;
-//	break;
-//      case 1:
-//	cinfo->jpeg_color_space = JCS_YCbCr;
-//	break;
-//      default:
-//	WARNMS1(cinfo, JWRN_ADOBE_XFORM, cinfo->Adobe_transform);
-//	cinfo->jpeg_color_space = JCS_YCbCr;	/* assume it's YCbCr */
-//	break;
-//      }
-
 			mJPEG.mCoefficients = new int[numVerMCU][numHorMCU][mJPEG.mSOFSegment.getMaxBlocksInMCU()][64];
 
 			mDecoder.initialize(mJPEG);
@@ -426,13 +397,7 @@ public class JPEGImageReader
 		}
 
 		mProgressiveLevel++;
-		mBitStream.align();
-
-		if (mProgressiveLevel == 311)
-		{
-			updateImage();
-			mStop = true;
-		}
+		mBitStream.align(); // todo: remove?
 
 		if (VERBOSE)
 		{

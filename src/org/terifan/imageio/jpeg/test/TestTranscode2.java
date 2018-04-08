@@ -18,12 +18,14 @@ public class TestTranscode2
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-			JPEGConstants.VERBOSE = true;
+//			JPEGConstants.VERBOSE = true;
 			
 			System.out.println("=================================================================================================================================================================================");
-			
-//			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
-			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(new FileInputStream("d:\\ari-test.jpg"), baos);
+
+			BufferedImage imagex = JPEGImageReader.read(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"));
+
+			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
+//			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(new FileInputStream("d:\\ari-test.jpg"), baos);
 			
 			System.out.println(baos.size());
 			
@@ -33,14 +35,11 @@ public class TestTranscode2
 			{
 				fos.write(baos.toByteArray());
 			}
-			
+
 //			BufferedImage image = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
 			BufferedImage image = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
 
 			new ImageFrame(image);
-
-//			System.out.println(ariImage);
-
 		}
 		catch (Throwable e)
 		{
