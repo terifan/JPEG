@@ -144,7 +144,7 @@ public class HuffmanEncoder implements Encoder
 	 * Compute the derived values for a Huffman table.
 	 * This routine also performs some validation checks on the table.
 	 */
-	private c_derived_tbl jpeg_make_c_derived_tbl(JPEG cinfo, boolean isDC, int tblno, c_derived_tbl pdtbl)
+	private c_derived_tbl jpeg_make_c_derived_tbl(JPEG aJPEG, boolean isDC, int tblno, c_derived_tbl pdtbl)
 	{
 		HuffmanTable htbl;
 		c_derived_tbl dtbl;
@@ -162,7 +162,7 @@ public class HuffmanEncoder implements Encoder
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE" + tblno);
 		}
-		htbl = isDC ? cinfo.dc_huff_tbl_ptrs[tblno] : cinfo.ac_huff_tbl_ptrs[tblno];
+		htbl = isDC ? aJPEG.dc_huff_tbl_ptrs[tblno] : aJPEG.ac_huff_tbl_ptrs[tblno];
 		if (htbl == null)
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE " + tblno);
@@ -405,6 +405,8 @@ public class HuffmanEncoder implements Encoder
 
 	private void flush_bits_e(huff_entropy_encoder entropy) throws IOException
 	{
+		if (entropy.gather_statistics) return;
+			
 		emit_bits_e(entropy, 0x7F, 7);
 		/* fill any partial byte with ones */
 		entropy.saved.put_buffer = 0;
@@ -557,9 +559,9 @@ public class HuffmanEncoder implements Encoder
 	 * MCU encoding for DC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	private boolean encode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_DC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int temp, temp2;
 		int nbits;
 		int blkn, ci, tbl;
@@ -569,7 +571,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -578,15 +580,15 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
-			ci = cinfo.MCU_membership[blkn];
-			tbl = cinfo.cur_comp_info[ci].getTableDC();
+			ci = aJPEG.MCU_membership[blkn];
+			tbl = aJPEG.cur_comp_info[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
 			 */
-			temp = MCU_data[blkn][0] >> cinfo.Al;
+			temp = aCoefficients[blkn][0] >> aJPEG.Al;
 
 			/* DC differences are figured on the point-transformed values. */
 			temp2 = temp - entropy.saved.last_dc_val[ci];
@@ -635,11 +637,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -654,9 +656,9 @@ public class HuffmanEncoder implements Encoder
 	 * MCU encoding for AC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	private boolean encode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int[] natural_order;
 		int[] block;
 		int temp, temp2;
@@ -668,7 +670,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -676,18 +678,18 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Se = cinfo.Se;
-		Al = cinfo.Al;
+		Se = aJPEG.Se;
+		Al = aJPEG.Al;
 		natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the MCU data block */
-		block = MCU_data[0];
+		block = aCoefficients[0];
 
 		/* Encode the AC coefficients per section G.1.2.2, fig. G.3 */
 		r = 0;
 		/* r = run length of zeros */
 
-		for (k = cinfo.Ss; k <= Se; k++)
+		for (k = aJPEG.Ss; k <= Se; k++)
 		{
 			if ((temp = block[natural_order[k]]) == 0)
 			{
@@ -772,11 +774,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -792,16 +794,16 @@ public class HuffmanEncoder implements Encoder
 	 * Note: we assume such scans can be multi-component,
 	 * although the spec is not very clear on the point.
 	 */
-	private boolean encode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int Al, blkn;
 
 //		entropy.next_output_byte = cinfo.next_output_byte;
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -809,24 +811,24 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Al = cinfo.Al;
+		Al = aJPEG.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
-			emit_bits_e(entropy, (MCU_data[blkn][0] >> Al) & 1, 1);
+			emit_bits_e(entropy, (aCoefficients[blkn][0] >> Al) & 1, 1);
 		}
 
 //		cinfo.next_output_byte = entropy.next_output_byte;
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -840,9 +842,9 @@ public class HuffmanEncoder implements Encoder
 	/*
 	 * MCU encoding for AC successive approximation refinement scan.
 	 */
-	private boolean encode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int[] natural_order;
 		int[] block;
 		int temp;
@@ -857,7 +859,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -865,18 +867,18 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Se = cinfo.Se;
-		Al = cinfo.Al;
+		Se = aJPEG.Se;
+		Al = aJPEG.Al;
 		natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the MCU data block */
-		block = MCU_data[0];
+		block = aCoefficients[0];
 
 		/* It is convenient to make a pre-pass to determine the transformed
 		 * coefficients' absolute values and the EOB position.
 		 */
 		EOB = 0;
-		for (k = cinfo.Ss; k <= Se; k++)
+		for (k = aJPEG.Ss; k <= Se; k++)
 		{
 			temp = block[natural_order[k]];
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -906,7 +908,7 @@ public class HuffmanEncoder implements Encoder
 		/* Append bits to buffer */
 		int BR_offset = entropy.BE;
 
-		for (k = cinfo.Ss; k <= Se; k++)
+		for (k = aJPEG.Ss; k <= Se; k++)
 		{
 			if ((temp = absvalues[k]) == 0)
 			{
@@ -981,11 +983,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1107,9 +1109,9 @@ public class HuffmanEncoder implements Encoder
 	/*
 	 * Encode and output one MCU's worth of Huffman-compressed coefficients.
 	 */
-	private boolean encode_mcu_huff(JPEG cinfo, int[][] MCU_data) throws IOException
+	private boolean encode_mcu_huff(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		working_state state = entropy.working_state;
 		int blkn, ci;
 		ComponentInfo compptr;
@@ -1119,10 +1121,10 @@ public class HuffmanEncoder implements Encoder
 //		state.next_output_byte_offset = cinfo.next_output_byte_offset;
 //		state.free_in_buffer = cinfo.free_in_buffer;
 //		state.cur = entropy.saved;
-		state.cinfo = cinfo;
+		state.cinfo = aJPEG;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -1131,13 +1133,13 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
-			ci = cinfo.MCU_membership[blkn];
-			compptr = cinfo.cur_comp_info[ci];
-			encode_one_block(state, MCU_data[blkn], state.cur.last_dc_val[ci], entropy.dc_derived_tbls[compptr.getTableDC()], entropy.ac_derived_tbls[compptr.getTableAC()]);
+			ci = aJPEG.MCU_membership[blkn];
+			compptr = aJPEG.cur_comp_info[ci];
+			encode_one_block(state, aCoefficients[blkn], state.cur.last_dc_val[ci], entropy.dc_derived_tbls[compptr.getTableDC()], entropy.ac_derived_tbls[compptr.getTableAC()]);
 			/* Update last_dc_val */
-			state.cur.last_dc_val[ci] = MCU_data[blkn][0];
+			state.cur.last_dc_val[ci] = aCoefficients[blkn][0];
 		}
 
 		/* Completed MCU, so update state */
@@ -1146,11 +1148,11 @@ public class HuffmanEncoder implements Encoder
 //		entropy.saved = state.cur;
 
 		/* Update restart-interval state too */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1165,25 +1167,25 @@ public class HuffmanEncoder implements Encoder
  * Finish up at the end of a Huffman-compressed scan.
 	 */
 	@Override
-	public void finish_pass(JPEG cinfo, boolean gather_statistics) throws IOException
+	public void finish_pass(JPEG aJPEG, boolean gather_statistics) throws IOException
 	{
 		if (gather_statistics)
 		{
-			finish_pass_gather(cinfo);
+			finish_pass_gather(aJPEG);
 		}
 		else
 		{
-			finish_pass_huff(cinfo);
+			finish_pass_huff(aJPEG);
 		}
 	}
 
 
-	private void finish_pass_huff(JPEG cinfo) throws IOException
+	private void finish_pass_huff(JPEG aJPEG) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 //		working_state state = new working_state();
 
-		if (cinfo.mProgressive)
+		if (aJPEG.mProgressive)
 		{
 //			entropy.next_output_byte[entropy.next_output_byte_offset] = cinfo.next_output_byte[cinfo.next_output_byte_offset];
 //			entropy.free_in_buffer = cinfo.free_in_buffer;
@@ -1230,12 +1232,12 @@ public class HuffmanEncoder implements Encoder
 	 * the compressed data.
 	 */
 	/* Process a single block's worth of coefficients */
-	private void htest_one_block(JPEG cinfo, int[] block, int last_dc_val, int[] dc_counts, int[] ac_counts)
+	private void htest_one_block(JPEG aJPEG, int[] block, int last_dc_val, int[] dc_counts, int[] ac_counts)
 	{
 		int temp;
 		int nbits;
 		int r, k;
-		int Se = cinfo.lim_Se;
+		int Se = aJPEG.lim_Se;
 		int[] natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the DC coefficient difference per section F.1.2.1 */
@@ -1320,34 +1322,34 @@ public class HuffmanEncoder implements Encoder
 	 * Trial-encode one MCU's worth of Huffman-compressed coefficients.
 	 * No data is actually output, so no suspension return is possible.
 	 */
-	private boolean encode_mcu_gather(JPEG cinfo, int[][] MCU_data)
+	private boolean encode_mcu_gather(JPEG aJPEG, int[][] aCoefficients)
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int blkn, ci;
 		ComponentInfo compptr;
 
 		/* Take care of restart intervals if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				/* Re-initialize DC predictions to 0 */
-				for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+				for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 				{
 					entropy.saved.last_dc_val[ci] = 0;
 				}
 				/* Update restart state */
-				entropy.restarts_to_go = cinfo.restart_interval;
+				entropy.restarts_to_go = aJPEG.restart_interval;
 			}
 			entropy.restarts_to_go--;
 		}
 
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
-			ci = cinfo.MCU_membership[blkn];
-			compptr = cinfo.cur_comp_info[ci];
-			htest_one_block(cinfo, MCU_data[blkn], entropy.saved.last_dc_val[ci], entropy.dc_count_ptrs[compptr.getTableDC()], entropy.ac_count_ptrs[compptr.getTableAC()]);
-			entropy.saved.last_dc_val[ci] = MCU_data[blkn][0];
+			ci = aJPEG.MCU_membership[blkn];
+			compptr = aJPEG.cur_comp_info[ci];
+			htest_one_block(aJPEG, aCoefficients[blkn], entropy.saved.last_dc_val[ci], entropy.dc_count_ptrs[compptr.getTableDC()], entropy.ac_count_ptrs[compptr.getTableAC()]);
+			entropy.saved.last_dc_val[ci] = aCoefficients[blkn][0];
 		}
 
 		return true;
@@ -1380,7 +1382,7 @@ public class HuffmanEncoder implements Encoder
 	 * microscopic --- usually less than a hundredth of a percent of total size.
 	 * So the extra complexity of an optimal algorithm doesn't seem worthwhile.
 	 */
-	private HuffmanTable jpeg_gen_optimal_table(JPEG cinfo, int[] freq, int aType, int aIndex)
+	private HuffmanTable jpeg_gen_optimal_table(JPEG aJPEG, int[] freq, int aType, int aIndex)
 	{
 		int MAX_CLEN = 32;
 		/* assumed maximum initial code length */
@@ -1549,9 +1551,9 @@ public class HuffmanEncoder implements Encoder
 	/*
 	 * Finish up a statistics-gathering pass and create the new Huffman tables.
 	 */
-	private void finish_pass_gather(JPEG cinfo) throws IOException
+	private void finish_pass_gather(JPEG aJPEG) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 		boolean[] did_dc = new boolean[NUM_HUFF_TBLS];
@@ -1560,7 +1562,7 @@ public class HuffmanEncoder implements Encoder
 		/* It's important not to apply jpeg_gen_optimal_table more than once
 		 * per table, because it clobbers the input frequency counts!
 		 */
-		if (cinfo.mProgressive)	/* Flush out buffered data (all we care about is counting the EOB symbol) */
+		if (aJPEG.mProgressive)	/* Flush out buffered data (all we care about is counting the EOB symbol) */
 		{
 			emit_eobrun(entropy);
 		}
@@ -1568,26 +1570,26 @@ public class HuffmanEncoder implements Encoder
 //  MEMZERO(did_dc, SIZEOF(did_dc));
 //  MEMZERO(did_ac, SIZEOF(did_ac));
 
-		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
-			compptr = cinfo.cur_comp_info[ci];
+			compptr = aJPEG.cur_comp_info[ci];
 			/* DC needs no table for refinement scan */
-			if (cinfo.Ss == 0 && cinfo.Ah == 0)
+			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (!did_dc[tbl])
 				{
-					cinfo.dc_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(cinfo, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
+					aJPEG.dc_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
 					did_dc[tbl] = true;
 				}
 			}
 			/* AC needs no table when not present */
-			if (cinfo.Se != 0)
+			if (aJPEG.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (!did_ac[tbl])
 				{
-					cinfo.ac_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(cinfo, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
+					aJPEG.ac_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
 					did_ac[tbl] = true;
 				}
 			}
@@ -1601,24 +1603,24 @@ public class HuffmanEncoder implements Encoder
 	 * just count the Huffman symbols used and generate Huffman code tables.
 	 */
 	@Override
-	public void start_pass(JPEG cinfo, boolean gather_statistics)
+	public void start_pass(JPEG aJPEG, boolean gather_statistics)
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)cinfo.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
-		entropy.cinfo = cinfo;
+		entropy.cinfo = aJPEG;
 
-		if (cinfo.mProgressive)
+		if (aJPEG.mProgressive)
 		{
 			entropy.gather_statistics = gather_statistics;
 
 			/* We assume jcmaster.c already validated the scan parameters. */
 
 			/* Select execution routine */
-			if (cinfo.Ah == 0)
+			if (aJPEG.Ah == 0)
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_first;
 				}
@@ -1629,7 +1631,7 @@ public class HuffmanEncoder implements Encoder
 			}
 			else
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_refine;
 				}
@@ -1645,7 +1647,7 @@ public class HuffmanEncoder implements Encoder
 			}
 
 			/* Initialize AC stuff */
-			entropy.ac_tbl_no = cinfo.cur_comp_info[0].getTableAC();
+			entropy.ac_tbl_no = aJPEG.cur_comp_info[0].getTableAC();
 			entropy.EOBRUN = 0;
 			entropy.BE = 0;
 		}
@@ -1654,11 +1656,11 @@ public class HuffmanEncoder implements Encoder
 			entropy.encode_mcu = x_encode_mcu;
 		}
 
-		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
-			compptr = cinfo.cur_comp_info[ci];
+			compptr = aJPEG.cur_comp_info[ci];
 			/* DC needs no table for refinement scan */
-			if (cinfo.Ss == 0 && cinfo.Ah == 0)
+			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (gather_statistics)
@@ -1680,13 +1682,13 @@ public class HuffmanEncoder implements Encoder
 				{
 					/* Compute derived values for Huffman tables */
 					/* We may do this more than once for a table, but it's not expensive */
-					entropy.dc_derived_tbls[tbl] = jpeg_make_c_derived_tbl(cinfo, true, tbl, entropy.dc_derived_tbls[tbl]);
+					entropy.dc_derived_tbls[tbl] = jpeg_make_c_derived_tbl(aJPEG, true, tbl, entropy.dc_derived_tbls[tbl]);
 				}
 				/* Initialize DC predictions to 0 */
 				entropy.saved.last_dc_val[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (cinfo.Se != 0)
+			if (aJPEG.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (gather_statistics)
@@ -1703,7 +1705,7 @@ public class HuffmanEncoder implements Encoder
 				}
 				else
 				{
-					entropy.ac_derived_tbls[tbl] = jpeg_make_c_derived_tbl(cinfo, false, tbl, entropy.ac_derived_tbls[tbl]);
+					entropy.ac_derived_tbls[tbl] = jpeg_make_c_derived_tbl(aJPEG, false, tbl, entropy.ac_derived_tbls[tbl]);
 				}
 			}
 		}
@@ -1713,7 +1715,7 @@ public class HuffmanEncoder implements Encoder
 		entropy.saved.put_bits = 0;
 
 		/* Initialize restart stuff */
-		entropy.restarts_to_go = cinfo.restart_interval;
+		entropy.restarts_to_go = aJPEG.restart_interval;
 		entropy.next_restart_num = 0;
 	}
 
@@ -1722,12 +1724,12 @@ public class HuffmanEncoder implements Encoder
 	 * Module initialization routine for Huffman entropy encoding.
 	 */
 	@Override
-	public void jinit_encoder(JPEG cinfo)
+	public void jinit_encoder(JPEG aJPEG)
 	{
 		huff_entropy_encoder entropy = new huff_entropy_encoder();
 		int i;
 
-		cinfo.entropy = entropy;
+		aJPEG.entropy = entropy;
 
 		/* Mark tables unallocated */
 		for (i = 0; i < NUM_HUFF_TBLS; i++)
@@ -1736,7 +1738,7 @@ public class HuffmanEncoder implements Encoder
 			entropy.dc_count_ptrs[i] = entropy.ac_count_ptrs[i] = null;
 		}
 
-		if (cinfo.mProgressive)
+		if (aJPEG.mProgressive)
 		{
 			entropy.bit_buffer = null;	/* needed only in AC refinement scan */
 		}
@@ -1744,33 +1746,33 @@ public class HuffmanEncoder implements Encoder
 
 
 	@Override
-	public boolean encode_mcu(JPEG cinfo, int[][] MCU_data, boolean gather_statistics) throws IOException
+	public boolean encode_mcu(JPEG aJPEG, int[][] aCoefficients, boolean gather_statistics) throws IOException
 	{
-		switch (cinfo.entropy.encode_mcu)
+		switch (aJPEG.entropy.encode_mcu)
 		{
 			case x_encode_mcu_DC_first:
-				return encode_mcu_DC_first(cinfo, MCU_data);
+				return encode_mcu_DC_first(aJPEG, aCoefficients);
 			case x_encode_mcu_AC_first:
-				return encode_mcu_AC_first(cinfo, MCU_data);
+				return encode_mcu_AC_first(aJPEG, aCoefficients);
 			case x_encode_mcu_DC_refine:
-				return encode_mcu_DC_refine(cinfo, MCU_data);
+				return encode_mcu_DC_refine(aJPEG, aCoefficients);
 			case x_encode_mcu_AC_refine:
-				return encode_mcu_AC_refine(cinfo, MCU_data);
+				return encode_mcu_AC_refine(aJPEG, aCoefficients);
 		}
 
 		if (gather_statistics)
 		{
-			return encode_mcu_gather(cinfo, MCU_data);
+			return encode_mcu_gather(aJPEG, aCoefficients);
 		}
 
-		return encode_mcu_huff(cinfo, MCU_data);
+		return encode_mcu_huff(aJPEG, aCoefficients);
 	}
 
 
 
 	/* Set up the standard Huffman tables (cf. JPEG standard section K.3) */
 	/* IMPORTANT: these are only valid for 8-bit data precision! */
-	public static void setupStandardHuffmanTables(JPEG cinfo)
+	public static void setupStandardHuffmanTables(JPEG aJPEG)
 	{
 		int[] bits_dc_luminance = { /* 0-base */ 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
 		int[] val_dc_luminance = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
@@ -1826,12 +1828,12 @@ public class HuffmanEncoder implements Encoder
 			0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
 			0xf9, 0xfa };
 
-		cinfo.dc_huff_tbl_ptrs = new HuffmanTable[2];
-		cinfo.ac_huff_tbl_ptrs = new HuffmanTable[2];
+		aJPEG.dc_huff_tbl_ptrs = new HuffmanTable[2];
+		aJPEG.ac_huff_tbl_ptrs = new HuffmanTable[2];
 
-		cinfo.dc_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
-		cinfo.dc_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
-		cinfo.ac_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
-		cinfo.ac_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
+		aJPEG.dc_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
+		aJPEG.dc_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
+		aJPEG.ac_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
+		aJPEG.ac_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
   }
 }
