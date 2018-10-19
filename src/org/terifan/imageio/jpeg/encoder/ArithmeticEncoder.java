@@ -107,7 +107,7 @@ public class ArithmeticEncoder implements Encoder
 	 * We assume that int right shift is unsigned if INT32 right shift is,
 	 * which should be safe.
 	 */
-	void emit_byte(int val, JPEG cinfo) throws IOException
+	void emit_byte(int val, JPEG aJPEG) throws IOException
 	/* Write next output byte; we do not support suspension in this module. */
 	{
 		mOutputStream.write(val);
@@ -125,14 +125,14 @@ public class ArithmeticEncoder implements Encoder
 	 * Finish up at the end of an arithmetic-compressed scan.
 	 */
 	@Override
-	public void finish_pass(JPEG cinfo, boolean gather_statistics) throws IOException
+	public void finish_pass(JPEG aJPEG, boolean gather_statistics) throws IOException
 	{
 		if (gather_statistics)
 		{
 			return;
 		}
 
-		JPEGEntropyState e = cinfo.entropy;
+		JPEGEntropyState e = aJPEG.entropy;
 		long temp;
 
 		/* Section D.1.8: Termination of encoding */
@@ -158,14 +158,14 @@ public class ArithmeticEncoder implements Encoder
 				{
 					do
 					{
-						emit_byte(0x00, cinfo);
+						emit_byte(0x00, aJPEG);
 					}
 					while (--e.zc != 0);
 				}
-				emit_byte(e.buffer + 1, cinfo);
+				emit_byte(e.buffer + 1, aJPEG);
 				if (e.buffer + 1 == 0xFF)
 				{
-					emit_byte(0x00, cinfo);
+					emit_byte(0x00, aJPEG);
 				}
 			}
 			e.zc += e.sc;
@@ -184,11 +184,11 @@ public class ArithmeticEncoder implements Encoder
 				{
 					do
 					{
-						emit_byte(0x00, cinfo);
+						emit_byte(0x00, aJPEG);
 					}
 					while (--e.zc != 0);
 				}
-				emit_byte(e.buffer, cinfo);
+				emit_byte(e.buffer, aJPEG);
 			}
 			if (e.sc != 0)
 			{
@@ -196,14 +196,14 @@ public class ArithmeticEncoder implements Encoder
 				{
 					do
 					{
-						emit_byte(0x00, cinfo);
+						emit_byte(0x00, aJPEG);
 					}
 					while (--e.zc != 0);
 				}
 				do
 				{
-					emit_byte(0xFF, cinfo);
-					emit_byte(0x00, cinfo);
+					emit_byte(0xFF, aJPEG);
+					emit_byte(0x00, aJPEG);
 				}
 				while (--e.sc != 0);
 			}
@@ -216,21 +216,21 @@ public class ArithmeticEncoder implements Encoder
 			{
 				do
 				{
-					emit_byte(0x00, cinfo);
+					emit_byte(0x00, aJPEG);
 				}
 				while (--e.zc != 0);
 			}
-			emit_byte((int)(e.c >>> 19) & 0xFF, cinfo);
+			emit_byte((int)(e.c >>> 19) & 0xFF, aJPEG);
 			if (((e.c >>> 19) & 0xFF) == 0xFF)
 			{
-				emit_byte(0x00, cinfo);
+				emit_byte(0x00, aJPEG);
 			}
 			if ((e.c & 0x7F800) != 0)
 			{
-				emit_byte((int)((e.c >>> 11) & 0xFF), cinfo);
+				emit_byte((int)((e.c >>> 11) & 0xFF), aJPEG);
 				if (((e.c >>> 11) & 0xFF) == 0xFF)
 				{
-					emit_byte(0x00, cinfo);
+					emit_byte(0x00, aJPEG);
 				}
 			}
 		}
@@ -258,9 +258,9 @@ public class ArithmeticEncoder implements Encoder
 	 * the probability estimation state machine table,
 	 * derived from Markus Kuhn's JBIG implementation.
 	 */
-	void arith_encode(JPEG cinfo, int[] st, int st_off, int val) throws IOException
+	void arith_encode(JPEG aJPEG, int[] st, int st_off, int val) throws IOException
 	{
-		JPEGEntropyState e = cinfo.entropy;
+		JPEGEntropyState e = aJPEG.entropy;
 		int nl, nm;
 		int temp;
 		int sv;
@@ -332,14 +332,14 @@ public class ArithmeticEncoder implements Encoder
 						{
 							do
 							{
-								emit_byte(0x00, cinfo);
+								emit_byte(0x00, aJPEG);
 							}
 							while (--e.zc != 0);
 						}
-						emit_byte(e.buffer + 1, cinfo);
+						emit_byte(e.buffer + 1, aJPEG);
 						if (e.buffer + 1 == 0xFF)
 						{
-							emit_byte(0x00, cinfo);
+							emit_byte(0x00, aJPEG);
 						}
 					}
 					e.zc += e.sc;
@@ -369,11 +369,11 @@ public class ArithmeticEncoder implements Encoder
 						{
 							do
 							{
-								emit_byte(0x00, cinfo);
+								emit_byte(0x00, aJPEG);
 							}
 							while (--e.zc != 0);
 						}
-						emit_byte(e.buffer, cinfo);
+						emit_byte(e.buffer, aJPEG);
 					}
 					if (e.sc != 0)
 					{
@@ -381,14 +381,14 @@ public class ArithmeticEncoder implements Encoder
 						{
 							do
 							{
-								emit_byte(0x00, cinfo);
+								emit_byte(0x00, aJPEG);
 							}
 							while (--e.zc != 0);
 						}
 						do
 						{
-							emit_byte(0xFF, cinfo);
-							emit_byte(0x00, cinfo);
+							emit_byte(0xFF, aJPEG);
+							emit_byte(0x00, aJPEG);
 						}
 						while (--e.sc != 0);
 					}
@@ -406,23 +406,23 @@ public class ArithmeticEncoder implements Encoder
 	/*
 	 * Emit a restart marker & resynchronize predictions.
 	 */
-	void emit_restart(JPEG cinfo, int restart_num) throws IOException
+	void emit_restart(JPEG aJPEG, int restart_num) throws IOException
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int ci;
 		ComponentInfo compptr;
 
-		finish_pass(cinfo, false);
+		finish_pass(aJPEG, false);
 
-		emit_byte(0xFF, cinfo);
-		emit_byte(RST0 + restart_num, cinfo);
+		emit_byte(0xFF, aJPEG);
+		emit_byte(RST0 + restart_num, aJPEG);
 
 		/* Re-initialize statistics areas */
-		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
-			compptr = cinfo.cur_comp_info[ci];
+			compptr = aJPEG.cur_comp_info[ci];
 			/* DC needs no table for refinement scan */
-			if (cinfo.Ss == 0 && cinfo.Ah == 0)
+			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
 				MEMZERO(entropy.dc_stats[compptr.getTableDC()], DC_STAT_BINS);
 				/* Reset DC predictions to 0 */
@@ -430,7 +430,7 @@ public class ArithmeticEncoder implements Encoder
 				entropy.dc_context[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (cinfo.Se != 0)
+			if (aJPEG.Se != 0)
 			{
 				MEMZERO(entropy.ac_stats[compptr.getTableAC()], AC_STAT_BINS);
 			}
@@ -451,21 +451,21 @@ public class ArithmeticEncoder implements Encoder
 	 * MCU encoding for DC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_DC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean encode_mcu_DC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int[] st;
 		int st_off;
 		int blkn, ci, tbl;
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				emit_restart(cinfo, entropy.next_restart_num);
-				entropy.restarts_to_go = cinfo.restart_interval;
+				emit_restart(aJPEG, entropy.next_restart_num);
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -473,15 +473,15 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
-			ci = cinfo.MCU_membership[blkn];
-			tbl = cinfo.cur_comp_info[ci].getTableDC();
+			ci = aJPEG.MCU_membership[blkn];
+			tbl = aJPEG.cur_comp_info[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
 			 */
-			m = IRIGHT_SHIFT((int)(MCU_data[blkn][0]), cinfo.Al);
+			m = MCU_data[blkn][0] >> aJPEG.Al;
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 
@@ -492,19 +492,19 @@ public class ArithmeticEncoder implements Encoder
 			/* Figure F.4: Encode_DC_DIFF */
 			if ((v = m - entropy.last_dc_val[ci]) == 0)
 			{
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				entropy.dc_context[ci] = 0;
 				/* zero diff category */
 			}
 			else
 			{
 				entropy.last_dc_val[ci] = m;
-				arith_encode(cinfo, st, st_off, 1);
+				arith_encode(aJPEG, st, st_off, 1);
 				/* Figure F.6: Encoding nonzero value v */
 				/* Figure F.7: Encoding the sign of v */
 				if (v > 0)
 				{
-					arith_encode(cinfo, st, st_off + 1, 0);
+					arith_encode(aJPEG, st, st_off + 1, 0);
 					/* Table F.4: SS = S0 + 1 */
 					st_off += 2;
 					/* Table F.4: SP = S0 + 2 */
@@ -514,7 +514,7 @@ public class ArithmeticEncoder implements Encoder
 				else
 				{
 					v = -v;
-					arith_encode(cinfo, st, st_off + 1, 1);
+					arith_encode(aJPEG, st, st_off + 1, 1);
 					/* Table F.4: SS = S0 + 1 */
 					st_off += 3;
 					/* Table F.4: SN = S0 + 3 */
@@ -525,7 +525,7 @@ public class ArithmeticEncoder implements Encoder
 				m = 0;
 				if ((v -= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, 1);
+					arith_encode(aJPEG, st, st_off, 1);
 					m = 1;
 					v2 = v;
 					st = entropy.dc_stats[tbl];
@@ -533,18 +533,18 @@ public class ArithmeticEncoder implements Encoder
 					/* Table F.4: X1 = 20 */
 					while ((v2 >>= 1) != 0)
 					{
-						arith_encode(cinfo, st, st_off, 1);
+						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st_off += 1;
 					}
 				}
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << cinfo.arith_dc_L[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.arith_dc_L[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << cinfo.arith_dc_U[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.arith_dc_U[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -552,7 +552,7 @@ public class ArithmeticEncoder implements Encoder
 				st_off += 14;
 				while ((m >>= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, (m & v) != 0 ? 1 : 0);
+					arith_encode(aJPEG, st, st_off, (m & v) != 0 ? 1 : 0);
 				}
 			}
 		}
@@ -565,9 +565,9 @@ public class ArithmeticEncoder implements Encoder
 	 * MCU encoding for AC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_AC_first(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean encode_mcu_AC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -575,12 +575,12 @@ public class ArithmeticEncoder implements Encoder
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				emit_restart(cinfo, entropy.next_restart_num);
-				entropy.restarts_to_go = cinfo.restart_interval;
+				emit_restart(aJPEG, entropy.next_restart_num);
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -589,12 +589,12 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = cinfo.cur_comp_info[0].getTableAC();
+		tbl = aJPEG.cur_comp_info[0].getTableAC();
 
 		/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
 
 		/* Establish EOB (end-of-block) index */
-		ke = cinfo.Se;
+		ke = aJPEG.Se;
 		do
 		{
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -603,7 +603,7 @@ public class ArithmeticEncoder implements Encoder
 			 */
 			if ((v = block[NATURAL_ORDER[ke]]) >= 0)
 			{
-				if ((v >>= cinfo.Al) != 0)
+				if ((v >>= aJPEG.Al) != 0)
 				{
 					break;
 				}
@@ -611,7 +611,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= cinfo.Al) != 0)
+				if ((v >>= aJPEG.Al) != 0)
 				{
 					break;
 				}
@@ -620,34 +620,34 @@ public class ArithmeticEncoder implements Encoder
 		while ((--ke) != 0);
 
 		/* Figure F.5: Encode_AC_Coefficients */
-		for (k = cinfo.Ss - 1; k < ke;)
+		for (k = aJPEG.Ss - 1; k < ke;)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
-			arith_encode(cinfo, st, st_off, 0);
+			arith_encode(aJPEG, st, st_off, 0);
 			/* EOB decision */
 			for (;;)
 			{
 				if ((v = block[NATURAL_ORDER[++k]]) >= 0)
 				{
-					if ((v >>= cinfo.Al) != 0)
+					if ((v >>= aJPEG.Al) != 0)
 					{
-						arith_encode(cinfo, st, st_off + 1, 1);
-						arith_encode(cinfo, entropy.fixed_bin, 0, 0);
+						arith_encode(aJPEG, st, st_off + 1, 1);
+						arith_encode(aJPEG, entropy.fixed_bin, 0, 0);
 						break;
 					}
 				}
 				else
 				{
 					v = -v;
-					if ((v >>= cinfo.Al) != 0)
+					if ((v >>= aJPEG.Al) != 0)
 					{
-						arith_encode(cinfo, st, st_off + 1, 1);
-						arith_encode(cinfo, entropy.fixed_bin, 0, 1);
+						arith_encode(aJPEG, st, st_off + 1, 1);
+						arith_encode(aJPEG, entropy.fixed_bin, 0, 1);
 						break;
 					}
 				}
-				arith_encode(cinfo, st, st_off + 1, 0);
+				arith_encode(aJPEG, st, st_off + 1, 0);
 				st_off += 3;
 			}
 			st_off += 2;
@@ -655,37 +655,37 @@ public class ArithmeticEncoder implements Encoder
 			m = 0;
 			if ((v -= 1) != 0)
 			{
-				arith_encode(cinfo, st, st_off, 1);
+				arith_encode(aJPEG, st, st_off, 1);
 				m = 1;
 				v2 = v;
 				if ((v2 >>= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, 1);
+					arith_encode(aJPEG, st, st_off, 1);
 					m <<= 1;
 					st = entropy.ac_stats[tbl];
-					st_off = (k <= cinfo.arith_ac_K[tbl] ? 189 : 217);
+					st_off = (k <= aJPEG.arith_ac_K[tbl] ? 189 : 217);
 					while ((v2 >>= 1) != 0)
 					{
-						arith_encode(cinfo, st, st_off, 1);
+						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st_off += 1;
 					}
 				}
 			}
-			arith_encode(cinfo, st, st_off, 0);
+			arith_encode(aJPEG, st, st_off, 0);
 			/* Figure F.9: Encoding the magnitude bit pattern of v */
 			st_off += 14;
 			while ((m >>= 1) != 0)
 			{
-				arith_encode(cinfo, st, st_off, (m & v) != 0 ? 1 : 0);
+				arith_encode(aJPEG, st, st_off, (m & v) != 0 ? 1 : 0);
 			}
 		}
 		/* Encode EOB decision only if k < cinfo.Se */
-		if (k < cinfo.Se)
+		if (k < aJPEG.Se)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
-			arith_encode(cinfo, st, st_off, 1);
+			arith_encode(aJPEG, st, st_off, 1);
 		}
 
 		return true;
@@ -697,20 +697,20 @@ public class ArithmeticEncoder implements Encoder
 	 * Note: we assume such scans can be multi-component,
 	 * although the spec is not very clear on the point.
 	 */
-	boolean encode_mcu_DC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int[] st;
 		int st_off = 0;
 		int Al, blkn;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				emit_restart(cinfo, entropy.next_restart_num);
-				entropy.restarts_to_go = cinfo.restart_interval;
+				emit_restart(aJPEG, entropy.next_restart_num);
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -719,13 +719,13 @@ public class ArithmeticEncoder implements Encoder
 
 		st = entropy.fixed_bin;
 		/* use fixed probability estimation */
-		Al = cinfo.Al;
+		Al = aJPEG.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
-			arith_encode(cinfo, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
+			arith_encode(aJPEG, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
 		}
 
 		return true;
@@ -735,9 +735,9 @@ public class ArithmeticEncoder implements Encoder
 	/*
 	 * MCU encoding for AC successive approximation refinement scan.
 	 */
-	boolean encode_mcu_AC_refine(JPEG cinfo, int[][] MCU_data) throws IOException
+	boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -745,12 +745,12 @@ public class ArithmeticEncoder implements Encoder
 		int v;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				emit_restart(cinfo, entropy.next_restart_num);
-				entropy.restarts_to_go = cinfo.restart_interval;
+				emit_restart(aJPEG, entropy.next_restart_num);
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -759,12 +759,12 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = cinfo.cur_comp_info[0].getTableAC();
+		tbl = aJPEG.cur_comp_info[0].getTableAC();
 
 		/* Section G.1.3.3: Encoding of AC coefficients */
 
 		/* Establish EOB (end-of-block) index */
-		ke = cinfo.Se;
+		ke = aJPEG.Se;
 		do
 		{
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -773,7 +773,7 @@ public class ArithmeticEncoder implements Encoder
 			 */
 			if ((v = block[NATURAL_ORDER[ke]]) >= 0)
 			{
-				if ((v >>= cinfo.Al) != 0)
+				if ((v >>= aJPEG.Al) != 0)
 				{
 					break;
 				}
@@ -781,7 +781,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= cinfo.Al) != 0)
+				if ((v >>= aJPEG.Al) != 0)
 				{
 					break;
 				}
@@ -794,7 +794,7 @@ public class ArithmeticEncoder implements Encoder
 		{
 			if ((v = block[NATURAL_ORDER[kex]]) >= 0)
 			{
-				if ((v >>= cinfo.Ah) != 0)
+				if ((v >>= aJPEG.Ah) != 0)
 				{
 					break;
 				}
@@ -802,7 +802,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= cinfo.Ah) != 0)
+				if ((v >>= aJPEG.Ah) != 0)
 				{
 					break;
 				}
@@ -810,30 +810,30 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Figure G.10: Encode_AC_Coefficients_SA */
-		for (k = cinfo.Ss - 1; k < ke;)
+		for (k = aJPEG.Ss - 1; k < ke;)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
 			if (k >= kex)
 			{
-				arith_encode(cinfo, st, st_off, 0);	/* EOB decision */
+				arith_encode(aJPEG, st, st_off, 0);	/* EOB decision */
 			}
 			for (;;)
 			{
 				if ((v = block[NATURAL_ORDER[++k]]) >= 0)
 				{
-					if ((v >>= cinfo.Al) != 0)
+					if ((v >>= aJPEG.Al) != 0)
 					{
 						if ((v >> 1) != 0)
 						/* previously nonzero coef */
 						{
-							arith_encode(cinfo, st, st_off + 2, (v & 1));
+							arith_encode(aJPEG, st, st_off + 2, (v & 1));
 						}
 						else
 						{
 							/* newly nonzero coef */
-							arith_encode(cinfo, st, st_off + 1, 1);
-							arith_encode(cinfo, entropy.fixed_bin, 0, 0);
+							arith_encode(aJPEG, st, st_off + 1, 1);
+							arith_encode(aJPEG, entropy.fixed_bin, 0, 0);
 						}
 						break;
 					}
@@ -841,32 +841,32 @@ public class ArithmeticEncoder implements Encoder
 				else
 				{
 					v = -v;
-					if ((v >>= cinfo.Al) != 0)
+					if ((v >>= aJPEG.Al) != 0)
 					{
 						if ((v >> 1) != 0)
 						/* previously nonzero coef */
 						{
-							arith_encode(cinfo, st, st_off + 2, (v & 1));
+							arith_encode(aJPEG, st, st_off + 2, (v & 1));
 						}
 						else
 						{
 							/* newly nonzero coef */
-							arith_encode(cinfo, st, st_off + 1, 1);
-							arith_encode(cinfo, entropy.fixed_bin, 0, 1);
+							arith_encode(aJPEG, st, st_off + 1, 1);
+							arith_encode(aJPEG, entropy.fixed_bin, 0, 1);
 						}
 						break;
 					}
 				}
-				arith_encode(cinfo, st, st_off + 1, 0);
+				arith_encode(aJPEG, st, st_off + 1, 0);
 				st_off += 3;
 			}
 		}
 		/* Encode EOB decision only if k < cinfo.Se */
-		if (k < cinfo.Se)
+		if (k < aJPEG.Se)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
-			arith_encode(cinfo, st, st_off, 1);
+			arith_encode(aJPEG, st, st_off, 1);
 		}
 
 		return true;
@@ -877,26 +877,26 @@ public class ArithmeticEncoder implements Encoder
 	 * Encode and output one MCU's worth of arithmetic-compressed coefficients.
 	 */
 	@Override
-	public boolean encode_mcu(JPEG cinfo, int[][] MCU_data, boolean gather_statistics) throws IOException
+	public boolean encode_mcu(JPEG aJPEG, int[][] MCU_data, boolean gather_statistics) throws IOException
 	{
 		if (gather_statistics)
 		{
 			return true;
 		}
 
-		switch (cinfo.entropy.encode_mcu)
+		switch (aJPEG.entropy.encode_mcu)
 		{
 			case x_encode_mcu_DC_first:
-				return encode_mcu_DC_first(cinfo, MCU_data);
+				return encode_mcu_DC_first(aJPEG, MCU_data);
 			case x_encode_mcu_AC_first:
-				return encode_mcu_AC_first(cinfo, MCU_data);
+				return encode_mcu_AC_first(aJPEG, MCU_data);
 			case x_encode_mcu_DC_refine:
-				return encode_mcu_DC_refine(cinfo, MCU_data);
+				return encode_mcu_DC_refine(aJPEG, MCU_data);
 			case x_encode_mcu_AC_refine:
-				return encode_mcu_AC_refine(cinfo, MCU_data);
+				return encode_mcu_AC_refine(aJPEG, MCU_data);
 		}
 
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -906,12 +906,12 @@ public class ArithmeticEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Emit restart marker if needed */
-		if (cinfo.restart_interval != 0)
+		if (aJPEG.restart_interval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				emit_restart(cinfo, entropy.next_restart_num);
-				entropy.restarts_to_go = cinfo.restart_interval;
+				emit_restart(aJPEG, entropy.next_restart_num);
+				entropy.restarts_to_go = aJPEG.restart_interval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -919,11 +919,11 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < cinfo.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
 		{
 			block = MCU_data[blkn];
-			ci = cinfo.MCU_membership[blkn];
-			compptr = cinfo.cur_comp_info[ci];
+			ci = aJPEG.MCU_membership[blkn];
+			compptr = aJPEG.cur_comp_info[ci];
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 			tbl = compptr.getTableDC();
@@ -935,19 +935,19 @@ public class ArithmeticEncoder implements Encoder
 			/* Figure F.4: Encode_DC_DIFF */
 			if ((v = block[0] - entropy.last_dc_val[ci]) == 0)
 			{
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				entropy.dc_context[ci] = 0;
 				/* zero diff category */
 			}
 			else
 			{
 				entropy.last_dc_val[ci] = block[0];
-				arith_encode(cinfo, st, st_off, 1);
+				arith_encode(aJPEG, st, st_off, 1);
 				/* Figure F.6: Encoding nonzero value v */
 				/* Figure F.7: Encoding the sign of v */
 				if (v > 0)
 				{
-					arith_encode(cinfo, st, st_off + 1, 0);
+					arith_encode(aJPEG, st, st_off + 1, 0);
 					/* Table F.4: SS = S0 + 1 */
 					st_off += 2;
 					/* Table F.4: SP = S0 + 2 */
@@ -957,7 +957,7 @@ public class ArithmeticEncoder implements Encoder
 				else
 				{
 					v = -v;
-					arith_encode(cinfo, st, st_off + 1, 1);
+					arith_encode(aJPEG, st, st_off + 1, 1);
 					/* Table F.4: SS = S0 + 1 */
 					st_off += 3;
 					/* Table F.4: SN = S0 + 3 */
@@ -968,7 +968,7 @@ public class ArithmeticEncoder implements Encoder
 				m = 0;
 				if ((v -= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, 1);
+					arith_encode(aJPEG, st, st_off, 1);
 					m = 1;
 					v2 = v;
 					st = entropy.dc_stats[tbl];
@@ -976,18 +976,18 @@ public class ArithmeticEncoder implements Encoder
 					/* Table F.4: X1 = 20 */
 					while ((v2 >>= 1) != 0)
 					{
-						arith_encode(cinfo, st, st_off, 1);
+						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st_off += 1;
 					}
 				}
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << cinfo.arith_dc_L[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.arith_dc_L[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << cinfo.arith_dc_U[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.arith_dc_U[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -995,19 +995,19 @@ public class ArithmeticEncoder implements Encoder
 				st_off += 14;
 				while ((m >>= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, (m & v) != 0 ? 1 : 0);
+					arith_encode(aJPEG, st, st_off, (m & v) != 0 ? 1 : 0);
 				}
 			}
 
 			/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
-			if ((ke = cinfo.lim_Se) == 0)
+			if ((ke = aJPEG.lim_Se) == 0)
 			{
 				continue;
 			}
 			tbl = compptr.getTableAC();
 
 			if (tbl >= entropy.ac_stats.length) throw new IllegalArgumentException("ac_stats: " + tbl+" >= "+entropy.ac_stats.length);
-			if (tbl >= cinfo.arith_ac_K.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+cinfo.arith_ac_K.length);
+			if (tbl >= aJPEG.arith_ac_K.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+aJPEG.arith_ac_K.length);
 
 			/* Establish EOB (end-of-block) index */
 			do
@@ -1024,61 +1024,61 @@ public class ArithmeticEncoder implements Encoder
 			{
 				st = entropy.ac_stats[tbl];
 				st_off = 3 * k;
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				/* EOB decision */
 				while ((v = block[NATURAL_ORDER[++k]]) == 0)
 				{
-					arith_encode(cinfo, st, st_off + 1, 0);
+					arith_encode(aJPEG, st, st_off + 1, 0);
 					st_off += 3;
 				}
-				arith_encode(cinfo, st, st_off + 1, 1);
+				arith_encode(aJPEG, st, st_off + 1, 1);
 				/* Figure F.6: Encoding nonzero value v */
 				/* Figure F.7: Encoding the sign of v */
 				if (v > 0)
 				{
-					arith_encode(cinfo, entropy.fixed_bin, 0, 0);
+					arith_encode(aJPEG, entropy.fixed_bin, 0, 0);
 				}
 				else
 				{
 					v = -v;
-					arith_encode(cinfo, entropy.fixed_bin, 0, 1);
+					arith_encode(aJPEG, entropy.fixed_bin, 0, 1);
 				}
 				st_off += 2;
 				/* Figure F.8: Encoding the magnitude category of v */
 				m = 0;
 				if ((v -= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, 1);
+					arith_encode(aJPEG, st, st_off, 1);
 					m = 1;
 					v2 = v;
 					if ((v2 >>= 1) != 0)
 					{
-						arith_encode(cinfo, st, st_off, 1);
+						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st = entropy.ac_stats[tbl];
-						st_off = (k <= cinfo.arith_ac_K[tbl] ? 189 : 217);
+						st_off = (k <= aJPEG.arith_ac_K[tbl] ? 189 : 217);
 						while ((v2 >>= 1) != 0)
 						{
-							arith_encode(cinfo, st, st_off, 1);
+							arith_encode(aJPEG, st, st_off, 1);
 							m <<= 1;
 							st_off += 1;
 						}
 					}
 				}
-				arith_encode(cinfo, st, st_off, 0);
+				arith_encode(aJPEG, st, st_off, 0);
 				/* Figure F.9: Encoding the magnitude bit pattern of v */
 				st_off += 14;
 				while ((m >>= 1) != 0)
 				{
-					arith_encode(cinfo, st, st_off, (m & v) != 0 ? 1 : 0);
+					arith_encode(aJPEG, st, st_off, (m & v) != 0 ? 1 : 0);
 				}
 			}
 			/* Encode EOB decision only if k < cinfo.lim_Se */
-			if (k < cinfo.lim_Se)
+			if (k < aJPEG.lim_Se)
 			{
 				st = entropy.ac_stats[tbl];
 				st_off = 3 * k;
-				arith_encode(cinfo, st, st_off, 1);
+				arith_encode(aJPEG, st, st_off, 1);
 			}
 		}
 
@@ -1103,25 +1103,25 @@ public class ArithmeticEncoder implements Encoder
 
 
 	@Override
-	public void start_pass(JPEG cinfo, boolean gather_statistics)
+	public void start_pass(JPEG aJPEG, boolean gather_statistics)
 	{
 		if (gather_statistics)
 		{
 			return;
 		}
 
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
 		/* We assume jcmaster.c already validated the progressive scan parameters. */
 
 		/* Select execution routines */
-		if (cinfo.mProgressive)
+		if (aJPEG.mProgressive)
 		{
-			if (cinfo.Ah == 0)
+			if (aJPEG.Ah == 0)
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_first;
 				}
@@ -1132,7 +1132,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 			else
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_refine;
 				}
@@ -1148,16 +1148,16 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
-			compptr = cinfo.cur_comp_info[ci];
+			compptr = aJPEG.cur_comp_info[ci];
 			/* DC needs no table for refinement scan */
-			if (cinfo.Ss == 0 && cinfo.Ah == 0)
+			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
-					ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
+					ERREXIT1(aJPEG, JERR_NO_ARITH_TABLE, tbl);
 				}
 				if (entropy.dc_stats[tbl] == null)
 				{
@@ -1168,12 +1168,12 @@ public class ArithmeticEncoder implements Encoder
 				entropy.dc_context[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (cinfo.Se != 0)
+			if (aJPEG.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
-					ERREXIT1(cinfo, JERR_NO_ARITH_TABLE, tbl);
+					ERREXIT1(aJPEG, JERR_NO_ARITH_TABLE, tbl);
 				}
 				if (entropy.ac_stats[tbl] == null)
 				{
@@ -1197,7 +1197,7 @@ public class ArithmeticEncoder implements Encoder
 		/* empty */
 
 		/* Initialize restart stuff */
-		entropy.restarts_to_go = cinfo.restart_interval;
+		entropy.restarts_to_go = aJPEG.restart_interval;
 		entropy.next_restart_num = 0;
 	}
 
@@ -1206,20 +1206,20 @@ public class ArithmeticEncoder implements Encoder
 	 * Module initialization routine for arithmetic entropy encoding.
 	 */
 	@Override
-	public void jinit_encoder(JPEG cinfo)
+	public void jinit_encoder(JPEG aJPEG)
 	{
-		if(cinfo.entropy==null)
-		cinfo.entropy = new JPEGEntropyState();
+		if(aJPEG.entropy==null)
+		aJPEG.entropy = new JPEGEntropyState();
 		int i;
 
 		/* Mark tables unallocated */
 		for (i = 0; i < NUM_ARITH_TBLS; i++)
 		{
-			cinfo.entropy.dc_stats[i] = null;
-			cinfo.entropy.ac_stats[i] = null;
+			aJPEG.entropy.dc_stats[i] = null;
+			aJPEG.entropy.ac_stats[i] = null;
 		}
 
 		/* Initialize index for fixed probability estimation */
-		cinfo.entropy.fixed_bin[0] = 113;
+		aJPEG.entropy.fixed_bin[0] = 113;
 	}
 }
