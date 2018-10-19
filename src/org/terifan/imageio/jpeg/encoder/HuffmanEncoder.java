@@ -375,7 +375,7 @@ public class HuffmanEncoder implements Encoder
 
 		while (put_bits >= 8)
 		{
-			int c = (int)((put_buffer >> 16) & 0xFF);
+			int c = (put_buffer >> 16) & 0xFF;
 
 			emit_byte_e(entropy, c);
 			if (c == 0xFF)

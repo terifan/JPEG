@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
-import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
@@ -15,6 +14,52 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 public class TestTranscodeBatch
 {
+	public static void main(String... args)
+	{
+		try
+		{
+			long original = 0;
+			long compressed = 0;
+
+			for (File file : new File("T:\\Photos\\2018-05-26 Hammarkullekarnivalen\\106ND750").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+			{
+				ByteArrayOutputStream output = new ByteArrayOutputStream();
+				new Transcode().setArithmetic(false).setProgressive(false).transcode(file, output);
+
+				boolean b = output.size() * 1.05 < file.length();
+
+				System.out.println(output.size()+"\t"+file.length()+"\t"+b+"\t"+file);
+
+				if (b)
+				{
+					original += file.length();
+					compressed += output.size();
+
+					long modified = file.lastModified();
+					
+					File tmp = new File(file.getAbsolutePath() + "~");
+
+					try (FileOutputStream fos = new FileOutputStream(tmp))
+					{
+						output.writeTo(fos);
+					}
+					
+					file.delete();
+					tmp.renameTo(file);
+
+					file.setLastModified(modified);
+				}
+			}
+
+			System.out.println(original-compressed);
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
+	
+
 	public static void xmain(String... args)
 	{
 		try
@@ -41,7 +86,8 @@ public class TestTranscodeBatch
 		}
 	}
 	
-	public static void main(String... args)
+
+	public static void xxmain(String... args)
 	{
 		try
 		{
@@ -50,12 +96,12 @@ public class TestTranscodeBatch
 			int totalHuffProgLength = 0;
 			int totalHuffOptLength = 0;
 			int totalHuffLength = 0;
-			
+
 //			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
 //				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
-//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().endsWith(".jpg")))
-				File file = new File("D:\\Pictures\\Wallpapers High Quality\\02.jpg");
+				for (File file : new File("D:\\Desktop\\2018-04-28\\killar").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+//				File file = new File("D:\\Pictures\\Wallpapers High Quality\\02.jpg");
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
