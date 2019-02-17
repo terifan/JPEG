@@ -22,7 +22,7 @@ public class TestTranscode
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 //			JPEGConstants.VERBOSE = true;
-			
+
 			BufferedImage huffImage = JPEGImageReader.read(file);
 
 			System.out.println("=================================================================================================================================================================================");
