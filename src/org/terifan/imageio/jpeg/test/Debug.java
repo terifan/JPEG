@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.nio.Buffer;
 
 
-public class Debug 
+public class Debug
 {
 	public static void hexDump(Buffer aBuffer)
 	{
@@ -34,7 +34,7 @@ public class Debug
 
 	public static void hexDump(InputStream aInputStream, int aLength)
 	{
-		int LW = 64;
+		int LW = 40;
 
 		try
 		{

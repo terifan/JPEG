@@ -1,12 +1,12 @@
 package org.terifan.imageio.jpeg.exif;
 
 import static org.terifan.imageio.jpeg.exif.ExifFormat.RATIONAL;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.STRING;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.UBYTE;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.ULONG;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.UNDEFINED;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.URATIONAL;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.USHORT;
+import static org.terifan.imageio.jpeg.exif.ExifFormat.ASCII;
 
 
 public enum ExifTag
@@ -14,22 +14,24 @@ public enum ExifTag
 	// Tags used by IFD0 (main image)
 	ImageWidth(0x0100, USHORT),
 	ImageHeight(0x0101, USHORT),
-	ImageDescription(0x010e, STRING),
+	ImageDescription(0x010e, ASCII),
 	Orientation(0x0112, USHORT),
-	Make(0x010f, STRING),
-	Model(0x0110, STRING),
+	Make(0x010f, ASCII),
+	Model(0x0110, ASCII),
 	XResolution(0x011A, URATIONAL),
 	YResolution(0x011B, URATIONAL),
 	ResolutionUnit(0x0128, USHORT),
-	Software(0x0131, STRING),
+	Software(0x0131, ASCII),
 	DateTime(0x0132, UBYTE),
 	WhitePoint(0x013e, URATIONAL),
 	PrimaryChromaticities(0x013f, URATIONAL),
 	YCbCrCoefficients(0x0211, URATIONAL),
 	YCbCrPositioning(0x0213, USHORT),
 	ReferenceBlackWhite(0x0214, URATIONAL),
-	Copyright(0x8298, STRING),
+	Copyright(0x8298, ASCII),
 	ExifOffset(0x8769, ULONG),
+	GpsOffset(0x8825, ULONG),
+	GPSDOP(0x000B, RATIONAL),
 
 	// Tags used by Exif SubIFD
 	ExposureTime(0x829a, URATIONAL),
@@ -57,7 +59,7 @@ public enum ExifTag
 	ColorSpace(0xa001, USHORT),
 	ExifImageWidth(0xa002, USHORT),
 	ExifImageHeight(0xa003, USHORT),
-	RelatedSoundFile(0xa004, STRING),
+	RelatedSoundFile(0xa004, ASCII),
 	ExifInteroperabilityOffset(0xa005, ULONG),
 	FocalPlaneXResolution(0xa20e, URATIONAL),
 	FocalPlaneYResolution(0xa20f, URATIONAL),
@@ -91,22 +93,39 @@ public enum ExifTag
 	RatingPercent(0x4749, USHORT),
 	ImageNumber(0x9211, ULONG),
 	_Title(0x9C9B, UBYTE),
-	ImageUniqueID(0xA420, STRING),
+	ImageUniqueID(0xA420, ASCII),
+	SubSecTime(0x9290, ASCII),
+	SubSecTimeOriginal(0x9291, ASCII),
+	SubSecTimeDigitized(0x9292, ASCII),
 
 	Comment(0x9C9c, UBYTE),
 	Author(0x9C9d, UBYTE),
 	Tags(0x9c9e, UBYTE),
 	Subject(0x9c9f, UBYTE),
 
-	PADDING(0xea1c, UBYTE);
+	CustomImageProcessing(0xA401, USHORT),
+	ExposureMode(0xA402, USHORT),
+	WhiteBalance(0xA403, USHORT),
+	DigitalZoomRatio(0xA404, RATIONAL),
+	FocalLengthIn35mmFilm(0xA405, USHORT),
+	SceneCaptureType(0xA406, USHORT),
+	GainControl(0xA407, RATIONAL),
+	Contrast(0xA408, USHORT),
+	Saturation(0xA409, USHORT),
+	Sharpness(0xA40A, USHORT),
+	DeviceSettingDescription(0xA40B, UNDEFINED),
+	SubjectDistanceRange(0xA40C0, USHORT),
 
-	final int mCode;
+	PADDING(0xea1c, UBYTE)
+	;
+
+	final int CODE;
 	final ExifFormat mFormat;
 
 
 	private ExifTag(int aCode, ExifFormat aFormat)
 	{
-		mCode = aCode;
+		CODE = aCode;
 		mFormat = aFormat;
 	}
 
@@ -115,7 +134,7 @@ public enum ExifTag
 	{
 		for (ExifTag f : values())
 		{
-			if (f.mCode == aCode)
+			if (f.CODE == aCode)
 			{
 				return f;
 			}
@@ -128,7 +147,7 @@ public enum ExifTag
 	{
 		for (ExifTag type : values())
 		{
-			if (type.mCode == aCode)
+			if (type.CODE == aCode)
 			{
 				return type;
 			}

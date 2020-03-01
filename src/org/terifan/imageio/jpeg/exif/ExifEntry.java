@@ -7,11 +7,12 @@ public class ExifEntry
 	private Object mValue;
 	private ExifFormat mFormat;
 	private byte [] mExifData;
+	private String mDebug;
 
 
 	public ExifEntry(ExifTag aFieldType, Object aValue)
 	{
-		this(null, aFieldType.mFormat, aFieldType.mCode, aValue);
+		this(null, aFieldType.mFormat, aFieldType.CODE, aValue);
 	}
 
 
@@ -42,6 +43,13 @@ public class ExifEntry
 	}
 
 
+	public ExifEntry setValue(Object aValue)
+	{
+		mValue = aValue;
+		return this;
+	}
+
+
 	public ExifFormat getFormat()
 	{
 		return mFormat;
@@ -57,6 +65,30 @@ public class ExifEntry
 	@Override
 	public String toString()
 	{
-		return String.format("tag=%X format=%s type=%s value=%s", mCode, mFormat, ExifTag.decode(mCode), mValue);
+		return String.format("%04X  %-10s %-25s %s %s", mCode, mFormat, ExifTag.decode(mCode), mValue instanceof byte[] ? toHexString((byte[])mValue) : mValue, "");
+	}
+
+
+	private String toHexString(byte[] aValue)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < aValue.length; i++)
+		{
+			sb.append(String.format("%02X", 0xff & aValue[i]));
+		}
+		return "0x" + sb.toString();
+	}
+
+
+	ExifEntry setDebug(String aDebug)
+	{
+		mDebug = aDebug;
+		return this;
+	}
+
+
+	String getDebug()
+	{
+		return mDebug;
 	}
 }

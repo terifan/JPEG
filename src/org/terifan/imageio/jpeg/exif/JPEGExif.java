@@ -1,10 +1,13 @@
 package org.terifan.imageio.jpeg.exif;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
@@ -12,137 +15,85 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 
 public class JPEGExif
 {
-	private ArrayList<ExifEntry> mEntries;
+	private ArrayList<ExifTable> mTables;
 
 
 	public JPEGExif()
 	{
-		mEntries = new ArrayList<>();
+		mTables = new ArrayList<>();
 	}
 
 
-	private JPEGExif(byte[] aImageData) throws IOException
+	public ArrayList<ExifTable> list()
 	{
-		this();
+		return mTables;
+	}
 
-		Reader reader = new Reader(aImageData);
 
-		if (reader.readInt16() != JPEGConstants.SOI)
+	public JPEGExif add(ExifTable aTable)
+	{
+		mTables.add(aTable);
+		return this;
+	}
+
+
+	public JPEGExif remove(ExifTable aTable)
+	{
+		mTables.remove(aTable);
+		return this;
+	}
+
+
+	public ExifTable get(int aTableIndex)
+	{
+		return mTables.get(aTableIndex);
+	}
+
+
+	public static JPEGExif extract(byte [] aImageData) throws IOException
+	{
+		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(aImageData));
+
+		if (dis.readShort() != (short)JPEGConstants.SOI)
 		{
 			throw new IOException("Not a JPEG file");
 		}
 
 		for (;;)
 		{
-			int code = reader.readInt16();
+			int code = dis.readShort();
 
-			if (code == JPEGConstants.EOI || code == JPEGConstants.SOS)
+			if (code == (short)JPEGConstants.EOI || code == (short)JPEGConstants.SOS)
 			{
 				break;
 			}
 
-			int len = reader.readInt16();
-			int pos = reader.byteBuffer.position();
+			int len = 0xffff & dis.readShort();
 
-			if (code == JPEGConstants.APP1)
+			if (code == (short)JPEGConstants.APP1 && len > 6)
 			{
-				parse2(reader, len - 2);
+				byte[] buf = new byte[6];
+				dis.readFully(buf);
+
+				if (Arrays.equals(buf, "Exif\u0000\u0000".getBytes()))
+				{
+					buf = new byte[len - 2 - 6];
+					dis.readFully(buf);
+
+					return new JPEGExif().decode(buf);
+				}
+				else
+				{
+					dis.skip(len - 2 - 6);
+				}
 			}
-
-			reader.byteBuffer.position(pos + len - 2);
-		}
-	}
-
-
-	public ArrayList<ExifEntry> list()
-	{
-		return mEntries;
-	}
-
-
-	public ExifEntry get(ExifTag aTag)
-	{
-		for (ExifEntry entry : mEntries)
-		{
-			if (entry.getTag() == aTag)
+			else
 			{
-				return entry;
+				dis.skip(len - 2);
 			}
 		}
 
 		return null;
-	}
-
-
-	public JPEGExif add(ExifEntry aTag)
-	{
-		mEntries.add(aTag);
-
-		return this;
-	}
-
-
-	public <T> T value(ExifTag aTag, Class<T> aType)
-	{
-		for (ExifEntry entry : mEntries)
-		{
-			if (entry.getTag() == aTag)
-			{
-				return (T)entry.getValue();
-			}
-		}
-
-		return null;
-	}
-
-
-	public String value(ExifTag aTag)
-	{
-		for (ExifEntry entry : mEntries)
-		{
-			if (entry.getTag() == aTag)
-			{
-				return entry.getValue().toString();
-			}
-		}
-
-		return null;
-	}
-
-
-	public static JPEGExif extract(byte [] aImageData) throws IOException
-	{
-		return new JPEGExif(aImageData);
-	}
-
-
-	private void parse2(Reader aReader, int aLen) throws IOException
-	{
-		String header = "";
-
-		while (aLen-- > 0)
-		{
-			int c = aReader.readInt8();
-			if (c == 0)
-			{
-				break;
-			}
-			header += (char)c;
-		}
-
-		if (header.equals("Exif"))
-		{
-			if (aReader.readInt8() != 0)
-			{
-				throw new IOException("Bad TIFF header data");
-			}
-
-			byte[] exif = new byte[aLen - 1];
-
-			aReader.byteBuffer.get(exif);
-
-			parseImpl(exif);
-		}
 	}
 
 
@@ -150,9 +101,15 @@ public class JPEGExif
 	{
 		int len = aBitStream.readInt16() - 2;
 
+		read(aBitStream, len);
+	}
+
+
+	public void read(BitInputStream aBitStream, int aLength) throws IOException
+	{
 		String header = "";
 
-		while (len-- > 0)
+		while (aLength-- > 0)
 		{
 			int c = aBitStream.readInt8();
 			if (c == 0)
@@ -169,20 +126,18 @@ public class JPEGExif
 				throw new IOException("Bad TIFF header data");
 			}
 
-			byte[] exif = new byte[len - 1];
+			byte[] exif = new byte[aLength - 1];
 
 			for (int i = 0; i < exif.length; i++)
 			{
 				exif[i] = (byte)aBitStream.readInt8();
-
-//				System.out.printf("%02x ", exif[i]);
 			}
 
-			parseImpl(exif);
+			decode(exif);
 		}
 		else
 		{
-			aBitStream.skipBytes(len);
+			aBitStream.skipBytes(aLength);
 
 			if (VERBOSE)
 			{
@@ -192,19 +147,21 @@ public class JPEGExif
 	}
 
 
-	private void parseImpl(byte [] aExifData) throws IOException
+	public JPEGExif decode(byte [] aExifData) throws IOException
 	{
 		Reader reader = new Reader(aExifData);
+
+//		Debug.hexDump(aExifData);
 
 		switch (reader.readInt16())
 		{
 			case 0x4d4d: // "MM"
 			case 0x6d6d: // "mm"
-				reader.bigEndian = true;
+				reader.setBigEndian(true);
 				break;
 			case 0x4949: // "II"
 			case 0x6969: // "ii"
-				reader.bigEndian = false;
+				reader.setBigEndian(false);
 				break;
 			default:
 				throw new IOException("Bad TIFF encoding header");
@@ -215,220 +172,69 @@ public class JPEGExif
 			throw new IOException("Bad TIFF encoding header");
 		}
 
-		reader.readInt32(); // ???
-
-//		if (reader.readInt32() != 0x00000008)
-//		{
-//			throw new IOException("Bad TIFF encoding header");
-//		}
+		reader.position(reader.readInt32());
 
 		for (;;)
 		{
-			int entryCount = reader.readInt16();
+			ExifTable table = new ExifTable();
+			mTables.add(table);
 
-			for (int i = 0; i < entryCount; i++)
+			int nextIFD;
+
+			try
 			{
-				int tag = reader.readInt16();
-				ExifFormat format = ExifFormat.values()[reader.readInt16() - 1];
-				int length = reader.readInt32();
-				int value = reader.readInt32();
-				Object output = null;
+				table.read(aExifData, reader);
 
-				if (tag == ExifTag.PADDING.mCode) // ignore padding
-				{
-					continue;
-				}
-
-				int pos = reader.byteBuffer.position();
-
-				switch (format)
-				{
-					case UBYTE:
-						if (length <= 2)
-						{
-							output = "";
-						}
-						else if (length == 4)
-						{
-							output = "" + Character.reverseBytes((char)(value >> 16));
-						}
-						else
-						{
-							reader.byteBuffer.position(value);
-							char [] dst = new char[length / 2 - 1];
-							for (int j = 0; j < dst.length; j++)
-							{
-								dst[j] = Character.reverseBytes(reader.byteBuffer.getChar());
-							}
-							output = new String(dst);
-						}
-						break;
-					case STRING:
-						if (validRange(value, length, tag, reader))
-						{
-							byte [] dst = new byte[length - 1];
-							reader.byteBuffer.position(value);
-							reader.byteBuffer.get(dst);
-							output = new String(dst);
-						}
-						break;
-					case USHORT:
-						output = (value >> 16) & 0xffff;
-						break;
-					case ULONG:
-						output = value;
-						break;
-					case URATIONAL:
-						if (validRange(value, length, tag, reader))
-						{
-							reader.byteBuffer.position(value);
-							output = reader.readInt32() / (double)reader.readInt32();
-						}
-						break;
-					case UNDEFINED:
-						if (validRange(value, length, tag, reader))
-						{
-							output = new byte[length - 1];
-							reader.byteBuffer.position(value);
-							reader.byteBuffer.get((byte[])output);
-						}
-						break;
-					default:
-						if (VERBOSE)
-						{
-							System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s\n", tag, length, value, format);
-						}
-						output = null;
-						break;
-				}
-
-				if (output != null)
-				{
-					mEntries.add(new ExifEntry(aExifData, format, tag, output));
-				}
-
-				reader.byteBuffer.position(pos);
+				nextIFD = reader.readInt32();
 			}
-
-			int nextIFD = reader.readInt32();
-
-			if (nextIFD == 0)
+			catch (DataAccessException e)
 			{
 				break;
 			}
 
-			reader.byteBuffer.position(nextIFD);
+			if (nextIFD <= 0 || nextIFD >= reader.capacity())
+			{
+				break;
+			}
+
+			reader.position(nextIFD);
 		}
+
+		return this;
 	}
 
 
 	public byte [] encode() throws IOException
 	{
-		ByteArrayOutputStream dataBuffer = new ByteArrayOutputStream();
-		DataOutputStream data = new DataOutputStream(dataBuffer);
+		Writer writer = new Writer();
+		writer.setBigEndian(!true);
+		writer.write(new byte[8]);
 
-		ByteArrayOutputStream dirBuffer = new ByteArrayOutputStream();
-		DataOutputStream dir = new DataOutputStream(dirBuffer);
-		dir.write("Exif".getBytes());
-		dir.writeShort(0x0000);
-		dir.writeShort(0x4d4d);
-		dir.writeShort(0x002a);
-		dir.writeInt(0x00000008);
-		dir.writeShort(mEntries.size());
+		ArrayList<Integer> pointerOffsets = new ArrayList<>();
+		pointerOffsets.add(4);
 
-		int dataOffset = 1024 - 6;
-
-		for (ExifEntry entry : mEntries)
+		for (ExifTable table : mTables)
 		{
-			dir.writeShort(entry.getCode());
-			dir.writeShort(entry.getFormat().ordinal() + 1);
+			writer.position(writer.size());
 
-			switch (entry.getFormat())
-			{
-				case ULONG:
-				{
-					dir.writeInt(0);
-					dir.writeInt((Integer)entry.getValue());
-					break;
-				}
-				case USHORT:
-				{
-					dir.writeInt(0);
-					dir.writeInt((Integer)entry.getValue() << 16);
-					break;
-				}
-				case UBYTE:
-				{
-					char[] s;
-					if (entry.getValue() instanceof char[])
-					{
-						s = (char[])entry.getValue();
-					}
-					else
-					{
-						s = entry.getValue().toString().toCharArray();
-					}
+			table.write(writer);
 
-					if (s.length == 1)
-					{
-						dir.writeInt(4);
-						dir.writeChar(Character.reverseBytes(s[0]));
-						dir.writeChar(0);
-					}
-					else
-					{
-						dir.writeInt(2 * s.length + 2);
-						dir.writeInt(dataOffset + data.size());
-						for (int i = 0; i < s.length; i++)
-						{
-							data.writeChar(Character.reverseBytes(s[i])); // always little endian
-						}
-						data.writeChar(0);
-					}
-					break;
-				}
-				case URATIONAL:
-				{
-					dir.writeInt(1);
-					dir.writeInt(dataOffset + data.size());
-
-					double v = (Double)entry.getValue();
-					data.writeInt((int)(v * 1000000));
-					data.writeInt(1000000);
-					break;
-				}
-				case STRING:
-				{
-					byte [] chunk = entry.getValue().toString().getBytes();
-
-					dir.writeInt(chunk.length + 1);
-					dir.writeInt(dataOffset + data.size());
-					data.write(chunk);
-					data.write(0);
-					break;
-				}
-				case UNDEFINED:
-				{
-					byte [] chunk = (byte[])entry.getValue();
-
-					dir.writeInt(chunk.length + 1);
-					dir.writeInt(dataOffset + data.size());
-					data.write(chunk);
-					data.write(0);
-					break;
-				}
-				default:
-					throw new IllegalStateException("not implemented: " + entry);
-			}
+			pointerOffsets.add(table.getNextPointerOffset());
 		}
 
-		dir.writeShort(0);
+		writer.position(0);
+		writer.writeInt16(writer.isBigEndian() ? 0x4d4d : 0x4949);
+		writer.writeInt16(0x002a);
 
-		dir.write(new byte[dataOffset - dir.size() + 6]);
+		for (int i = 0; i < mTables.size(); i++)
+		{
+			writer.position(pointerOffsets.get(i));
+			writer.writeInt32(mTables.get(i).mContentOffset);
 
-		dataBuffer.writeTo(dir);
+//			System.out.println(pointerOffsets.get(i) + " -> " + mTables.get(i).mContentOffset);
+		}
 
-		return dirBuffer.toByteArray();
+		return writer.toByteArray();
 	}
 
 
@@ -461,10 +267,12 @@ public class JPEGExif
 			int pos = dis.position();
 			int code = dis.getShort() & 0xffff;
 
-			if (code == JPEGConstants.DQT && aNewMetaData != null && aNewMetaData.length > 0) // insert Exif data right before first quantization table
+			if (code != JPEGConstants.APP0 && aNewMetaData != null && aNewMetaData.length > 0)
 			{
 				dos.writeShort(JPEGConstants.APP1);
-				dos.writeShort(aNewMetaData.length + 2);
+				dos.writeShort(aNewMetaData.length + 2 + 6);
+				dos.write("Exif".getBytes());
+				dos.writeShort(0);
 				dos.write(aNewMetaData);
 
 				aNewMetaData = null;
@@ -483,7 +291,7 @@ public class JPEGExif
 
 			int len = dis.getShort() & 0xffff;
 
-			if (code != JPEGConstants.APP1 && code != JPEGConstants.APP2 && code != JPEGConstants.APP13) // ignore app chunks containing metadata
+			if (code != JPEGConstants.APP1) // ignore app chunks containing metadata
 			{
 				byte [] tmp = new byte[len + 2];
 				dis.position(pos);
@@ -499,64 +307,46 @@ public class JPEGExif
 	}
 
 
-	private boolean validRange(int aOffset, int aLength, int aTag, Reader aReader)
+	public void print()
 	{
-		if (aOffset < 0 || aOffset + aLength >= aReader.byteBuffer.capacity())
+		for (ExifTable table : mTables)
 		{
-			if (VERBOSE)
-			{
-				System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.byteBuffer.capacity(), ExifTag.decode(aTag), aTag);
-			}
-
-			return false;
+			table.print("");
 		}
-
-		return true;
 	}
 
 
-	private static class Reader
+	public ExifTable getThumbnailTable(int aIndex)
 	{
-		boolean bigEndian = true;
-		ByteBuffer byteBuffer;
-
-
-		public Reader(byte [] aData)
+		for (ExifTable table : mTables)
 		{
-			byteBuffer = ByteBuffer.wrap(aData);
-		}
-
-
-		public int readInt8()
-		{
-			return byteBuffer.get() & 0xff;
-		}
-
-
-		public int readInt16()
-		{
-			if (bigEndian)
+			if (table.getThumbData() != null && aIndex-- == 0)
 			{
-				return byteBuffer.getShort() & 0xffff;
+				return table;
 			}
-			return Short.reverseBytes(byteBuffer.getShort()) & 0xffff;
 		}
 
+		return null;
+	}
 
-		public int readInt32()
+
+	public byte[] getThumbnailImage(int aIndex)
+	{
+		for (ExifTable table : mTables)
 		{
-			if (bigEndian)
+			if (table.getThumbData() != null && aIndex-- == 0)
 			{
-				return byteBuffer.getInt();
+				return table.getThumbData();
 			}
-			return Integer.reverseBytes(byteBuffer.getInt());
 		}
+
+		return null;
 	}
 
 
 	@Override
 	public String toString()
 	{
-		return mEntries.toString();
+		return mTables.toString();
 	}
 }
