@@ -25,10 +25,11 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
+import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.QuantizationTable;
-import org.terifan.imageio.jpeg.exif.JPEGExif;
+import org.terifan.imageio.jpeg.exif.Exif;
 
 
 public class JPEGImageReader
@@ -42,6 +43,7 @@ public class JPEGImageReader
 	private int mProgressiveLevel;
 	private JPEG mJPEG = new JPEG();
 	private boolean mUpdateImage;
+	private Exif mExif;
 
 
 	public JPEGImageReader(InputStream aInputStream) throws IOException
@@ -49,6 +51,12 @@ public class JPEGImageReader
 		mBitStream = new BitInputStream(aInputStream);
 		mUpdateImage = true;
 		mIDCT = IDCTIntegerSlow.class;
+	}
+
+
+	public Exif getExif()
+	{
+		return mExif;
 	}
 
 
@@ -137,15 +145,7 @@ public class JPEGImageReader
 						new APP0Segment(mJPEG).read(mBitStream);
 						break;
 					case APP1:
-						try
-						{
-							new JPEGExif().read(mBitStream);
-						}
-						catch (Throwable e)
-						{
-							System.err.println("Error reading metadata");
-							e.printStackTrace(System.err);
-						}
+						mExif = read(mBitStream);
 						break;
 					case APP2:
 						new APP2Segment(mJPEG).read(mBitStream);
@@ -242,6 +242,49 @@ public class JPEGImageReader
 		}
 
 		return colorTransform();
+	}
+
+
+	private Exif read(BitInputStream aBitStream) throws IOException
+	{
+		int len = aBitStream.readInt16() - 2;
+
+		String header = "";
+
+		while (len-- > 0)
+		{
+			int c = aBitStream.readInt8();
+			if (c == 0)
+			{
+				break;
+			}
+			header += (char)c;
+		}
+
+		if (header.equals("Exif"))
+		{
+			if (aBitStream.readInt8() != 0)
+			{
+				throw new IOException("Bad TIFF header data");
+			}
+
+			byte[] exif = new byte[len - 1];
+
+			for (int i = 0; i < exif.length; i++)
+			{
+				exif[i] = (byte)aBitStream.readInt8();
+			}
+
+			return new Exif().decode(exif);
+		}
+
+		aBitStream.skipBytes(len);
+		if (JPEGConstants.VERBOSE)
+		{
+			System.out.printf("  Unsupported APP1 segment content (%s)%n", header);
+		}
+
+		return null;
 	}
 
 

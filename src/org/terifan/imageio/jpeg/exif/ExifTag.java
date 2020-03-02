@@ -119,8 +119,8 @@ public enum ExifTag
 	PADDING(0xea1c, UBYTE)
 	;
 
-	final int CODE;
-	final ExifFormat mFormat;
+	public final int CODE;
+	public final ExifFormat mFormat;
 
 
 	private ExifTag(int aCode, ExifFormat aFormat)
@@ -130,26 +130,13 @@ public enum ExifTag
 	}
 
 
-	static ExifTag decode(int aCode)
+	static ExifTag valueOf(int aCode)
 	{
-		for (ExifTag f : values())
+		for (ExifTag tag : values())
 		{
-			if (f.CODE == aCode)
+			if (tag.CODE == aCode)
 			{
-				return f;
-			}
-		}
-		return null;
-	}
-
-
-	public static ExifTag lookup(int aCode)
-	{
-		for (ExifTag type : values())
-		{
-			if (type.CODE == aCode)
-			{
-				return type;
+				return tag;
 			}
 		}
 		return null;

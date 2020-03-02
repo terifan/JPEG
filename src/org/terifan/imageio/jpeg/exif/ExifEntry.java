@@ -6,19 +6,16 @@ public class ExifEntry
 	private int mCode;
 	private Object mValue;
 	private ExifFormat mFormat;
-	private byte [] mExifData;
-	private String mDebug;
 
 
-	public ExifEntry(ExifTag aFieldType, Object aValue)
+	public ExifEntry(ExifTag aTag, Object aValue)
 	{
-		this(null, aFieldType.mFormat, aFieldType.CODE, aValue);
+		this(aTag.mFormat, aTag.CODE, aValue);
 	}
 
 
-	public ExifEntry(byte [] aExifData, ExifFormat aFormat, int aTag, Object aValue)
+	public ExifEntry(ExifFormat aFormat, int aTag, Object aValue)
 	{
-		mExifData = aExifData;
 		mFormat = aFormat;
 		mCode = aTag;
 		mValue = aValue;
@@ -33,7 +30,7 @@ public class ExifEntry
 
 	public ExifTag getTag()
 	{
-		return ExifTag.lookup(mCode);
+		return ExifTag.valueOf(mCode);
 	}
 
 
@@ -56,39 +53,28 @@ public class ExifEntry
 	}
 
 
-	public byte [] getExifData()
-	{
-		return mExifData;
-	}
-
-
 	@Override
 	public String toString()
 	{
-		return String.format("%04X  %-10s %-25s %s %s", mCode, mFormat, ExifTag.decode(mCode), mValue instanceof byte[] ? toHexString((byte[])mValue) : mValue, "");
+		return String.format("%04X  %-10s %-25s %s %s", mCode, mFormat, ExifTag.valueOf(mCode), formatValue(), "");
 	}
 
 
-	private String toHexString(byte[] aValue)
+	private String formatValue()
 	{
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < aValue.length; i++)
+		if (mValue instanceof byte[])
 		{
-			sb.append(String.format("%02X", 0xff & aValue[i]));
+			byte[] bytes = (byte[])mValue;
+			StringBuilder sb = new StringBuilder();
+
+			for (int i = 0; i < bytes.length; i++)
+			{
+				sb.append(String.format("%02X", 0xff & bytes[i]));
+			}
+
+			return "0x" + sb.toString();
 		}
-		return "0x" + sb.toString();
-	}
 
-
-	ExifEntry setDebug(String aDebug)
-	{
-		mDebug = aDebug;
-		return this;
-	}
-
-
-	String getDebug()
-	{
-		return mDebug;
+		return mValue.toString();
 	}
 }

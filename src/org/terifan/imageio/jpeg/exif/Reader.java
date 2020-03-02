@@ -37,6 +37,13 @@ class Reader
 	}
 
 
+	public int readInt16LE()
+	{
+		access(2);
+		return Short.reverseBytes(mBuffer.getShort()) & 0xffff;
+	}
+
+
 	public int readInt32()
 	{
 		access(4);

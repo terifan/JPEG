@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg.exif;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import org.terifan.imageio.jpeg.test.Debug;
 
 
 /**
@@ -22,7 +21,7 @@ import org.terifan.imageio.jpeg.test.Debug;
  */
 public class ExifTable
 {
-	private final static boolean VERBOSE = !false;
+	private final static boolean VERBOSE = false;
 
 	private ArrayList<ExifEntry> mEntries;
 	private ArrayList<ExifTable> mTables;
@@ -187,7 +186,6 @@ public class ExifTable
 	private void readEntry(int aFormatIndex, int aLength, int aValue, Reader aReader, int aTag, int aStartOffset, int aEntryIndex, byte[] aExifData) throws IOException
 	{
 		Object output = null;
-		String debug = null;
 
 		ExifFormat format = ExifFormat.values()[aFormatIndex];
 
@@ -200,7 +198,7 @@ public class ExifTable
 				}
 				else if (aLength == 4)
 				{
-					output = "" + (aReader.isBigEndian() ? Character.reverseBytes((char)(aValue >> 16)) : (char)(aValue >> 16));
+					output = "" + aReader.readInt16LE();
 				}
 				else
 				{
@@ -232,7 +230,6 @@ public class ExifTable
 			case URATIONAL:
 			case RATIONAL:
 				output = aValue / (double)aLength;
-				debug = aValue + " / " + aLength;
 				break;
 			case UNDEFINED:
 				byte[] b = null;
@@ -264,12 +261,12 @@ public class ExifTable
 
 		if (VERBOSE)
 		{
-			System.out.printf("%4d %4d %04X %4d %4d %30s [%11s] = %s%n", aStartOffset + 12 * aEntryIndex, aReader.capacity(), aTag, aFormatIndex, aLength, ExifTag.lookup(aTag), aValue, output);
+			System.out.printf("%4d %4d %04X %4d %4d %30s [%11s] = %s%n", aStartOffset + 12 * aEntryIndex, aReader.capacity(), aTag, aFormatIndex, aLength, ExifTag.valueOf(aTag), aValue, output);
 		}
 
 		if (output != null)
 		{
-			add(new ExifEntry(aExifData, format, aTag, output).setDebug(debug));
+			add(new ExifEntry(format, aTag, output));
 
 			if (aTag == ExifTag.ExifOffset.CODE)
 			{
@@ -309,7 +306,6 @@ public class ExifTable
 		}
 	}
 
-	static boolean done;
 
 	void write(Writer aWriter) throws IOException
 	{
@@ -390,7 +386,7 @@ public class ExifTable
 					if (s.length == 1)
 					{
 						aWriter.writeInt32(4);
-						aWriter.writeInt16(Character.reverseBytes(s[0]));
+						aWriter.writeInt16LE(s[0]);
 						aWriter.writeInt16(0);
 					}
 					else
@@ -399,7 +395,7 @@ public class ExifTable
 						aWriter.writeInt32(dataOffset + dataOutput.size());
 						for (int i = 0; i < s.length; i++)
 						{
-							dataOutput.writeInt16(Character.reverseBytes(s[i])); // always little endian
+							dataOutput.writeInt16LE(s[i]);
 						}
 						dataOutput.writeInt16(0);
 					}
@@ -500,7 +496,6 @@ public class ExifTable
 
 		if (mThumbData != null)
 		{
-			System.out.println("******"+aWriter.size());
 			thumbOffsetEntry.setValue(aWriter.size());
 
 			aWriter.position(aWriter.size());
@@ -517,7 +512,7 @@ public class ExifTable
 
 	void print(String aIndent)
 	{
-		System.out.println(aIndent + "table");
+		System.out.println(aIndent + "Exif table");
 		aIndent += "\t";
 
 		for (ExifEntry entry : mEntries)
@@ -541,7 +536,7 @@ public class ExifTable
 
 		if (VERBOSE)
 		{
-			System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.capacity(), ExifTag.decode(aTag), aTag);
+			System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.capacity(), ExifTag.valueOf(aTag), aTag);
 		}
 
 		return false;

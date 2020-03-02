@@ -64,6 +64,15 @@ class Writer
 	}
 
 
+	public Writer writeInt16LE(int aValue) throws IOException
+	{
+		writeInt8(0xff & aValue);
+		writeInt8(0xff & (aValue >> 8));
+
+		return this;
+	}
+
+
 	public Writer writeInt32(int aValue) throws IOException
 	{
 		if (mBigEndian)
