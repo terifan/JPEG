@@ -106,8 +106,6 @@ class Reader
 	{
 //		System.out.println(mBuffer.position() + " .. " + (mBuffer.position() + aLength - 1));
 
-//		if(mBuffer.position()==3378) throw new IllegalArgumentException();
-
 		for (int i = mBuffer.position(); --aLength >= 0; i++)
 		{
 			if (mAccessMap[i])
