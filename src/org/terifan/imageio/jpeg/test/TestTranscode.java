@@ -4,7 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.Transcode;
@@ -17,29 +17,30 @@ public class TestTranscode
 	{
 		try
 		{
-			File file = new File("D:\\Pictures\\Wallpapers\\mountain-silhouette.jpg");
+			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
 
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();
 
 //			JPEGConstants.VERBOSE = true;
 
-			BufferedImage huffImage = JPEGImageReader.read(file);
+			BufferedImage originalImage = JPEGImageReader.read(file);
 
 			System.out.println("=================================================================================================================================================================================");
-			
-			new Transcode().setArithmetic(!false).setOptimizedHuffman(!true).setProgressive(false).transcode(file, baos);
 
-			System.out.println(baos.size());
-			
+			new Transcode().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
+
+			System.out.println(transImageData.size());
+
 			System.out.println("=================================================================================================================================================================================");
 
-			BufferedImage ariImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
+//			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
+			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
 
 			JPEGConstants.VERBOSE = false;
 
 			BufferedImage javaImage = ImageIO.read(file);
 
-			BufferedImage diff = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+			BufferedImage deltaImage = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 
 			for (int y = 0; y < javaImage.getHeight(); y++)
 			{
@@ -47,28 +48,29 @@ public class TestTranscode
 				{
 					int s = 20;
 
-					int c0 = ariImage.getRGB(x, y);
-					int c1 = huffImage.getRGB(x, y);
+					int c0 = transImage.getRGB(x, y);
+					int c1 = originalImage.getRGB(x, y);
 					int r = s * Math.abs((255 & (c0 >> 16)) - (255 & (c1 >> 16)));
 					int g = s * Math.abs((255 & (c0 >> 8)) - (255 & (c1 >> 8)));
 					int b = s * Math.abs((255 & (c0 >> 0)) - (255 & (c1 >> 0)));
-					diff.setRGB(x, y, (r << 16) + (g << 8) + b);
+					deltaImage.setRGB(x, y, (r << 16) + (g << 8) + b);
 				}
 			}
 
-			BufferedImage image = new BufferedImage(ariImage.getWidth() * 2, ariImage.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
+			BufferedImage image = new BufferedImage(transImage.getWidth() * 2, transImage.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = image.createGraphics();
-			g.drawImage(ariImage, 0 * javaImage.getWidth(), 0 * javaImage.getHeight(), null);
-			g.drawImage(diff, 0 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
+			g.drawImage(originalImage, 0 * javaImage.getWidth(), 0 * javaImage.getHeight(), null);
+			g.drawImage(transImage, 1 * javaImage.getWidth(), 0 * javaImage.getHeight(), null);
+			g.drawImage(deltaImage, 0 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.drawImage(javaImage, 1 * javaImage.getWidth(), 1 * javaImage.getHeight(), null);
 			g.dispose();
-			
-			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(huffImage, ariImage));
+
+			System.out.println("\nError per pixel: " + MeasureErrorRate.measureError(originalImage, transImage));
 
 //			ImageIO.write(ariImage, "png", new File("d:\\temp\\" + file.getName() + "_my.png"));
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
-			
+
 			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)

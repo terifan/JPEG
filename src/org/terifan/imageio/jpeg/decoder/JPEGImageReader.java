@@ -448,7 +448,7 @@ public class JPEGImageReader
 		}
 
 		mProgressiveLevel++;
-		mBitStream.align(); // todo: remove?
+		mBitStream.align();
 
 		if (VERBOSE)
 		{

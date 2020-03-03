@@ -93,9 +93,9 @@ public class HuffmanEncoder implements Encoder
 
 		/* next_output_byte/free_in_buffer are local copies of cinfo.dest fields.
 		 */
-//		int next_output_byte_offset;
-//		byte[] next_output_byte = new byte[16]; 		/* => next byte to write in buffer */
-//		int free_in_buffer = 16; 		/* # of byte spaces remaining in buffer */
+		int next_output_byte_offset;
+		byte[] next_output_byte = new byte[16]; 		/* => next byte to write in buffer */
+		int free_in_buffer = 16; 		/* # of byte spaces remaining in buffer */
 		JPEG cinfo;
 		/* link to cinfo (needed for dump_buffer) */
 
@@ -109,7 +109,7 @@ public class HuffmanEncoder implements Encoder
 		int[] bit_buffer;
 		/* buffer for correction bits (1 per char) */
 		/* packing correction bits tightly would save some space but cost time... */
-		
+
 		private working_state working_state = new working_state();
 
 		savable_state saved = working_state.cur;
@@ -265,32 +265,30 @@ public class HuffmanEncoder implements Encoder
 	/* Emit a byte */
 	private void emit_byte_e(huff_entropy_encoder entropy, int val) throws IOException
 	{
-		emit_byte_s(entropy.working_state, val);
-		
-//		entropy.next_output_byte[entropy.next_output_byte_offset++] = (byte)val;
-//		if (--entropy.free_in_buffer == 0)
-//		{
-//			dump_buffer_e(entropy);
-//		}
+		entropy.next_output_byte[entropy.next_output_byte_offset++] = (byte)val;
+		if (--entropy.free_in_buffer == 0)
+		{
+			dump_buffer_e(entropy);
+		}
 	}
 
 
 	private void dump_buffer_s(working_state state) throws IOException
 	{
 		mOutputStream.write(state.next_output_byte, 0, state.next_output_byte_offset);
-		
+
 		state.next_output_byte_offset = 0;
 		state.free_in_buffer = state.next_output_byte.length;
 	}
 
 
-//	private void dump_buffer_e(huff_entropy_encoder entropy) throws IOException
-//	{
-//		mOutputStream.write(entropy.next_output_byte, 0, entropy.next_output_byte_offset);
-//		
-//		entropy.next_output_byte_offset = 0;
-//		entropy.free_in_buffer = entropy.next_output_byte.length;
-//	}
+	private void dump_buffer_e(huff_entropy_encoder entropy) throws IOException
+	{
+		mOutputStream.write(entropy.next_output_byte, 0, entropy.next_output_byte_offset);
+
+		entropy.next_output_byte_offset = 0;
+		entropy.free_in_buffer = entropy.next_output_byte.length;
+	}
 
 
 	/* Outputting bits to the file */
@@ -406,7 +404,7 @@ public class HuffmanEncoder implements Encoder
 	private void flush_bits_e(huff_entropy_encoder entropy) throws IOException
 	{
 		if (entropy.gather_statistics) return;
-			
+
 		emit_bits_e(entropy, 0x7F, 7);
 		/* fill any partial byte with ones */
 		entropy.saved.put_buffer = 0;
@@ -1193,8 +1191,8 @@ public class HuffmanEncoder implements Encoder
 			/* Flush out any buffered data */
 			emit_eobrun(entropy);
 			flush_bits_e(entropy);
-			
-			dump_buffer_s(entropy.working_state);
+
+			dump_buffer_e(entropy);
 
 //			cinfo.next_output_byte[cinfo.next_output_byte_offset] = entropy.next_output_byte[entropy.next_output_byte_offset];
 //			cinfo.free_in_buffer = entropy.free_in_buffer;
@@ -1208,11 +1206,10 @@ public class HuffmanEncoder implements Encoder
 //			state.cinfo = cinfo;
 
 			/* Flush out the last data */
-//			flush_bits_s(state);
 			flush_bits_s(entropy.working_state);
 
 			dump_buffer_s(entropy.working_state);
-			
+
 			/* Update state */
 //			cinfo.next_output_byte = state.next_output_byte;
 //			cinfo.free_in_buffer = state.free_in_buffer;
@@ -1526,7 +1523,7 @@ public class HuffmanEncoder implements Encoder
 		bits[i]--;
 
 		int[] huffval = new int[257];
-		
+
 		/* Return a list of the symbols sorted by code length */
 		/* It's not real clear to me why we don't need to consider the codelength
 		 * changes made above, but the JPEG spec seems to think this works.

@@ -24,7 +24,8 @@ public class TestTranscodeBatch
 
 //			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
-				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+				for (File file : new File("C:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
@@ -46,11 +47,11 @@ public class TestTranscodeBatch
 						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(true).transcode(new ByteArrayInputStream(data), huffOptData);
 						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(false).transcode(new ByteArrayInputStream(data), huffData);
 
-						File ariFile = new File("D:\\temp\\jpg-ari", file.getName());
-						File ariProgFile = new File("D:\\temp\\jpg-ari-prog", file.getName());
-						File huffFile = new File("D:\\temp\\jpg-huff", file.getName());
-						File huffProgFile = new File("D:\\temp\\jpg-huff-prog", file.getName());
-						File huffOptFile = new File("D:\\temp\\jpg-huff-opt", file.getName());
+						File ariFile = new File("D:\\dev\\jpg-ari", file.getName());
+						File ariProgFile = new File("D:\\dev\\jpg-ari-prog", file.getName());
+						File huffFile = new File("D:\\dev\\jpg-huff", file.getName());
+						File huffProgFile = new File("D:\\dev\\jpg-huff-prog", file.getName());
+						File huffOptFile = new File("D:\\dev\\jpg-huff-opt", file.getName());
 
 						try (FileOutputStream fos = new FileOutputStream(ariFile))
 						{
@@ -94,6 +95,8 @@ public class TestTranscodeBatch
 						totalHuffOptLength += huffOptData.size();
 						totalHuffProgLength += huffProgData.size();
 						totalHuffLength += huffData.size();
+
+						if(true) break;
 					}
 					catch (Throwable e)
 					{
