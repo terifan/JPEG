@@ -6,8 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Arrays;
-import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
@@ -15,79 +13,6 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 public class TestTranscodeBatch
 {
 	public static void main(String... args)
-	{
-		try
-		{
-			long original = 0;
-			long compressed = 0;
-
-			for (File file : new File("T:\\Photos\\2018-05-26 Hammarkullekarnivalen\\106ND750").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
-			{
-				ByteArrayOutputStream output = new ByteArrayOutputStream();
-				new Transcode().setArithmetic(false).setProgressive(false).transcode(file, output);
-
-				boolean b = output.size() * 1.05 < file.length();
-
-				System.out.println(output.size()+"\t"+file.length()+"\t"+b+"\t"+file);
-
-				if (b)
-				{
-					original += file.length();
-					compressed += output.size();
-
-					long modified = file.lastModified();
-					
-					File tmp = new File(file.getAbsolutePath() + "~");
-
-					try (FileOutputStream fos = new FileOutputStream(tmp))
-					{
-						output.writeTo(fos);
-					}
-					
-					file.delete();
-					tmp.renameTo(file);
-
-					file.setLastModified(modified);
-				}
-			}
-
-			System.out.println(original-compressed);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
-	
-
-	public static void xmain(String... args)
-	{
-		try
-		{
-			JPEG jpeg1 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-ari.jpg")).decode();
-			JPEG jpeg2 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-ari-prog.jpg")).decode();
-			JPEG jpeg3 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt.jpg")).decode();
-			JPEG jpeg4 = new JPEGImageReader(TestTranscodeBatch.class.getResourceAsStream("Swallowtail-huff-opt-prog.jpg")).decode();
-			
-			System.out.println(Arrays.deepEquals(jpeg1.getCoefficients(), jpeg2.getCoefficients()));
-			System.out.println(Arrays.deepEquals(jpeg3.getCoefficients(), jpeg4.getCoefficients()));
-			
-			BufferedImage image1 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-ari.jpg"));
-			BufferedImage image2 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-ari-prog.jpg"));
-			BufferedImage image3 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt.jpg"));
-			BufferedImage image4 = JPEGImageReader.read(TestTranscodeBatch.class.getResource("Swallowtail-huff-opt-prog.jpg"));
-			
-			System.out.println(compare(image1, image2));
-			System.out.println(compare(image3, image4));
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
-	
-
-	public static void xxmain(String... args)
 	{
 		try
 		{
@@ -99,9 +24,7 @@ public class TestTranscodeBatch
 
 //			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
-//				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg") && e.length() < 10000000))
-				for (File file : new File("D:\\Desktop\\2018-04-28\\killar").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
-//				File file = new File("D:\\Pictures\\Wallpapers High Quality\\02.jpg");
+				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
@@ -160,15 +83,11 @@ public class TestTranscodeBatch
 						BufferedImage imageHuffProg = JPEGImageReader.read(huffProgFile);
 						BufferedImage imageHuffOpt = JPEGImageReader.read(huffOptFile);
 
-//						ImageIO.write(imageAri, "png", new File("d:\\test1.png"));
-//						ImageIO.write(imageAriProg, "png", new File("d:\\test2.png"));
-//						new ImageFrame(imageAri);
-//						new ImageFrame(imageAriProg);
-						
 						boolean err = compare(imageAri, imageAriProg) != 0 || compare(imageAri, imageHuff) != 0 || compare(imageAri, imageHuffOpt) != 0 || compare(imageAri, imageHuffProg) != 0;
 
-						String z = compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri)+" "+compare(imageHuffProg, imageAriProg);
-						System.out.printf("%-50s  %-5s ari=%8d ariProg=%8d huff=%8d huffProg=%8d huffOpt=%8d %s %n", z, err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), file.getName());
+						String z = compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri)+" "+compare(imageHuff, imageAriProg)+" "+compare(imageHuffProg, imageAri)+" "+compare(imageHuffProg, imageAriProg);
+
+						System.out.printf("%-50s  %-5s  ari=%8d  ariProg=%8d  huff=%8d  huffProg=%8d  huffOpt=%8d  %s%n", z, err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), file.getName());
 
 						totalAriLength += ariData.size();
 						totalAriProgLength += ariProgData.size();
@@ -191,8 +110,8 @@ public class TestTranscodeBatch
 			e.printStackTrace(System.out);
 		}
 	}
-	
-	
+
+
 	private static int compare(BufferedImage aImage1, BufferedImage aImage2)
 	{
 		int err = 0;
