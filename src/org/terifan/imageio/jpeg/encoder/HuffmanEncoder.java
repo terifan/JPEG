@@ -324,7 +324,7 @@ public class HuffmanEncoder implements Encoder
 
 		while (put_bits >= 8)
 		{
-			int c = (put_buffer >> 16) & 0xFF;
+			int c = (put_buffer >>> 16) & 0xFF;
 
 			emit_byte_s(state, c);
 			if (c == 0xFF) // need to stuff a zero byte
@@ -373,7 +373,7 @@ public class HuffmanEncoder implements Encoder
 
 		while (put_bits >= 8)
 		{
-			int c = (put_buffer >> 16) & 0xFF;
+			int c = (put_buffer >>> 16) & 0xFF;
 
 			emit_byte_e(entropy, c);
 			if (c == 0xFF)
@@ -1118,7 +1118,7 @@ public class HuffmanEncoder implements Encoder
 //		state.next_output_byte = cinfo.next_output_byte;
 //		state.next_output_byte_offset = cinfo.next_output_byte_offset;
 //		state.free_in_buffer = cinfo.free_in_buffer;
-//		state.cur = entropy.saved;
+		state.cur = entropy.saved;
 		state.cinfo = aJPEG;
 
 		/* Emit restart marker if needed */
@@ -1143,7 +1143,7 @@ public class HuffmanEncoder implements Encoder
 		/* Completed MCU, so update state */
 //		cinfo.next_output_byte = state.next_output_byte;
 //		cinfo.free_in_buffer = state.free_in_buffer;
-//		entropy.saved = state.cur;
+		entropy.saved = state.cur;
 
 		/* Update restart-interval state too */
 		if (aJPEG.restart_interval != 0)
@@ -1162,7 +1162,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	/*
- * Finish up at the end of a Huffman-compressed scan.
+	 * Finish up at the end of a Huffman-compressed scan.
 	 */
 	@Override
 	public void finish_pass(JPEG aJPEG, boolean gather_statistics) throws IOException
@@ -1181,7 +1181,7 @@ public class HuffmanEncoder implements Encoder
 	private void finish_pass_huff(JPEG aJPEG) throws IOException
 	{
 		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
-//		working_state state = new working_state();
+		working_state state = new working_state();
 
 		if (aJPEG.mProgressive)
 		{
@@ -1202,8 +1202,8 @@ public class HuffmanEncoder implements Encoder
 			/* Load up working state ... flush_bits needs it */
 //			state.next_output_byte = cinfo.next_output_byte;
 //			state.free_in_buffer = cinfo.free_in_buffer;
-//			state.cur = entropy.saved;
-//			state.cinfo = cinfo;
+			state.cur = entropy.saved;
+			state.cinfo = aJPEG;
 
 			/* Flush out the last data */
 			flush_bits_s(entropy.working_state);
@@ -1213,7 +1213,7 @@ public class HuffmanEncoder implements Encoder
 			/* Update state */
 //			cinfo.next_output_byte = state.next_output_byte;
 //			cinfo.free_in_buffer = state.free_in_buffer;
-//			entropy.saved = state.cur;
+			entropy.saved = state.cur;
 		}
 	}
 

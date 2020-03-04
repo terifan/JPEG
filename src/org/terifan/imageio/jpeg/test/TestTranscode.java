@@ -33,8 +33,8 @@ public class TestTranscode
 
 			System.out.println("=================================================================================================================================================================================");
 
-//			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
-			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
+			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
+//			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
 
 			JPEGConstants.VERBOSE = false;
 

@@ -44,6 +44,7 @@ public class JPEGImageReader
 	private JPEG mJPEG = new JPEG();
 	private boolean mUpdateImage;
 	private Exif mExif;
+	private String mCompressionMode;
 
 
 	public JPEGImageReader(InputStream aInputStream) throws IOException
@@ -167,23 +168,28 @@ public class JPEGImageReader
 					case DAC: // Arithmetic Table
 						new DACSegment(mJPEG).read(mBitStream);
 						break;
-					case SOF0: // Baseline
+					case SOF0:
+						mCompressionMode = "Baseline";
 						mDecoder = new HuffmanDecoder(mBitStream);
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
-					case SOF1: // Extended sequential, Huffman
+					case SOF1:
+						mCompressionMode = "Extended sequential, Huffman";
 						throw new IOException("Image encoding not supported: Extended sequential, Huffman");
-					case SOF2: // Progressive, Huffman
+					case SOF2:
+						mCompressionMode = "Progressive, Huffman";
 						mDecoder = new HuffmanDecoder(mBitStream);
 						mJPEG.mProgressive = true;
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
-					case SOF9: // Extended sequential, arithmetic
+					case SOF9:
+						mCompressionMode = "Extended sequential, arithmetic";
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mJPEG.mArithmetic = true;
 						mJPEG.mSOFSegment = new SOFSegment(mJPEG).read(mBitStream);
 						break;
-					case SOF10: // Progressive, arithmetic
+					case SOF10:
+						mCompressionMode = "Progressive, arithmetic";
 						mDecoder = new ArithmeticDecoder(mBitStream);
 						mJPEG.mArithmetic = true;
 						mJPEG.mProgressive = true;
@@ -762,5 +768,11 @@ public class JPEGImageReader
 		}
 
 		return sb.toString();
+	}
+
+
+	public String getCompressionMode()
+	{
+		return mCompressionMode;
 	}
 }
