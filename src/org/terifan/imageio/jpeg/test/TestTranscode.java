@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
@@ -17,7 +18,8 @@ public class TestTranscode
 	{
 		try
 		{
-			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
+//			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
+			URL file = new URL("file:///d:/dev/macos-catalina-cb-3840x2160-original.jpg");
 
 			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();
 
@@ -30,13 +32,19 @@ public class TestTranscode
 
 			new Transcode().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
 
+//			transImageData.writeTo(new FileOutputStream("d:\\dev\\macos-catalina-cb-3840x2160-transcoded.jpg"));
+
 			JPEGConstants.VERBOSE = false;
 
 			System.out.println(transImageData.size());
 
 			System.out.println("=================================================================================================================================================================================");
 
-			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
+//			JPEGConstants.VERBOSE = true;
+			BufferedImage transImage = JPEGImageReader.read(new URL("file:///d:/dev/macos-catalina-cb-3840x2160-transcoded.jpg"));
+//			JPEGConstants.VERBOSE = false;
+
+//			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
 //			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
 
 			BufferedImage javaImage = ImageIO.read(file);
@@ -72,7 +80,7 @@ public class TestTranscode
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
 
-			ImageFrame imagePane = new ImageFrame(image);
+//			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)
 		{

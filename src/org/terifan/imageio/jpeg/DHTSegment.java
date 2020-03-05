@@ -50,35 +50,38 @@ public class DHTSegment
 
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
 		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
 		{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
 			if (table != null && table.write(baos))
 			{
 				table.log();
 			}
+
+		if (baos.size() > 0)
+		{
+			aBitStream.writeInt16(JPEGConstants.DHT);
+			aBitStream.writeInt16(2 + baos.size());
+			baos.writeTo(aBitStream);
 		}
+		}
+
 		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
 		{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
 			if (table != null && table.write(baos))
 			{
 				table.log();
 			}
+
+		if (baos.size() > 0)
+		{
+			aBitStream.writeInt16(JPEGConstants.DHT);
+			aBitStream.writeInt16(2 + baos.size());
+			baos.writeTo(aBitStream);
 		}
-
-//		for (HuffmanTable[] tables : mJPEG.mHuffmanTables)
-//		{
-//			for (HuffmanTable table : tables)
-//			{
-//				table.write(baos);
-//			}
-//		}
-
-		aBitStream.writeInt16(JPEGConstants.DHT);
-		aBitStream.writeInt16(2 + baos.size());
-//		baos.writeTo(aBitStream);
-
-		aBitStream.write(baos.toByteArray());
+		}
 	}
 }

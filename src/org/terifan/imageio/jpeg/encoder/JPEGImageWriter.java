@@ -215,21 +215,21 @@ public class JPEGImageWriter
 //				+ "0:     1-63,  1, 0 ;"
 //				;
 
-				String s
-					= "0,1,2: 0-0, 0, 2;\n"
-					+ "0,1,2: 0-0, 2, 1;\n"
-					+ "0,1,2: 0-0, 1, 0;\n"
-					+ "1: 1-63, 0, 0;\n"
-//					+ "1: 1-63, 0, 2;\n"
-//					+ "1: 1-63, 2, 1;\n"
-//					+ "1: 1-63, 1, 0;\n"
-					+ "2: 1-63, 0, 0;\n"
-//					+ "0: 1-5, 0, 0;"
-//					+ "0: 6-63, 0, 0;"
-					+ "0: 1-63, 0, 2;"
-					+ "0: 1-63, 2, 1;"
-					+ "0: 1-63, 1, 0;"
-					;
+//				String s
+//					= "0,1,2: 0-0, 0, 2;\n"
+//					+ "0,1,2: 0-0, 2, 1;\n"
+//					+ "0,1,2: 0-0, 1, 0;\n"
+//					+ "1: 1-63, 0, 0;\n"
+////					+ "1: 1-63, 0, 2;\n"
+////					+ "1: 1-63, 2, 1;\n"
+////					+ "1: 1-63, 1, 0;\n"
+//					+ "2: 1-63, 0, 0;\n"
+////					+ "0: 1-5, 0, 0;"
+////					+ "0: 6-63, 0, 0;"
+//					+ "0: 1-63, 0, 2;"
+//					+ "0: 1-63, 2, 1;"
+//					+ "0: 1-63, 1, 0;"
+//					;
 
 //				String s
 //					= "# Interleaved DC scan for Y,Cb,Cr:\n"
@@ -244,7 +244,7 @@ public class JPEGImageWriter
 //					+ "0:     10-63, 0, 0 ;	# Remaining Y coefficients"
 //				;
 
-			mProgressionScript = new ProgressionScript(s);
+//			mProgressionScript = new ProgressionScript(s);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();

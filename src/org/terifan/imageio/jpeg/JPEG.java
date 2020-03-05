@@ -53,11 +53,11 @@ public class JPEG
 
 	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
 	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
-	
-//	public int next_output_byte_offset;
-//	public byte[] next_output_byte = new byte[16];
-//	public int free_in_buffer = 16;
-	
+
+	public int next_output_byte_offset;
+	public byte[] next_output_byte = new byte[16];
+	public int free_in_buffer = 16;
+
 	public JPEG()
 	{
 		for (int i = 0; i < NUM_ARITH_TBLS; i++)

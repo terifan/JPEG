@@ -16,8 +16,8 @@ public class APP0Segment
 		mJPEG = aJPEG;
 
 		mJPEG.mDensitiesUnits = 1;
-		mJPEG.mDensityX = 100;
-		mJPEG.mDensityY = 100;
+		mJPEG.mDensityX = 72;
+		mJPEG.mDensityY = 72;
 	}
 
 

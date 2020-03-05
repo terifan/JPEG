@@ -147,7 +147,6 @@ public class HuffmanEncoder implements Encoder
 	private c_derived_tbl jpeg_make_c_derived_tbl(JPEG aJPEG, boolean isDC, int tblno, c_derived_tbl pdtbl)
 	{
 		HuffmanTable htbl;
-		c_derived_tbl dtbl;
 		int p, i, l, lastp, si, maxsymbol;
 		int[] huffsize = new int[257];
 		int[] huffcode = new int[257];
@@ -169,9 +168,10 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Allocate a workspace if we haven't already done so. */
-//  if (*pdtbl == null)
-//    *pdtbl = (c_derived_tbl *)      (*cinfo.mem.alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,				  SIZEOF(c_derived_tbl));
-		dtbl = pdtbl != null ? pdtbl : new c_derived_tbl();
+		if (pdtbl == null)
+		{
+			pdtbl = new c_derived_tbl();
+		}
 
 		/* Figure C.1: make table of Huffman code length for each symbol */
 		p = 0;
@@ -221,8 +221,7 @@ public class HuffmanEncoder implements Encoder
 		 * this lets us detect duplicate VAL entries here, and later
 		 * allows emit_bits to detect any attempt to emit such symbols.
 		 */
-//		MEMZERO(dtbl.ehufsi, SIZEOF(dtbl.ehufsi));
-		Arrays.fill(dtbl.ehufsi, 0);
+		Arrays.fill(pdtbl.ehufsi, 0);
 
 		/* This is also a convenient place to check for out-of-range
 		 * and duplicated VAL entries.  We allow 0..255 for AC symbols
@@ -234,15 +233,15 @@ public class HuffmanEncoder implements Encoder
 		for (p = 0; p < lastp; p++)
 		{
 			i = htbl.huffval[p];
-			if (i < 0 || i > maxsymbol || dtbl.ehufsi[i] != 0)
+			if (i < 0 || i > maxsymbol || pdtbl.ehufsi[i] != 0)
 			{
 				throw new IllegalStateException("JERR_BAD_HUFF_TABLE");
 			}
-			dtbl.ehufco[i] = huffcode[p];
-			dtbl.ehufsi[i] = huffsize[p];
+			pdtbl.ehufco[i] = huffcode[p];
+			pdtbl.ehufsi[i] = huffsize[p];
 		}
 
-		return dtbl;
+		return pdtbl;
 	}
 
 
@@ -279,6 +278,9 @@ public class HuffmanEncoder implements Encoder
 
 		state.next_output_byte_offset = 0;
 		state.free_in_buffer = state.next_output_byte.length;
+
+		state.next_output_byte = state.cinfo.next_output_byte;
+		state.free_in_buffer = state.cinfo.free_in_buffer;
 	}
 
 
@@ -288,6 +290,9 @@ public class HuffmanEncoder implements Encoder
 
 		entropy.next_output_byte_offset = 0;
 		entropy.free_in_buffer = entropy.next_output_byte.length;
+
+		entropy.next_output_byte = entropy.cinfo.next_output_byte;
+		entropy.free_in_buffer =  entropy.cinfo.free_in_buffer;
 	}
 
 
@@ -564,9 +569,9 @@ public class HuffmanEncoder implements Encoder
 		int nbits;
 		int blkn, ci, tbl;
 
-//		entropy.next_output_byte = cinfo.next_output_byte;
-//		entropy.next_output_byte_offset = cinfo.next_output_byte_offset;
-//		entropy.free_in_buffer = cinfo.free_in_buffer;
+		entropy.next_output_byte = aJPEG.next_output_byte;
+		entropy.next_output_byte_offset = aJPEG.next_output_byte_offset;
+		entropy.free_in_buffer = aJPEG.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (aJPEG.restart_interval != 0)
@@ -630,9 +635,9 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-//		cinfo.next_output_byte = entropy.next_output_byte;
-//		cinfo.next_output_byte_offset = entropy.next_output_byte_offset;
-//		cinfo.free_in_buffer = entropy.free_in_buffer;
+		aJPEG.next_output_byte = entropy.next_output_byte;
+		aJPEG.next_output_byte_offset = entropy.next_output_byte_offset;
+		aJPEG.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (aJPEG.restart_interval != 0)
@@ -664,8 +669,8 @@ public class HuffmanEncoder implements Encoder
 		int r, k;
 		int Se, Al;
 
-//		entropy.next_output_byte = cinfo.next_output_byte;
-//		entropy.free_in_buffer = cinfo.free_in_buffer;
+		entropy.next_output_byte = aJPEG.next_output_byte;
+		entropy.free_in_buffer = aJPEG.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (aJPEG.restart_interval != 0)
@@ -768,8 +773,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-//		cinfo.next_output_byte = entropy.next_output_byte;
-//		cinfo.free_in_buffer = entropy.free_in_buffer;
+		aJPEG.next_output_byte = entropy.next_output_byte;
+		aJPEG.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (aJPEG.restart_interval != 0)
@@ -797,8 +802,8 @@ public class HuffmanEncoder implements Encoder
 		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		int Al, blkn;
 
-//		entropy.next_output_byte = cinfo.next_output_byte;
-//		entropy.free_in_buffer = cinfo.free_in_buffer;
+		entropy.next_output_byte = aJPEG.next_output_byte;
+		entropy.free_in_buffer = aJPEG.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (aJPEG.restart_interval != 0)
@@ -818,8 +823,8 @@ public class HuffmanEncoder implements Encoder
 			emit_bits_e(entropy, (aCoefficients[blkn][0] >> Al) & 1, 1);
 		}
 
-//		cinfo.next_output_byte = entropy.next_output_byte;
-//		cinfo.free_in_buffer = entropy.free_in_buffer;
+		aJPEG.next_output_byte = entropy.next_output_byte;
+		aJPEG.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (aJPEG.restart_interval != 0)
@@ -853,8 +858,8 @@ public class HuffmanEncoder implements Encoder
 		int BR;
 		int[] absvalues = new int[DCTSIZE2];
 
-//		entropy.next_output_byte = cinfo.next_output_byte;
-//		entropy.free_in_buffer = cinfo.free_in_buffer;
+		entropy.next_output_byte = aJPEG.next_output_byte;
+		entropy.free_in_buffer = aJPEG.free_in_buffer;
 
 		/* Emit restart marker if needed */
 		if (aJPEG.restart_interval != 0)
@@ -977,8 +982,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-//		cinfo.next_output_byte = entropy.next_output_byte;
-//		cinfo.free_in_buffer = entropy.free_in_buffer;
+		aJPEG.next_output_byte = entropy.next_output_byte;
+		aJPEG.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
 		if (aJPEG.restart_interval != 0)
@@ -1115,9 +1120,9 @@ public class HuffmanEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Load up working state */
-//		state.next_output_byte = aJPEG.next_output_byte;
-//		state.next_output_byte_offset = aJPEG.next_output_byte_offset;
-//		state.free_in_buffer = aJPEG.free_in_buffer;
+		state.next_output_byte = aJPEG.next_output_byte;
+		state.next_output_byte_offset = aJPEG.next_output_byte_offset;
+		state.free_in_buffer = aJPEG.free_in_buffer;
 		state.cur = entropy.saved;
 		state.cinfo = aJPEG;
 
@@ -1141,8 +1146,8 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Completed MCU, so update state */
-//		cinfo.next_output_byte = state.next_output_byte;
-//		cinfo.free_in_buffer = state.free_in_buffer;
+		aJPEG.next_output_byte = state.next_output_byte;
+		aJPEG.free_in_buffer = state.free_in_buffer;
 		entropy.saved = state.cur;
 
 		/* Update restart-interval state too */
@@ -1185,23 +1190,22 @@ public class HuffmanEncoder implements Encoder
 
 		if (aJPEG.mProgressive)
 		{
-//			entropy.next_output_byte[entropy.next_output_byte_offset] = cinfo.next_output_byte[cinfo.next_output_byte_offset];
-//			entropy.free_in_buffer = cinfo.free_in_buffer;
+			entropy.next_output_byte = aJPEG.next_output_byte;
+			entropy.free_in_buffer = aJPEG.free_in_buffer;
 
 			/* Flush out any buffered data */
 			emit_eobrun(entropy);
 			flush_bits_e(entropy);
 
-			dump_buffer_e(entropy);
-
-//			cinfo.next_output_byte[cinfo.next_output_byte_offset] = entropy.next_output_byte[entropy.next_output_byte_offset];
-//			cinfo.free_in_buffer = entropy.free_in_buffer;
+			aJPEG.next_output_byte = entropy.next_output_byte;
+			aJPEG.free_in_buffer = entropy.free_in_buffer;
 		}
 		else
 		{
 			/* Load up working state ... flush_bits needs it */
-//			state.next_output_byte = cinfo.next_output_byte;
-//			state.free_in_buffer = cinfo.free_in_buffer;
+			state.next_output_byte = aJPEG.next_output_byte;
+			state.free_in_buffer = aJPEG.free_in_buffer;
+//			ASSIGN_STATE(state.cur, entropy->saved);
 			state.cur = entropy.saved;
 			state.cinfo = aJPEG;
 
@@ -1211,8 +1215,9 @@ public class HuffmanEncoder implements Encoder
 			dump_buffer_s(entropy.working_state);
 
 			/* Update state */
-//			cinfo.next_output_byte = state.next_output_byte;
-//			cinfo.free_in_buffer = state.free_in_buffer;
+			aJPEG.next_output_byte = state.next_output_byte;
+			aJPEG.free_in_buffer = state.free_in_buffer;
+//			ASSIGN_STATE(entropy->saved, state.cur);
 			entropy.saved = state.cur;
 		}
 	}
@@ -1679,6 +1684,7 @@ public class HuffmanEncoder implements Encoder
 				{
 					/* Compute derived values for Huffman tables */
 					/* We may do this more than once for a table, but it's not expensive */
+					if (entropy.dc_derived_tbls[tbl] == null) entropy.dc_derived_tbls[tbl] = new c_derived_tbl();
 					entropy.dc_derived_tbls[tbl] = jpeg_make_c_derived_tbl(aJPEG, true, tbl, entropy.dc_derived_tbls[tbl]);
 				}
 				/* Initialize DC predictions to 0 */
@@ -1702,6 +1708,7 @@ public class HuffmanEncoder implements Encoder
 				}
 				else
 				{
+					if (entropy.ac_derived_tbls[tbl] == null) entropy.ac_derived_tbls[tbl] = new c_derived_tbl();
 					entropy.ac_derived_tbls[tbl] = jpeg_make_c_derived_tbl(aJPEG, false, tbl, entropy.ac_derived_tbls[tbl]);
 				}
 			}
