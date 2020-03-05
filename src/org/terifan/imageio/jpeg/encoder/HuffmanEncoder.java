@@ -937,7 +937,7 @@ public class HuffmanEncoder implements Encoder
 			if (temp > 1)
 			{
 				/* The correction bit is the next bit of the absolute value. */
-				BR_buffer[BR++] = (char)(temp & 1);
+				BR_buffer[BR++] = (temp & 1);
 				continue;
 			}
 
@@ -1115,9 +1115,9 @@ public class HuffmanEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Load up working state */
-//		state.next_output_byte = cinfo.next_output_byte;
-//		state.next_output_byte_offset = cinfo.next_output_byte_offset;
-//		state.free_in_buffer = cinfo.free_in_buffer;
+//		state.next_output_byte = aJPEG.next_output_byte;
+//		state.next_output_byte_offset = aJPEG.next_output_byte_offset;
+//		state.free_in_buffer = aJPEG.free_in_buffer;
 		state.cur = entropy.saved;
 		state.cinfo = aJPEG;
 

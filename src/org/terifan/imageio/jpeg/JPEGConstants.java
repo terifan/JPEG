@@ -111,7 +111,7 @@ public class JPEGConstants
 	public final static int JPG13 = 0xFFFD;  // Reserved for JPEG extensions, fatal error
 	public final static int COM = 0xFFFE;    // Comment
 
-	public final static String DEFAULT_PROGRESSION_SCRIPT = 
+	public final static String DEFAULT_PROGRESSION_SCRIPT =
 		"# Initial DC scan for Y,Cb,Cr (lowest bit not sent)\n" +
 		"0,1,2: 0-0,   0, 1 ;\n" +
 		"# First AC scan: send first 5 Y AC coefficients, minus 2 lowest bits:\n" +

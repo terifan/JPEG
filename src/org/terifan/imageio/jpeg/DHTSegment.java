@@ -25,7 +25,7 @@ public class DHTSegment
 		{
 			return;
 		}
-		
+
 		do
 		{
 			HuffmanTable table = new HuffmanTable().read(aBitStream);
@@ -38,7 +38,7 @@ public class DHTSegment
 			{
 				throw new IOException("Error in JPEG stream; illegal DHT segment size.");
 			}
-			
+
 			if (JPEGConstants.VERBOSE)
 			{
 				table.log();
@@ -54,23 +54,19 @@ public class DHTSegment
 
 		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
 		{
-			if (table != null)
+			if (table != null && table.write(baos))
 			{
 				table.log();
-				
-				table.write(baos);
 			}
 		}
 		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
 		{
-			if (table != null)
+			if (table != null && table.write(baos))
 			{
 				table.log();
-			
-				table.write(baos);
 			}
 		}
-		
+
 //		for (HuffmanTable[] tables : mJPEG.mHuffmanTables)
 //		{
 //			for (HuffmanTable table : tables)

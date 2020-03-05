@@ -19,6 +19,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.util.Arrays;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
@@ -455,6 +456,9 @@ public class JPEGImageReader
 
 		mProgressiveLevel++;
 		mBitStream.align();
+
+//		updateImage();
+//		ImageIO.write(mImage.getImage(), "png", new File("d:\\output-"+mProgressiveLevel+".png"));
 
 		if (VERBOSE)
 		{

@@ -157,7 +157,7 @@ public class JPEGImageWriter
 		{
 			mProgressionScript = new ProgressionScript(JPEGConstants.DEFAULT_PROGRESSION_SCRIPT);
 
-//			String s = 
+//			String s =
 //				"0,1,2: 0-0,   0, 0 ;\n" +
 //				"0:     1-63,  0, 0 ;\n" +
 //				"2:     1-63,  0, 0 ;\n" +
@@ -190,8 +190,61 @@ public class JPEGImageWriter
 //				+ "2:     1-63,  1, 0 ;\n"
 //				+ "1:     1-63,  1, 0 ;\n"
 //				+ "0:     1-63,  1, 0 ;";
-//
-//			mProgressionScript = new ProgressionScript(s);
+
+//			String s
+//				= "# Initial DC scan for Y,Cb,Cr (lowest bit not sent)\n"
+//				+ "0,1,2: 0-0,   0, 1 ;\n"
+//				+ "# First AC scan: send first 5 Y AC coefficients, minus 2 lowest bits:\n"
+//				+ "0:     1-5,   0, 2 ;\n"
+//				+ "# Send all Cr,Cb AC coefficients, minus lowest bit:\n"
+//				+ "# (chroma data is usually too small to be worth subdividing further;\n"
+//				+ "#  but note we send Cr first since eye is least sensitive to Cb)\n"
+//				+ "2:     1-63,  0, 1 ;\n"
+//				+ "1:     1-63,  0, 1 ;\n"
+//				+ "# Send remaining Y AC coefficients, minus 2 lowest bits:\n"
+//				+ "0:     6-63,  0, 2 ;\n"
+//				+ "# Send next-to-lowest bit of all Y AC coefficients:\n"
+//				+ "0:     1-63,  2, 1 ;\n"
+//				+ "# At this point we've sent all but the lowest bit of all coefficients.\n"
+//				+ "# Send lowest bit of DC coefficients\n"
+//				+ "0,1,2: 0-0,   1, 0 ;\n"
+//				+ "# Send lowest bit of AC coefficients\n"
+//				+ "2:     1-63,  1, 0 ;\n"
+//				+ "1:     1-63,  1, 0 ;\n"
+//				+ "# Y AC lowest bit scan is last; it's usually the largest scan\n"
+//				+ "0:     1-63,  1, 0 ;"
+//				;
+
+				String s
+					= "0,1,2: 0-0, 0, 2;\n"
+					+ "0,1,2: 0-0, 2, 1;\n"
+					+ "0,1,2: 0-0, 1, 0;\n"
+					+ "1: 1-63, 0, 0;\n"
+//					+ "1: 1-63, 0, 2;\n"
+//					+ "1: 1-63, 2, 1;\n"
+//					+ "1: 1-63, 1, 0;\n"
+					+ "2: 1-63, 0, 0;\n"
+//					+ "0: 1-5, 0, 0;"
+//					+ "0: 6-63, 0, 0;"
+					+ "0: 1-63, 0, 2;"
+					+ "0: 1-63, 2, 1;"
+					+ "0: 1-63, 1, 0;"
+					;
+
+//				String s
+//					= "# Interleaved DC scan for Y,Cb,Cr:\n"
+//					+ "0,1,2: 0-0,   0, 1 ;\n"
+//					+ "0,1,2: 0-0,   1, 0 ;\n"
+//					+ "# AC scans:\n"
+//					+ "0:     1-2,   0, 0 ;	# First two Y AC coefficients\n"
+//					+ "0:     3-5,   0, 0 ;	# Three more\n"
+//					+ "1:     1-63,  0, 0 ;	# All AC coefficients for Cb\n"
+//					+ "2:     1-63,  0, 0 ;	# All AC coefficients for Cr\n"
+//					+ "0:     6-9,   0, 0 ;	# More Y coefficients\n"
+//					+ "0:     10-63, 0, 0 ;	# Remaining Y coefficients"
+//				;
+
+			mProgressionScript = new ProgressionScript(s);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
@@ -278,7 +331,7 @@ public class JPEGImageWriter
 			int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 			int mcuWidth = 8 * maxSamplingX;
 			int mcuHeight = 8 * maxSamplingY;
-			
+
 			if (aJPEG.mArithmetic)
 			{
 				aJPEG.arith_dc_L = new int[]{0,0};

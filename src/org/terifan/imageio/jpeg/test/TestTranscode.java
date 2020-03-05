@@ -21,13 +21,16 @@ public class TestTranscode
 
 			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();
 
-//			JPEGConstants.VERBOSE = true;
 
 			BufferedImage originalImage = JPEGImageReader.read(file);
 
 			System.out.println("=================================================================================================================================================================================");
 
+			JPEGConstants.VERBOSE = true;
+
 			new Transcode().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
+
+			JPEGConstants.VERBOSE = false;
 
 			System.out.println(transImageData.size());
 
@@ -35,8 +38,6 @@ public class TestTranscode
 
 			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
 //			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
-
-			JPEGConstants.VERBOSE = false;
 
 			BufferedImage javaImage = ImageIO.read(file);
 

@@ -17,13 +17,13 @@ public class HuffmanTable
 	private boolean mSent;
 
 	// decoder
-	
+
 	private int mMaxLength;
 	private int mNumSymbols;
 	private int [] mLookup;
 
 	// encoder
-	
+
 	/* These two fields directly represent the contents of a JPEG DHT marker */
 	public int[] bits;
 	/* bits[k] = # of symbols with codes of */
@@ -117,11 +117,11 @@ public class HuffmanTable
 	}
 
 
-	void write(OutputStream aOutput) throws IOException
+	boolean write(OutputStream aOutput) throws IOException
 	{
 		if (mSent)
 		{
-			return;
+			return false;
 		}
 
 		aOutput.write(mIndex + (mType == TYPE_AC ? 0x10 : 0x00));
@@ -159,8 +159,9 @@ public class HuffmanTable
 //				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
 //			}
 //		}
-		
+
 		mSent = true;
+		return true;
 	}
 
 
@@ -217,7 +218,7 @@ public class HuffmanTable
 		return symbol;
 	}
 
-	
+
 	public void log()
 	{
 		if (VERBOSE)
@@ -229,7 +230,7 @@ public class HuffmanTable
 			System.out.println("  maxLength=" + mMaxLength);
 		}
 	}
-	
+
 
 	@Override
 	public String toString()
