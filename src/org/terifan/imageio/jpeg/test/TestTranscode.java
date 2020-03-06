@@ -80,7 +80,7 @@ public class TestTranscode
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
 
-//			ImageFrame imagePane = new ImageFrame(image);
+			ImageFrame imagePane = new ImageFrame(image);
 		}
 		catch (Throwable e)
 		{

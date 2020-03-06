@@ -22,10 +22,13 @@ public class TestTranscodeBatch
 			int totalHuffOptLength = 0;
 			int totalHuffLength = 0;
 
-//			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
+			String out = "D:\\dev";
+
+			for (File dir : new File("D:\\Pictures").listFiles(e->e.isDirectory()))
 			{
+				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 //				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
-				for (File file : new File("C:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+//				for (File file : new File("C:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 				{
 					byte[] data = new byte[(int)file.length()];
 					try (FileInputStream in = new FileInputStream(file))
@@ -47,11 +50,11 @@ public class TestTranscodeBatch
 						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(true).transcode(new ByteArrayInputStream(data), huffOptData);
 						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(false).transcode(new ByteArrayInputStream(data), huffData);
 
-						File ariFile = new File("D:\\dev\\jpg-ari", file.getName());
-						File ariProgFile = new File("D:\\dev\\jpg-ari-prog", file.getName());
-						File huffFile = new File("D:\\dev\\jpg-huff", file.getName());
-						File huffProgFile = new File("D:\\dev\\jpg-huff-prog", file.getName());
-						File huffOptFile = new File("D:\\dev\\jpg-huff-opt", file.getName());
+						File ariFile = new File(new File(out, "jpg-ari"), file.getName());
+						File ariProgFile = new File(new File(out, "jpg-ari-prog"), file.getName());
+						File huffFile = new File(new File(out, "jpg-huff"), file.getName());
+						File huffProgFile = new File(new File(out, "jpg-huff-prog"), file.getName());
+						File huffOptFile = new File(new File(out, "jpg-huff-opt"), file.getName());
 
 						try (FileOutputStream fos = new FileOutputStream(ariFile))
 						{
@@ -88,7 +91,7 @@ public class TestTranscodeBatch
 
 						String z = compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri)+" "+compare(imageHuff, imageAriProg)+" "+compare(imageHuffProg, imageAri)+" "+compare(imageHuffProg, imageAriProg);
 
-						System.out.printf("%-50s  %-5s  ari=%8d  ariProg=%8d  huff=%8d  huffProg=%8d  huffOpt=%8d  %s%n", z, err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), file.getName());
+						System.out.printf("%-50s  %-5s  ari=%8d  ariProg=%8d  huff=%8d  huffProg=%8d  huffOpt=%8d  ariOverHuff=%8d (%6.3f)  %s%n", z, err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), huffProgData.size()-ariProgData.size(), 100*(huffProgData.size()-ariProgData.size())/(double)huffProgData.size(), file.getName());
 
 						totalAriLength += ariData.size();
 						totalAriProgLength += ariProgData.size();
@@ -96,7 +99,7 @@ public class TestTranscodeBatch
 						totalHuffProgLength += huffProgData.size();
 						totalHuffLength += huffData.size();
 
-						if(true) break;
+//						if(true) break;
 					}
 					catch (Throwable e)
 					{
