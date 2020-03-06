@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.Transcode;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
@@ -19,16 +19,16 @@ public class TestTranscode2
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 //			JPEGConstants.VERBOSE = true;
-			
+
 			System.out.println("=================================================================================================================================================================================");
 
-			BufferedImage imagex = JPEGImageReader.read(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"));
+			BufferedImage imagex = new JPEGImageIO().read(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"));
 
-			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
+			new JPEGImageIO().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
 //			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(new FileInputStream("d:\\ari-test.jpg"), baos);
-			
+
 			System.out.println(baos.size());
-			
+
 			System.out.println("=================================================================================================================================================================================");
 
 			try (FileOutputStream fos = new FileOutputStream("d:\\test.jpg"))
@@ -37,9 +37,9 @@ public class TestTranscode2
 			}
 
 //			BufferedImage image = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
-			BufferedImage image = JPEGImageReader.read(new ByteArrayInputStream(baos.toByteArray()));
+			BufferedImage image = new JPEGImageIO().read(new ByteArrayInputStream(baos.toByteArray()));
 
-			new ImageFrame(image);
+			ImageFrame.show(image);
 		}
 		catch (Throwable e)
 		{

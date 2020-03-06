@@ -2,9 +2,7 @@ package org.terifan.imageio.jpeg.examples;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
-import org.terifan.imageio.jpeg.encoder.JPEGImageWriter;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
 import org.terifan.imageio.jpeg.test.ImageFrame;
 
@@ -15,16 +13,13 @@ public class SaveJPEGDemo
 	{
 		try
 		{
-			BufferedImage myImage = JPEGImageReader.read(R.class.getResource("Swallowtail-ari.jpg"));
+			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari.jpg"));
 
-			try (FileOutputStream output = new FileOutputStream("d:\\Swallowtail-arithmetic.jpg"))
-			{
-				new JPEGImageWriter(output).setArithmetic(true).setProgressive(true).write(myImage, 90);
-			}
+			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			myImage = JPEGImageReader.read(new File("d:\\Swallowtail-arithmetic.jpg"));
+			new JPEGImageIO().setArithmetic(true).setProgressive(true).setQuality(55).setProgressionScript(null).write(myImage, output);
 
-			ImageFrame imagePane = new ImageFrame(myImage);
+			ImageFrame.show(output);
 		}
 		catch (Throwable e)
 		{

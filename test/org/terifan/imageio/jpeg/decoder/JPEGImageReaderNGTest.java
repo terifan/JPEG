@@ -1,10 +1,10 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -18,7 +18,7 @@ public class JPEGImageReaderNGTest
 		{
 			BufferedImage comparison = ImageIO.read(input2);
 
-			BufferedImage image = JPEGImageReader.read(input);
+			BufferedImage image = new JPEGImageIO().read(input);
 
 			assertEquals(image.getWidth(), 227);
 			assertEquals(image.getHeight(), 149);

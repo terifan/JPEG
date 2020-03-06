@@ -1,9 +1,10 @@
 package org.terifan.imageio.jpeg.examples;
 
-import java.io.FileOutputStream;
+import java.io.File;
 import java.net.URL;
-import org.terifan.imageio.jpeg.Transcode;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
+import org.terifan.imageio.jpeg.test.ImageFrame;
 
 
 public class TranscodeJPEGDemo
@@ -14,10 +15,11 @@ public class TranscodeJPEGDemo
 		{
 			URL input = R.class.getResource("Swallowtail.jpg");
 
-			try (FileOutputStream output = new FileOutputStream("d:\\Swallowtail-transcoded.jpg"))
-			{
-				new Transcode().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(input, output);
-			}
+			File output = new File("d:\\Swallowtail-arithmetic.jpg");
+
+			new JPEGImageIO().setArithmetic(true).setProgressive(true).transcode(input, output);
+
+			ImageFrame.show(output);
 		}
 		catch (Throwable e)
 		{

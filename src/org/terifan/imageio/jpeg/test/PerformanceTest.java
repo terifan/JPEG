@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class PerformanceTest
@@ -28,7 +28,7 @@ public class PerformanceTest
 				a += terifanImageReader(imageData);
 				b += javaImageIO(imageData);
 				n++;
-				
+
 				System.out.println(a/n + "\t" + b/n);
 			}
 		}
@@ -43,7 +43,7 @@ public class PerformanceTest
 	static long terifanImageReader(byte[] aImageData) throws Exception
 	{
 		long t = System.currentTimeMillis();
-		JPEGImageReader.read(new ByteArrayInputStream(aImageData));
+		new JPEGImageIO().read(new ByteArrayInputStream(aImageData));
 
 		return System.currentTimeMillis() - t;
 	}

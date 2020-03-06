@@ -1,7 +1,7 @@
 package org.terifan.imageio.jpeg.examples;
 
 import java.awt.image.BufferedImage;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
 import org.terifan.imageio.jpeg.test.ImageFrame;
 
@@ -12,9 +12,9 @@ public class LoadJPEGDemo
 	{
 		try
 		{
-			BufferedImage myImage = JPEGImageReader.read(R.class.getResource("Swallowtail-ari.jpg"));
+			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari.jpg"));
 
-			ImageFrame imagePane = new ImageFrame(myImage);
+			ImageFrame.show(myImage);
 		}
 		catch (Throwable e)
 		{

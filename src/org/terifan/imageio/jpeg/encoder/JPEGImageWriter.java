@@ -1,6 +1,8 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.terifan.imageio.jpeg.APP0Segment;
@@ -17,23 +19,24 @@ import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.SOSSegment;
 
 
-public class JPEGImageWriter
+class JPEGImageWriter
 {
-	private BitOutputStream mBitStream;
 	private JPEG mJPEG;
+	private BitOutputStream mBitStream;
 	private ProgressionScript mProgressionScript;
 
 
-	public JPEGImageWriter(OutputStream aOutputStream)
+	public void setBitStream(BitOutputStream aBitStream)
 	{
-		mJPEG = new JPEG();
-
-		mBitStream = new BitOutputStream(aOutputStream);
+		mBitStream = aBitStream;
 	}
 
 
-	public void write(BufferedImage aImage, int aQuality) throws IOException
+	public void write(JPEG aJPEG, BufferedImage aImage, BitOutputStream aBitStream, int aQuality, ProgressionScript aProgressionScript, FDCT aFDCT) throws IOException
 	{
+		mJPEG = aJPEG;
+		mProgressionScript = aProgressionScript;
+		mBitStream = aBitStream;
 		mJPEG.width = aImage.getWidth();
 		mJPEG.height = aImage.getHeight();
 
@@ -49,7 +52,7 @@ public class JPEGImageWriter
 		mJPEG.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(aQuality, 0);
 		mJPEG.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(aQuality, 1);
 
-		sampleImage(mJPEG.mSOFSegment, aImage, new FDCTFloat());
+		sampleImage(mJPEG.mSOFSegment, aImage, aFDCT);
 
 		create(mJPEG);
 
@@ -500,6 +503,12 @@ public class JPEGImageWriter
 	}
 
 
+	public boolean isOptimizedHuffman()
+	{
+		return mJPEG.mOptimizedHuffman;
+	}
+
+
 	public JPEGImageWriter setOptimizedHuffman(boolean aOptimizedHuffman)
 	{
 		mJPEG.mOptimizedHuffman = aOptimizedHuffman;
@@ -507,16 +516,54 @@ public class JPEGImageWriter
 	}
 
 
-	public JPEGImageWriter setProgressive(boolean aProgressive)
-	{
-		mJPEG.mProgressive = aProgressive;
-		return this;
-	}
-
-
-	public JPEGImageWriter setArithmetic(boolean aArithmetic)
-	{
-		mJPEG.mArithmetic = aArithmetic;
-		return this;
-	}
+//	public boolean isProgressive()
+//	{
+//		return mJPEG.mProgressive;
+//	}
+//
+//
+//	public JPEGImageWriter setProgressive(boolean aProgressive)
+//	{
+//		mJPEG.mProgressive = aProgressive;
+//		return this;
+//	}
+//
+//
+//	public boolean isArithmetic()
+//	{
+//		return mJPEG.mArithmetic;
+//	}
+//
+//
+//	public JPEGImageWriter setArithmetic(boolean aArithmetic)
+//	{
+//		mJPEG.mArithmetic = aArithmetic;
+//		return this;
+//	}
+//
+//
+//	public int getQuality()
+//	{
+//		return mQuality;
+//	}
+//
+//
+//	public JPEGImageWriter setQuality(int aQuality)
+//	{
+//		mQuality = aQuality;
+//		return this;
+//	}
+//
+//
+//	public ProgressionScript getProgressionScript()
+//	{
+//		return mProgressionScript;
+//	}
+//
+//
+//	public JPEGImageWriter setProgressionScript(ProgressionScript aProgressionScript)
+//	{
+//		mProgressionScript = aProgressionScript;
+//		return this;
+//	}
 }

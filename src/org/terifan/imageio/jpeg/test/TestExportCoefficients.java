@@ -15,7 +15,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.Transcode;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
@@ -33,9 +33,9 @@ public class TestExportCoefficients
 //				Graphics2D g = dest.createGraphics();
 //				g.drawImage(img, 0, 0, null);
 //				g.dispose();
-//				
+//
 //				float quality = 0.95f;
-//				
+//
 //				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 //
 //				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
@@ -55,8 +55,8 @@ public class TestExportCoefficients
 //				{
 //					new Transcode().setOptimizedHuffman(true).transcode(new ByteArrayInputStream(buffer.toByteArray()), fos);
 //				}
-//				
-//				
+//
+//
 ////				for (String type : new String[]{"-ari", "-ari-prog", "-huff", "-huff-prog"})
 ////				{
 ////					FileOutputStream fos = new FileOutputStream(new File("d:\\temp\\x", file.getName().replace(".png", type + ".jpg")));
@@ -71,7 +71,7 @@ public class TestExportCoefficients
 //		}
 //	}
 
-	
+
 	public static void main(String... args)
 	{
 		try
@@ -98,7 +98,7 @@ public class TestExportCoefficients
 		}
 	}
 
-	
+
 	private static int findDataOffset(File aFile) throws IOException
 	{
 		int o = 0;
@@ -118,7 +118,7 @@ public class TestExportCoefficients
 		}
 		return o;
 	}
-	
+
 
 	public static void xmain(String... args)
 	{
@@ -126,35 +126,33 @@ public class TestExportCoefficients
 		{
 			for (File file : new File("D:\\temp\\x").listFiles(e->e.getName().endsWith("-ari.jpg")))
 			{
-				try (FileInputStream in = new FileInputStream(file))
+				JPEGImageIO reader = new JPEGImageIO();
+				JPEG jpeg = reader.decode(file);
+
+				int[][][][] coefficients = jpeg.getCoefficients();
+
+				try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\temp\\x\\" + file.getName().replace("-ari.jpg", ".jpg") + ".data"))))
 				{
-					JPEG jpeg = new JPEGImageReader(in).decode();
+					dos.writeShort(jpeg.getCoefficients().length);
+					dos.writeShort(jpeg.getCoefficients()[0].length);
+					dos.writeShort(jpeg.getCoefficients()[0][0].length);
 
-					int[][][][] coefficients = jpeg.getCoefficients();
-
-					try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\temp\\x\\" + file.getName().replace("-ari.jpg", ".jpg") + ".data"))))
+					for (int mcuY = 0; mcuY < coefficients.length; mcuY++)
 					{
-						dos.writeShort(jpeg.getCoefficients().length);
-						dos.writeShort(jpeg.getCoefficients()[0].length);
-						dos.writeShort(jpeg.getCoefficients()[0][0].length);
-
-						for (int mcuY = 0; mcuY < coefficients.length; mcuY++)
+						for (int mcuX = 0; mcuX < coefficients[mcuY].length; mcuX++)
 						{
-							for (int mcuX = 0; mcuX < coefficients[mcuY].length; mcuX++)
+							for (int blockIndex = 0; blockIndex < coefficients[mcuY][mcuX].length; blockIndex++)
 							{
-								for (int blockIndex = 0; blockIndex < coefficients[mcuY][mcuX].length; blockIndex++)
+								for (int i = 0; i < coefficients[mcuY][mcuX][blockIndex].length; i++)
 								{
-									for (int i = 0; i < coefficients[mcuY][mcuX][blockIndex].length; i++)
-									{
-										dos.writeShort(coefficients[mcuY][mcuX][blockIndex][i]);
+									dos.writeShort(coefficients[mcuY][mcuX][blockIndex][i]);
 
-	//									System.out.printf("%5d ", coefficients[mcuY][mcuX][blockIndex][i]);
-	//									if ((i % 8) == 7) System.out.println();
-									}
-	//								System.out.println();
+//									System.out.printf("%5d ", coefficients[mcuY][mcuX][blockIndex][i]);
+//									if ((i % 8) == 7) System.out.println();
 								}
-	//							System.out.println();
+//								System.out.println();
 							}
+//							System.out.println();
 						}
 					}
 				}

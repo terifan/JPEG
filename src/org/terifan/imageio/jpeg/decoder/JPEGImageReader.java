@@ -48,11 +48,8 @@ public class JPEGImageReader
 	private String mCompressionMode;
 
 
-	public JPEGImageReader(InputStream aInputStream) throws IOException
+	public JPEGImageReader()
 	{
-		mBitStream = new BitInputStream(aInputStream);
-		mUpdateImage = true;
-		mIDCT = IDCTIntegerSlow.class;
 	}
 
 
@@ -69,40 +66,18 @@ public class JPEGImageReader
 	}
 
 
-	public JPEG decode() throws IOException
+	public JPEG getJPEG()
 	{
-		mUpdateImage = false;
-		read();
 		return mJPEG;
 	}
 
 
-	public static BufferedImage read(File aFile) throws IOException
+	public BufferedImage read(BitInputStream aInputStream, boolean aUpdateImage) throws IOException
 	{
-		try (InputStream input = new BufferedInputStream(new FileInputStream(aFile)))
-		{
-			return new JPEGImageReader(input).read();
-		}
-	}
+		mBitStream = aInputStream;
+		mUpdateImage = aUpdateImage;
+		mIDCT = IDCTIntegerSlow.class;
 
-
-	public static BufferedImage read(URL aInputStream) throws IOException
-	{
-		try (InputStream input = new BufferedInputStream(aInputStream.openStream()))
-		{
-			return new JPEGImageReader(input).read();
-		}
-	}
-
-
-	public static BufferedImage read(InputStream aInputStream) throws IOException
-	{
-		return new JPEGImageReader(aInputStream).read();
-	}
-
-
-	public BufferedImage read() throws IOException
-	{
 		try
 		{
 			int nextSegment = mBitStream.readInt16();
@@ -147,7 +122,7 @@ public class JPEGImageReader
 						new APP0Segment(mJPEG).read(mBitStream);
 						break;
 					case APP1:
-						mExif = read(mBitStream);
+						mExif = readExif(mBitStream);
 						break;
 					case APP2:
 						new APP2Segment(mJPEG).read(mBitStream);
@@ -248,7 +223,7 @@ public class JPEGImageReader
 	}
 
 
-	private Exif read(BitInputStream aBitStream) throws IOException
+	private Exif readExif(BitInputStream aBitStream) throws IOException
 	{
 		int len = aBitStream.readInt16() - 2;
 

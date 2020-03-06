@@ -9,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.terifan.imageio.jpeg.Transcode;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
 
@@ -129,14 +129,14 @@ public class TestTranscodeBatch
 
 	private static void process(byte[] aImageInData, ByteArrayOutputStream aImageOutData, File aFile, AtomicReference<BufferedImage> aImageOut, boolean aArithmetic, boolean aProgressive, boolean aOptimizedHuffman) throws IOException
 	{
-		new Transcode().setArithmetic(aArithmetic).setProgressive(aProgressive).setOptimizedHuffman(aOptimizedHuffman).transcode(new ByteArrayInputStream(aImageInData), aImageOutData);
+		new JPEGImageIO().setArithmetic(aArithmetic).setProgressive(aProgressive).setOptimizedHuffman(aOptimizedHuffman).transcode(new ByteArrayInputStream(aImageInData), aImageOutData);
 
 		try (FileOutputStream fos = new FileOutputStream(aFile))
 		{
 			aImageOutData.writeTo(fos);
 		}
 
-		aImageOut.set(JPEGImageReader.read(new ByteArrayInputStream(aImageOutData.toByteArray())));
+		aImageOut.set(new JPEGImageIO().read(new ByteArrayInputStream(aImageOutData.toByteArray())));
 	}
 
 

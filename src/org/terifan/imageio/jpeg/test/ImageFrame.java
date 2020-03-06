@@ -4,8 +4,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class ImageFrame extends JFrame
@@ -13,16 +16,29 @@ public class ImageFrame extends JFrame
 	private BufferedImage mImage;
 
 
-	public ImageFrame()
+	private ImageFrame()
 	{
-		this(null);
 	}
 
 
-	public ImageFrame(BufferedImage aImage)
+	public static void show(File aFile) throws IOException
 	{
-		mImage = aImage;
+		ImageFrame imageFrame = new ImageFrame();
+		imageFrame.mImage = new JPEGImageIO().read(aFile);
+		imageFrame.display();
+	}
 
+
+	public static void show(BufferedImage aImage)
+	{
+		ImageFrame imageFrame = new ImageFrame();
+		imageFrame.mImage = aImage;
+		imageFrame.display();
+	}
+
+
+	private void display()
+	{
 		add(new JPanel()
 		{
 			@Override
@@ -61,7 +77,6 @@ public class ImageFrame extends JFrame
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setVisible(true);
-//		setExtendedState(JFrame.MAXIMIZED_BOTH);
 	}
 
 

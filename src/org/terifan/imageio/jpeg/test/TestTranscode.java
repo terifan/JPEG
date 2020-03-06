@@ -4,12 +4,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.Transcode;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class TestTranscode
@@ -24,13 +22,13 @@ public class TestTranscode
 			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();
 
 
-			BufferedImage originalImage = JPEGImageReader.read(file);
+			BufferedImage originalImage = new JPEGImageIO().read(file);
 
 			System.out.println("=================================================================================================================================================================================");
 
 			JPEGConstants.VERBOSE = true;
 
-			new Transcode().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
+			new JPEGImageIO().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
 
 //			transImageData.writeTo(new FileOutputStream("d:\\dev\\macos-catalina-cb-3840x2160-transcoded.jpg"));
 
@@ -44,7 +42,7 @@ public class TestTranscode
 //			BufferedImage transImage = JPEGImageReader.read(new URL("file:///d:/dev/macos-catalina-cb-3840x2160-transcoded.jpg"));
 //			JPEGConstants.VERBOSE = false;
 
-			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
+			BufferedImage transImage = new JPEGImageIO().read(new ByteArrayInputStream(transImageData.toByteArray()));
 //			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
 
 			BufferedImage javaImage = ImageIO.read(file);
@@ -80,7 +78,7 @@ public class TestTranscode
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
 
-			ImageFrame imagePane = new ImageFrame(image);
+			ImageFrame.show(image);
 		}
 		catch (Throwable e)
 		{

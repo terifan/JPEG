@@ -2,7 +2,7 @@ package org.terifan.imageio.jpeg.test;
 
 import java.io.File;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class TestBatch
@@ -23,7 +23,7 @@ public class TestBatch
 
 					try
 					{
-						JPEGImageReader.read(file);
+						new JPEGImageIO().read(file);
 					}
 					catch (Throwable e)
 					{

@@ -2,7 +2,7 @@ package org.terifan.imageio.jpeg.test;
 
 import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class TestLoad
@@ -13,9 +13,9 @@ public class TestLoad
 		{
 			JPEGConstants.VERBOSE = true;
 
-			BufferedImage myImage = JPEGImageReader.read(TestLoad.class.getResource("Swallowtail-ari-prog.jpg"));
+			BufferedImage myImage = new JPEGImageIO().read(TestLoad.class.getResource("Swallowtail-ari-prog.jpg"));
 
-			ImageFrame imagePane = new ImageFrame(myImage);
+			ImageFrame.show(myImage);
 		}
 		catch (Throwable e)
 		{

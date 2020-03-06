@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 
 
 public class TestHuff
@@ -24,7 +24,7 @@ public class TestHuff
 
 			JPEGConstants.VERBOSE = true;
 
-			BufferedImage myImage = JPEGImageReader.read(input);
+			BufferedImage myImage = new JPEGImageIO().read(input);
 			BufferedImage javaImage = ImageIO.read(input);
 
 			BufferedImage diff = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -64,7 +64,7 @@ public class TestHuff
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + input.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + input.getName() + "_delta.png"));
 
-			ImageFrame imagePane = new ImageFrame(image);
+			ImageFrame.show(image);
 		}
 		catch (Throwable e)
 		{

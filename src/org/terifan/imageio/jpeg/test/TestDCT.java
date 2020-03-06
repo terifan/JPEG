@@ -15,6 +15,7 @@ import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
+import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
 
 
@@ -90,9 +91,9 @@ public class TestDCT
 
 			URL jpegResource = Test.class.getResource("Swallowtail.jpg");
 
-			BufferedImage image1 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTFloat.class).read();
-			BufferedImage image2 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTIntegerFast.class).read();
-			BufferedImage image3 = new JPEGImageReader(jpegResource.openStream()).setIDCT(IDCTIntegerSlow.class).read();
+			BufferedImage image1 = new JPEGImageIO().setIDCT(IDCTFloat.class).read(jpegResource.openStream());
+			BufferedImage image2 = new JPEGImageIO().setIDCT(IDCTIntegerFast.class).read(jpegResource.openStream());
+			BufferedImage image3 = new JPEGImageIO().setIDCT(IDCTIntegerSlow.class).read(jpegResource.openStream());
 
 			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight()*2, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = image.createGraphics();
@@ -101,7 +102,7 @@ public class TestDCT
 			g.drawImage(image3, 0*image1.getWidth(), 1*image1.getHeight(), null);
 			g.dispose();
 
-			ImageFrame imagePane = new ImageFrame(image);
+			ImageFrame.show(image);
 		}
 		catch (Throwable e)
 		{
