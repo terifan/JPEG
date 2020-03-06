@@ -18,8 +18,8 @@ public class TestTranscode
 	{
 		try
 		{
-//			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
-			URL file = new URL("file:///d:/dev/macos-catalina-cb-3840x2160-original.jpg");
+			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
+//			URL file = new URL("file:///d:/dev/macos-catalina-cb-3840x2160-original.jpg");
 
 			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();
 
@@ -41,10 +41,10 @@ public class TestTranscode
 			System.out.println("=================================================================================================================================================================================");
 
 //			JPEGConstants.VERBOSE = true;
-			BufferedImage transImage = JPEGImageReader.read(new URL("file:///d:/dev/macos-catalina-cb-3840x2160-transcoded.jpg"));
+//			BufferedImage transImage = JPEGImageReader.read(new URL("file:///d:/dev/macos-catalina-cb-3840x2160-transcoded.jpg"));
 //			JPEGConstants.VERBOSE = false;
 
-//			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
+			BufferedImage transImage = JPEGImageReader.read(new ByteArrayInputStream(transImageData.toByteArray()));
 //			BufferedImage transImage = ImageIO.read(new ByteArrayInputStream(transImageData.toByteArray()));
 
 			BufferedImage javaImage = ImageIO.read(file);

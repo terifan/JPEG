@@ -929,7 +929,7 @@ public class HuffmanEncoder implements Encoder
 				r -= 16;
 				/* Emit buffered correction bits that must be associated with ZRL */
 				emit_buffered_bits(entropy, BR_buffer, BR_offset, BR);
-				BR_buffer = entropy.bit_buffer;
+				BR_offset = 0;
 				/* BE bits are gone now */
 				BR = 0;
 			}
@@ -942,7 +942,7 @@ public class HuffmanEncoder implements Encoder
 			if (temp > 1)
 			{
 				/* The correction bit is the next bit of the absolute value. */
-				BR_buffer[BR++] = (temp & 1);
+				BR_buffer[BR_offset + BR++] = (temp & 1);
 				continue;
 			}
 
@@ -958,7 +958,7 @@ public class HuffmanEncoder implements Encoder
 
 			/* Emit buffered correction bits that must be associated with this code */
 			emit_buffered_bits(entropy, BR_buffer, BR_offset, BR);
-			BR_buffer = entropy.bit_buffer;
+			BR_offset = 0;
 			/* BE bits are gone now */
 			BR = 0;
 			r = 0;
