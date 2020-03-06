@@ -6,6 +6,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.terifan.imageio.jpeg.Transcode;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 
@@ -38,72 +41,78 @@ public class TestTranscodeBatch
 
 					try
 					{
-						ByteArrayOutputStream ariData = new ByteArrayOutputStream();
-						ByteArrayOutputStream ariProgData = new ByteArrayOutputStream();
-						ByteArrayOutputStream huffProgData = new ByteArrayOutputStream();
-						ByteArrayOutputStream huffOptData = new ByteArrayOutputStream();
-						ByteArrayOutputStream huffData = new ByteArrayOutputStream();
+						File ariSeqFile = new File(new File(out, "jpg-ari"), file.getName());
+						File ariProFile = new File(new File(out, "jpg-ari-prog"), file.getName());
+						File hufSeqFile = new File(new File(out, "jpg-huff"), file.getName());
+						File hufProFile = new File(new File(out, "jpg-huff-prog"), file.getName());
+						File hufOptFile = new File(new File(out, "jpg-huff-opt"), file.getName());
 
-						new Transcode().setArithmetic(true).setProgressive(false).transcode(new ByteArrayInputStream(data), ariData);
-						new Transcode().setArithmetic(true).setProgressive(true).transcode(new ByteArrayInputStream(data), ariProgData);
-						new Transcode().setArithmetic(false).setProgressive(true).setOptimizedHuffman(true).transcode(new ByteArrayInputStream(data), huffProgData);
-						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(true).transcode(new ByteArrayInputStream(data), huffOptData);
-						new Transcode().setArithmetic(false).setProgressive(false).setOptimizedHuffman(false).transcode(new ByteArrayInputStream(data), huffData);
+						ByteArrayOutputStream ariSeqData = new ByteArrayOutputStream();
+						ByteArrayOutputStream ariProData = new ByteArrayOutputStream();
+						ByteArrayOutputStream hufProData = new ByteArrayOutputStream();
+						ByteArrayOutputStream hufOptData = new ByteArrayOutputStream();
+						ByteArrayOutputStream hufSeqData = new ByteArrayOutputStream();
 
-						File ariFile = new File(new File(out, "jpg-ari"), file.getName());
-						File ariProgFile = new File(new File(out, "jpg-ari-prog"), file.getName());
-						File huffFile = new File(new File(out, "jpg-huff"), file.getName());
-						File huffProgFile = new File(new File(out, "jpg-huff-prog"), file.getName());
-						File huffOptFile = new File(new File(out, "jpg-huff-opt"), file.getName());
+						AtomicReference<BufferedImage> ariSeqImage = new AtomicReference<>();
+						AtomicReference<BufferedImage> ariProImage = new AtomicReference<>();
+						AtomicReference<BufferedImage> hufSeqImage = new AtomicReference<>();
+						AtomicReference<BufferedImage> hufProImage = new AtomicReference<>();
+						AtomicReference<BufferedImage> hufOptImage = new AtomicReference<>();
 
-						try (FileOutputStream fos = new FileOutputStream(ariFile))
+						AtomicInteger c0 = new AtomicInteger();
+						AtomicInteger c1 = new AtomicInteger();
+						AtomicInteger c2 = new AtomicInteger();
+						AtomicInteger c3 = new AtomicInteger();
+						AtomicInteger c4 = new AtomicInteger();
+						AtomicInteger c5 = new AtomicInteger();
+						AtomicInteger c6 = new AtomicInteger();
+						AtomicInteger c7 = new AtomicInteger();
+						AtomicInteger c8 = new AtomicInteger();
+						AtomicInteger c9 = new AtomicInteger();
+
+						try (FixedThreadExecutor ex  = new FixedThreadExecutor(1f))
 						{
-							ariData.writeTo(fos);
+							ex.submit(()->process(data, ariSeqData, ariSeqFile, ariSeqImage, true, false, false));
+							ex.submit(()->process(data, ariProData, ariProFile, ariProImage, true, true, false));
+							ex.submit(()->process(data, hufSeqData, hufSeqFile, hufSeqImage, false, false, false));
+							ex.submit(()->process(data, hufOptData, hufOptFile, hufOptImage, false, false, true));
+							ex.submit(()->process(data, hufProData, hufProFile, hufProImage, false, true, false));
 						}
 
-						try (FileOutputStream fos = new FileOutputStream(ariProgFile))
+						try (FixedThreadExecutor ex  = new FixedThreadExecutor(1f))
 						{
-							ariProgData.writeTo(fos);
+							ex.submit(()->compare(c0, ariSeqImage, ariProImage));
+							ex.submit(()->compare(c1, ariSeqImage, hufSeqImage));
+							ex.submit(()->compare(c2, ariSeqImage, hufOptImage));
+							ex.submit(()->compare(c3, ariSeqImage, hufProImage));
+							ex.submit(()->compare(c4, ariProImage, hufOptImage));
+							ex.submit(()->compare(c5, ariProImage, hufProImage));
+							ex.submit(()->compare(c6, ariProImage, hufSeqImage));
+							ex.submit(()->compare(c7, hufSeqImage, hufOptImage));
+							ex.submit(()->compare(c8, hufSeqImage, hufProImage));
+							ex.submit(()->compare(c9, hufProImage, hufOptImage));
 						}
 
-						try (FileOutputStream fos = new FileOutputStream(huffOptFile))
-						{
-							huffOptData.writeTo(fos);
-						}
+						boolean err = c0.get() != 0 || c1.get() != 0 || c2.get() != 0 || c3.get() != 0;
 
-						try (FileOutputStream fos = new FileOutputStream(huffProgFile))
-						{
-							huffProgData.writeTo(fos);
-						}
+						String z = c0+" "+c1+" "+c2+" "+c3+" "+c4+" "+c5+" "+c6+" "+c7+" "+c8+" "+c9;
 
-						try (FileOutputStream fos = new FileOutputStream(huffFile))
-						{
-							huffData.writeTo(fos);
-						}
+						System.out.printf("%-50s  %-5s  ari=%8d  ariProg=%8d  huff=%8d  huffProg=%8d  huffOpt=%8d  ariOverHuff=%8d (%6.3f)  %s%n", z, err?"ERROR":"OK", ariSeqData.size(), ariProData.size(), hufSeqData.size(), hufProData.size(), hufOptData.size(), hufProData.size()-ariProData.size(), 100*(hufProData.size()-ariProData.size())/(double)hufProData.size(), file.getAbsolutePath());
 
-						BufferedImage imageAri = JPEGImageReader.read(ariFile);
-						BufferedImage imageAriProg = JPEGImageReader.read(ariProgFile);
-						BufferedImage imageHuff = JPEGImageReader.read(huffFile);
-						BufferedImage imageHuffProg = JPEGImageReader.read(huffProgFile);
-						BufferedImage imageHuffOpt = JPEGImageReader.read(huffOptFile);
-
-						boolean err = compare(imageAri, imageAriProg) != 0 || compare(imageAri, imageHuff) != 0 || compare(imageAri, imageHuffOpt) != 0 || compare(imageAri, imageHuffProg) != 0;
-
-						String z = compare(imageAri, imageAriProg)+" "+compare(imageHuff, imageHuffOpt)+" "+compare(imageHuff, imageHuffProg)+" "+compare(imageHuff, imageAri)+" "+compare(imageHuff, imageAriProg)+" "+compare(imageHuffProg, imageAri)+" "+compare(imageHuffProg, imageAriProg);
-
-						System.out.printf("%-50s  %-5s  ari=%8d  ariProg=%8d  huff=%8d  huffProg=%8d  huffOpt=%8d  ariOverHuff=%8d (%6.3f)  %s%n", z, err?"ERROR":"OK", ariData.size(), ariProgData.size(), huffData.size(), huffProgData.size(), huffOptData.size(), huffProgData.size()-ariProgData.size(), 100*(huffProgData.size()-ariProgData.size())/(double)huffProgData.size(), file.getName());
-
-						totalAriLength += ariData.size();
-						totalAriProgLength += ariProgData.size();
-						totalHuffOptLength += huffOptData.size();
-						totalHuffProgLength += huffProgData.size();
-						totalHuffLength += huffData.size();
+						totalAriLength += ariSeqData.size();
+						totalAriProgLength += ariProData.size();
+						totalHuffOptLength += hufOptData.size();
+						totalHuffProgLength += hufProData.size();
+						totalHuffLength += hufSeqData.size();
 
 //						if(true) break;
 					}
 					catch (Throwable e)
 					{
+						System.out.println("------------------------------------------------------------------------------------------");
+						System.out.println(file);
 						e.printStackTrace(System.out);
+						System.out.println("------------------------------------------------------------------------------------------");
 					}
 				}
 			}
@@ -118,19 +127,36 @@ public class TestTranscodeBatch
 	}
 
 
-	private static int compare(BufferedImage aImage1, BufferedImage aImage2)
+	private static void process(byte[] aImageInData, ByteArrayOutputStream aImageOutData, File aFile, AtomicReference<BufferedImage> aImageOut, boolean aArithmetic, boolean aProgressive, boolean aOptimizedHuffman) throws IOException
 	{
-		int err = 0;
-		for (int y = 0; y < aImage2.getHeight(); y++)
+		new Transcode().setArithmetic(aArithmetic).setProgressive(aProgressive).setOptimizedHuffman(aOptimizedHuffman).transcode(new ByteArrayInputStream(aImageInData), aImageOutData);
+
+		try (FileOutputStream fos = new FileOutputStream(aFile))
 		{
-			for (int x = 0; x < aImage2.getWidth(); x++)
+			aImageOutData.writeTo(fos);
+		}
+
+		aImageOut.set(JPEGImageReader.read(new ByteArrayInputStream(aImageOutData.toByteArray())));
+	}
+
+
+	private static void compare(AtomicInteger aResult, AtomicReference<BufferedImage> aImage1, AtomicReference<BufferedImage> aImage2)
+	{
+		BufferedImage img1 = aImage1.get();
+		BufferedImage img2 = aImage2.get();
+
+		int err = 0;
+		for (int y = 0; y < img2.getHeight(); y++)
+		{
+			for (int x = 0; x < img2.getWidth(); x++)
 			{
-				if (aImage2.getRGB(x, y) != aImage1.getRGB(x, y))
+				if (img2.getRGB(x, y) != img1.getRGB(x, y))
 				{
 					err++;
 				}
 			}
 		}
-		return err;
+
+		aResult.set(err);
 	}
 }

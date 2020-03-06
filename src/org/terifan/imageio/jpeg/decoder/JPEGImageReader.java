@@ -123,7 +123,7 @@ public class JPEGImageReader
 				{
 					nextSegment = mBitStream.readInt16();
 
-					if ((nextSegment & 0xFF00) != 0xFF00)
+					if ((nextSegment & 0xFF00) != 0xFF00 || nextSegment == -1)
 					{
 						updateImage();
 
@@ -232,10 +232,6 @@ public class JPEGImageReader
 						break;
 				}
 			}
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
 		}
 		finally
 		{
