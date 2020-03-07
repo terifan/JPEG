@@ -112,7 +112,7 @@ public class JPEGImageIO
 		jpeg.mProgressive = mProgressive;
 		jpeg.mOptimizedHuffman = mOptimizedHuffman;
 		jpeg.mRestartInterval = 0;
-System.out.println("trans");
+
 		encode(jpeg, aOutput);
 	}
 

@@ -150,8 +150,6 @@ public class SOSSegment extends Segment
 			comp.setTableAC(getACTable(scanComponentIndex));
 			comp.setTableDC(getDCTable(scanComponentIndex));
 
-			System.out.println(comp);
-
 			mJPEG.cur_comp_info[scanComponentIndex] = comp;
 
 			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)

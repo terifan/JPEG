@@ -17,33 +17,13 @@ public class SaveJPEGDemo
 		{
 			URL input = R.class.getResource("Swallowtail-huff-opt-prog.jpg");
 
-			BufferedImage myImage = new JPEGImageIO()
-//				.setLog(System.out)
-				.read(input);
-
-//			System.out.println("************************************************************************************************************************************");
-//			System.out.println("************************************************************************************************************************************");
-			System.out.println("************************************************************************************************************************************");
+			BufferedImage myImage = new JPEGImageIO().read(input);
 
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			new JPEGImageIO().setArithmetic(true).setOptimizedHuffman(true).setProgressive(true).setQuality(93.36).setProgressionScript(null)
-//				.setLog(System.out)
-				.write(myImage, output);
+			new JPEGImageIO().setArithmetic(!true).setOptimizedHuffman(true).setProgressive(true).setQuality(95).setProgressionScript(null).setLog(System.out).write(myImage, output);
 
-			System.out.println("************************************************************************************************************************************");
-
-			new JPEGImageIO().setArithmetic(true).setOptimizedHuffman(true).setProgressive(true).setQuality(93.36).setProgressionScript(null)
-//				.setLog(System.out)
-//				.write(myImage, output);
-				.transcode(input, new ByteArrayOutputStream());
-
-			System.out.println("************************************************************************************************************************************");
-
-			myImage = new JPEGImageIO()
-//				.setLog(System.out)
-				.read(output);
-
+			myImage = new JPEGImageIO().read(output);
 
 			ImageFrame.show(myImage).setTitle("" + output.length());
 		}
