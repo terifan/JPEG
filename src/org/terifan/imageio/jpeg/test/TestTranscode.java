@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.test;
 
+import org.terifan.imageio.jpeg.examples._ImageWindow;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -75,7 +76,7 @@ public class TestTranscode
 //			ImageIO.write(javaImage, "png", new File("d:\\temp\\" + file.getName() + "_java.png"));
 //			ImageIO.write(diff, "png", new File("d:\\temp\\" + file.getName() + "_delta.png"));
 
-			ImageFrame.show(image);
+			_ImageWindow.show(image);
 		}
 		catch (Throwable e)
 		{

@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg;
 import java.awt.color.ICC_Profile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 

@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.URL;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
-import org.terifan.imageio.jpeg.test.ImageFrame;
 
 
 public class TranscodeJPEGDemo
@@ -19,7 +18,7 @@ public class TranscodeJPEGDemo
 
 			new JPEGImageIO().setArithmetic(true).setProgressive(true).transcode(input, output);
 
-			ImageFrame.show(output).setTitle("" + output.length());
+			_ImageWindow.show(output).setTitle("" + output.length());
 		}
 		catch (Throwable e)
 		{

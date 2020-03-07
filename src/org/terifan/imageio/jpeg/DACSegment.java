@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;

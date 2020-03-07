@@ -5,7 +5,6 @@ import java.io.File;
 import java.net.URL;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
-import org.terifan.imageio.jpeg.test.ImageFrame;
 
 
 public class SaveJPEGDemo
@@ -24,7 +23,7 @@ public class SaveJPEGDemo
 
 			myImage = new JPEGImageIO().read(output);
 
-			ImageFrame.show(myImage).setTitle("" + output.length());
+			_ImageWindow.show(myImage).setTitle("" + output.length());
 		}
 		catch (Throwable e)
 		{

@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.test;
 
+import org.terifan.imageio.jpeg.examples._ImageWindow;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,7 +40,7 @@ public class TestTranscode2
 //			BufferedImage image = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
 			BufferedImage image = new JPEGImageIO().read(new ByteArrayInputStream(baos.toByteArray()));
 
-			ImageFrame.show(image);
+			_ImageWindow.show(image);
 		}
 		catch (Throwable e)
 		{

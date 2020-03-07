@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_16_BITS;
