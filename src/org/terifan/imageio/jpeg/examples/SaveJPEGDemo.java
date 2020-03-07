@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg.examples;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URL;
 import org.terifan.imageio.jpeg.JPEGImageIO;
@@ -21,7 +20,7 @@ public class SaveJPEGDemo
 
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			new JPEGImageIO().setArithmetic(!true).setOptimizedHuffman(true).setProgressive(true).setQuality(95).setProgressionScript(null).setLog(System.out).write(myImage, output);
+			new JPEGImageIO().setArithmetic(true).setOptimizedHuffman(true).setProgressive(true).setQuality(95).setProgressionScript(null).setLog(System.out).write(myImage, output);
 
 			myImage = new JPEGImageIO().read(output);
 
