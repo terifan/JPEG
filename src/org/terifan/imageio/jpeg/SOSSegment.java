@@ -1,12 +1,11 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOSSegment
+public class SOSSegment extends Segment
 {
 	private int[] mComponentIds;
 	private int[] mTableAC;
@@ -23,7 +22,8 @@ public class SOSSegment
 	}
 
 
-	public SOSSegment read(BitInputStream aBitStream) throws IOException
+	@Override
+	public SOSSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 
@@ -49,53 +49,14 @@ public class SOSSegment
 		mJPEG.Al = aBitStream.readBits(4);
 		mJPEG.comps_in_scan = getNumComponents();
 
-		if (VERBOSE)
-		{
-			log();
-		}
-
 		return this;
 	}
 
 
-	public void log()
+	@Override
+	public SOSSegment encode(BitOutputStream aBitStream) throws IOException
 	{
-		System.out.println("SOSMarkerSegment");
-		System.out.println("  {ss=" + mJPEG.Ss + ", se=" + mJPEG.Se + ", ah=" + mJPEG.Ah + ", al=" + mJPEG.Al + "}");
-		System.out.println("  numComponents=" + mJPEG.comps_in_scan);
-
-		for (int i = 0; i < mJPEG.comps_in_scan; i++)
-		{
-			String component;
-			switch (mComponentIds[i])
-			{
-				case ComponentInfo.Y:
-					component = "Y";
-					break;
-				case ComponentInfo.CB:
-					component = "Cb";
-					break;
-				case ComponentInfo.CR:
-					component = "Cr";
-					break;
-				case ComponentInfo.I:
-					component = "I";
-					break;
-				case ComponentInfo.Q:
-					component = "Q";
-					break;
-				default:
-					component = "<error>";
-			}
-
-			System.out.println("    {component=" + component + ", dc-table=" + mTableDC[i] + ", ac-table=" + mTableAC[i] + "}");
-		}
-	}
-
-
-	public SOSSegment write(BitOutputStream aBitStream) throws IOException
-	{
-		aBitStream.writeInt16(JPEGConstants.SOS);
+		aBitStream.writeInt16(SegmentMarker.SOS.CODE);
 		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);
 
 		aBitStream.writeInt8(mComponentIds.length);
@@ -103,14 +64,29 @@ public class SOSSegment
 		for (int i = 0; i < mComponentIds.length; i++)
 		{
 			aBitStream.writeInt8(mComponentIds[i]);
-			aBitStream.writeBits(mTableDC[i], 4);
-			aBitStream.writeBits(mTableAC[i], 4);
+			aBitStream.writeInt8((mTableDC[i] << 4)  + mTableAC[i]);
 		}
 
 		aBitStream.writeInt8(mJPEG.Ss);
 		aBitStream.writeInt8(mJPEG.Se);
-		aBitStream.writeBits(mJPEG.Ah, 4);
-		aBitStream.writeBits(mJPEG.Al, 4);
+		aBitStream.writeInt8((mJPEG.Ah << 4) + mJPEG.Al);
+
+		return this;
+	}
+
+
+	@Override
+	public SOSSegment print(Log aLog) throws IOException
+	{
+		aLog.println("SOS segment");
+		aLog.println("  coefficient partitioning");
+		aLog.println("    ss=%d, se=%d, ah=%d, al=%d", mJPEG.Ss, mJPEG.Se, mJPEG.Ah, mJPEG.Al);
+
+		for (int i = 0; i < mJPEG.comps_in_scan; i++)
+		{
+			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 0*1].name());
+			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
+		}
 
 		return this;
 	}
@@ -168,11 +144,6 @@ public class SOSSegment
 		mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
 		mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
 
-		if (VERBOSE)
-		{
-			System.out.println("MCU");
-		}
-
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 		{
 			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
@@ -184,11 +155,6 @@ public class SOSSegment
 			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
 			{
 				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
-			}
-
-			if (VERBOSE)
-			{
-				System.out.println("  " + comp);
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package org.terifan.imageio.jpeg.encoder;
+package org.terifan.imageio.jpeg;
 
 
 public class JPEGImageIOException extends RuntimeException

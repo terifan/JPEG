@@ -1,21 +1,13 @@
 package org.terifan.imageio.jpeg.test;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Random;
-import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
 import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
 
 
@@ -38,7 +30,7 @@ public class TestDCT
 			int[] enc;
 			int[] dec;
 
-			System.out.println("\nFDCTIntegerFast");
+			System.out.println("\nFDCTIntegerFast > IDCTFloat");
 
 			enc = original.clone();
 			new FDCTIntegerFast().transform(enc, qt);
@@ -46,7 +38,7 @@ public class TestDCT
 			new IDCTFloat().transform(dec, qt);
 			printTables(new int[][]{original,enc,dec,delta(original,dec)});
 
-			System.out.println("\nFDCTFloat");
+			System.out.println("\nFDCTFloat > IDCTFloat");
 
 			enc = original.clone();
 			new FDCTFloat().transform(enc, qt);
@@ -54,7 +46,7 @@ public class TestDCT
 			new IDCTFloat().transform(dec, qt);
 			printTables(new int[][]{original,enc,dec,delta(original,dec)});
 
-			System.out.println("\nFDCTIntegerSlow");
+			System.out.println("\nFDCTIntegerSlow > IDCTFloat");
 
 			enc = original.clone();
 			new FDCTIntegerSlow().transform(enc, qt);
@@ -64,7 +56,7 @@ public class TestDCT
 
 			System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
-			System.out.println("\nIDCTIntegerFast");
+			System.out.println("\nFDCTFloat > IDCTIntegerFast");
 
 			enc = original.clone();
 			new FDCTFloat().transform(enc, qt);
@@ -72,7 +64,7 @@ public class TestDCT
 			new IDCTIntegerFast().transform(dec, qt);
 			printTables(new int[][]{original, enc, dec,delta(original,dec)});
 
-			System.out.println("\nIDCTFloat");
+			System.out.println("\nFDCTFloat > IDCTFloat");
 
 			enc = original.clone();
 			new FDCTFloat().transform(enc, qt);
@@ -80,29 +72,13 @@ public class TestDCT
 			new IDCTFloat().transform(dec, qt);
 			printTables(new int[][]{original, enc, dec,delta(original,dec)});
 
-			System.out.println("\nIDCTIntegerSlow");
+			System.out.println("\nFDCTFloat > IDCTIntegerSlow");
 
 			enc = original.clone();
 			new FDCTFloat().transform(enc, qt);
 			dec = enc.clone();
 			new IDCTIntegerSlow().transform(dec, qt);
 			printTables(new int[][]{original, enc, dec,delta(original,dec)});
-
-
-			URL jpegResource = Test.class.getResource("Swallowtail.jpg");
-
-			BufferedImage image1 = new JPEGImageIO().setIDCT(IDCTFloat.class).read(jpegResource.openStream());
-			BufferedImage image2 = new JPEGImageIO().setIDCT(IDCTIntegerFast.class).read(jpegResource.openStream());
-			BufferedImage image3 = new JPEGImageIO().setIDCT(IDCTIntegerSlow.class).read(jpegResource.openStream());
-
-			BufferedImage image = new BufferedImage(image1.getWidth()*2, image1.getHeight()*2, BufferedImage.TYPE_INT_RGB);
-			Graphics2D g = image.createGraphics();
-			g.drawImage(image1, 0*image1.getWidth(), 0*image1.getHeight(), null);
-			g.drawImage(image2, 1*image1.getWidth(), 0*image1.getHeight(), null);
-			g.drawImage(image3, 0*image1.getWidth(), 1*image1.getHeight(), null);
-			g.dispose();
-
-			ImageFrame.show(image);
 		}
 		catch (Throwable e)
 		{

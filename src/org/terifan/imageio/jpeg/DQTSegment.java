@@ -1,15 +1,15 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_16_BITS;
 import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_8_BITS;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DQTSegment
+public class DQTSegment extends Segment
 {
 	private JPEG mJPEG;
 
@@ -20,7 +20,8 @@ public class DQTSegment
 	}
 
 
-	public void read(BitInputStream aBitStream) throws IOException
+	@Override
+	public DQTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -30,7 +31,7 @@ public class DQTSegment
 
 			mJPEG.mQuantizationTables[table.getIdentity()] = table;
 
-			length -= 1 + table.getPrecision() * 64;
+			length -= 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 128);
 
 			if (length < 0)
 			{
@@ -38,6 +39,43 @@ public class DQTSegment
 			}
 		}
 		while (length > 0);
+
+		return this;
+	}
+
+
+	@Override
+	public DQTSegment encode(BitOutputStream aBitStream) throws IOException
+	{
+		for (QuantizationTable table : mJPEG.mQuantizationTables)
+		{
+			if (table == null)
+			{
+				continue;
+			}
+
+			int len = 2 + 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 128);
+
+			aBitStream.writeInt16(SegmentMarker.DQT.CODE);
+			aBitStream.writeInt16(len);
+			aBitStream.writeInt8(((table.getPrecision() == PRECISION_8_BITS ? 0 : 1) << 3) | table.getIdentity());
+
+			double[] data = table.getDivisors();
+
+			for (int i = 0; i < 64; i++)
+			{
+				double v = data[NATURAL_ORDER[i]];
+
+				if (table.getPrecision() == PRECISION_16_BITS)
+				{
+					v *= 256.0;
+				}
+
+				aBitStream.write((int)v);
+			}
+		}
+
+		return this;
 	}
 
 
@@ -47,66 +85,40 @@ public class DQTSegment
 		int identity = temp & 0x07;
 		int precision = (temp >> 3) == 0 ? PRECISION_8_BITS : PRECISION_16_BITS;
 
-		double[] table = new double[64];
+		double[] data = new double[64];
 
 		for (int i = 0; i < 64; i++)
 		{
 			if (precision == PRECISION_8_BITS)
 			{
-				table[NATURAL_ORDER[i]] = aBitStream.readInt8();
+				data[NATURAL_ORDER[i]] = aBitStream.readInt8();
 			}
 			else
 			{
-				table[NATURAL_ORDER[i]] = aBitStream.readInt16() / 256.0;
+				data[NATURAL_ORDER[i]] = aBitStream.readInt16() / 256.0;
 			}
 		}
 
-		if (VERBOSE)
-		{
-			System.out.println("DQTMarkerSegment");
-			System.out.println("  identity=" + identity);
-			System.out.println("  precision=" + (precision == PRECISION_8_BITS ? 8 : 16) + " bits");
-
-			for (int row = 0, i = 0; row < 8; row++)
-			{
-				System.out.print("  ");
-				for (int col = 0; col < 8; col++, i++)
-				{
-					System.out.printf("%7.3f ", table[i]);
-				}
-				System.out.println();
-			}
-		}
-
-		return new QuantizationTable(identity, precision, table);
+		return new QuantizationTable(identity, precision, data);
 	}
 
 
-	public void write(BitOutputStream aBitStream) throws IOException
+	@Override
+	public DQTSegment print(Log aLog) throws IOException
 	{
+		aLog.println("DQT segment");
 		for (QuantizationTable table : mJPEG.mQuantizationTables)
 		{
-			if (table == null)
+			if (table != null)
 			{
-				continue;
-			}
+				aLog.println("  identity=%d, precision=%d bits", table.getIdentity(), table.getPrecision() == PRECISION_8_BITS ? 8 : 16);
 
-			aBitStream.writeInt16(JPEGConstants.DQT);
-			aBitStream.writeInt16(2 + 1 + 64 * table.getPrecision());
-
-			aBitStream.writeInt8((table.getPrecision() == PRECISION_16_BITS ? 1 : 0) | table.getIdentity()); // 8 bit precision
-
-			for (int i = 0; i < 64; i++)
-			{
-				double v = table.getDivisors()[NATURAL_ORDER[i]];
-
-				if (table.getPrecision() == PRECISION_16_BITS)
+				if (aLog.isDetailed())
 				{
-					v *= 256;
+					table.print(aLog);
 				}
-
-				aBitStream.write((int)v);
 			}
 		}
+		return this;
 	}
 }

@@ -2,6 +2,7 @@ package org.terifan.imageio.jpeg.exif;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import org.terifan.imageio.jpeg.Log;
 
 
 public class Exif
@@ -145,11 +146,11 @@ public class Exif
 	}
 
 
-	public void print()
+	public void print(String aIndent, Log aLog)
 	{
 		for (ExifTable table : mTables)
 		{
-			table.print("");
+			table.print(aLog, aIndent);
 		}
 	}
 

@@ -3,6 +3,7 @@ package org.terifan.imageio.jpeg.exif;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import org.terifan.imageio.jpeg.Log;
 
 
 /**
@@ -253,7 +254,7 @@ public class ExifTable
 			default:
 				if (VERBOSE)
 				{
-					System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s\n", aTag, aLength, aValue, format);
+					System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s", aTag, aLength, aValue, format);
 				}
 				output = null;
 				break;
@@ -510,19 +511,19 @@ public class ExifTable
 	}
 
 
-	void print(String aIndent)
+	void print(Log aLog, String aIndent)
 	{
-		System.out.println(aIndent + "Exif table");
+		aLog.println("%s Exif table", aIndent);
 		aIndent += "\t";
 
 		for (ExifEntry entry : mEntries)
 		{
-			System.out.println(aIndent + entry);
+			aLog.println("%s%s", aIndent, entry);
 		}
 
 		for (ExifTable table : mTables)
 		{
-			table.print(aIndent);
+			table.print(aLog, aIndent);
 		}
 	}
 

@@ -1,15 +1,16 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DACSegment
+public class DACSegment extends Segment
 {
 	private JPEG mJPEG;
+	private SOSSegment mSOSSegment;
 
 
 	public DACSegment(JPEG aJPEG)
@@ -18,11 +19,17 @@ public class DACSegment
 	}
 
 
-	public void read(BitInputStream aBitStream) throws IOException
+	public DACSegment(JPEG aJPEG, SOSSegment aSOSSegment)
+	{
+		mJPEG = aJPEG;
+		mSOSSegment = aSOSSegment;
+	}
+
+
+	@Override
+	public DACSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
-
-		if (VERBOSE) System.out.println("DACMarkerSegment");
 
 		while (length > 0)
 		{
@@ -37,20 +44,12 @@ public class DACSegment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-				if (VERBOSE) System.out.println("  arith_ac_K[" + index + "]=" + val);
-
 				mJPEG.arith_ac_K[index - NUM_ARITH_TBLS] = val;
 			}
 			else // define DC table
 			{
 				mJPEG.arith_dc_U[index] = val >> 4;
 				mJPEG.arith_dc_L[index] = val & 0x0F;
-
-				if (VERBOSE)
-				{
-					System.out.println("  arith_dc_L[" + index + "]=" + mJPEG.arith_dc_L[index]);
-					System.out.println("  arith_dc_U[" + index + "]=" + mJPEG.arith_dc_U[index]);
-				}
 
 				if (mJPEG.arith_dc_L[index] > mJPEG.arith_dc_U[index])
 				{
@@ -63,10 +62,13 @@ public class DACSegment
 		{
 			throw new IllegalArgumentException("Bad DAC segment: remaining: " + length);
 		}
+
+		return this;
 	}
 
 
-	public void write(BitOutputStream aBitStream, SOSSegment aSOSSegment) throws IOException
+	@Override
+	public DACSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		int ac = 0;
 		for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
@@ -74,16 +76,16 @@ public class DACSegment
 			boolean found = false;
 			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
-				found = aSOSSegment.getACTable(scanComponentIndex) == i;
-			}			
+				found = mSOSSegment.getACTable(scanComponentIndex) == i;
+			}
 
 			if (found)
 			{
 				ac++;
 			}
 		}
-		
-		aBitStream.writeInt16(JPEGConstants.DAC);
+
+		aBitStream.writeInt16(SegmentMarker.DAC.CODE);
 		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + ac));
 
 		for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
@@ -96,8 +98,8 @@ public class DACSegment
 			boolean found = false;
 			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
-				found = aSOSSegment.getACTable(scanComponentIndex) == i;
-			}			
+				found = mSOSSegment.getACTable(scanComponentIndex) == i;
+			}
 
 			if (found)
 			{
@@ -105,5 +107,42 @@ public class DACSegment
 				aBitStream.writeInt8(mJPEG.arith_ac_K[i]);
 			}
 		}
+
+		return this;
+	}
+
+
+	@Override
+	public DACSegment print(Log aLog) throws IOException
+	{
+		aLog.println("DAC segment");
+
+		aLog.println("  DC=%d, AC=%d", mJPEG.arith_dc_U.length, mJPEG.arith_ac_K.length);
+
+		if (aLog.isDetailed())
+		{
+			for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
+			{
+				aLog.println("    DC %d", i);
+				aLog.println("      u=%d, l=%d", mJPEG.arith_dc_U[i], mJPEG.arith_dc_L[i]);
+			}
+
+			for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
+			{
+				boolean found = false;
+				for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+				{
+					found = mSOSSegment.getACTable(scanComponentIndex) == i;
+				}
+
+				if (found)
+				{
+					aLog.println("    AC %d", i);
+					aLog.println("      k=%d", mJPEG.arith_ac_K[i]);
+				}
+			}
+		}
+
+		return this;
 	}
 }

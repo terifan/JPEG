@@ -6,8 +6,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.JPEGImageIO;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 
 
 public class TestTranscode2

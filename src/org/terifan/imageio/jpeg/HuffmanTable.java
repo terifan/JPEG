@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 
 
@@ -24,17 +23,10 @@ public class HuffmanTable
 
 	// encoder
 
-	/* These two fields directly represent the contents of a JPEG DHT marker */
+	// These two fields directly represent the contents of a JPEG DHT marker bits[k] = # of symbols with codes of  length k bits; bits[0] is unused
 	public int[] bits;
-	/* bits[k] = # of symbols with codes of */
-	/* length k bits; bits[0] is unused */
+	// The symbols, in order of incr code length */
 	public int[] huffval;
-	/* The symbols, in order of incr code length */
-	/* This field is used only during compression.  It's initialized FALSE when
-	* the table is created, and set TRUE when it's been output to the file.
-	* You could suppress output of a table by setting this to TRUE.
-	* (See jpeg_suppress_tables for an example.)
-	*/
 
 
 	public HuffmanTable()
@@ -72,7 +64,7 @@ public class HuffmanTable
 	}
 
 
-	HuffmanTable read(InputStream aInput) throws IOException
+	HuffmanTable decode(InputStream aInput) throws IOException
 	{
 		int temp = aInput.read();
 		mIndex = temp & 0x07;
@@ -99,13 +91,6 @@ public class HuffmanTable
 				int symbol = aInput.read();
 				int shift = 1 << (mMaxLength - length);
 
-//				String s = "";
-//				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
-//				{
-//					s += 1 & ((code * shift) >> (mMaxLength-k-1));
-//				}
-//				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
-
 				for (int k = 0; k < shift; k++)
 				{
 					mLookup[(code * shift) | k] = (length << 16) + symbol;
@@ -117,11 +102,11 @@ public class HuffmanTable
 	}
 
 
-	boolean write(OutputStream aOutput) throws IOException
+	void encode(OutputStream aOutput) throws IOException
 	{
 		if (mSent)
 		{
-			return false;
+			return;
 		}
 
 		aOutput.write(mIndex + (mType == TYPE_AC ? 0x10 : 0x00));
@@ -144,24 +129,7 @@ public class HuffmanTable
 			}
 		}
 
-//		for (int length = 1, code = 0, n = 0; length < 17; length++, code <<= 1)
-//		{
-//			for (int j = 0; j < bits[length]; j++, code++)
-//			{
-//				int symbol = huffval[n++];
-//				int shift = 1 << (mMaxLength - length);
-//
-//				String s = "";
-//				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
-//				{
-//					s += 1 & ((code * shift) >> (mMaxLength-k-1));
-//				}
-//				System.out.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
-//			}
-//		}
-
 		mSent = true;
-		return true;
 	}
 
 
@@ -219,22 +187,31 @@ public class HuffmanTable
 	}
 
 
-	public void log()
+	public void print(Log aLog)
 	{
-		if (VERBOSE)
+		aLog.println("  HuffmanTable");
+		aLog.println("    identity=%d, type=%s, numSymbols=%d, maxLength=%d", mIndex, mType == TYPE_AC ? "AC" : "DC", mNumSymbols, mNumSymbols);
+
+		for (int length = 1, code = 0, n = 0; length < 17; length++, code <<= 1)
 		{
-			System.out.println("DHTMarkerSegment");
-			System.out.println("  identity=" + mIndex);
-			System.out.println("  type=" + (mType == TYPE_AC ? "AC" : "DC"));
-			System.out.println("  numSymbols=" + mNumSymbols);
-			System.out.println("  maxLength=" + mMaxLength);
+			for (int j = 0; j < bits[length]; j++, code++)
+			{
+				int symbol = huffval[n++];
+				int shift = 1 << (mMaxLength - length);
+
+				String s = "";
+				for (int z = mMaxLength, k = 0; --z >= 0 && k < length; k++)
+				{
+					s += 1 & ((code * shift) >> (mMaxLength-k-1));
+				}
+				aLog.println("%-"+mMaxLength+"s [%d] = %d", s, length, symbol);
+			}
 		}
 	}
 
 
-	@Override
-	public String toString()
+	public boolean isSent()
 	{
-		return (mType == TYPE_DC ? "DC" : "AC") + "-" + mIndex;
+		return mSent;
 	}
 }

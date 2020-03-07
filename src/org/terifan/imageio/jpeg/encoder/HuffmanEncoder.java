@@ -9,6 +9,7 @@ import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.HuffmanTable;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 /*
@@ -510,7 +511,7 @@ public class HuffmanEncoder implements Encoder
 		flush_bits_s(state);
 
 		emit_byte_s(state, 0xFF);
-		emit_byte_s(state, RST0 + restart_num);
+		emit_byte_s(state, SegmentMarker.RST0.CODE + restart_num);
 
 		/* Re-initialize DC predictions to 0 */
 		for (ci = 0; ci < state.cinfo.comps_in_scan; ci++)
@@ -533,7 +534,7 @@ public class HuffmanEncoder implements Encoder
 		{
 			flush_bits_e(entropy);
 			emit_byte_e(entropy, 0xFF);
-			emit_byte_e(entropy, RST0 + restart_num);
+			emit_byte_e(entropy, SegmentMarker.RST0.CODE + restart_num);
 		}
 
 		if (entropy.cinfo.Ss == 0)
@@ -569,7 +570,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -635,11 +636,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -668,7 +669,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -772,11 +773,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -801,7 +802,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -822,11 +823,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -857,7 +858,7 @@ public class HuffmanEncoder implements Encoder
 //		entropy.free_in_buffer = cinfo.free_in_buffer;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -981,11 +982,11 @@ public class HuffmanEncoder implements Encoder
 //		cinfo.free_in_buffer = entropy.free_in_buffer;
 
 		/* Update restart-interval state too */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1002,7 +1003,7 @@ public class HuffmanEncoder implements Encoder
 		int temp, temp2;
 		int nbits;
 		int r, k;
-		int Se = state.cinfo.lim_Se;
+		int Se = LIM_SE;
 		int[] natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the DC coefficient difference per section F.1.2.1 */
@@ -1122,7 +1123,7 @@ public class HuffmanEncoder implements Encoder
 		state.cinfo = aJPEG;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -1146,11 +1147,11 @@ public class HuffmanEncoder implements Encoder
 		entropy.saved = state.cur;
 
 		/* Update restart-interval state too */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1234,7 +1235,7 @@ public class HuffmanEncoder implements Encoder
 		int temp;
 		int nbits;
 		int r, k;
-		int Se = aJPEG.lim_Se;
+		int Se = LIM_SE;
 		int[] natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the DC coefficient difference per section F.1.2.1 */
@@ -1326,7 +1327,7 @@ public class HuffmanEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Take care of restart intervals if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -1336,7 +1337,7 @@ public class HuffmanEncoder implements Encoder
 					entropy.saved.last_dc_val[ci] = 0;
 				}
 				/* Update restart state */
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 			}
 			entropy.restarts_to_go--;
 		}
@@ -1712,7 +1713,7 @@ public class HuffmanEncoder implements Encoder
 		entropy.saved.put_bits = 0;
 
 		/* Initialize restart stuff */
-		entropy.restarts_to_go = aJPEG.restart_interval;
+		entropy.restarts_to_go = aJPEG.mRestartInterval;
 		entropy.next_restart_num = 0;
 	}
 

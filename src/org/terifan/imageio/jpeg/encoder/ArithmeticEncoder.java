@@ -5,10 +5,11 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
+import static org.terifan.imageio.jpeg.JPEGConstants.LIM_SE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
 import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 /*
@@ -415,7 +416,7 @@ public class ArithmeticEncoder implements Encoder
 		finish_pass(aJPEG, false);
 
 		emit_byte(0xFF, aJPEG);
-		emit_byte(RST0 + restart_num, aJPEG);
+		emit_byte(SegmentMarker.RST0.CODE + restart_num, aJPEG);
 
 		/* Re-initialize statistics areas */
 		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
@@ -460,12 +461,12 @@ public class ArithmeticEncoder implements Encoder
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -575,12 +576,12 @@ public class ArithmeticEncoder implements Encoder
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -705,12 +706,12 @@ public class ArithmeticEncoder implements Encoder
 		int Al, blkn;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -745,12 +746,12 @@ public class ArithmeticEncoder implements Encoder
 		int v;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -906,12 +907,12 @@ public class ArithmeticEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1000,7 +1001,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 
 			/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
-			if ((ke = aJPEG.lim_Se) == 0)
+			if ((ke = LIM_SE) == 0)
 			{
 				continue;
 			}
@@ -1074,7 +1075,7 @@ public class ArithmeticEncoder implements Encoder
 				}
 			}
 			/* Encode EOB decision only if k < cinfo.lim_Se */
-			if (k < aJPEG.lim_Se)
+			if (k < LIM_SE)
 			{
 				st = entropy.ac_stats[tbl];
 				st_off = 3 * k;
@@ -1197,7 +1198,7 @@ public class ArithmeticEncoder implements Encoder
 		/* empty */
 
 		/* Initialize restart stuff */
-		entropy.restarts_to_go = aJPEG.restart_interval;
+		entropy.restarts_to_go = aJPEG.mRestartInterval;
 		entropy.next_restart_num = 0;
 	}
 

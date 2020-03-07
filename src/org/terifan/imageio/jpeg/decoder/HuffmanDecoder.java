@@ -4,7 +4,6 @@ import org.terifan.imageio.jpeg.JPEGEntropyState;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
@@ -33,7 +32,7 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	void startPass(JPEG aJPEG) throws IOException
 	{
-		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+		aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
 
 		mBitStream.align();
 		mEOBRun = 0;
@@ -41,15 +40,16 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void finishPass(JPEG aJPEG)
+	void finishPass(JPEG aJPEG) throws IOException
 	{
+		mBitStream.align();
 	}
 
 
 	@Override
 	boolean decodeMCU(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (aJPEG.entropy.restarts_to_go == 0)
 			{
@@ -62,13 +62,13 @@ public class HuffmanDecoder extends Decoder
 				mEOBRun = 0;
 
 				int restartMarker = mBitStream.readInt16();
-				if (restartMarker != 0xFFD0 + aJPEG.restartMarkerIndex)
+				if (restartMarker != 0xFFD0 + aJPEG.mRestartMarkerIndex)
 				{
-					throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + aJPEG.restartMarkerIndex));
+					throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + aJPEG.mRestartMarkerIndex));
 				}
 
-				aJPEG.restartMarkerIndex = (aJPEG.restartMarkerIndex + 1) & 7;
-				aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+				aJPEG.mRestartMarkerIndex = (aJPEG.mRestartMarkerIndex + 1) & 7;
+				aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
 			}
 
 			aJPEG.entropy.restarts_to_go--;

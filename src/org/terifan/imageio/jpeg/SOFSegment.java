@@ -3,11 +3,10 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOFSegment
+public class SOFSegment extends Segment
 {
 	private int mPrecision;
 	private int mHeight;
@@ -32,7 +31,8 @@ public class SOFSegment
 	}
 
 
-	public SOFSegment read(BitInputStream aBitStream) throws IOException
+	@Override
+	public SOFSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
 
@@ -44,80 +44,52 @@ public class SOFSegment
 		mPrecision = aBitStream.readInt8();
 		mHeight = aBitStream.readInt16();
 		mWidth = aBitStream.readInt16();
-		mJPEG.num_components = aBitStream.readInt8();
+		int numComponents = aBitStream.readInt8();
 
 		if (mPrecision != 8)
 		{
 			throw new IOException("mPrecision illegal value: " + mPrecision);
 		}
 
-		mComponents = new ComponentInfo[mJPEG.num_components];
+		mComponents = new ComponentInfo[numComponents];
 
-		for (int i = 0; i < mJPEG.num_components; i++)
+		for (int i = 0; i < numComponents; i++)
 		{
-			mComponents[i] = new ComponentInfo().read(aBitStream, i);
+			mComponents[i] = new ComponentInfo().decode(aBitStream, i);
 		}
 
-		mJPEG.width = mWidth;
-		mJPEG.height = mHeight;
-		mJPEG.components = mComponents;
-		mJPEG.precision = mPrecision;
-		
-		if (mJPEG.num_components == 1)
+		if (numComponents == 1)
 		{
 			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
-		}
-
-		if (VERBOSE)
-		{
-			log();
 		}
 
 		return this;
 	}
 
 
-	public void log()
+	@Override
+	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
 	{
-		System.out.println("SOFMarkerSegment");
-		System.out.println("  precision=" + mPrecision + " bits");
-		System.out.println("  dimensions=" + mWidth + "x" + mHeight);
-		System.out.println("  numComponents=" + mComponents.length);
-
-		for (ComponentInfo mComponent : mComponents)
-		{
-			System.out.println("    " + mComponent);
-		}
-	}
-
-
-	public SOFSegment write(BitOutputStream aBitStream) throws IOException
-	{
-		boolean baseline = true;
-		int type;
+		SegmentMarker type;
 
 		if (mJPEG.mArithmetic && mJPEG.mProgressive)
 		{
-			type = JPEGConstants.SOF10;
+			type = SegmentMarker.SOF10;
 		}
 		else if (mJPEG.mArithmetic)
 		{
-			type = JPEGConstants.SOF9;
+			type = SegmentMarker.SOF9;
 		}
 		else if (mJPEG.mProgressive)
 		{
-			type = JPEGConstants.SOF2;
-		}
-		else if (baseline)
-		{
-			type = JPEGConstants.SOF0;
+			type = SegmentMarker.SOF2;
 		}
 		else
 		{
-			type = JPEGConstants.SOF1;
+			type = SegmentMarker.SOF0;
 		}
 
-		aBitStream.writeInt16(type);
+		aBitStream.writeInt16(type.CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);
 		aBitStream.writeInt8(mPrecision);
 		aBitStream.writeInt16(mHeight);
@@ -126,17 +98,22 @@ public class SOFSegment
 
 		for (ComponentInfo comp : mComponents)
 		{
-			comp.write(aBitStream);
+			comp.encode(aBitStream);
 		}
 
-		if (VERBOSE)
-		{
-			System.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
+		return this;
+	}
 
-			for (ComponentInfo mComponent : mComponents)
-			{
-				System.out.println("  " + mComponent);
-			}
+
+	@Override
+	public SOFSegment print(Log aLog) throws IOException
+	{
+		aLog.println("SOF segment");
+		aLog.println("  precision=%d bits, width=%d, height=%d", mPrecision, mWidth, mHeight);
+
+		for (ComponentInfo mComponent : mComponents)
+		{
+			mComponent.print(aLog);
 		}
 
 		return this;

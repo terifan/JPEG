@@ -2,7 +2,8 @@ package org.terifan.imageio.jpeg.examples;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import java.net.URL;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.examples.res.R;
 import org.terifan.imageio.jpeg.test.ImageFrame;
 
@@ -13,13 +14,17 @@ public class SaveJPEGDemo
 	{
 		try
 		{
-			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari.jpg"));
+			URL input = R.class.getResource("Swallowtail-huff-opt-prog.jpg");
+
+			BufferedImage myImage = new JPEGImageIO().read(input);
 
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			new JPEGImageIO().setArithmetic(true).setProgressive(true).setQuality(55).setProgressionScript(null).write(myImage, output);
+			new JPEGImageIO().setArithmetic(true).setOptimizedHuffman(true).setProgressive(true).setQuality(95).setProgressionScript(null).setLog(System.out).write(myImage, output);
 
-			ImageFrame.show(output);
+			myImage = new JPEGImageIO().read(output);
+
+			ImageFrame.show(myImage).setTitle("" + output.length());
 		}
 		catch (Throwable e)
 		{
