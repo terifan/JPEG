@@ -8,6 +8,7 @@ public class ImageSampler
 {
 	public static void sampleImage(JPEG aJPEG, BufferedImage aImage, FDCT aFDCT) throws UnsupportedOperationException
 	{
+		int numComponents = aJPEG.mSOFSegment.getComponents().length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
@@ -16,7 +17,7 @@ public class ImageSampler
 		int mcuHeight = 8 * maxSamplingY;
 
 		int blocks_in_MCU = 0;
-		for (int ci = 0; ci < aJPEG.mNumComponents; ci++)
+		for (int ci = 0; ci < numComponents; ci++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponent(ci);
 			blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
@@ -25,7 +26,7 @@ public class ImageSampler
 		aJPEG.mCoefficients = new int[numVerMCU][numHorMCU][blocks_in_MCU][64];
 
 		int[] raster = new int[mcuWidth * mcuHeight];
-		int[][] colors = new int[aJPEG.mNumComponents][mcuWidth * mcuHeight];
+		int[][] colors = new int[numComponents][mcuWidth * mcuHeight];
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{
@@ -38,7 +39,7 @@ public class ImageSampler
 
 				ColorSpace.YCBCR.rgbToYuv(raster, colors[0], colors[1], colors[2]);
 
-				for (int ci = 0, blockIndex = 0; ci < aJPEG.mNumComponents; ci++)
+				for (int ci = 0, blockIndex = 0; ci < numComponents; ci++)
 				{
 					ComponentInfo comp = aJPEG.mSOFSegment.getComponent(ci);
 					int samplingX = comp.getHorSampleFactor();

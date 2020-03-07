@@ -62,12 +62,12 @@ public class HuffmanDecoder extends Decoder
 				mEOBRun = 0;
 
 				int restartMarker = mBitStream.readInt16();
-				if (restartMarker != 0xFFD0 + aJPEG.restartMarkerIndex)
+				if (restartMarker != 0xFFD0 + aJPEG.mRestartMarkerIndex)
 				{
-					throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + aJPEG.restartMarkerIndex));
+					throw new IOException("Error reading JPEG stream; Expected restart marker " + Integer.toHexString(0xFFD0 + aJPEG.mRestartMarkerIndex));
 				}
 
-				aJPEG.restartMarkerIndex = (aJPEG.restartMarkerIndex + 1) & 7;
+				aJPEG.mRestartMarkerIndex = (aJPEG.mRestartMarkerIndex + 1) & 7;
 				aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
 			}
 

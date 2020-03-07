@@ -41,7 +41,7 @@ public class JPEGImageWriterImpl
 	{
 		if (aJPEG.mProgressive && aProgressionScript == null)
 		{
-			aProgressionScript = new ProgressionScript(ProgressionScript.DEFAULT);
+			aProgressionScript = new ProgressionScript(ProgressionScript.DC_THEN_AC);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
@@ -165,13 +165,13 @@ public class JPEGImageWriterImpl
 						{
 							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 							{
-								if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mHeight)
+								if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
 								{
 									for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
 									{
 										for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 										{
-											if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mWidth)
+											if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
 											{
 												mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
@@ -209,7 +209,7 @@ public class JPEGImageWriterImpl
 				System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
 			}
 
-			sosSegment.writeTo(aOutput);
+			sosSegment.write(aOutput);
 
 			encoder.start_pass(aJPEG, false);
 
@@ -221,13 +221,13 @@ public class JPEGImageWriterImpl
 				{
 					for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 					{
-						if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mHeight)
+						if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
 						{
 							for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
 							{
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
-									if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mWidth)
+									if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
 									{
 										mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 

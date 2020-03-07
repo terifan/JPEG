@@ -32,7 +32,7 @@ public class ProgressionScript
 		+ "# Y AC lowest bit scan is last; it's usually the largest scan\n"
 		+ "0:     1-63,  1, 0 ;";
 
-	public final static String A
+	public final static String DC_THEN_AC
 		= "0,1,2: 0-0,   0, 0 ;\n"
 		+ "0:     1-63,  0, 0 ;\n"
 		+ "2:     1-63,  0, 0 ;\n"
@@ -40,7 +40,7 @@ public class ProgressionScript
 
 	public final static String B
 		= "0,1,2: 0-0,   0, 0 ;\n"
-		+ "0:     1-5,  0, 0 ;\n"
+		+ "0:     1-5,   0, 0 ;\n"
 		+ "0:     6-63,  0, 0 ;\n"
 		+ "2:     1-63,  0, 0 ;\n"
 		+ "1:     1-63,  0, 0 ;\n";

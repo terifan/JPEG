@@ -45,26 +45,21 @@ public class SOFSegment implements Segment
 		mPrecision = aBitStream.readInt8();
 		mHeight = aBitStream.readInt16();
 		mWidth = aBitStream.readInt16();
-		mJPEG.mNumComponents = aBitStream.readInt8();
+		int numComponents = aBitStream.readInt8();
 
 		if (mPrecision != 8)
 		{
 			throw new IOException("mPrecision illegal value: " + mPrecision);
 		}
 
-		mComponents = new ComponentInfo[mJPEG.mNumComponents];
+		mComponents = new ComponentInfo[numComponents];
 
-		for (int i = 0; i < mJPEG.mNumComponents; i++)
+		for (int i = 0; i < numComponents; i++)
 		{
 			mComponents[i] = new ComponentInfo().read(aBitStream, i);
 		}
 
-		mJPEG.mWidth = mWidth;
-		mJPEG.mHeight = mHeight;
-		mJPEG.mComponents = mComponents;
-		mJPEG.precision = mPrecision;
-
-		if (mJPEG.mNumComponents == 1)
+		if (numComponents == 1)
 		{
 			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
 		}

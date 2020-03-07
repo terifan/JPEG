@@ -43,7 +43,7 @@ public class APP14Segment implements Segment
 					break;
 			}
 
-			mJPEG.saw_Adobe_marker = true;
+			mJPEG.mHasAdobeMarker = true;
 		}
 
 		int remaining = offset + length - aBitStream.getStreamOffset();

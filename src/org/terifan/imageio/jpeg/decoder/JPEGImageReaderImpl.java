@@ -12,10 +12,10 @@ import org.terifan.imageio.jpeg.APP1Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
-import static org.terifan.imageio.jpeg.Debug.hexdump;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import org.terifan.imageio.jpeg.JPEGImage;
+import org.terifan.imageio.jpeg.test.Debug;
 
 
 public class JPEGImageReaderImpl
@@ -59,7 +59,7 @@ public class JPEGImageReaderImpl
 
 					System.out.println("Expected JPEG marker at " + aInput.getStreamOffset() + " (" + Integer.toHexString(aInput.getStreamOffset()) + ")");
 
-					hexdump(aInput);
+					Debug.hexDump(aInput);
 
 					break;
 //						throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
@@ -140,13 +140,16 @@ public class JPEGImageReaderImpl
 				case SOF15: // Differential lossless, arithmetic
 					throw new IOException("Image encoding not supported.");
 				case SOS:
-					SOSSegment sosSegment = new SOSSegment(aJPEG).readFrom(aInput);
+					SOSSegment sosSegment = new SOSSegment(aJPEG);
+					sosSegment.read(aInput);
 					sosSegment.prepareMCU();
 
 					try
 					{
 						aInput.setHandleMarkers(true);
+
 						image = readCoefficients(aJPEG, decoder, image);
+
 						aInput.align();
 						aInput.setHandleMarkers(false);
 
@@ -197,6 +200,7 @@ public class JPEGImageReaderImpl
 
 	private JPEGImage readCoefficients(JPEG aJPEG, Decoder aDecoder, JPEGImage aImage) throws IOException
 	{
+		int numComponents = aJPEG.mSOFSegment.getComponents().length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
@@ -204,7 +208,7 @@ public class JPEGImageReaderImpl
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
 
-		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < aJPEG.mNumComponents; scanComponentIndex++)
+		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < numComponents; scanComponentIndex++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponent(scanComponentIndex);
 			comp.setComponentBlockOffset(first);
@@ -217,7 +221,7 @@ public class JPEGImageReaderImpl
 
 			aDecoder.initialize(aJPEG);
 
-			aImage = new JPEGImage(aJPEG.mSOFSegment.getWidth(), aJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, aJPEG.mNumComponents);
+			aImage = new JPEGImage(aJPEG.mSOFSegment.getWidth(), aJPEG.mSOFSegment.getHeight(), maxSamplingX, maxSamplingY, numComponents);
 		}
 
 		Arrays.fill(aJPEG.entropy.last_dc_val, 0);
@@ -239,13 +243,13 @@ public class JPEGImageReaderImpl
 			{
 				for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 				{
-					if (mcuY < numVerMCU - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mHeight)
+					if (mcuY < numVerMCU - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
 					{
 						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
-								if (mcuX < numHorMCU - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mWidth)
+								if (mcuX < numHorMCU - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
 								{
 									mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 

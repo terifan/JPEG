@@ -19,7 +19,7 @@ public class TranscodeJPEGDemo
 
 			new JPEGImageIO().setArithmetic(true).setProgressive(true).transcode(input, output);
 
-			ImageFrame.show(output);
+			ImageFrame.show(output).setTitle("" + output.length());
 		}
 		catch (Throwable e)
 		{

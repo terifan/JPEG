@@ -7,39 +7,42 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 
 public class JPEG
 {
-	public int[] arith_dc_L = new int[NUM_ARITH_TBLS];
-	public int[] arith_dc_U = new int[NUM_ARITH_TBLS];
-	public int[] arith_ac_K = new int[NUM_ARITH_TBLS];
-
 	public SOFSegment mSOFSegment;
 	public boolean mArithmetic;
 	public boolean mProgressive;
 	public boolean mOptimizedHuffman;
-	public int num_hor_mcu;
-	public int num_ver_mcu;
-	public int mWidth;
-	public int mHeight;
-	public int mDensitiesUnits;
-	public int mDensityX;
-	public int mDensityY;
-	public int precision;
-	public ColorSpace mColorSpace = ColorSpace.YCBCR;
 
 	public QuantizationTable[] mQuantizationTables = new QuantizationTable[8];
+
 	public HuffmanTable[][] mHuffmanTables = new HuffmanTable[4][2];
+	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
+	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
+
+	public ColorSpace mColorSpace = ColorSpace.YCBCR;
+	public ICC_Profile mICCProfile;
+	public boolean mHasAdobeMarker;
 
 	public int[][][][] mCoefficients;
 
-	public ComponentInfo[] mComponents;
+	public int mDensitiesUnits;
+	public int mDensityX;
+	public int mDensityY;
+
+	public int mRestartInterval;
+	public int mRestartMarkerIndex;
+
+	public int[] arith_dc_L = new int[NUM_ARITH_TBLS];
+	public int[] arith_dc_U = new int[NUM_ARITH_TBLS];
+	public int[] arith_ac_K = new int[NUM_ARITH_TBLS];
+
+	public int num_hor_mcu;
+	public int num_ver_mcu;
+
 	public JPEGEntropyState entropy;
 	public int[] MCU_membership;
 	public ComponentInfo[] cur_comp_info;
-	public int mNumComponents;
 	public int blocks_in_MCU;
 	public int comps_in_scan;
-	public boolean saw_Adobe_marker;
-	public int Adobe_transform;
-
 	public int Ss;
 	public int Se;
 	public int Ah;
@@ -47,12 +50,6 @@ public class JPEG
 	public int lim_Se = DCTSIZE2 - 1;
 	public int[][] coef_bits;
 
-	public int mRestartInterval;
-	public int restartMarkerIndex;
-	public ICC_Profile mICCProfile;
-
-	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
-	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
 
 	public JPEG()
 	{
@@ -74,7 +71,7 @@ public class JPEG
 	public String getSubSampling()
 	{
 		StringBuilder sb = new StringBuilder();
-		for (ComponentInfo ci : mComponents)
+		for (ComponentInfo ci : mSOFSegment.getComponents())
 		{
 			if (sb.length() > 0)
 			{

@@ -76,16 +76,13 @@ public class JPEGImageIO
 		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2);
 		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1);
 		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1);
+		ComponentInfo[] components = new ComponentInfo[]{lu, cb, cr};
 
 		JPEG jpeg = new JPEG();
 		jpeg.mArithmetic = mArithmetic;
 		jpeg.mProgressive = mProgressive;
 		jpeg.mOptimizedHuffman = mOptimizedHuffman;
-		jpeg.mWidth = aInput.getWidth();
-		jpeg.mHeight = aInput.getHeight();
-		jpeg.mComponents = new ComponentInfo[]{lu, cb, cr};
-		jpeg.mNumComponents = jpeg.mComponents.length;
-		jpeg.mSOFSegment = new SOFSegment(jpeg, jpeg.mWidth, jpeg.mHeight, 8, jpeg.mComponents);
+		jpeg.mSOFSegment = new SOFSegment(jpeg, aInput.getWidth(), aInput.getHeight(), 8, components);
 		jpeg.mQuantizationTables = new QuantizationTable[2];
 		jpeg.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(mQuality, 0);
 		jpeg.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(mQuality, 1);
@@ -100,7 +97,7 @@ public class JPEGImageIO
 	{
 		JPEG jpeg = decode(aInput);
 
-		if (jpeg.mComponents == null)
+		if (jpeg.mSOFSegment.getComponents() == null)
 		{
 			throw new IllegalStateException("Error decoding source image");
 		}

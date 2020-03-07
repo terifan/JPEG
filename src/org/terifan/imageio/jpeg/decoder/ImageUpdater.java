@@ -15,10 +15,12 @@ class ImageUpdater
 {
 	static void updateImage(JPEG aJPEG, IDCT aIDCT, BufferedImage aImage)
 	{
+		ComponentInfo[] components = aJPEG.mSOFSegment.getComponents();
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
 		int numVerMCU = aJPEG.mSOFSegment.getVerMCU();
+		int numComponents = components.length;
 
 		int mcuW = 8 * maxSamplingX;
 		int mcuH = 8 * maxSamplingY;
@@ -46,7 +48,7 @@ class ImageUpdater
 
 		int cp = 0;
 		int cii = 0;
-		for (ComponentInfo ci : aJPEG.mComponents)
+		for (ComponentInfo ci : components)
 		{
 			for (int i = 0; i < ci.getVerSampleFactor() * ci.getHorSampleFactor(); i++, cp++)
 			{
@@ -93,24 +95,24 @@ class ImageUpdater
 		}
 
 		int c0 = aJPEG.mSOFSegment.getComponent(0).getComponentBlockOffset();
-		int c1 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(1).getComponentBlockOffset();
-		int c2 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(2).getComponentBlockOffset();
+		int c1 = components.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(1).getComponentBlockOffset();
+		int c2 = components.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(2).getComponentBlockOffset();
 
-		int h0 = aJPEG.mComponents[0].getHorSampleFactor();
-		int v0 = aJPEG.mComponents[0].getVerSampleFactor();
-		int h1 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mComponents[1].getHorSampleFactor();
-		int v1 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mComponents[1].getVerSampleFactor();
-		int h2 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mComponents[2].getHorSampleFactor();
-		int v2 = aJPEG.mComponents.length == 1 ? 0 : aJPEG.mComponents[2].getVerSampleFactor();
+		int h0 = components[0].getHorSampleFactor();
+		int v0 = components[0].getVerSampleFactor();
+		int h1 = components.length == 1 ? 0 : components[1].getHorSampleFactor();
+		int v1 = components.length == 1 ? 0 : components[1].getVerSampleFactor();
+		int h2 = components.length == 1 ? 0 : components[2].getHorSampleFactor();
+		int v2 = components.length == 1 ? 0 : components[2].getVerSampleFactor();
 
-		if (aJPEG.mComponents.length == 1 && (h0 != 1 || v0 != 1))
+		if (components.length == 1 && (h0 != 1 || v0 != 1))
 		{
 			throw new IllegalStateException("Unsupported subsampling");
 		}
 
-		for (int iy = 0; iy < aJPEG.mHeight; iy++)
+		for (int iy = 0; iy < aJPEG.mSOFSegment.getHeight(); iy++)
 		{
-			for (int ix = 0; ix < aJPEG.mWidth; ix++)
+			for (int ix = 0; ix < aJPEG.mSOFSegment.getWidth(); ix++)
 			{
 //		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 //		{
@@ -135,11 +137,11 @@ class ImageUpdater
 									int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
 									int color;
 
-									if (aJPEG.mNumComponents == 1)
+									if (numComponents == 1)
 									{
 										color = aJPEG.mColorSpace.yccToRgb(lu, 0, 0);
 									}
-									else if (aJPEG.mNumComponents == 3)
+									else if (numComponents == 3)
 									{
 										int cb;
 										int cr;
@@ -214,8 +216,8 @@ class ImageUpdater
 
 		int x = ix - kernel[0].length / 2;
 		int y = iy - kernel.length / 2;
-		int iw = aJPEG.mWidth;
-		int ih = aJPEG.mHeight;
+		int iw = aJPEG.mSOFSegment.getWidth();
+		int ih = aJPEG.mSOFSegment.getHeight();
 
 		for (int fy = 0; fy < kernel.length; fy++)
 		{

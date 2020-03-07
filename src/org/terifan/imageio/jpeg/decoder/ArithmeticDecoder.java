@@ -213,7 +213,7 @@ public class ArithmeticDecoder extends Decoder
 				/* Estimate_after_MPS */
 			}
 		}
-	
+
 		return sv >> 7;
 	}
 
@@ -280,7 +280,7 @@ public class ArithmeticDecoder extends Decoder
 		int st_off;
 		int blockIndex, sign;
 		int v, m;
-		
+
 		if (entropy.ct == -1)
 		{
 			return true;
@@ -624,8 +624,8 @@ public class ArithmeticDecoder extends Decoder
 				return decodeMCUImpl(aJPEG, aCoefficients);
 		}
 	}
-	
-	
+
+
 	private boolean decodeMCUImpl(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
 		for (int[] d : aCoefficients)
@@ -974,6 +974,7 @@ public class ArithmeticDecoder extends Decoder
 	@Override
 	void initialize(JPEG cinfo)
 	{
+		int numComponents = cinfo.mSOFSegment.getComponents().length;
 		JPEGEntropyState entropy = new JPEGEntropyState();
 		cinfo.entropy = entropy;
 
@@ -983,7 +984,7 @@ public class ArithmeticDecoder extends Decoder
 			entropy.dc_stats[i] = null;
 			entropy.ac_stats[i] = null;
 			entropy.dc_context = new int[DC_STAT_BINS];
-			entropy.last_dc_val = new int[cinfo.mNumComponents];
+			entropy.last_dc_val = new int[numComponents];
 		}
 
 		/* Initialize index for fixed probability estimation */
@@ -992,8 +993,8 @@ public class ArithmeticDecoder extends Decoder
 		if (cinfo.mProgressive)
 		{
 			/* Create progression status table */
-			cinfo.coef_bits = new int[cinfo.mNumComponents][DCTSIZE2];
-			for (int ci = 0; ci < cinfo.mNumComponents; ci++)
+			cinfo.coef_bits = new int[numComponents][DCTSIZE2];
+			for (int ci = 0; ci < numComponents; ci++)
 			{
 				for (int i = 0; i < DCTSIZE2; i++)
 				{

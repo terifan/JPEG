@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOSSegment
+public class SOSSegment implements Segment
 {
 	private int[] mComponentIds;
 	private int[] mTableAC;
@@ -23,7 +23,8 @@ public class SOSSegment
 	}
 
 
-	public SOSSegment readFrom(BitInputStream aBitStream) throws IOException
+	@Override
+	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 
@@ -53,8 +54,6 @@ public class SOSSegment
 		{
 			log();
 		}
-
-		return this;
 	}
 
 
@@ -93,7 +92,8 @@ public class SOSSegment
 	}
 
 
-	public SOSSegment writeTo(BitOutputStream aBitStream) throws IOException
+	@Override
+	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.SOS);
 		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);
@@ -111,8 +111,6 @@ public class SOSSegment
 		aBitStream.writeInt8(mJPEG.Se);
 		aBitStream.writeBits(mJPEG.Ah, 4);
 		aBitStream.writeBits(mJPEG.Al, 4);
-
-		return this;
 	}
 
 
