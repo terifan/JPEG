@@ -2,11 +2,12 @@ package org.terifan.imageio.jpeg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DHTSegment implements Segment
+public class DHTSegment extends Segment
 {
 	private JPEG mJPEG;
 
@@ -18,18 +19,13 @@ public class DHTSegment implements Segment
 
 
 	@Override
-	public void read(BitInputStream aBitStream) throws IOException
+	public DHTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
-		if (length == 0)
+		while (length > 0)
 		{
-			return;
-		}
-
-		do
-		{
-			HuffmanTable table = new HuffmanTable().read(aBitStream);
+			HuffmanTable table = new HuffmanTable().decode(aBitStream);
 
 			mJPEG.mHuffmanTables[table.getIndex()][table.getType()] = table;
 
@@ -39,39 +35,62 @@ public class DHTSegment implements Segment
 			{
 				throw new IOException("Error in JPEG stream; illegal DHT segment size.");
 			}
-
-			if (JPEGConstants.VERBOSE)
-			{
-				table.log();
-			}
 		}
-		while (length > 0);
+
+		return this;
 	}
 
 
 	@Override
-	public void write(BitOutputStream aBitStream) throws IOException
+	public DHTSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
 		{
-			if (table != null && table.write(baos))
+			if (table != null)
 			{
-				table.log();
+				table.encode(baos);
 			}
 		}
 
 		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
 		{
-			if (table != null && table.write(baos))
+			if (table != null)
 			{
-				table.log();
+				table.encode(baos);
 			}
 		}
 
 		aBitStream.writeInt16(JPEGConstants.DHT);
 		aBitStream.writeInt16(2 + baos.size());
 		baos.writeTo(aBitStream);
+
+		return this;
+	}
+
+
+	@Override
+	public DHTSegment print(Log aLog) throws IOException
+	{
+		aLog.println("DHT segment");
+
+		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
+		{
+			if (table != null)
+			{
+				table.print(aLog);
+			}
+		}
+
+		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
+		{
+			if (table != null)
+			{
+				table.print(aLog);
+			}
+		}
+
+		return this;
 	}
 }

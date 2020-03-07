@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.decoder.IDCT;
@@ -33,6 +34,7 @@ public class JPEGImageIO
 	private boolean mProgressive;
 	private int mQuality;
 	private boolean mUpdateProgressiveImage;
+	private Log mLog;
 
 
 	public JPEGImageIO()
@@ -52,7 +54,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			image = reader.read(in, jpeg, idct, true, mUpdateProgressiveImage);
+			image = reader.decode(in, jpeg, idct, true, mUpdateProgressiveImage);
 		}
 		catch (IOException e)
 		{
@@ -118,7 +120,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			reader.read(in, jpeg, null, false, false);
+			reader.decode(in, jpeg, null, false, false);
 		}
 		catch (IOException e)
 		{
@@ -134,10 +136,11 @@ public class JPEGImageIO
 		try (final BitOutputStream out = new BitOutputStream(toOutputStream(aOutput)))
 		{
 			JPEGImageWriterImpl writer = new JPEGImageWriterImpl();
-			writer.create(aJpeg, out);
-			writer.encodeCoefficients(aJpeg, out, mProgressionScript);
-			writer.finish(aJpeg, out);
-		}catch (IOException e)
+			writer.create(aJpeg, out, mLog);
+			writer.encode(aJpeg, out, mLog, mProgressionScript);
+			writer.finish(aJpeg, out, mLog);
+		}
+		catch (IOException e)
 		{
 			throw new JPEGImageIOException(e);
 		}
@@ -276,6 +279,26 @@ public class JPEGImageIO
 	public JPEGImageIO setFDCT(Class<? extends FDCT> aClass)
 	{
 		mFDCT = aClass;
+		return this;
+	}
+
+
+	public Log getLog()
+	{
+		return mLog;
+	}
+
+
+	public JPEGImageIO setLog(Log aLog)
+	{
+		mLog = aLog;
+		return this;
+	}
+
+
+	public JPEGImageIO setLog(PrintStream aPrintStream)
+	{
+		mLog = new Log().setPrintStream(aPrintStream);
 		return this;
 	}
 }

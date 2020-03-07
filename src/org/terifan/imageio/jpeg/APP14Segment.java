@@ -1,12 +1,11 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class APP14Segment implements Segment
+public class APP14Segment extends Segment
 {
 	private JPEG mJPEG;
 
@@ -18,7 +17,7 @@ public class APP14Segment implements Segment
 
 
 	@Override
-	public void read(BitInputStream aBitStream) throws IOException
+	public APP14Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int offset = aBitStream.getStreamOffset();
 		int length = aBitStream.readInt16();
@@ -48,12 +47,6 @@ public class APP14Segment implements Segment
 
 		int remaining = offset + length - aBitStream.getStreamOffset();
 
-		if (VERBOSE)
-		{
-			System.out.println("Adobe APP14 marker segment");
-			System.out.println("  Color space " + mJPEG.mColorSpace);
-		}
-
 		if (remaining < 0)
 		{
 			throw new IOException("Expected offset " + (offset + length) + ", actual " + aBitStream.getStreamOffset());
@@ -62,12 +55,25 @@ public class APP14Segment implements Segment
 		{
 			aBitStream.skipBytes(remaining);
 		}
+
+		return this;
 	}
 
 
 	@Override
-	public void write(BitOutputStream aBitStream) throws IOException
+	public APP14Segment encode(BitOutputStream aBitStream) throws IOException
 	{
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+
+	@Override
+	public APP14Segment print(Log aLog) throws IOException
+	{
+		aLog.println("APP14 segment");
+		aLog.println("  Adobe");
+		aLog.println("  Color space " + mJPEG.mColorSpace);
+
+		return this;
 	}
 }

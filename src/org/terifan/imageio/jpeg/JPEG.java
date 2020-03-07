@@ -12,13 +12,13 @@ public class JPEG
 	public boolean mProgressive;
 	public boolean mOptimizedHuffman;
 
-	public QuantizationTable[] mQuantizationTables = new QuantizationTable[8];
+	public QuantizationTable[] mQuantizationTables;
 
-	public HuffmanTable[][] mHuffmanTables = new HuffmanTable[4][2];
-	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
-	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
+	public HuffmanTable[][] mHuffmanTables;
+	public HuffmanTable[] dc_huff_tbl_ptrs;
+	public HuffmanTable[] ac_huff_tbl_ptrs;
 
-	public ColorSpace mColorSpace = ColorSpace.YCBCR;
+	public ColorSpace mColorSpace;
 	public ICC_Profile mICCProfile;
 	public boolean mHasAdobeMarker;
 
@@ -31,9 +31,9 @@ public class JPEG
 	public int mRestartInterval;
 	public int mRestartMarkerIndex;
 
-	public int[] arith_dc_L = new int[NUM_ARITH_TBLS];
-	public int[] arith_dc_U = new int[NUM_ARITH_TBLS];
-	public int[] arith_ac_K = new int[NUM_ARITH_TBLS];
+	public int[] arith_dc_L;
+	public int[] arith_dc_U;
+	public int[] arith_ac_K;
 
 	public int num_hor_mcu;
 	public int num_ver_mcu;
@@ -47,12 +47,23 @@ public class JPEG
 	public int Se;
 	public int Ah;
 	public int Al;
-	public int lim_Se = DCTSIZE2 - 1;
+	public final int lim_Se = DCTSIZE2 - 1;
 	public int[][] coef_bits;
 
 
 	public JPEG()
 	{
+		mColorSpace = ColorSpace.YCBCR;
+		mQuantizationTables = new QuantizationTable[8];
+		mHuffmanTables = new HuffmanTable[4][2];
+
+		dc_huff_tbl_ptrs = new HuffmanTable[4];
+		ac_huff_tbl_ptrs = new HuffmanTable[4];
+
+		arith_ac_K = new int[NUM_ARITH_TBLS];
+		arith_dc_U = new int[NUM_ARITH_TBLS];
+		arith_dc_L = new int[NUM_ARITH_TBLS];
+
 		for (int i = 0; i < NUM_ARITH_TBLS; i++)
 		{
 			arith_dc_L[i] = 0;

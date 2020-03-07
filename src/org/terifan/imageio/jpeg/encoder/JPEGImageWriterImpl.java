@@ -9,35 +9,37 @@ import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGConstants;
+import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SOSSegment;
 
 
 public class JPEGImageWriterImpl
 {
-	public void create(JPEG aJPEG, BitOutputStream aOutput) throws IOException
+	public void create(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
 	{
 		aOutput.writeInt16(JPEGConstants.SOI);
 
-		new APP0Segment(aJPEG).write(aOutput);
+		new APP0Segment(aJPEG).encode(aOutput).log(aLog);
 
 		if (aJPEG.mICCProfile != null)
 		{
-			new APP2Segment(aJPEG).setType(APP2Segment.ICC_PROFILE).write(aOutput);
+			new APP2Segment(aJPEG).setType(APP2Segment.ICC_PROFILE).encode(aOutput);
 		}
 
-		new DQTSegment(aJPEG).write(aOutput);
+		new DQTSegment(aJPEG).encode(aOutput).log(aLog);
 
-		aJPEG.mSOFSegment.write(aOutput);
+		aJPEG.mSOFSegment.encode(aOutput).log(aLog);
 	}
 
 
-	public void finish(JPEG aJPEG, BitOutputStream aOutput) throws IOException
+	public void finish(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
 	{
 		aOutput.writeInt16(JPEGConstants.EOI);
+		aLog.println("EOI");
 	}
 
 
-	public void encodeCoefficients(JPEG aJPEG, BitOutputStream aOutput, ProgressionScript aProgressionScript) throws IOException
+	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, ProgressionScript aProgressionScript) throws IOException
 	{
 		if (aJPEG.mProgressive && aProgressionScript == null)
 		{
@@ -100,11 +102,6 @@ public class JPEGImageWriterImpl
 				}
 
 				sosSegment.prepareMCU();
-//
-//				if (JPEGConstants.VERBOSE)
-//				{
-//					System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
-//				}
 			}
 			else
 			{
@@ -137,7 +134,7 @@ public class JPEGImageWriterImpl
 				aJPEG.arith_dc_U = new int[]{1,1};
 				aJPEG.arith_ac_K = new int[]{5,5};
 
-				new DACSegment(aJPEG).write(aOutput, sosSegment);
+				new DACSegment(aJPEG, sosSegment).encode(aOutput).log(aLog);
 
 				if (encoder == null)
 				{
@@ -201,15 +198,12 @@ public class JPEGImageWriterImpl
 					HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
 				}
 
-				new DHTSegment(aJPEG).write(aOutput);
+				new DHTSegment(aJPEG).encode(aOutput).log(aLog);
 			}
 
-			if (JPEGConstants.VERBOSE)
-			{
-				System.out.println("  {ss=" + aJPEG.Ss + ", se=" + aJPEG.Se + ", ah=" + aJPEG.Ah + ", al=" + aJPEG.Al + "}");
-			}
+			sosSegment.encode(aOutput).log(aLog);
 
-			sosSegment.write(aOutput);
+			int streamOffset = aOutput.getStreamOffset();
 
 			encoder.start_pass(aJPEG, false);
 
@@ -251,6 +245,8 @@ public class JPEGImageWriterImpl
 			}
 
 			encoder.finish_pass(aJPEG, false);
+
+			aLog.println("<output " + (aOutput.getStreamOffset() - streamOffset) + " bytes>");
 		}
 	}
 }

@@ -25,7 +25,7 @@ public class JPEGImageReaderImpl
 	}
 
 
-	public JPEGImage read(BitInputStream aInput, JPEG aJPEG, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage) throws IOException
+	public JPEGImage decode(BitInputStream aInput, JPEG aJPEG, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage) throws IOException
 	{
 		int progressiveLevel = 0;
 		JPEGImage image = null;
@@ -74,13 +74,13 @@ public class JPEGImageReaderImpl
 			switch (nextSegment)
 			{
 				case APP0:
-					new APP0Segment(aJPEG).read(aInput);
+					new APP0Segment(aJPEG).decode(aInput);
 					break;
 				case APP1:
-					new APP1Segment(aJPEG).read(aInput);
+					new APP1Segment(aJPEG).decode(aInput);
 					break;
 				case APP2:
-					new APP2Segment(aJPEG).read(aInput);
+					new APP2Segment(aJPEG).decode(aInput);
 					break;
 				case APP12:
 				case APP13:
@@ -88,22 +88,22 @@ public class JPEGImageReaderImpl
 					aInput.skipBytes(aInput.readInt16() - 2); // skip length
 					break;
 				case APP14:
-					new APP14Segment(aJPEG).read(aInput);
+					new APP14Segment(aJPEG).decode(aInput);
 					break;
 				case DQT:
-					new DQTSegment(aJPEG).read(aInput);
+					new DQTSegment(aJPEG).decode(aInput);
 					break;
 				case DHT:
-					new DHTSegment(aJPEG).read(aInput);
+					new DHTSegment(aJPEG).decode(aInput);
 					break;
 				case DAC: // Arithmetic Table
-					new DACSegment(aJPEG).read(aInput);
+					new DACSegment(aJPEG).decode(aInput);
 					break;
 				case SOF0:
 //					mCompressionMode = "Baseline";
 					decoder = new HuffmanDecoder(aInput);
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
-					aJPEG.mSOFSegment.read(aInput);
+					aJPEG.mSOFSegment.decode(aInput);
 					break;
 				case SOF1:
 //					mCompressionMode = "Extended sequential, Huffman";
@@ -113,14 +113,14 @@ public class JPEGImageReaderImpl
 					decoder = new HuffmanDecoder(aInput);
 					aJPEG.mProgressive = true;
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
-					aJPEG.mSOFSegment.read(aInput);
+					aJPEG.mSOFSegment.decode(aInput);
 					break;
 				case SOF9:
 //					mCompressionMode = "Extended sequential, arithmetic";
 					decoder = new ArithmeticDecoder(aInput);
 					aJPEG.mArithmetic = true;
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
-					aJPEG.mSOFSegment.read(aInput);
+					aJPEG.mSOFSegment.decode(aInput);
 					break;
 				case SOF10:
 //					mCompressionMode = "Progressive, arithmetic";
@@ -128,7 +128,7 @@ public class JPEGImageReaderImpl
 					aJPEG.mArithmetic = true;
 					aJPEG.mProgressive = true;
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
-					aJPEG.mSOFSegment.read(aInput);
+					aJPEG.mSOFSegment.decode(aInput);
 					break;
 				case SOF3: // Lossless, Huffman
 				case SOF5: // Differential sequential, Huffman
@@ -141,7 +141,7 @@ public class JPEGImageReaderImpl
 					throw new IOException("Image encoding not supported.");
 				case SOS:
 					SOSSegment sosSegment = new SOSSegment(aJPEG);
-					sosSegment.read(aInput);
+					sosSegment.decode(aInput);
 					sosSegment.prepareMCU();
 
 					try

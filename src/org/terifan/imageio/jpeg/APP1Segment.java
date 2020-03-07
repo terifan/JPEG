@@ -1,13 +1,16 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 import org.terifan.imageio.jpeg.exif.Exif;
 
 
-public class APP1Segment implements Segment
+public class APP1Segment extends Segment
 {
+	private final static String EXIF = "Exif";
+
 	private JPEG mJPEG;
 	private Exif mExif;
 
@@ -24,52 +27,74 @@ public class APP1Segment implements Segment
 	}
 
 
-	@Override
-	public void read(BitInputStream aBitStream) throws IOException
+	public void setExif(Exif aExif)
 	{
-		int len = aBitStream.readInt16() - 2;
-
-		String header = "";
-
-		while (len-- > 0)
-		{
-			int c = aBitStream.readInt8();
-			if (c == 0)
-			{
-				break;
-			}
-			header += (char)c;
-		}
-
-		if (header.equals("Exif"))
-		{
-			len--;
-			if (aBitStream.readInt8() != 0)
-			{
-				throw new IOException("Bad TIFF header data");
-			}
-
-			byte[] exif = new byte[len - 1];
-
-			for (int i = 0; i < exif.length; i++, len--)
-			{
-				exif[i] = (byte)aBitStream.readInt8();
-			}
-
-			mExif = new Exif().decode(exif);
-		}
-
-		aBitStream.skipBytes(len);
-
-		if (JPEGConstants.VERBOSE)
-		{
-			System.out.printf("  Unsupported APP1 segment content (%s)%n", header);
-		}
+		mExif = aExif;
 	}
 
 
 	@Override
-	public void write(BitOutputStream aBitStream) throws IOException
+	public APP1Segment decode(BitInputStream aBitStream) throws IOException
 	{
+		int length = aBitStream.readInt16() - 2;
+
+		String header = aBitStream.readString();
+		length -= header.length() + 1;
+
+		switch (header)
+		{
+			case EXIF:
+				if (aBitStream.readInt8() != 0)
+				{
+					throw new IOException("Bad TIFF header data");
+				}
+
+				length--;
+				byte[] exif = new byte[length];
+
+				for (int i = 0; i < exif.length; i++, length--)
+				{
+					exif[i] = (byte)aBitStream.readInt8();
+				}
+
+				mExif = new Exif().decode(exif);
+				break;
+			default:
+				System.out.printf("  Ignoring unsupported APP1 segment content (%s)%n", header);
+				aBitStream.skipBytes(length);
+				break;
+		}
+
+		return this;
+	}
+
+
+	@Override
+	public APP1Segment encode(BitOutputStream aBitStream) throws IOException
+	{
+		if (mExif != null)
+		{
+			byte[] data = mExif.encode();
+
+			aBitStream.writeInt16(2 + 5 + data.length);
+			aBitStream.writeString("Exif");
+			aBitStream.write(data);
+		}
+
+		return this;
+	}
+
+
+	@Override
+	public APP1Segment print(Log aLog) throws IOException
+	{
+		if (mExif != null)
+		{
+			aLog.println("APP1 segment");
+			aLog.println("EXIF");
+			aLog.println(mExif);
+		}
+
+		return this;
 	}
 }

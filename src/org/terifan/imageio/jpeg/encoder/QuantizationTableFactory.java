@@ -1,6 +1,5 @@
 package org.terifan.imageio.jpeg.encoder;
 
-import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.QuantizationTable;
 
 
@@ -30,12 +29,12 @@ public class QuantizationTableFactory
 		99, 99, 99, 99, 99, 99, 99, 99
 	};
 
-			
+
 	public static QuantizationTable buildQuantTable(int aQuality, int aComponent)
 	{
 		int W = 8;
 		int H = 8;
-		
+
 		aQuality = Math.max(Math.min(aQuality, 100), 1);
 
 		if (aQuality < 50)
@@ -49,7 +48,7 @@ public class QuantizationTableFactory
 
 		int[] quantval = new int[W * H];
 
-		if (aComponent > 2)
+		if (aComponent > 1) // was > 2 ????
 		{
 			for (int i = 0; i < quantval.length; i++)
 			{

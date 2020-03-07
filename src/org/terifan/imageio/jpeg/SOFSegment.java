@@ -3,11 +3,10 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOFSegment implements Segment
+public class SOFSegment extends Segment
 {
 	private int mPrecision;
 	private int mHeight;
@@ -33,7 +32,7 @@ public class SOFSegment implements Segment
 
 
 	@Override
-	public void read(BitInputStream aBitStream) throws IOException
+	public SOFSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
 
@@ -56,7 +55,7 @@ public class SOFSegment implements Segment
 
 		for (int i = 0; i < numComponents; i++)
 		{
-			mComponents[i] = new ComponentInfo().read(aBitStream, i);
+			mComponents[i] = new ComponentInfo().decode(aBitStream, i);
 		}
 
 		if (numComponents == 1)
@@ -64,29 +63,12 @@ public class SOFSegment implements Segment
 			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
 		}
 
-		if (VERBOSE)
-		{
-			log();
-		}
-	}
-
-
-	public void log()
-	{
-		System.out.println("SOFMarkerSegment");
-		System.out.println("  precision=" + mPrecision + " bits");
-		System.out.println("  dimensions=" + mWidth + "x" + mHeight);
-		System.out.println("  numComponents=" + mComponents.length);
-
-		for (ComponentInfo mComponent : mComponents)
-		{
-			System.out.println("    " + mComponent);
-		}
+		return this;
 	}
 
 
 	@Override
-	public void write(BitOutputStream aBitStream) throws IOException
+	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		boolean baseline = true;
 		int type;
@@ -121,18 +103,25 @@ public class SOFSegment implements Segment
 
 		for (ComponentInfo comp : mComponents)
 		{
-			comp.write(aBitStream);
+			comp.encode(aBitStream);
 		}
 
-		if (VERBOSE)
+		return this;
+	}
+
+
+	@Override
+	public SOFSegment print(Log aLog) throws IOException
+	{
+		aLog.println("SOF segment");
+		aLog.println("  precision=" + mPrecision + " bits, width=" + mWidth + ", height=" + mHeight);
+
+		for (ComponentInfo mComponent : mComponents)
 		{
-			System.out.println("SOFMarkerSegment[precision=" + mPrecision + "bits, width=" + mWidth + ", height=" + mHeight + ", numComponents=" + mComponents.length + "]");
-
-			for (ComponentInfo mComponent : mComponents)
-			{
-				System.out.println("  " + mComponent);
-			}
+			mComponent.print(aLog);
 		}
+
+		return this;
 	}
 
 
