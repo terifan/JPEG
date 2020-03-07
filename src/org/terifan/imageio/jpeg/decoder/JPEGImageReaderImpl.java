@@ -54,17 +54,12 @@ public class JPEGImageReaderImpl
 
 				if ((nextSegment & 0xFF00) != 0xFF00 || nextSegment == -1)
 				{
-					if (aUpdateImage)
+					if (aUpdateImage && image != null)
 					{
 						ImageUpdater.updateImage(aJPEG, aIDCT, image.getImage());
 					}
 
-					System.out.println("Expected JPEG marker at " + aInput.getStreamOffset() + " (" + Integer.toHexString(aInput.getStreamOffset()) + ")");
-
-					Debug.hexDump(aInput);
-
-					break;
-//						throw new IOException("Error in JPEG stream; expected segment marker but found: " + Integer.toString(nextSegment, 16));
+					throw new IOException("Error in JPEG stream at offset " + aInput.getStreamOffset() + "; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 				}
 			}
 
