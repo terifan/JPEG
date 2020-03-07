@@ -116,7 +116,7 @@ public class APP0Segment extends Segment
 			if (mThumbnailData.length > 0)
 			{
 				aLog.println("  thumbnail");
-				aLog.println("  width=" + mThumbnailWidth + ", height=" + mThumbnailHeight + ", data=" + mThumbnailData.length + " bytes");
+				aLog.println("  width=%d, height=%d, data=%d bytes", mThumbnailWidth, mThumbnailHeight, mThumbnailData.length);
 			}
 		}
 		else
@@ -126,7 +126,7 @@ public class APP0Segment extends Segment
 			if (mThumbnailData.length > 0)
 			{
 				aLog.println("  thumbnail");
-				aLog.println("  format=" + mThumbnailFormat + ", data=" + mThumbnailData.length + " bytes");
+				aLog.println("  format=%d, data=%d bytes", mThumbnailFormat, mThumbnailData.length);
 			}
 		}
 

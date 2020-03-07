@@ -91,7 +91,7 @@ public class APP2Segment extends Segment
 				aLog.println("ICC_PROFILE");
 				break;
 			default:
-				aLog.println("Unsupported APP2 extension - " + mType);
+				aLog.println("Unsupported APP2 extension - %s", mType);
 				break;
 		}
 

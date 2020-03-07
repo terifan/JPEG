@@ -60,9 +60,9 @@ public class QuantizationTable
 			aLog.print("  ");
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aLog.printf("%7.3f ", mTable[i]);
+				aLog.print("%7.3f ", mTable[i]);
 			}
-			aLog.println();
+			aLog.println("");
 		}
 	}
 }

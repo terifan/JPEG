@@ -113,7 +113,7 @@ public class SOFSegment extends Segment
 	public SOFSegment print(Log aLog) throws IOException
 	{
 		aLog.println("SOF segment");
-		aLog.println("  precision=" + mPrecision + " bits, width=" + mWidth + ", height=" + mHeight);
+		aLog.println("  precision=%d bits, width=%d, height=%d", mPrecision, mWidth, mHeight);
 
 		for (ComponentInfo mComponent : mComponents)
 		{

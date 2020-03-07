@@ -246,7 +246,7 @@ public class JPEGImageWriterImpl
 
 			encoder.finish_pass(aJPEG, false);
 
-			aLog.println("<output " + (aOutput.getStreamOffset() - streamOffset) + " bytes" + (aJPEG.mProgressive ? ", progression level " + (1+progressionLevel) : "") + ">");
+			aLog.println("<image data %d bytes%s>", aOutput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + (1 + progressionLevel) : "");
 		}
 	}
 }

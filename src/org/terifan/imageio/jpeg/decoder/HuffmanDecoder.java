@@ -4,7 +4,6 @@ import org.terifan.imageio.jpeg.JPEGEntropyState;
 import java.io.IOException;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.HuffmanTable;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;

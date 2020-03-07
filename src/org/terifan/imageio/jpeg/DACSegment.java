@@ -117,14 +117,14 @@ public class DACSegment extends Segment
 	{
 		aLog.println("DAC segment");
 
-		aLog.println("  DC=" + mJPEG.arith_dc_U.length + ", AC=" + mJPEG.arith_ac_K.length);
+		aLog.println("  DC=%d, AC=%d", mJPEG.arith_dc_U.length, mJPEG.arith_ac_K.length);
 
 		if (aLog.isDetailed())
 		{
 			for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
 			{
-				aLog.println("    DC " + i);
-				aLog.println("      u=" + mJPEG.arith_dc_U[i] + ", l=" + mJPEG.arith_dc_L[i]);
+				aLog.println("    DC %d", i);
+				aLog.println("      u=%d, l=%d", mJPEG.arith_dc_U[i], mJPEG.arith_dc_L[i]);
 			}
 
 			for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
@@ -137,8 +137,8 @@ public class DACSegment extends Segment
 
 				if (found)
 				{
-					aLog.println("    AC " + i);
-					aLog.println("      k=" + mJPEG.arith_ac_K[i]);
+					aLog.println("    AC %d", i);
+					aLog.println("      k=%d", mJPEG.arith_ac_K[i]);
 				}
 			}
 		}

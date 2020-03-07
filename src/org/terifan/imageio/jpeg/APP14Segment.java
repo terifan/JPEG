@@ -72,7 +72,7 @@ public class APP14Segment extends Segment
 	{
 		aLog.println("APP14 segment");
 		aLog.println("  Adobe");
-		aLog.println("  Color space " + mJPEG.mColorSpace);
+		aLog.println("  Color space %d", mJPEG.mColorSpace);
 
 		return this;
 	}

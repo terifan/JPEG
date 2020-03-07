@@ -190,7 +190,7 @@ public class HuffmanTable
 	public void print(Log aLog)
 	{
 		aLog.println("  HuffmanTable");
-		aLog.println("    identity=" + mIndex + ",type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numSymbols=" + mNumSymbols + ", maxLength=" + mMaxLength);
+		aLog.println("    identity=%d, type=%s, numSymbols=%d, maxLength=%d", mIndex, mType == TYPE_AC ? "AC" : "DC", mNumSymbols, mNumSymbols);
 
 		for (int length = 1, code = 0, n = 0; length < 17; length++, code <<= 1)
 		{
@@ -204,7 +204,7 @@ public class HuffmanTable
 				{
 					s += 1 & ((code * shift) >> (mMaxLength-k-1));
 				}
-				aLog.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
+				aLog.println("%-"+mMaxLength+"s [%d] = %d", s, length, symbol);
 			}
 		}
 	}

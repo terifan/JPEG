@@ -75,7 +75,7 @@ public class JPEGImageReaderImpl
 				int length = aInput.readInt16() - 2;
 				aInput.skipBytes(length);
 
-				aLog.println("<unsupported segment " + Integer.toHexString(nextSegment) + ", " + length + " bytes>");
+				aLog.println("<unsupported segment %s, %d bytes>", Integer.toHexString(nextSegment), length);
 				continue;
 			}
 
@@ -176,17 +176,17 @@ public class JPEGImageReaderImpl
 						stop = true;
 					}
 
-					aLog.println("<image data " + (aInput.getStreamOffset() - streamOffset) + " bytes" + (aJPEG.mProgressive ? ", progression level " + progressionLevel : "") + ">");
+					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + progressionLevel : "");
 
 					break;
 				case DRI:
 					aInput.skipBytes(2); // skip length
 					aJPEG.mRestartInterval = aInput.readInt16();
-					aLog.println(marker);
+					aLog.println(marker.toString());
 					aLog.println("   " + aJPEG.mRestartInterval);
 					break;
 				case EOI:
-					aLog.println(SegmentMarker.EOI);
+					aLog.println(SegmentMarker.EOI.name());
 					if (aUpdateImage && !(aJPEG.mProgressive && aUpdateProgressiveImage))
 					{
 						ImageUpdater.updateImage(aJPEG, aIDCT, image.getImage());
@@ -200,7 +200,7 @@ public class JPEGImageReaderImpl
 				default:
 					int length = aInput.readInt16() - 2;
 					aInput.skipBytes(length);
-					aLog.println("<unsupported segment " + marker + ", " + length + " bytes>");
+					aLog.println("<unsupported segment %s, %d bytes>", marker, length);
 					break;
 			}
 		}

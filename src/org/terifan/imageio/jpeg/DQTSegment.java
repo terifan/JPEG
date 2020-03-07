@@ -111,7 +111,7 @@ public class DQTSegment extends Segment
 		{
 			if (table != null)
 			{
-				aLog.println("  identity=" + table.getIdentity() + ", precision=" + (table.getPrecision() == PRECISION_8_BITS ? 8 : 16) + " bits");
+				aLog.println("  identity=%d, precision=%d bits", table.getIdentity(), table.getPrecision() == PRECISION_8_BITS ? 8 : 16);
 
 				if (aLog.isDetailed())
 				{

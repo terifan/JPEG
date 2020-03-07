@@ -25,11 +25,11 @@ public class SaveJPEGDemo
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
 			new JPEGImageIO().setArithmetic(!true).setOptimizedHuffman(true).setProgressive(true).setQuality(93.36).setProgressionScript(null)
-//				.setLog(System.out)
+				.setLog(System.out)
 				.write(myImage, output);
 
 			myImage = new JPEGImageIO()
-//				.setLog(System.out)
+				.setLog(System.out)
 				.read(output);
 
 			ImageFrame.show(myImage).setTitle("" + output.length());

@@ -254,7 +254,7 @@ public class ExifTable
 			default:
 				if (VERBOSE)
 				{
-					System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s\n", aTag, aLength, aValue, format);
+					System.out.printf("  Unsupported Exif tag: tag=%04X length=%-4d value=%-4d format=%s", aTag, aLength, aValue, format);
 				}
 				output = null;
 				break;
@@ -513,12 +513,12 @@ public class ExifTable
 
 	void print(Log aLog, String aIndent)
 	{
-		aLog.println(aIndent + "Exif table");
+		aLog.println("%s Exif table", aIndent);
 		aIndent += "\t";
 
 		for (ExifEntry entry : mEntries)
 		{
-			aLog.println(aIndent + entry);
+			aLog.println("%s%s", aIndent, entry);
 		}
 
 		for (ExifTable table : mTables)

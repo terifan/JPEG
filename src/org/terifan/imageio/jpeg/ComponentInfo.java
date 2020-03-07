@@ -58,8 +58,7 @@ public class ComponentInfo
 	public ComponentInfo encode(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt8(mComponentId);
-		aBitStream.writeBits(mHorSampleFactor, 4);
-		aBitStream.writeBits(mVerSampleFactor, 4);
+		aBitStream.writeInt8((mHorSampleFactor << 4) + mVerSampleFactor);
 		aBitStream.writeInt8(mQuantizationTableId);
 
 		return this;
@@ -68,8 +67,8 @@ public class ComponentInfo
 
 	public void print(Log aLog)
 	{
-		aLog.println("  component " + ComponentInfo.Type.values()[mComponentId - 1].name());
-		aLog.println("    id=" + mComponentIndex + ", dc-table=" + mTableDC + ", ac-table=" + mTableAC + ", quantizationTableId=" + mQuantizationTableId + ", sample-factor=" + mHorSampleFactor + "x" + mVerSampleFactor);
+		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId - 1].name());
+		aLog.println("    id=%d, dc-table=%d, ac-table=%d, quantizationTableId=%d, sample-factor=%dx%d", mComponentIndex, mTableDC, mTableAC, mQuantizationTableId, mHorSampleFactor, mVerSampleFactor);
 	}
 
 

@@ -41,25 +41,7 @@ public class Log
 	}
 
 
-	public void println(Object aText)
-	{
-		if (mPrintStream != null)
-		{
-			mPrintStream.println(aText);
-		}
-	}
-
-
-	public void print(String aText)
-	{
-		if (mPrintStream != null)
-		{
-			mPrintStream.print(aText);
-		}
-	}
-
-
-	public void printf(String aText, Object... aParams)
+	public void print(String aText, Object... aParams)
 	{
 		if (mPrintStream != null)
 		{
@@ -68,10 +50,11 @@ public class Log
 	}
 
 
-	public void println()
+	public void println(String aText, Object... aParams)
 	{
 		if (mPrintStream != null)
 		{
+			mPrintStream.printf(aText, aParams);
 			mPrintStream.println();
 		}
 	}
