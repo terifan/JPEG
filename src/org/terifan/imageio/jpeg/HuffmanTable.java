@@ -13,7 +13,7 @@ public class HuffmanTable
 
 	private int mType;
 	private int mIndex;
-	private boolean mAlreadyWritten;
+	private boolean mSent;
 
 	// decoder
 
@@ -104,7 +104,7 @@ public class HuffmanTable
 
 	void encode(OutputStream aOutput) throws IOException
 	{
-		if (mAlreadyWritten)
+		if (mSent)
 		{
 			return;
 		}
@@ -129,7 +129,7 @@ public class HuffmanTable
 			}
 		}
 
-		mAlreadyWritten = true;
+		mSent = true;
 	}
 
 
@@ -191,11 +191,7 @@ public class HuffmanTable
 	{
 		aLog.println("  HuffmanTable");
 		aLog.println("    identity=" + mIndex + ",type=" + (mType == TYPE_AC ? "AC" : "DC") + ", numSymbols=" + mNumSymbols + ", maxLength=" + mMaxLength);
-	}
 
-
-	public void printDetails(Log aLog)
-	{
 		for (int length = 1, code = 0, n = 0; length < 17; length++, code <<= 1)
 		{
 			for (int j = 0; j < bits[length]; j++, code++)
@@ -211,5 +207,11 @@ public class HuffmanTable
 				aLog.printf("%-"+mMaxLength+"s [%d] = %d%n", s, length, symbol);
 			}
 		}
+	}
+
+
+	public boolean isSent()
+	{
+		return mSent;
 	}
 }

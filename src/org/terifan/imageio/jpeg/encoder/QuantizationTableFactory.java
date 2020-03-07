@@ -30,7 +30,7 @@ public class QuantizationTableFactory
 	};
 
 
-	public static QuantizationTable buildQuantTable(int aQuality, int aComponent)
+	public static QuantizationTable buildQuantTable(double aQuality, int aComponent)
 	{
 		int W = 8;
 		int H = 8;
@@ -57,7 +57,7 @@ public class QuantizationTableFactory
 
 			for (int i = 0; i < quantval.length; i++)
 			{
-				quantval[i] = Math.max(1, Math.min(255, (quantval[i] * aQuality + 50) / 100));
+				quantval[i] = (int)Math.max(1, Math.min(255, (quantval[i] * aQuality + 50) / 100));
 			}
 		}
 		else
@@ -70,7 +70,7 @@ public class QuantizationTableFactory
 			{
 				for (int x = 0; x < W; x++, i++)
 				{
-					quantval[i] = Math.max(1, Math.min(255, (table[x / sw + y / sh * 8] * aQuality + 50) / 100));
+					quantval[i] = (int)Math.max(1, Math.min(255, (table[x / sw + y / sh * 8] * aQuality + 50) / 100));
 				}
 			}
 		}

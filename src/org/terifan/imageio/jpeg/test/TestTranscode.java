@@ -27,13 +27,9 @@ public class TestTranscode
 
 			System.out.println("=================================================================================================================================================================================");
 
-			JPEGConstants.VERBOSE = true;
-
 			new JPEGImageIO().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
 
 //			transImageData.writeTo(new FileOutputStream("d:\\dev\\macos-catalina-cb-3840x2160-transcoded.jpg"));
-
-			JPEGConstants.VERBOSE = false;
 
 			System.out.println(transImageData.size());
 

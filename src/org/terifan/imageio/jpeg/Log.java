@@ -14,6 +14,19 @@ public class Log
 	}
 
 
+	public Log(PrintStream aPrintStream, boolean aDetailed)
+	{
+		mPrintStream = aPrintStream;
+		mDetailed = aDetailed;
+	}
+
+
+	public boolean isDetailed()
+	{
+		return mDetailed;
+	}
+
+
 	public Log setDetailed(boolean aDetailed)
 	{
 		mDetailed = aDetailed;
@@ -28,38 +41,38 @@ public class Log
 	}
 
 
-	public boolean isDetailed()
-	{
-		return mDetailed;
-	}
-
-
-	public PrintStream getPrintStream()
-	{
-		return mPrintStream;
-	}
-
-
 	public void println(Object aText)
 	{
-		mPrintStream.println(aText);
+		if (mPrintStream != null)
+		{
+			mPrintStream.println(aText);
+		}
 	}
 
 
 	public void print(String aText)
 	{
-		mPrintStream.print(aText);
+		if (mPrintStream != null)
+		{
+			mPrintStream.print(aText);
+		}
 	}
 
 
 	public void printf(String aText, Object... aParams)
 	{
-		mPrintStream.printf(aText, aParams);
+		if (mPrintStream != null)
+		{
+			mPrintStream.printf(aText, aParams);
+		}
 	}
 
 
 	public void println()
 	{
-		mPrintStream.println();
+		if (mPrintStream != null)
+		{
+			mPrintStream.println();
+		}
 	}
 }

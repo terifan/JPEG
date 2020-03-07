@@ -17,12 +17,12 @@ public abstract class ColorSpace
 	public abstract void rgbToYuv(int[] aRGB, int[] aY, int[] aCb, int[] aCr);
 
 	public abstract String getName();
-	
+
 	public final static ColorSpace YCBCR = new YCBCRColorSpaceFloat();
 	public final static ColorSpace YCCK = new YCBCRColorSpaceFloat();
 	public final static ColorSpace RGB = new RGBColorSpace();
 	public final static ColorSpace GRAYSCALE = new GrayScaleColorSpace();
-	
+
 
 	protected static int clamp(double aValue)
 	{
@@ -47,7 +47,7 @@ class YCBCRColorSpaceFloat extends ColorSpace
 		return (R << 16) + (G << 8) + B;
 	}
 
-	
+
 	@Override
 	public void rgbToYuv(int[] aRGB, int[] aY, int[] aCb, int[] aCr)
 	{
@@ -85,7 +85,7 @@ class GrayScaleColorSpace extends ColorSpace
 		return (aY << 16) + (aY << 8) + aY;
 	}
 
-	
+
 	@Override
 	public void rgbToYuv(int[] aRGB, int[] aY, int[] aCb, int[] aCr)
 	{
@@ -95,7 +95,7 @@ class GrayScaleColorSpace extends ColorSpace
 			int R = 255 & (c >> 16);
 			int G = 255 & (c >> 8);
 			int B = 255 & (c);
-			
+
 			int lu = clamp(R * 0.29900 + G * 0.58700 + B * 0.11400);
 
 			aY[i] = lu;
@@ -121,7 +121,7 @@ class RGBColorSpace extends ColorSpace
 		return (aY << 16) + (aCb << 8) + aCr;
 	}
 
-	
+
 	@Override
 	public void rgbToYuv(int[] aRGB, int[] aY, int[] aCb, int[] aCr)
 	{

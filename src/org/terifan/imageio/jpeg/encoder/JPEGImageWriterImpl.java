@@ -8,16 +8,16 @@ import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SOSSegment;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 public class JPEGImageWriterImpl
 {
 	public void create(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
 	{
-		aOutput.writeInt16(JPEGConstants.SOI);
+		aOutput.writeInt16(SegmentMarker.SOI.CODE);
 
 		new APP0Segment(aJPEG).encode(aOutput).log(aLog);
 
@@ -34,7 +34,7 @@ public class JPEGImageWriterImpl
 
 	public void finish(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
 	{
-		aOutput.writeInt16(JPEGConstants.EOI);
+		aOutput.writeInt16(SegmentMarker.EOI.CODE);
 		aLog.println("EOI");
 	}
 
@@ -43,7 +43,7 @@ public class JPEGImageWriterImpl
 	{
 		if (aJPEG.mProgressive && aProgressionScript == null)
 		{
-			aProgressionScript = new ProgressionScript(ProgressionScript.DC_THEN_AC);
+			aProgressionScript = new ProgressionScript(ProgressionScript.DEFAULT);
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
@@ -246,7 +246,7 @@ public class JPEGImageWriterImpl
 
 			encoder.finish_pass(aJPEG, false);
 
-			aLog.println("<output " + (aOutput.getStreamOffset() - streamOffset) + " bytes>");
+			aLog.println("<output " + (aOutput.getStreamOffset() - streamOffset) + " bytes" + (aJPEG.mProgressive ? ", progression level " + (1+progressionLevel) : "") + ">");
 		}
 	}
 }

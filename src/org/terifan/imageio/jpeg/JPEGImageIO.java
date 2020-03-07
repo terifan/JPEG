@@ -32,7 +32,7 @@ public class JPEGImageIO
 	private boolean mArithmetic;
 	private boolean mOptimizedHuffman;
 	private boolean mProgressive;
-	private int mQuality;
+	private double mQuality;
 	private boolean mUpdateProgressiveImage;
 	private Log mLog;
 
@@ -42,6 +42,7 @@ public class JPEGImageIO
 		mQuality = 90;
 		mIDCT = IDCTIntegerFast.class;
 		mFDCT = FDCTIntegerFast.class;
+		mLog = new Log();
 	}
 
 
@@ -54,7 +55,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			image = reader.decode(in, jpeg, idct, true, mUpdateProgressiveImage);
+			image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage);
 		}
 		catch (IOException e)
 		{
@@ -66,7 +67,7 @@ public class JPEGImageIO
 			return null;
 		}
 
-		return new ColorTransformer().colorTransform(jpeg, image);
+		return new ColorTransform().transform(jpeg, image);
 	}
 
 
@@ -120,7 +121,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			reader.decode(in, jpeg, null, false, false);
+			reader.decode(in, jpeg, mLog, null, false, false);
 		}
 		catch (IOException e)
 		{
@@ -244,13 +245,13 @@ public class JPEGImageIO
 	}
 
 
-	public int getQuality()
+	public double getQuality()
 	{
 		return mQuality;
 	}
 
 
-	public JPEGImageIO setQuality(int aQuality)
+	public JPEGImageIO setQuality(double aQuality)
 	{
 		mQuality = aQuality;
 		return this;

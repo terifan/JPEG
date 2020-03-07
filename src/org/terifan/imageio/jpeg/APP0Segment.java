@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
@@ -81,7 +80,7 @@ public class APP0Segment extends Segment
 	@Override
 	public APP0Segment encode(BitOutputStream aBitStream) throws IOException
 	{
-		aBitStream.writeInt16(JPEGConstants.APP0);
+		aBitStream.writeInt16(SegmentMarker.APP0.CODE);
 
 		if (mExtension)
 		{

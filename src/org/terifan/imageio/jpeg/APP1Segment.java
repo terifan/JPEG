@@ -91,8 +91,12 @@ public class APP1Segment extends Segment
 		if (mExif != null)
 		{
 			aLog.println("APP1 segment");
-			aLog.println("EXIF");
-			aLog.println(mExif);
+			aLog.println("  EXIF");
+
+			if (aLog.isDetailed())
+			{
+				mExif.print("    ", aLog);
+			}
 		}
 
 		return this;

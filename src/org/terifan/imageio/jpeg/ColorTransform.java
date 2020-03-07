@@ -5,9 +5,9 @@ import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
 
 
-public class ColorTransformer
+public class ColorTransform
 {
-	public BufferedImage colorTransform(JPEG aJPEG, JPEGImage aImage)
+	public BufferedImage transform(JPEG aJPEG, JPEGImage aImage)
 	{
 		BufferedImage image = aImage.getImage();
 

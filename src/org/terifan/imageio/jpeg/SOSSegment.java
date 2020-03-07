@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
@@ -57,7 +56,7 @@ public class SOSSegment extends Segment
 	@Override
 	public SOSSegment encode(BitOutputStream aBitStream) throws IOException
 	{
-		aBitStream.writeInt16(JPEGConstants.SOS);
+		aBitStream.writeInt16(SegmentMarker.SOS.CODE);
 		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);
 
 		aBitStream.writeInt8(mComponentIds.length);

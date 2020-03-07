@@ -3,6 +3,7 @@ package org.terifan.imageio.jpeg.exif;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import org.terifan.imageio.jpeg.Log;
 
 
 /**
@@ -510,19 +511,19 @@ public class ExifTable
 	}
 
 
-	void print(String aIndent)
+	void print(Log aLog, String aIndent)
 	{
-		System.out.println(aIndent + "Exif table");
+		aLog.println(aIndent + "Exif table");
 		aIndent += "\t";
 
 		for (ExifEntry entry : mEntries)
 		{
-			System.out.println(aIndent + entry);
+			aLog.println(aIndent + entry);
 		}
 
 		for (ExifTable table : mTables)
 		{
-			table.print(aIndent);
+			table.print(aLog, aIndent);
 		}
 	}
 

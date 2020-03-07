@@ -85,7 +85,7 @@ public class DACSegment extends Segment
 			}
 		}
 
-		aBitStream.writeInt16(JPEGConstants.DAC);
+		aBitStream.writeInt16(SegmentMarker.DAC.CODE);
 		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + ac));
 
 		for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
@@ -117,24 +117,29 @@ public class DACSegment extends Segment
 	{
 		aLog.println("DAC segment");
 
-		for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
-		{
-			aLog.println("DC " + i);
-			aLog.println(mJPEG.arith_dc_U[i] + " " + mJPEG.arith_dc_L[i]);
-		}
+		aLog.println("  DC=" + mJPEG.arith_dc_U.length + ", AC=" + mJPEG.arith_ac_K.length);
 
-		for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
+		if (aLog.isDetailed())
 		{
-			boolean found = false;
-			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+			for (int i = 0; i < mJPEG.arith_dc_U.length; i++)
 			{
-				found = mSOSSegment.getACTable(scanComponentIndex) == i;
+				aLog.println("    DC " + i);
+				aLog.println("      u=" + mJPEG.arith_dc_U[i] + ", l=" + mJPEG.arith_dc_L[i]);
 			}
 
-			if (found)
+			for (int i = 0; i < mJPEG.arith_ac_K.length; i++)
 			{
-				aLog.println("AC " + i);
-				aLog.println(mJPEG.arith_ac_K[i]);
+				boolean found = false;
+				for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+				{
+					found = mSOSSegment.getACTable(scanComponentIndex) == i;
+				}
+
+				if (found)
+				{
+					aLog.println("    AC " + i);
+					aLog.println("      k=" + mJPEG.arith_ac_K[i]);
+				}
 			}
 		}
 

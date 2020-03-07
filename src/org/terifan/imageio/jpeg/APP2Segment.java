@@ -70,7 +70,7 @@ public class APP2Segment extends Segment
 		{
 			byte[] data = mJPEG.mICCProfile.getData();
 
-			aBitStream.writeInt16(JPEGConstants.APP2);
+			aBitStream.writeInt16(SegmentMarker.APP2.CODE);
 			aBitStream.writeInt16(2 + 12 + 2 + data.length);
 			aBitStream.writeString(ICC_PROFILE);
 			aBitStream.writeInt16(mVersion);

@@ -6,9 +6,9 @@ import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import static org.terifan.imageio.jpeg.JPEGConstants.RST0;
 import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 /*
@@ -415,7 +415,7 @@ public class ArithmeticEncoder implements Encoder
 		finish_pass(aJPEG, false);
 
 		emit_byte(0xFF, aJPEG);
-		emit_byte(RST0 + restart_num, aJPEG);
+		emit_byte(SegmentMarker.RST0.CODE + restart_num, aJPEG);
 
 		/* Re-initialize statistics areas */
 		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.JPEGConstants;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 public class JPEGExif
@@ -24,23 +25,23 @@ public class JPEGExif
 	{
 		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(aImageData));
 
-		if (dis.readShort() != (short)JPEGConstants.SOI)
+		if (dis.readShort() != (short)SegmentMarker.SOI.CODE)
 		{
 			throw new IOException("Not a JPEG file");
 		}
 
 		for (;;)
 		{
-			int code = dis.readShort();
+			int code = 0xffff & dis.readShort();
 
-			if (code == (short)JPEGConstants.EOI || code == (short)JPEGConstants.SOS)
+			if (code == SegmentMarker.EOI.CODE || code == SegmentMarker.SOS.CODE)
 			{
 				break;
 			}
 
 			int len = 0xffff & dis.readShort();
 
-			if (code == (short)JPEGConstants.APP1 && len > 6)
+			if (code == SegmentMarker.APP1.CODE && len > 6)
 			{
 				byte[] buf = new byte[6];
 				dis.readFully(buf);
@@ -84,21 +85,21 @@ public class JPEGExif
 
 		ByteBuffer dis = ByteBuffer.wrap(aImageData);
 
-		if (dis.getShort() != (short)JPEGConstants.SOI)
+		if (dis.getShort() != (short)SegmentMarker.SOI.CODE)
 		{
 			throw new IOException("Not a JPEG file");
 		}
 
-		dos.writeShort(JPEGConstants.SOI);
+		dos.writeShort(SegmentMarker.SOI.CODE);
 
 		for (;;)
 		{
 			int pos = dis.position();
 			int code = dis.getShort() & 0xffff;
 
-			if (code != JPEGConstants.APP0 && aExifData != null && aExifData.length > 0)
+			if (code != SegmentMarker.APP0.CODE && aExifData != null && aExifData.length > 0)
 			{
-				dos.writeShort(JPEGConstants.APP1);
+				dos.writeShort(SegmentMarker.APP1.CODE);
 				dos.writeShort(aExifData.length + 2 + 6);
 				dos.write("Exif".getBytes());
 				dos.writeShort(0);
@@ -107,7 +108,7 @@ public class JPEGExif
 				aExifData = null;
 			}
 
-			if (code == JPEGConstants.SOS || code == JPEGConstants.EOI) // copy remaining bytes and return
+			if (code == SegmentMarker.SOS.CODE || code == SegmentMarker.EOI.CODE) // copy remaining bytes and return
 			{
 				byte [] tmp = new byte[aImageData.length - dis.position()];
 				dis.get(tmp, 0, tmp.length);
@@ -120,7 +121,7 @@ public class JPEGExif
 
 			int len = dis.getShort() & 0xffff;
 
-			if (code != JPEGConstants.APP1) // ignore app chunks containing metadata
+			if (code != SegmentMarker.APP1.CODE) // ignore app chunks containing metadata
 			{
 				byte [] tmp = new byte[len + 2];
 				dis.position(pos);

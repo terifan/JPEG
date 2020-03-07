@@ -56,7 +56,7 @@ public class DQTSegment extends Segment
 
 			int len = 2 + 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 128);
 
-			aBitStream.writeInt16(JPEGConstants.DQT);
+			aBitStream.writeInt16(SegmentMarker.DQT.CODE);
 			aBitStream.writeInt16(len);
 			aBitStream.writeInt8(((table.getPrecision() == PRECISION_8_BITS ? 0 : 1) << 3) | table.getIdentity());
 
@@ -109,11 +109,14 @@ public class DQTSegment extends Segment
 		aLog.println("DQT segment");
 		for (QuantizationTable table : mJPEG.mQuantizationTables)
 		{
-			aLog.println("  identity=" + table.getIdentity() + ", precision=" + (table.getPrecision() == PRECISION_8_BITS ? 8 : 16) + " bits");
-
-			if (aLog.isDetailed())
+			if (table != null)
 			{
-				table.print(aLog);
+				aLog.println("  identity=" + table.getIdentity() + ", precision=" + (table.getPrecision() == PRECISION_8_BITS ? 8 : 16) + " bits");
+
+				if (aLog.isDetailed())
+				{
+					table.print(aLog);
+				}
 			}
 		}
 		return this;

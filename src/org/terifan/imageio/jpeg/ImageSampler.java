@@ -8,6 +8,7 @@ public class ImageSampler
 {
 	public static void sampleImage(JPEG aJPEG, BufferedImage aImage, FDCT aFDCT) throws UnsupportedOperationException
 	{
+		ColorSpace colorSpace = ColorSpace.YCBCR;
 		int numComponents = aJPEG.mSOFSegment.getComponents().length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
@@ -37,7 +38,7 @@ public class ImageSampler
 
 				aImage.getRGB(bx, by, mcuWidth, mcuHeight, raster, 0, mcuWidth);
 
-				ColorSpace.YCBCR.rgbToYuv(raster, colors[0], colors[1], colors[2]);
+				colorSpace.rgbToYuv(raster, colors[0], colors[1], colors[2]);
 
 				for (int ci = 0, blockIndex = 0; ci < numComponents; ci++)
 				{

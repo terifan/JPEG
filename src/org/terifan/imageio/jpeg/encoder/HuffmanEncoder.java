@@ -9,6 +9,7 @@ import org.terifan.imageio.jpeg.JPEGConstants;
 import static org.terifan.imageio.jpeg.JPEGConstants.*;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.HuffmanTable;
+import org.terifan.imageio.jpeg.SegmentMarker;
 
 
 /*
@@ -510,7 +511,7 @@ public class HuffmanEncoder implements Encoder
 		flush_bits_s(state);
 
 		emit_byte_s(state, 0xFF);
-		emit_byte_s(state, RST0 + restart_num);
+		emit_byte_s(state, SegmentMarker.RST0.CODE + restart_num);
 
 		/* Re-initialize DC predictions to 0 */
 		for (ci = 0; ci < state.cinfo.comps_in_scan; ci++)
@@ -533,7 +534,7 @@ public class HuffmanEncoder implements Encoder
 		{
 			flush_bits_e(entropy);
 			emit_byte_e(entropy, 0xFF);
-			emit_byte_e(entropy, RST0 + restart_num);
+			emit_byte_e(entropy, SegmentMarker.RST0.CODE + restart_num);
 		}
 
 		if (entropy.cinfo.Ss == 0)

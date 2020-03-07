@@ -70,31 +70,30 @@ public class SOFSegment extends Segment
 	@Override
 	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
 	{
-		boolean baseline = true;
-		int type;
+		SegmentMarker type;
 
 		if (mJPEG.mArithmetic && mJPEG.mProgressive)
 		{
-			type = JPEGConstants.SOF10;
+			type = SegmentMarker.SOF10;
 		}
 		else if (mJPEG.mArithmetic)
 		{
-			type = JPEGConstants.SOF9;
+			type = SegmentMarker.SOF9;
 		}
 		else if (mJPEG.mProgressive)
 		{
-			type = JPEGConstants.SOF2;
+			type = SegmentMarker.SOF2;
 		}
-		else if (baseline)
+		else if (false) // unsupported: extended huffman
 		{
-			type = JPEGConstants.SOF0;
+			type = SegmentMarker.SOF1;
 		}
-		else
+		else // baseline
 		{
-			type = JPEGConstants.SOF1;
+			type = SegmentMarker.SOF0;
 		}
 
-		aBitStream.writeInt16(type);
+		aBitStream.writeInt16(type.CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);
 		aBitStream.writeInt8(mPrecision);
 		aBitStream.writeInt16(mHeight);
