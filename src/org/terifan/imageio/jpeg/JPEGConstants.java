@@ -111,28 +111,6 @@ public class JPEGConstants
 	public final static int JPG13 = 0xFFFD;  // Reserved for JPEG extensions, fatal error
 	public final static int COM = 0xFFFE;    // Comment
 
-	public final static String DEFAULT_PROGRESSION_SCRIPT =
-		"# Initial DC scan for Y,Cb,Cr (lowest bit not sent)\n" +
-		"0,1,2: 0-0,   0, 1 ;\n" +
-		"# First AC scan: send first 5 Y AC coefficients, minus 2 lowest bits:\n" +
-		"0:     1-5,   0, 2 ;\n" +
-		"# Send all Cr,Cb AC coefficients, minus lowest bit:\n" +
-		"# (chroma data is usually too small to be worth subdividing further;\n" +
-		"#  but note we send Cr first since eye is least sensitive to Cb)\n" +
-		"2:     1-63,  0, 1 ;\n" +
-		"1:     1-63,  0, 1 ;\n" +
-		"# Send remaining Y AC coefficients, minus 2 lowest bits:\n" +
-		"0:     6-63,  0, 2 ;\n" +
-		"# Send next-to-lowest bit of all Y AC coefficients:\n" +
-		"0:     1-63,  2, 1 ;\n" +
-		"# At this point we've sent all but the lowest bit of all coefficients.\n" +
-		"# Send lowest bit of DC coefficients\n" +
-		"0,1,2: 0-0,   1, 0 ;\n" +
-		"# Send lowest bit of AC coefficients\n" +
-		"2:     1-63,  1, 0 ;\n" +
-		"1:     1-63,  1, 0 ;\n" +
-		"# Y AC lowest bit scan is last; it's usually the largest scan\n" +
-		"0:     1-63,  1, 0 ;";
 
 	public static String getSOFDescription(int aMarker)
 	{

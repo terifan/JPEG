@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DHTSegment
+public class DHTSegment implements Segment
 {
 	private JPEG mJPEG;
 
@@ -17,6 +17,7 @@ public class DHTSegment
 	}
 
 
+	@Override
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -48,6 +49,7 @@ public class DHTSegment
 	}
 
 
+	@Override
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)

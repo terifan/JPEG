@@ -33,7 +33,7 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	void startPass(JPEG aJPEG) throws IOException
 	{
-		aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+		aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
 
 		mBitStream.align();
 		mEOBRun = 0;
@@ -49,7 +49,7 @@ public class HuffmanDecoder extends Decoder
 	@Override
 	boolean decodeMCU(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (aJPEG.entropy.restarts_to_go == 0)
 			{
@@ -68,7 +68,7 @@ public class HuffmanDecoder extends Decoder
 				}
 
 				aJPEG.restartMarkerIndex = (aJPEG.restartMarkerIndex + 1) & 7;
-				aJPEG.entropy.restarts_to_go = aJPEG.restart_interval;
+				aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
 			}
 
 			aJPEG.entropy.restarts_to_go--;

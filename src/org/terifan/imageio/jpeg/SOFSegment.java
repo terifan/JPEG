@@ -7,7 +7,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.VERBOSE;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOFSegment
+public class SOFSegment implements Segment
 {
 	private int mPrecision;
 	private int mHeight;
@@ -32,7 +32,8 @@ public class SOFSegment
 	}
 
 
-	public SOFSegment read(BitInputStream aBitStream) throws IOException
+	@Override
+	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
 
@@ -44,26 +45,26 @@ public class SOFSegment
 		mPrecision = aBitStream.readInt8();
 		mHeight = aBitStream.readInt16();
 		mWidth = aBitStream.readInt16();
-		mJPEG.num_components = aBitStream.readInt8();
+		mJPEG.mNumComponents = aBitStream.readInt8();
 
 		if (mPrecision != 8)
 		{
 			throw new IOException("mPrecision illegal value: " + mPrecision);
 		}
 
-		mComponents = new ComponentInfo[mJPEG.num_components];
+		mComponents = new ComponentInfo[mJPEG.mNumComponents];
 
-		for (int i = 0; i < mJPEG.num_components; i++)
+		for (int i = 0; i < mJPEG.mNumComponents; i++)
 		{
 			mComponents[i] = new ComponentInfo().read(aBitStream, i);
 		}
 
-		mJPEG.width = mWidth;
-		mJPEG.height = mHeight;
-		mJPEG.components = mComponents;
+		mJPEG.mWidth = mWidth;
+		mJPEG.mHeight = mHeight;
+		mJPEG.mComponents = mComponents;
 		mJPEG.precision = mPrecision;
-		
-		if (mJPEG.num_components == 1)
+
+		if (mJPEG.mNumComponents == 1)
 		{
 			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
 		}
@@ -72,8 +73,6 @@ public class SOFSegment
 		{
 			log();
 		}
-
-		return this;
 	}
 
 
@@ -91,7 +90,8 @@ public class SOFSegment
 	}
 
 
-	public SOFSegment write(BitOutputStream aBitStream) throws IOException
+	@Override
+	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		boolean baseline = true;
 		int type;
@@ -138,8 +138,6 @@ public class SOFSegment
 				System.out.println("  " + mComponent);
 			}
 		}
-
-		return this;
 	}
 
 

@@ -5,7 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 
 
 public class TestEncode

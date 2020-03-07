@@ -460,12 +460,12 @@ public class ArithmeticEncoder implements Encoder
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -575,12 +575,12 @@ public class ArithmeticEncoder implements Encoder
 		int v, v2, m;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -705,12 +705,12 @@ public class ArithmeticEncoder implements Encoder
 		int Al, blkn;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -745,12 +745,12 @@ public class ArithmeticEncoder implements Encoder
 		int v;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -906,12 +906,12 @@ public class ArithmeticEncoder implements Encoder
 		ComponentInfo compptr;
 
 		/* Emit restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
 				emit_restart(aJPEG, entropy.next_restart_num);
-				entropy.restarts_to_go = aJPEG.restart_interval;
+				entropy.restarts_to_go = aJPEG.mRestartInterval;
 				entropy.next_restart_num++;
 				entropy.next_restart_num &= 7;
 			}
@@ -1197,7 +1197,7 @@ public class ArithmeticEncoder implements Encoder
 		/* empty */
 
 		/* Initialize restart stuff */
-		entropy.restarts_to_go = aJPEG.restart_interval;
+		entropy.restarts_to_go = aJPEG.mRestartInterval;
 		entropy.next_restart_num = 0;
 	}
 

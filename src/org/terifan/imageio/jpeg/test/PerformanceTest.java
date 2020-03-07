@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 
 
 public class PerformanceTest

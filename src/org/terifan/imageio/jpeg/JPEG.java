@@ -17,8 +17,8 @@ public class JPEG
 	public boolean mOptimizedHuffman;
 	public int num_hor_mcu;
 	public int num_ver_mcu;
-	public int width;
-	public int height;
+	public int mWidth;
+	public int mHeight;
 	public int mDensitiesUnits;
 	public int mDensityX;
 	public int mDensityY;
@@ -30,11 +30,11 @@ public class JPEG
 
 	public int[][][][] mCoefficients;
 
-	public ComponentInfo[] components;
+	public ComponentInfo[] mComponents;
 	public JPEGEntropyState entropy;
 	public int[] MCU_membership;
 	public ComponentInfo[] cur_comp_info;
-	public int num_components;
+	public int mNumComponents;
 	public int blocks_in_MCU;
 	public int comps_in_scan;
 	public boolean saw_Adobe_marker;
@@ -47,16 +47,12 @@ public class JPEG
 	public int lim_Se = DCTSIZE2 - 1;
 	public int[][] coef_bits;
 
-	public int restart_interval;
+	public int mRestartInterval;
 	public int restartMarkerIndex;
 	public ICC_Profile mICCProfile;
 
 	public HuffmanTable[] dc_huff_tbl_ptrs = new HuffmanTable[4];
 	public HuffmanTable[] ac_huff_tbl_ptrs = new HuffmanTable[4];
-
-//	public int next_output_byte_offset;
-//	public byte[] next_output_byte = new byte[16];
-//	public int free_in_buffer = 16;
 
 	public JPEG()
 	{
@@ -72,5 +68,33 @@ public class JPEG
 	public int[][][][] getCoefficients()
 	{
 		return mCoefficients;
+	}
+
+
+	public String getSubSampling()
+	{
+		StringBuilder sb = new StringBuilder();
+		for (ComponentInfo ci : mComponents)
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(",");
+			}
+			sb.append(ci.getHorSampleFactor() + "x" + ci.getVerSampleFactor());
+		}
+
+		switch (sb.toString())
+		{
+			case "1x1,1x1,1x1":	return "4:4:4"; // 1 1
+			case "1x2,1x1,1x1":	return "4:4:0"; // 1 2
+			case "2----------":	return "4:4:1"; // 1 4
+			case "2x1,1x1,1x1":	return "4:2:2"; // 2 1
+			case "2x2,1x1,1x1":	return "4:2:0"; // 2 2
+			case "3----------":	return "4:2:1"; // 2 4
+			case "4x1,1x1,1x1":	return "4:1:1"; // 4 1
+			case "4x1,2x1,2x1":	return "4:1:0"; // 4 2
+		}
+
+		return sb.toString();
 	}
 }

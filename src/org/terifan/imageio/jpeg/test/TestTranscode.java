@@ -7,7 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
+import org.terifan.imageio.jpeg.examples.res.R;
 
 
 public class TestTranscode
@@ -16,7 +17,7 @@ public class TestTranscode
 	{
 		try
 		{
-			URL file = TestTranscode.class.getResource("Swallowtail.jpg");
+			URL file = R.class.getResource("Swallowtail.jpg");
 //			URL file = new URL("file:///d:/dev/macos-catalina-cb-3840x2160-original.jpg");
 
 			ByteArrayOutputStream transImageData = new ByteArrayOutputStream();

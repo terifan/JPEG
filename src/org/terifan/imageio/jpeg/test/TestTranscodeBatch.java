@@ -9,8 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.JPEGImageIO;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 
 
 public class TestTranscodeBatch

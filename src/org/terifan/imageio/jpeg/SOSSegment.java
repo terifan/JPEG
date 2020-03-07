@@ -23,7 +23,7 @@ public class SOSSegment
 	}
 
 
-	public SOSSegment read(BitInputStream aBitStream) throws IOException
+	public SOSSegment readFrom(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 
@@ -93,7 +93,7 @@ public class SOSSegment
 	}
 
 
-	public SOSSegment write(BitOutputStream aBitStream) throws IOException
+	public SOSSegment writeTo(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.SOS);
 		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);

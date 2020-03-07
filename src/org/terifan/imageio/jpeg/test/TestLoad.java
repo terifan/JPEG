@@ -2,7 +2,7 @@ package org.terifan.imageio.jpeg.test;
 
 import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.JPEGConstants;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 
 
 public class TestLoad

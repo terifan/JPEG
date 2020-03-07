@@ -6,9 +6,10 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 
 
 public class ImageFrame extends JFrame
@@ -21,19 +22,32 @@ public class ImageFrame extends JFrame
 	}
 
 
-	public static void show(File aFile) throws IOException
+	public static ImageFrame show(File aFile) throws IOException
 	{
 		ImageFrame imageFrame = new ImageFrame();
 		imageFrame.mImage = new JPEGImageIO().read(aFile);
+//		imageFrame.mImage = ImageIO.read(aFile);
 		imageFrame.display();
+
+		return imageFrame;
 	}
 
 
-	public static void show(BufferedImage aImage)
+	public static ImageFrame show(BufferedImage aImage)
 	{
 		ImageFrame imageFrame = new ImageFrame();
 		imageFrame.mImage = aImage;
 		imageFrame.display();
+
+		return imageFrame;
+	}
+
+
+	public ImageFrame setImage(BufferedImage aImage)
+	{
+		mImage = aImage;
+		repaint();
+		return this;
 	}
 
 
@@ -77,12 +91,5 @@ public class ImageFrame extends JFrame
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setVisible(true);
-	}
-
-
-	public ImageFrame setImage(BufferedImage aImage)
-	{
-		mImage = aImage;
-		return this;
 	}
 }

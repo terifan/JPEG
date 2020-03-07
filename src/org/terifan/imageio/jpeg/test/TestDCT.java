@@ -11,11 +11,11 @@ import org.terifan.imageio.jpeg.QuantizationTable;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
+import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
 
 

@@ -254,7 +254,7 @@ public class ArithmeticDecoder extends Decoder
 		/* force reading 2 initial bytes to fill C */
 
 		/* Reset restart counter */
-		entropy.restarts_to_go = cinfo.restart_interval;
+		entropy.restarts_to_go = cinfo.mRestartInterval;
 	}
 
 
@@ -601,7 +601,7 @@ public class ArithmeticDecoder extends Decoder
 		JPEGEntropyState entropy = aJPEG.entropy;
 
 		/* Process restart marker if needed */
-		if (aJPEG.restart_interval != 0)
+		if (aJPEG.mRestartInterval != 0)
 		{
 			if (entropy.restarts_to_go == 0)
 			{
@@ -955,7 +955,7 @@ public class ArithmeticDecoder extends Decoder
 		/* force reading 2 initial bytes to fill C */
 
 		/* Initialize restart counter */
-		entropy.restarts_to_go = cinfo.restart_interval;
+		entropy.restarts_to_go = cinfo.mRestartInterval;
 	}
 
 
@@ -983,7 +983,7 @@ public class ArithmeticDecoder extends Decoder
 			entropy.dc_stats[i] = null;
 			entropy.ac_stats[i] = null;
 			entropy.dc_context = new int[DC_STAT_BINS];
-			entropy.last_dc_val = new int[cinfo.num_components];
+			entropy.last_dc_val = new int[cinfo.mNumComponents];
 		}
 
 		/* Initialize index for fixed probability estimation */
@@ -992,8 +992,8 @@ public class ArithmeticDecoder extends Decoder
 		if (cinfo.mProgressive)
 		{
 			/* Create progression status table */
-			cinfo.coef_bits = new int[cinfo.num_components][DCTSIZE2];
-			for (int ci = 0; ci < cinfo.num_components; ci++)
+			cinfo.coef_bits = new int[cinfo.mNumComponents][DCTSIZE2];
+			for (int ci = 0; ci < cinfo.mNumComponents; ci++)
 			{
 				for (int i = 0; i < DCTSIZE2; i++)
 				{

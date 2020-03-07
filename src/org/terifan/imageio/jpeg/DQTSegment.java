@@ -9,7 +9,7 @@ import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_8_BITS;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DQTSegment
+public class DQTSegment implements Segment
 {
 	private JPEG mJPEG;
 
@@ -20,6 +20,7 @@ public class DQTSegment
 	}
 
 
+	@Override
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -82,6 +83,7 @@ public class DQTSegment
 	}
 
 
+	@Override
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		for (QuantizationTable table : mJPEG.mQuantizationTables)

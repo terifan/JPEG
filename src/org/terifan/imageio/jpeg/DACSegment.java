@@ -7,7 +7,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DACSegment
+public class DACSegment implements Segment
 {
 	private JPEG mJPEG;
 
@@ -18,6 +18,7 @@ public class DACSegment
 	}
 
 
+	@Override
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -75,14 +76,14 @@ public class DACSegment
 			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
 				found = aSOSSegment.getACTable(scanComponentIndex) == i;
-			}			
+			}
 
 			if (found)
 			{
 				ac++;
 			}
 		}
-		
+
 		aBitStream.writeInt16(JPEGConstants.DAC);
 		aBitStream.writeInt16(2 + 2 * (mJPEG.arith_dc_U.length + ac));
 
@@ -97,7 +98,7 @@ public class DACSegment
 			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
 			{
 				found = aSOSSegment.getACTable(scanComponentIndex) == i;
-			}			
+			}
 
 			if (found)
 			{
@@ -105,5 +106,12 @@ public class DACSegment
 				aBitStream.writeInt8(mJPEG.arith_ac_K[i]);
 			}
 		}
+	}
+
+
+	@Override
+	public void write(BitOutputStream aBitStream) throws IOException
+	{
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 }

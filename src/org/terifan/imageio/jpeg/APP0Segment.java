@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class APP0Segment
+public class APP0Segment implements Segment
 {
 	private JPEG mJPEG;
 
@@ -21,6 +21,7 @@ public class APP0Segment
 	}
 
 
+	@Override
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
@@ -83,6 +84,7 @@ public class APP0Segment
 	}
 
 
+	@Override
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(JPEGConstants.APP0);

@@ -15,8 +15,8 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.encoder.JPEGImageIO;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReader;
+import org.terifan.imageio.jpeg.JPEGImageIO;
+import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 
 
 public class TestExportCoefficients

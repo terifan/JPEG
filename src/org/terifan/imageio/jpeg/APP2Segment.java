@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class APP2Segment
+public class APP2Segment implements Segment
 {
 	public final static String ICC_PROFILE = "ICC_PROFILE";
 	public final static String MPF = "MPF";
@@ -21,6 +21,7 @@ public class APP2Segment
 	}
 
 
+	@Override
 	public void read(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
@@ -62,6 +63,7 @@ public class APP2Segment
 	}
 
 
+	@Override
 	public void write(BitOutputStream aBitStream) throws IOException
 	{
 		switch (mType)
