@@ -6,6 +6,7 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
+import static org.terifan.imageio.jpeg.JPEGConstants.LIM_SE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
@@ -241,7 +242,7 @@ public class ArithmeticDecoder extends Decoder
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!cinfo.mProgressive && cinfo.lim_Se != 0) || (cinfo.mProgressive && cinfo.Ss != 0))
+			if ((!cinfo.mProgressive && LIM_SE != 0) || (cinfo.mProgressive && cinfo.Ss != 0))
 			{
 				Arrays.fill(entropy.ac_stats[compptr.getTableAC()], 0);
 			}
@@ -728,7 +729,7 @@ public class ArithmeticDecoder extends Decoder
 			block[0] = entropy.last_dc_val[ci];
 
 			/* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
-			if (aJPEG.lim_Se == 0)
+			if (LIM_SE == 0)
 			{
 				continue;
 			}
@@ -753,9 +754,9 @@ public class ArithmeticDecoder extends Decoder
 						break;
 					}
 					st_off += 3;
-					if (k >= aJPEG.lim_Se)
+					if (k >= LIM_SE)
 					{
-						WARNMS(aJPEG, JWRN_ARITH_BAD_CODE + " - 6 " + k + " >= " + aJPEG.lim_Se);
+						WARNMS(aJPEG, JWRN_ARITH_BAD_CODE + " - 6 " + k + " >= " + LIM_SE);
 						entropy.ct = -1;
 						/* spectral overflow */
 						return true;
@@ -803,7 +804,7 @@ public class ArithmeticDecoder extends Decoder
 				}
 				block[NATURAL_ORDER[k]] = v;
 			}
-			while (k < aJPEG.lim_Se);
+			while (k < LIM_SE);
 		}
 
 		return true;
@@ -820,73 +821,73 @@ public class ArithmeticDecoder extends Decoder
 	 * Initialize for an arithmetic-compressed scan.
 	 */
 	@Override
-	void startPass(JPEG cinfo)
+	void startPass(JPEG aJPEG)
 	{
-		JPEGEntropyState entropy = cinfo.entropy;
+		JPEGEntropyState entropy = aJPEG.entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
-		if (cinfo.mProgressive)
+		if (aJPEG.mProgressive)
 		{
 			/* Validate progressive scan parameters */
-			if (cinfo.Ss == 0)
+			if (aJPEG.Ss == 0)
 			{
-				if (cinfo.Se != 0)
+				if (aJPEG.Se != 0)
 				{
-					ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
 				}
 			}
 			else
 			{
 				/* need not check Ss/Se < 0 since they came from unsigned bytes */
-				if (cinfo.Se < cinfo.Ss || cinfo.Se > cinfo.lim_Se)
+				if (aJPEG.Se < aJPEG.Ss || aJPEG.Se > LIM_SE)
 				{
-					ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
 				}
 				/* AC scans may have only one component */
-				if (cinfo.comps_in_scan != 1)
+				if (aJPEG.comps_in_scan != 1)
 				{
-					ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
 				}
 			}
-			if (cinfo.Ah != 0)
+			if (aJPEG.Ah != 0)
 			{
 				/* Successive approximation refinement scan: must have Al = Ah-1. */
-				if (cinfo.Ah - 1 != cinfo.Al)
+				if (aJPEG.Ah - 1 != aJPEG.Al)
 				{
-					ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
 				}
 			}
-			if (cinfo.Al > 13)
+			if (aJPEG.Al > 13)
 			{
 				/* need not check for < 0 */
-				ERREXIT(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
+				ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
 			}
 			/* Update progression status, and verify that scan order is legal.
 			 * Note that inter-scan inconsistencies are treated as warnings
 			 * not fatal errors ... not clear if this is right way to behave.
 			 */
-			for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+			for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 			{
-				int cindex = cinfo.cur_comp_info[ci].getComponentId() - 1;
-				if (cinfo.Ss != 0 && cinfo.coef_bits[cindex][0] < 0) // AC without prior DC scan
+				int cindex = aJPEG.cur_comp_info[ci].getComponentId() - 1;
+				if (aJPEG.Ss != 0 && aJPEG.coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
 				}
-				for (int coefi = cinfo.Ss; coefi <= cinfo.Se; coefi++)
+				for (int coefi = aJPEG.Ss; coefi <= aJPEG.Se; coefi++)
 				{
-					int expected = (cinfo.coef_bits[cindex][coefi] < 0) ? 0 : cinfo.coef_bits[cindex][coefi];
-					if (cinfo.Ah != expected)
+					int expected = (aJPEG.coef_bits[cindex][coefi] < 0) ? 0 : aJPEG.coef_bits[cindex][coefi];
+					if (aJPEG.Ah != expected)
 					{
-						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + cinfo.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
+						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + aJPEG.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
 					}
-					cinfo.coef_bits[cindex][coefi] = cinfo.Al;
+					aJPEG.coef_bits[cindex][coefi] = aJPEG.Al;
 				}
 			}
 			/* Select MCU decoding routine */
-			if (cinfo.Ah == 0)
+			if (aJPEG.Ah == 0)
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.decode_mcu = x_decode_mcu_DC_first;
 				}
@@ -897,7 +898,7 @@ public class ArithmeticDecoder extends Decoder
 			}
 			else
 			{
-				if (cinfo.Ss == 0)
+				if (aJPEG.Ss == 0)
 				{
 					entropy.decode_mcu = x_decode_mcu_DC_refine;
 				}
@@ -912,36 +913,36 @@ public class ArithmeticDecoder extends Decoder
 			/* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.
 			 * This ought to be an error condition, but we make it a warning.
 			 */
-			if (cinfo.Ss != 0 || cinfo.Ah != 0 || cinfo.Al != 0 || (cinfo.Se < DCTSIZE2 && cinfo.Se != cinfo.lim_Se))
+			if (aJPEG.Ss != 0 || aJPEG.Ah != 0 || aJPEG.Al != 0 || (aJPEG.Se < DCTSIZE2 && aJPEG.Se != LIM_SE))
 			{
-				WARNMS(cinfo, JWRN_NOT_SEQUENTIAL);
+				WARNMS(aJPEG, JWRN_NOT_SEQUENTIAL);
 			}
 			/* Select MCU decoding routine */
 			entropy.decode_mcu = x_decode_mcu;
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (ci = 0; ci < cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
-			compptr = cinfo.cur_comp_info[ci];
-			if (!cinfo.mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0))
+			compptr = aJPEG.cur_comp_info[ci];
+			if (!aJPEG.mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
 			{
 				tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
-					ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
+					ERREXIT(aJPEG, JERR_NO_ARITH_TABLE, tbl);
 				}
 				entropy.dc_stats[tbl] = new int[DC_STAT_BINS];
 				/* Initialize DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!cinfo.mProgressive && cinfo.lim_Se != 0) || (cinfo.mProgressive && cinfo.Ss != 0))
+			if ((!aJPEG.mProgressive && LIM_SE != 0) || (aJPEG.mProgressive && aJPEG.Ss != 0))
 			{
 				tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
-					ERREXIT(cinfo, JERR_NO_ARITH_TABLE, tbl);
+					ERREXIT(aJPEG, JERR_NO_ARITH_TABLE, tbl);
 				}
 
 				entropy.ac_stats[tbl] = new int[AC_STAT_BINS];
@@ -955,7 +956,7 @@ public class ArithmeticDecoder extends Decoder
 		/* force reading 2 initial bytes to fill C */
 
 		/* Initialize restart counter */
-		entropy.restarts_to_go = cinfo.mRestartInterval;
+		entropy.restarts_to_go = aJPEG.mRestartInterval;
 	}
 
 

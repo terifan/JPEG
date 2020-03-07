@@ -12,11 +12,11 @@ public class ComponentInfo
 		Y, CB, CR, I, Q
 	}
 
-	public final static int Y = 1;
-	public final static int CB = 2;
-	public final static int CR = 3;
-	public final static int I = 4;
-	public final static int Q = 5;
+	public final static int Y = 0;
+	public final static int CB = 1;
+	public final static int CR = 2;
+	public final static int I = 3;
+	public final static int Q = 4;
 
 	private int mComponentIndex; // identifier for this component (0..255)
 	private int mComponentId; // its index in SOF or cinfo->comp_info[]
@@ -67,7 +67,7 @@ public class ComponentInfo
 
 	public void print(Log aLog)
 	{
-		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId - 1].name());
+		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId - 0*1]);
 		aLog.println("    id=%d, dc-table=%d, ac-table=%d, quantizationTableId=%d, sample-factor=%dx%d", mComponentIndex, mTableDC, mTableAC, mQuantizationTableId, mHorSampleFactor, mVerSampleFactor);
 	}
 
@@ -135,5 +135,12 @@ public class ComponentInfo
 	public int getComponentBlockOffset()
 	{
 		return mComponentBlockOffset;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "ComponentInfo{" + "mComponentIndex=" + mComponentIndex + ", mComponentId=" + mComponentId + ", mQuantizationTableId=" + mQuantizationTableId + ", mHorSampleFactor=" + mHorSampleFactor + ", mVerSampleFactor=" + mVerSampleFactor + ", mTableDC=" + mTableDC + ", mTableAC=" + mTableAC + ", mComponentBlockOffset=" + mComponentBlockOffset + '}';
 	}
 }

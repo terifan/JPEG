@@ -101,6 +101,13 @@ public class JPEGImageWriterImpl
 					sosSegment.setTableAC(0, id[0] == 1 ? 0 : 1);
 				}
 
+				for (int scanComponentIndex = 0, first = 0; scanComponentIndex < aJPEG.mSOFSegment.getNumComponents(); scanComponentIndex++)
+				{
+					ComponentInfo comp = aJPEG.mSOFSegment.getComponent(scanComponentIndex);
+					comp.setComponentBlockOffset(first);
+					first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+				}
+
 				sosSegment.prepareMCU();
 			}
 			else

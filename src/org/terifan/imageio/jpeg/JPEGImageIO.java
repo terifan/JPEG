@@ -49,6 +49,8 @@ public class JPEGImageIO
 	public BufferedImage read(Object aInput) throws JPEGImageIOException
 	{
 		JPEG jpeg = new JPEG();
+		jpeg.mColorSpace = ColorSpace.YCBCR;
+
 		IDCT idct = createIDCTInstance();
 		JPEGImage image;
 
@@ -82,6 +84,7 @@ public class JPEGImageIO
 		ComponentInfo[] components = new ComponentInfo[]{lu, cb, cr};
 
 		JPEG jpeg = new JPEG();
+		jpeg.mColorSpace = ColorSpace.YCBCR;
 		jpeg.mArithmetic = mArithmetic;
 		jpeg.mProgressive = mProgressive;
 		jpeg.mOptimizedHuffman = mOptimizedHuffman;
@@ -109,7 +112,7 @@ public class JPEGImageIO
 		jpeg.mProgressive = mProgressive;
 		jpeg.mOptimizedHuffman = mOptimizedHuffman;
 		jpeg.mRestartInterval = 0;
-
+System.out.println("trans");
 		encode(jpeg, aOutput);
 	}
 

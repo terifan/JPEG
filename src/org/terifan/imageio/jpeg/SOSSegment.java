@@ -84,7 +84,7 @@ public class SOSSegment extends Segment
 
 		for (int i = 0; i < mJPEG.comps_in_scan; i++)
 		{
-			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 1].name());
+			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 0*1].name());
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
 		}
 
@@ -149,6 +149,8 @@ public class SOSSegment extends Segment
 			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
 			comp.setTableAC(getACTable(scanComponentIndex));
 			comp.setTableDC(getDCTable(scanComponentIndex));
+
+			System.out.println(comp);
 
 			mJPEG.cur_comp_info[scanComponentIndex] = comp;
 

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
+import static org.terifan.imageio.jpeg.JPEGConstants.LIM_SE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import org.terifan.imageio.jpeg.JPEGEntropyState;
 import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
@@ -1000,7 +1001,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 
 			/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
-			if ((ke = aJPEG.lim_Se) == 0)
+			if ((ke = LIM_SE) == 0)
 			{
 				continue;
 			}
@@ -1074,7 +1075,7 @@ public class ArithmeticEncoder implements Encoder
 				}
 			}
 			/* Encode EOB decision only if k < cinfo.lim_Se */
-			if (k < aJPEG.lim_Se)
+			if (k < LIM_SE)
 			{
 				st = entropy.ac_stats[tbl];
 				st_off = 3 * k;

@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.color.ICC_Profile;
-import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 
 
@@ -47,13 +46,11 @@ public class JPEG
 	public int Se;
 	public int Ah;
 	public int Al;
-	public final int lim_Se = DCTSIZE2 - 1;
 	public int[][] coef_bits;
 
 
 	public JPEG()
 	{
-		mColorSpace = ColorSpace.YCBCR;
 		mQuantizationTables = new QuantizationTable[8];
 		mHuffmanTables = new HuffmanTable[4][2];
 

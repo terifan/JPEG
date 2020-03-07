@@ -40,8 +40,9 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void finishPass(JPEG aJPEG)
+	void finishPass(JPEG aJPEG) throws IOException
 	{
+		mBitStream.align();
 	}
 
 

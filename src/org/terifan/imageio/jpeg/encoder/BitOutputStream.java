@@ -19,6 +19,7 @@ public class BitOutputStream extends OutputStream
 	public void writeInt8(int aByte) throws IOException
 	{
 		mOutputStream.write(aByte);
+		mStreamOffset++;
 	}
 
 
@@ -26,6 +27,7 @@ public class BitOutputStream extends OutputStream
 	{
 		mOutputStream.write(0xff & aShort >> 8);
 		mOutputStream.write(0xff & aShort);
+		mStreamOffset += 2;
 	}
 
 
@@ -38,17 +40,10 @@ public class BitOutputStream extends OutputStream
 
 
 	@Override
-	public void write(byte[] aBuffer) throws IOException
-	{
-		write(aBuffer, 0, aBuffer.length);
-	}
-
-
-	@Override
 	public void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
-		mStreamOffset+=aLength;
 		mOutputStream.write(aBuffer, aOffset, aLength);
+		mStreamOffset += aLength;
 	}
 
 

@@ -237,6 +237,7 @@ public class BitInputStream extends InputStream
 	}
 
 
+	@Override
 	public void close() throws IOException
 	{
 		if (mInputStream != null)
@@ -268,35 +269,8 @@ public class BitInputStream extends InputStream
 		{
 			aBuffer[i] = (byte)readImpl();
 		}
-		
+
 		return aBuffer;
-	}
-	
-	
-	public void hexdump(int aLength) throws IOException
-	{
-//		skipBytes(aLength);
-
-		StringBuilder sb = new StringBuilder();
-		
-		for (int i = 0; i < aLength; i++)
-		{
-			int c = readInt8();
-
-			System.out.printf("%02x ", c);
-		
-			sb.append(c < 32 ? '.' : (char)c);
-
-			if ((i % (8*8)) == 63 || i == aLength - 1)
-			{
-				while (i++ < 64) System.out.print(" ");
-				System.out.println("  " + sb);
-			}
-			else if ((i % 8) == 7)
-			{
-				System.out.print(" ");
-			}
-		}
 	}
 
 

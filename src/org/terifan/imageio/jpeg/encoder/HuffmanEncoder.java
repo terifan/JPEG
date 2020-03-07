@@ -1003,7 +1003,7 @@ public class HuffmanEncoder implements Encoder
 		int temp, temp2;
 		int nbits;
 		int r, k;
-		int Se = state.cinfo.lim_Se;
+		int Se = LIM_SE;
 		int[] natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the DC coefficient difference per section F.1.2.1 */
@@ -1235,7 +1235,7 @@ public class HuffmanEncoder implements Encoder
 		int temp;
 		int nbits;
 		int r, k;
-		int Se = aJPEG.lim_Se;
+		int Se = LIM_SE;
 		int[] natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the DC coefficient difference per section F.1.2.1 */

@@ -84,11 +84,7 @@ public class SOFSegment extends Segment
 		{
 			type = SegmentMarker.SOF2;
 		}
-		else if (false) // unsupported: extended huffman
-		{
-			type = SegmentMarker.SOF1;
-		}
-		else // baseline
+		else
 		{
 			type = SegmentMarker.SOF0;
 		}

@@ -43,6 +43,7 @@ public class JPEGConstants
 	public final static int DC_STAT_BINS = 64;
 	public final static int AC_STAT_BINS = 256;
 	public final static int MAX_AH_AL = 10; /* BITS_IN_JSAMPLE=8?10:13 */
+	public final static int LIM_SE = DCTSIZE2 - 1;
 
 	private static long V(int i, long a, long b, long c, long d)
 	{

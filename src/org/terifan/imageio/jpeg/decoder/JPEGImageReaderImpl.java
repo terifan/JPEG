@@ -13,7 +13,7 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
-import static org.terifan.imageio.jpeg.JPEGConstants.*;
+import org.terifan.imageio.jpeg.JPEGEntropyState;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SegmentMarker;
@@ -150,7 +150,6 @@ public class JPEGImageReaderImpl
 						aJPEG.mCoefficients = new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64];
 					}
 
-					progressionLevel++;
 					int streamOffset = aInput.getStreamOffset();
 					SOSSegment sosSegment = new SOSSegment(aJPEG);
 					sosSegment.decode(aInput).print(aLog);
@@ -162,7 +161,6 @@ public class JPEGImageReaderImpl
 
 						readCoefficients(aJPEG, decoder, progressionLevel);
 
-						aInput.align();
 						aInput.setHandleMarkers(false);
 
 						if (aUpdateImage && aJPEG.mProgressive && aUpdateProgressiveImage)
@@ -176,7 +174,9 @@ public class JPEGImageReaderImpl
 						stop = true;
 					}
 
-					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + progressionLevel : "");
+					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + (1 + progressionLevel) : "");
+
+					progressionLevel++;
 
 					break;
 				case DRI:
@@ -211,7 +211,6 @@ public class JPEGImageReaderImpl
 
 	private void readCoefficients(JPEG aJPEG, Decoder aDecoder, int aProgressionLevel) throws IOException
 	{
-		int numComponents = aJPEG.mSOFSegment.getComponents().length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
@@ -219,14 +218,14 @@ public class JPEGImageReaderImpl
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
 
-		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < numComponents; scanComponentIndex++)
+		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < aJPEG.mSOFSegment.getNumComponents(); scanComponentIndex++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponent(scanComponentIndex);
 			comp.setComponentBlockOffset(first);
 			first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		if (aProgressionLevel == 1)
+		if (aProgressionLevel == 0)
 		{
 			aDecoder.initialize(aJPEG);
 		}
@@ -301,5 +300,7 @@ public class JPEGImageReaderImpl
 				}
 			}
 		}
+
+		aDecoder.finishPass(aJPEG);
 	}
 }
