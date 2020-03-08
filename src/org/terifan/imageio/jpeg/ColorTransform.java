@@ -7,10 +7,8 @@ import java.awt.image.BufferedImage;
 
 public class ColorTransform
 {
-	public BufferedImage transform(JPEG aJPEG, JPEGImage aImage)
+	public BufferedImage transform(JPEG aJPEG, BufferedImage aImage)
 	{
-		BufferedImage image = aImage.getImage();
-
 		if (aJPEG.mICCProfile != null)
 		{
 			int profileClass = aJPEG.mICCProfile.getProfileClass();
@@ -18,7 +16,7 @@ public class ColorTransform
 			if ((profileClass != ICC_Profile.CLASS_INPUT) && (profileClass != ICC_Profile.CLASS_DISPLAY) && (profileClass != ICC_Profile.CLASS_OUTPUT) && (profileClass != ICC_Profile.CLASS_COLORSPACECONVERSION) && (profileClass != ICC_Profile.CLASS_NAMEDCOLOR) && (profileClass != ICC_Profile.CLASS_ABSTRACT))
 			{
 //				reportError("Failed to perform color transform: Invalid profile type");
-				return image;
+				return aImage;
 			}
 
 //			sun.java2d.cmm.PCMM module = sun.java2d.cmm.CMSManager.getModule();
@@ -34,11 +32,11 @@ public class ColorTransform
 
 			float[] colorvalue = new float[3];
 
-			for (int y = 0; y < image.getHeight(); y++)
+			for (int y = 0; y < aImage.getHeight(); y++)
 			{
-				for (int x = 0; x < image.getWidth(); x++)
+				for (int x = 0; x < aImage.getWidth(); x++)
 				{
-					int rgb = image.getRGB(x, y);
+					int rgb = aImage.getRGB(x, y);
 					colorvalue[0] = (0xff & (rgb >> 16)) / 255f;
 					colorvalue[1] = (0xff & (rgb >> 8)) / 255f;
 					colorvalue[2] = (0xff & (rgb >> 0)) / 255f;
@@ -48,11 +46,11 @@ public class ColorTransform
 					int r = (int)(255f * colorvalue[0] + 0.5f);
 					int g = (int)(255f * colorvalue[1] + 0.5f);
 					int b = (int)(255f * colorvalue[2] + 0.5f);
-					image.setRGB(x, y, (r << 16) + (g << 8) + b);
+					aImage.setRGB(x, y, (r << 16) + (g << 8) + b);
 				}
 			}
 		}
 
-		return image;
+		return aImage;
 	}
 }

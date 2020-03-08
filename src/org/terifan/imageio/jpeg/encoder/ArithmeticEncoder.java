@@ -8,8 +8,8 @@ import org.terifan.imageio.jpeg.JPEG;
 import static org.terifan.imageio.jpeg.JPEGConstants.LIM_SE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import org.terifan.imageio.jpeg.JPEGEntropyState;
-import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
 import org.terifan.imageio.jpeg.SegmentMarker;
+import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
 
 
 /*
@@ -270,7 +270,7 @@ public class ArithmeticEncoder implements Encoder
 		 * Qe values and probability estimation state machine
 		 */
 		sv = st_off;
-		long qe = jpeg_aritab[st[sv] & 0x7F];
+		long qe = ARITAB[st[sv] & 0x7F];
 		/* => Qe_Value */
 		nl = (int)(qe & 0xFF);
 		qe >>= 8;

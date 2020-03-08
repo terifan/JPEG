@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -13,11 +14,8 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.JPEGEntropyState;
-import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SegmentMarker;
-import org.terifan.imageio.jpeg.test.Debug;
 
 
 public class JPEGImageReaderImpl
@@ -27,10 +25,10 @@ public class JPEGImageReaderImpl
 	}
 
 
-	public JPEGImage decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage) throws IOException
+	public BufferedImage decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage) throws IOException
 	{
 		int progressionLevel = 0;
-		JPEGImage image = null;
+		BufferedImage image = null;
 		Decoder decoder = null;
 		boolean stop = false;
 
@@ -56,7 +54,7 @@ public class JPEGImageReaderImpl
 				{
 					if (aUpdateImage && image != null)
 					{
-						ImageUpdater.updateImage(aJPEG, aIDCT, image.getImage());
+						ImageUpdater.updateImage(aJPEG, aIDCT, image);
 					}
 
 					throw new IOException("Error in JPEG stream at offset " + aInput.getStreamOffset() + "; expected segment marker but found: " + Integer.toString(nextSegment, 16));
@@ -98,30 +96,25 @@ public class JPEGImageReaderImpl
 					new DACSegment(aJPEG).decode(aInput).print(aLog);
 					break;
 				case SOF0:
-//					mCompressionMode = "Baseline";
 					decoder = new HuffmanDecoder(aInput);
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF1:
-//					mCompressionMode = "Extended sequential, Huffman";
 					throw new IOException("Image encoding not supported: Extended sequential, Huffman");
 				case SOF2:
-//					mCompressionMode = "Progressive, Huffman";
 					decoder = new HuffmanDecoder(aInput);
 					aJPEG.mProgressive = true;
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF9:
-//					mCompressionMode = "Extended sequential, arithmetic";
 					decoder = new ArithmeticDecoder(aInput);
 					aJPEG.mArithmetic = true;
 					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF10:
-//					mCompressionMode = "Progressive, arithmetic";
 					decoder = new ArithmeticDecoder(aInput);
 					aJPEG.mArithmetic = true;
 					aJPEG.mProgressive = true;
@@ -141,7 +134,7 @@ public class JPEGImageReaderImpl
 					if (image == null)
 					{
 						SOFSegment sof = aJPEG.mSOFSegment;
-						image = new JPEGImage(sof.getWidth(), sof.getHeight(), sof.getMaxHorSampling(), sof.getMaxVerSampling(), sof.getComponents().length);
+						image = new BufferedImage(sof.getWidth(), sof.getHeight(), sof.getComponents().length == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_INT_RGB);
 						aJPEG.mCoefficients = new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64];
 					}
 
@@ -160,7 +153,7 @@ public class JPEGImageReaderImpl
 
 						if (aUpdateImage && aJPEG.mProgressive && aUpdateProgressiveImage)
 						{
-							ImageUpdater.updateImage(aJPEG, aIDCT, image.getImage());
+							ImageUpdater.updateImage(aJPEG, aIDCT, image);
 						}
 					}
 					catch (Throwable e)
@@ -184,7 +177,7 @@ public class JPEGImageReaderImpl
 					aLog.println(SegmentMarker.EOI.name());
 					if (aUpdateImage && !(aJPEG.mProgressive && aUpdateProgressiveImage))
 					{
-						ImageUpdater.updateImage(aJPEG, aIDCT, image.getImage());
+						ImageUpdater.updateImage(aJPEG, aIDCT, image);
 					}
 					stop = true;
 					break;

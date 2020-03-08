@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.encoder.FDCT;
 
 
@@ -17,14 +16,8 @@ public class ImageSampler
 		int numVerMCU = aJPEG.mSOFSegment.getVerMCU();
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
-		int iwm1 = aImage.getWidth() - 1;
-		int ihm1 = aImage.getHeight() - 1;
-
-		System.out.println("maxSamplingX=" + maxSamplingX);
-		System.out.println("maxSamplingY=" + maxSamplingY);
-		System.out.println("mcuWidth=" + mcuWidth);
-		System.out.println("mcuHeight=" + mcuHeight);
-		System.out.println();
+		int iw = aImage.getWidth();
+		int ih = aImage.getHeight();
 
 		int blocks_in_MCU = 0;
 		for (int ci = 0; ci < numComponents; ci++)
@@ -45,13 +38,7 @@ public class ImageSampler
 				int bx = mcuX * mcuWidth;
 				int by = mcuY * mcuHeight;
 
-				for (int cy = 0; cy < mcuHeight; cy++)
-				{
-					for (int cx = 0; cx < mcuWidth; cx++)
-					{
-						raster[cy * mcuWidth + cx] = aImage.getRGB(Math.min(bx + cx, iwm1), Math.min(by + cy, ihm1));
-					}
-				}
+				copyImageBlockToMCU(bx, by, iw, ih, mcuWidth, mcuHeight, aImage, raster);
 
 				colorSpace.rgbToYuv(raster, colors[0], colors[1], colors[2]);
 
@@ -87,11 +74,34 @@ public class ImageSampler
 							{
 								copyBlock(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX, 8 * blockY, mcuWidth);
 							}
+
 							aFDCT.transform(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], quantizationTable);
 						}
 					}
 				}
 			}
+		}
+	}
+
+
+	private static void copyImageBlockToMCU(int aBx, int aBy, int aIw, int aIh, int aMcuWidth, int aMcuHeight, BufferedImage aImage, int[] aRaster)
+	{
+		int w = Math.min(aMcuWidth, aIw - aBx);
+		int h = Math.min(aMcuHeight, aIh - aBy);
+
+		aImage.getRGB(aBx, aBy, w, h, aRaster, 0, aMcuWidth);
+
+		for (int x = 0; w + x < aMcuWidth; x++)
+		{
+			for (int y = 0, o = w, s = aRaster[o - 1]; y < h; y++, o+=aMcuWidth)
+			{
+				aRaster[o + x] = s;
+			}
+		}
+
+		for (int y = h, o = aMcuWidth * h; y < aMcuHeight; y++, o+=aMcuWidth)
+		{
+			System.arraycopy(aRaster, o - aMcuWidth, aRaster, o, aMcuWidth);
 		}
 	}
 
@@ -173,62 +183,121 @@ public class ImageSampler
 	}
 
 
-	private static void print(int[] aArray, int aW, int aH)
-	{
-		for (int y = 0; y < aH; y++)
-		{
-			for (int x = 0; x < aW; x++)
-			{
-				System.out.printf("%5d ", aArray[aW*y+x]);
-			}
-			System.out.println();
-		}
-	}
-
-
-	public static void main(String ... args)
-	{
-		try
-		{
-			int[] dst = new int[8*8];
-			int[] src = new int[32*16];
-			int[] val = {20,50,80,110,140,170,200,230};
-			for (int by = 0; by < 2; by++)
-			{
-				for (int bx = 0; bx < 4; bx++)
-				{
-					int v = val[4*by+bx];
-					for (int y = 0; y < 8; y++)
-					{
-						int i = 32 * (y + 8 * by) + 8 * bx;
-						Arrays.fill(src, i, i+8, v);
-					}
-				}
-			}
-
-			print(src, 32, 16);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample16x16(dst, src);
-			print(dst, 8, 8);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample16x8(dst, src, 0);
-			print(dst, 8, 8);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample16x8(dst, src, 16 * 8);
-			print(dst, 8, 8);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample8x16(dst, src, 0);
-			print(dst, 8, 8);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample8x16(dst, src, 8);
-			print(dst, 8, 8);
-			System.out.println("-----------------------------------------------------------------------------------------------------");
-			downsample32x8(dst, src, 32 * 8);
-			print(dst, 8, 8);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
+//	private static void print(int[] aArray, int aW, int aH)
+//	{
+//		for (int y = 0; y < aH; y++)
+//		{
+//			for (int x = 0; x < aW; x++)
+//			{
+//				System.out.printf("%5d ", 0xffffff & aArray[aW*y+x]);
+//			}
+//			System.out.println();
+//		}
+//	}
+//
+//
+//	private static int[] createTestBlock()
+//	{
+//		int[] src = new int[32*16];
+//		int[] val = {20,50,80,110, 140,170,200,230};
+//		for (int by = 0; by < 2; by++)
+//		{
+//			for (int bx = 0; bx < 4; bx++)
+//			{
+//				int v = val[4*by+bx];
+//				for (int y = 0; y < 8; y++)
+//				{
+//					int i = 32 * (y + 8 * by) + 8 * bx;
+//					Arrays.fill(src, i, i+8, v);
+//				}
+//			}
+//		}
+//		return src;
+//	}
+//
+//
+//	public static void xmain(String ... args)
+//	{
+//		try
+//		{
+//			int[] dst = new int[8*8];
+//			int[] src = createTestBlock();
+//
+//			print(src, 32, 16);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample16x16(dst, src);
+//			print(dst, 8, 8);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample16x8(dst, src, 0);
+//			print(dst, 8, 8);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample16x8(dst, src, 16 * 8);
+//			print(dst, 8, 8);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample8x16(dst, src, 0);
+//			print(dst, 8, 8);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample8x16(dst, src, 8);
+//			print(dst, 8, 8);
+//
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//			downsample32x8(dst, src, 32 * 8);
+//			print(dst, 8, 8);
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
+//
+//
+//	public static void main(String ... args)
+//	{
+//		try
+//		{
+//			int[] r = createTestBlock();
+//
+//			BufferedImage src = new BufferedImage(32, 16, BufferedImage.TYPE_INT_RGB);
+//			src.setRGB(0, 0, 32, 16, r, 0, 32);
+//			int iw = 32;
+//			int ih = 16;
+//			int bw = 20;
+//			int bh = 10;
+//
+//			int[] dst;
+//
+//			dst = new int[bw * bh];
+//			copyImageBlockToMCU(0, 0, iw, ih, bw, bh, src, dst);
+//			print(dst, bw, bh);
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//
+//			dst = new int[bw * bh];
+//			copyImageBlockToMCU(bw, 0, iw, ih, bw, bh, src, dst);
+//			print(dst, bw, bh);
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//
+//			dst = new int[bw * bh];
+//			copyImageBlockToMCU(0, bh, iw, ih, bw, bh, src, dst);
+//			print(dst, bw, bh);
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//
+//			dst = new int[bw * bh];
+//			copyImageBlockToMCU(bw, bh, iw, ih, bw, bh, src, dst);
+//			print(dst, bw, bh);
+//			System.out.println("-----------------------------------------------------------------------------------------------------");
+//
+//			dst = new int[bw * bh];
+//			copyImageBlockToMCU(0, 6, iw, ih, bw, bh, src, dst);
+//			print(dst, bw, bh);
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }

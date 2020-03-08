@@ -3,8 +3,6 @@ package org.terifan.imageio.jpeg;
 
 public class JPEGConstants
 {
-	public static boolean VERBOSE = false;
-
 	public final static int[] NATURAL_ORDER =
 	{
 		0, 1, 8, 16, 9, 2, 3, 10,
@@ -32,12 +30,14 @@ public class JPEGConstants
 	public final static int MAX_CHANNELS = 4;
 	public final static int NUM_HUFF_TBLS = 4; // ?????
 
-	public final static int NUM_ARITH_TBLS = 16;
 	/* Arith-coding tables are numbered 0..15 */
-	public final static int MAX_COMPS_IN_SCAN = 4;
+	public final static int NUM_ARITH_TBLS = 16;
+
 	/* JPEG limit on # of components in one scan */
-	public final static int MAX_SAMP_FACTOR = 4;
+	public final static int MAX_COMPS_IN_SCAN = 4;
+
 	/* JPEG limit on sampling factors */
+	public final static int MAX_SAMP_FACTOR = 4;
 	public final static int DCTSIZE = 8;
 	public final static int DCTSIZE2 = 8 * 8;
 	public final static int DC_STAT_BINS = 64;
@@ -50,7 +50,7 @@ public class JPEGConstants
 		return ((a << 16) | (c << 8) | (d << 7) | b);
 	}
 
-	public final static long[] jpeg_aritab =
+	public final static long[] ARITAB =
 	{
 		/*
 	 * Index, Qe_Value, Next_Index_LPS, Next_Index_MPS, Switch_MPS
@@ -169,8 +169,8 @@ public class JPEGConstants
 		V(111, 0x5522, 112, 109, 0),
 		V(112, 0x59eb, 112, 111, 1),
 		/*
-	 * This last entry is used for fixed probability estimate of 0.5
-	 * as suggested in Section 10.3 Table 5 of ITU-T Rec. T.851.
+		 * This last entry is used for fixed probability estimate of 0.5
+		 * as suggested in Section 10.3 Table 5 of ITU-T Rec. T.851.
 		 */
 		V(113, 0x5a1d, 113, 113, 0)
 	};

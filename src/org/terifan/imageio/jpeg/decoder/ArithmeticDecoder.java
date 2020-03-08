@@ -9,7 +9,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.DCTSIZE2;
 import static org.terifan.imageio.jpeg.JPEGConstants.LIM_SE;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import static org.terifan.imageio.jpeg.JPEGConstants.jpeg_aritab;
+import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
 
 
 /*
@@ -166,7 +166,7 @@ public class ArithmeticDecoder extends Decoder
 		 * Qe values and probability estimation state machine
 		 */
 		sv = st[st_off];
-		qe = jpeg_aritab[sv & 0x7F];
+		qe = ARITAB[sv & 0x7F];
 		/* => Qe_Value */
 		nl = (int)(qe & 0xFF);
 		qe >>= 8;

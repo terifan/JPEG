@@ -23,8 +23,6 @@ public class JPEGEntropyState
 	public int[] fixed_bin = new int[4];
 	public int decode_mcu;
 
-
-
 	// encode -------
 
 	public int sc;        /* counter for stacked 0xFF values which might overflow */

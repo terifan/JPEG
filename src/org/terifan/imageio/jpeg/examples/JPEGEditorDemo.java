@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import static java.lang.Math.log10;
@@ -58,7 +57,7 @@ public class JPEGEditorDemo
 		JFrame frame = new JFrame();
 		frame.setBackground(bg);
 		frame.add(panel1);
-		frame.setSize(1024, 768);
+		frame.setSize(2000, 1300);
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
@@ -369,7 +368,7 @@ catch (Exception e)
 	{
 		try
 		{
-			mImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari-prog.jpg"));
+			mImage = ImageIO.read(R.class.getResource("Lenna.png"));
 
 			new JPEGEditorDemo();
 		}

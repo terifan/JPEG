@@ -1,10 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.JPEG;
@@ -27,23 +23,6 @@ class ImageUpdater
 
 		int[][][][] coefficients = aJPEG.mCoefficients;
 
-		try
-		{
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try (ObjectOutputStream oos = new ObjectOutputStream(baos))
-			{
-				oos.writeObject(coefficients);
-			}
-			try (ObjectInputStream oos = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())))
-			{
-				coefficients = (int[][][][])oos.readObject();
-			}
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.out);
-		}
-
 		int[] blockLookup = new int[12];
 
 		int cp = 0;
@@ -57,27 +36,6 @@ class ImageUpdater
 			cii++;
 		}
 		blockLookup = Arrays.copyOfRange(blockLookup, 0, cp);
-
-//		try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(new FileOutputStream("d:\\jpeg.data"))))
-//		{
-//			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
-//			{
-//				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-//				{
-//					for (int blockIndex = 0; blockIndex < blockLookup.length; blockIndex++)
-//					{
-//						for (int i = 0; i < coefficients[mcuY][mcuX][blockIndex].length; i++)
-//						{
-//							dos.writeShort(coefficients[mcuY][mcuX][blockIndex][i]);
-//						}
-//					}
-//				}
-//			}
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.err);
-//		}
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{

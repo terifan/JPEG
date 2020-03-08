@@ -54,7 +54,7 @@ public class JPEGImageIO
 		jpeg.mColorSpace = ColorSpace.YCBCR;
 
 		IDCT idct = createIDCTInstance();
-		JPEGImage image;
+		BufferedImage image;
 
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
