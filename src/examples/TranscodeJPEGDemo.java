@@ -1,9 +1,10 @@
-package org.terifan.imageio.jpeg.examples;
+package examples;
 
 import java.io.File;
 import java.net.URL;
 import org.terifan.imageio.jpeg.JPEGImageIO;
-import org.terifan.imageio.jpeg.examples.res.R;
+import examples.res.R;
+import org.terifan.imageio.jpeg.CompressionType;
 
 
 public class TranscodeJPEGDemo
@@ -16,7 +17,7 @@ public class TranscodeJPEGDemo
 
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			new JPEGImageIO().setArithmetic(true).setProgressive(true).transcode(input, output);
+			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).transcode(input, output);
 
 			_ImageWindow.show(output).setTitle("" + output.length());
 		}

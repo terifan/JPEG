@@ -45,6 +45,7 @@ public class HuffmanEncoder implements Encoder
 
 
 	private OutputStream mOutputStream;
+	private boolean mProgressive;
 
 
 	public HuffmanEncoder(OutputStream aOutputStream)
@@ -1184,7 +1185,7 @@ public class HuffmanEncoder implements Encoder
 		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
 		working_state state = new working_state();
 
-		if (aJPEG.mProgressive)
+		if (mProgressive)
 		{
 //			entropy.next_output_byte[entropy.next_output_byte_offset] = cinfo.next_output_byte[cinfo.next_output_byte_offset];
 //			entropy.free_in_buffer = cinfo.free_in_buffer;
@@ -1560,7 +1561,7 @@ public class HuffmanEncoder implements Encoder
 		/* It's important not to apply jpeg_gen_optimal_table more than once
 		 * per table, because it clobbers the input frequency counts!
 		 */
-		if (aJPEG.mProgressive)	/* Flush out buffered data (all we care about is counting the EOB symbol) */
+		if (mProgressive)	/* Flush out buffered data (all we care about is counting the EOB symbol) */
 		{
 			emit_eobrun(entropy);
 		}
@@ -1609,7 +1610,7 @@ public class HuffmanEncoder implements Encoder
 
 		entropy.cinfo = aJPEG;
 
-		if (aJPEG.mProgressive)
+		if (mProgressive)
 		{
 			entropy.gather_statistics = gather_statistics;
 
@@ -1722,8 +1723,10 @@ public class HuffmanEncoder implements Encoder
 	 * Module initialization routine for Huffman entropy encoding.
 	 */
 	@Override
-	public void jinit_encoder(JPEG aJPEG)
+	public void jinit_encoder(JPEG aJPEG, boolean aProgressive)
 	{
+		mProgressive = aProgressive;
+
 		huff_entropy_encoder entropy = new huff_entropy_encoder();
 		int i;
 
@@ -1736,7 +1739,7 @@ public class HuffmanEncoder implements Encoder
 			entropy.dc_count_ptrs[i] = entropy.ac_count_ptrs[i] = null;
 		}
 
-		if (aJPEG.mProgressive)
+		if (mProgressive)
 		{
 			entropy.bit_buffer = null;	/* needed only in AC refinement scan */
 		}

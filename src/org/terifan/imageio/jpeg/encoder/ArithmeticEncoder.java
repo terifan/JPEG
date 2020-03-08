@@ -29,6 +29,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
 public class ArithmeticEncoder implements Encoder
 {
 	OutputStream mOutputStream;
+	private boolean mProgressive;
 
 
 	public ArithmeticEncoder(OutputStream aOutputStream)
@@ -1118,7 +1119,7 @@ public class ArithmeticEncoder implements Encoder
 		/* We assume jcmaster.c already validated the progressive scan parameters. */
 
 		/* Select execution routines */
-		if (aJPEG.mProgressive)
+		if (mProgressive)
 		{
 			if (aJPEG.Ah == 0)
 			{
@@ -1207,8 +1208,10 @@ public class ArithmeticEncoder implements Encoder
 	 * Module initialization routine for arithmetic entropy encoding.
 	 */
 	@Override
-	public void jinit_encoder(JPEG aJPEG)
+	public void jinit_encoder(JPEG aJPEG, boolean aProgressive)
 	{
+		mProgressive = aProgressive;
+
 		if(aJPEG.entropy==null)
 		aJPEG.entropy = new JPEGEntropyState();
 		int i;

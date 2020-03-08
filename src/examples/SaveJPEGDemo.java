@@ -1,4 +1,4 @@
-package org.terifan.imageio.jpeg.examples;
+package examples;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -6,7 +6,8 @@ import java.net.URL;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.SubsamplingMode;
 import org.terifan.imageio.jpeg.encoder.ProgressionScript;
-import org.terifan.imageio.jpeg.examples.res.R;
+import examples.res.R;
+import org.terifan.imageio.jpeg.CompressionType;
 
 
 public class SaveJPEGDemo
@@ -22,9 +23,7 @@ public class SaveJPEGDemo
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
 			new JPEGImageIO()
-				.setArithmetic(true)
-				.setOptimizedHuffman(true)
-				.setProgressive(true)
+				.setCompressionType(CompressionType.ArithmeticProgressive)
 				.setQuality(95)
 				.setProgressionScript(ProgressionScript.DC_THEN_AC)
 				.setSubsampling(SubsamplingMode._444)

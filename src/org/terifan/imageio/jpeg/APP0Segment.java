@@ -20,10 +20,6 @@ public class APP0Segment extends Segment
 		mJPEG = aJPEG;
 
 		mThumbnailData = new byte[0];
-
-		mJPEG.mDensitiesUnits = 1;
-		mJPEG.mDensityX = 72;
-		mJPEG.mDensityY = 72;
 	}
 
 

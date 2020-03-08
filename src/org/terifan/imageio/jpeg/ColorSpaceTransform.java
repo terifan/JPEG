@@ -5,9 +5,9 @@ import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
 
 
-public class ColorTransform
+public class ColorSpaceTransform
 {
-	public BufferedImage transform(JPEG aJPEG, BufferedImage aImage)
+	public static void transform(JPEG aJPEG, BufferedImage aImage)
 	{
 		if (aJPEG.mICCProfile != null)
 		{
@@ -16,7 +16,7 @@ public class ColorTransform
 			if ((profileClass != ICC_Profile.CLASS_INPUT) && (profileClass != ICC_Profile.CLASS_DISPLAY) && (profileClass != ICC_Profile.CLASS_OUTPUT) && (profileClass != ICC_Profile.CLASS_COLORSPACECONVERSION) && (profileClass != ICC_Profile.CLASS_NAMEDCOLOR) && (profileClass != ICC_Profile.CLASS_ABSTRACT))
 			{
 //				reportError("Failed to perform color transform: Invalid profile type");
-				return aImage;
+				return;
 			}
 
 //			sun.java2d.cmm.PCMM module = sun.java2d.cmm.CMSManager.getModule();
@@ -50,7 +50,5 @@ public class ColorTransform
 				}
 			}
 		}
-
-		return aImage;
 	}
 }

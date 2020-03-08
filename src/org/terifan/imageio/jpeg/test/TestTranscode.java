@@ -1,15 +1,15 @@
 package org.terifan.imageio.jpeg.test;
 
-import org.terifan.imageio.jpeg.examples._ImageWindow;
+import examples._ImageWindow;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.JPEGImageIO;
-import org.terifan.imageio.jpeg.examples.res.R;
+import examples.res.R;
+import org.terifan.imageio.jpeg.CompressionType;
 
 
 public class TestTranscode
@@ -28,7 +28,7 @@ public class TestTranscode
 
 			System.out.println("=================================================================================================================================================================================");
 
-			new JPEGImageIO().setArithmetic(false).setOptimizedHuffman(true).setProgressive(true).transcode(file, transImageData);
+			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).transcode(file, transImageData);
 
 //			transImageData.writeTo(new FileOutputStream("d:\\dev\\macos-catalina-cb-3840x2160-transcoded.jpg"));
 

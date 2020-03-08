@@ -1,11 +1,12 @@
 package org.terifan.imageio.jpeg.test;
 
-import org.terifan.imageio.jpeg.examples._ImageWindow;
+import examples._ImageWindow;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
@@ -25,7 +26,7 @@ public class TestTranscode2
 
 			BufferedImage imagex = new JPEGImageIO().read(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"));
 
-			new JPEGImageIO().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
+			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
 //			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(new FileInputStream("d:\\ari-test.jpg"), baos);
 
 			System.out.println(baos.size());

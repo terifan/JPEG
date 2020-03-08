@@ -1,15 +1,13 @@
-package org.terifan.imageio.jpeg.decoder;
+package org.terifan.imageio.jpeg;
 
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.JPEG;
-import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
-class ImageUpdater
+public class ImageTransdecode
 {
-	static void updateImage(JPEG aJPEG, IDCT aIDCT, BufferedImage aImage)
+	public static void transform(JPEG aJPEG, IDCT aIDCT, BufferedImage aImage)
 	{
 		ComponentInfo[] components = aJPEG.mSOFSegment.getComponents();
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
@@ -43,7 +41,7 @@ class ImageUpdater
 			{
 				for (int blockIndex = 0; blockIndex < blockLookup.length; blockIndex++)
 				{
-					ComponentInfo comp = aJPEG.mSOFSegment.getComponent(blockLookup[blockIndex]);
+					ComponentInfo comp = components[blockLookup[blockIndex]];
 
 					QuantizationTable quantizationTable = aJPEG.mQuantizationTables[comp.getQuantizationTableId()];
 
@@ -52,9 +50,9 @@ class ImageUpdater
 			}
 		}
 
-		int c0 = aJPEG.mSOFSegment.getComponent(0).getComponentBlockOffset();
-		int c1 = components.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(1).getComponentBlockOffset();
-		int c2 = components.length == 1 ? 0 : aJPEG.mSOFSegment.getComponent(2).getComponentBlockOffset();
+		int c0 = components[0].getComponentBlockOffset();
+		int c1 = components.length == 1 ? 0 : components[1].getComponentBlockOffset();
+		int c2 = components.length == 1 ? 0 : components[2].getComponentBlockOffset();
 
 		int h0 = components[0].getHorSampleFactor();
 		int v0 = components[0].getVerSampleFactor();

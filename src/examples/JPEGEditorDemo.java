@@ -1,4 +1,4 @@
-package org.terifan.imageio.jpeg.examples;
+package examples;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -24,7 +24,8 @@ import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
-import org.terifan.imageio.jpeg.examples.res.R;
+import examples.res.R;
+import org.terifan.imageio.jpeg.CompressionType;
 
 
 public class JPEGEditorDemo
@@ -89,10 +90,7 @@ public class JPEGEditorDemo
 			mQualityLabel = new JLabel("Quality");
 			mQualitySlider = new JSlider(0, 100, 90);
 			mSubsamplingSelect = new JComboBox(SubsamplingMode.values());
-			mCompressionSelect = new JComboBox(new String[]
-			{
-				"Sequential", "Progressive"
-			});
+			mCompressionSelect = new JComboBox(CompressionType.values());
 			mFDCTSelect = new JComboBox(new String[]
 			{
 				"Float", "FastInt", "SlowInt"
@@ -154,7 +152,7 @@ public class JPEGEditorDemo
 
 			new JPEGImageIO()
 				.setQuality(quality)
-				.setProgressive(mCompressionSelect.getSelectedIndex() == 1)
+				.setCompressionType((CompressionType)mCompressionSelect.getSelectedItem())
 				.setFDCT(fdctTypes[mFDCTSelect.getSelectedIndex()])
 				.setSubsampling((SubsamplingMode)mSubsamplingSelect.getSelectedItem())
 				.write(mImage, baos);

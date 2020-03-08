@@ -1,8 +1,8 @@
-package org.terifan.imageio.jpeg.examples;
+package examples;
 
 import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.JPEGImageIO;
-import org.terifan.imageio.jpeg.examples.res.R;
+import examples.res.R;
 
 
 public class LoadJPEGDemo

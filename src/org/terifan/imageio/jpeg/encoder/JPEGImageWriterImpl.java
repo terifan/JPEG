@@ -4,6 +4,7 @@ import java.io.IOException;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ComponentInfo;
+import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.DQTSegment;
@@ -39,25 +40,25 @@ public class JPEGImageWriterImpl
 	}
 
 
-	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, ProgressionScript aProgressionScript) throws IOException
+	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, CompressionType aCompressionType, ProgressionScript aProgressionScript) throws IOException
 	{
-		if (aJPEG.mProgressive && aProgressionScript == null)
+		if (aCompressionType.isProgressive() && aProgressionScript == null)
 		{
 			aProgressionScript = ProgressionScript.DEFAULT;
 		}
 
-		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
-		aJPEG.num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
+		int num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
+		int num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
 		Encoder encoder = null;
 
-		int progressionLevels = aJPEG.mProgressive ? aProgressionScript.getParams().size() : 1;
+		int progressionLevels = aCompressionType.isProgressive() ? aProgressionScript.getParams().size() : 1;
 
 		for (int progressionLevel = 0; progressionLevel < progressionLevels; progressionLevel++)
 		{
 			SOSSegment sosSegment;
 
-			if (aJPEG.mProgressive)
+			if (aCompressionType.isProgressive())
 			{
 				int[][] params = aProgressionScript.getParams().get(progressionLevel);
 
@@ -69,7 +70,7 @@ public class JPEGImageWriterImpl
 				int[] id = new int[params[0].length];
 				for (int i = 0; i < params[0].length; i++)
 				{
-					id[i] = aJPEG.mSOFSegment.getComponent(params[0][i]).getComponentId();
+					id[i] = aJPEG.mSOFSegment.getComponents()[params[0][i]].getComponentId();
 				}
 
 				sosSegment = new SOSSegment(aJPEG, id);
@@ -101,11 +102,11 @@ public class JPEGImageWriterImpl
 					sosSegment.setTableAC(0, id[0] == 1 ? 0 : 1);
 				}
 
-				for (int scanComponentIndex = 0, first = 0; scanComponentIndex < aJPEG.mSOFSegment.getNumComponents(); scanComponentIndex++)
+				int cn = 0;
+				for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
 				{
-					ComponentInfo comp = aJPEG.mSOFSegment.getComponent(scanComponentIndex);
-					comp.setComponentBlockOffset(first);
-					first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+					comp.setComponentBlockOffset(cn);
+					cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 				}
 
 				sosSegment.prepareMCU();
@@ -130,12 +131,15 @@ public class JPEGImageWriterImpl
 
 			int[][] mcu = new int[aJPEG.blocks_in_MCU][64];
 
+			int[][][][] coefficients = aJPEG.mCoefficients;
+			int width = aJPEG.mSOFSegment.getWidth();
+			int height = aJPEG.mSOFSegment.getHeight();
 			int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 			int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 			int mcuWidth = 8 * maxSamplingX;
 			int mcuHeight = 8 * maxSamplingY;
 
-			if (aJPEG.mArithmetic)
+			if (aCompressionType.isArithmetic())
 			{
 				aJPEG.arith_dc_L = new int[]{0,0};
 				aJPEG.arith_dc_U = new int[]{1,1};
@@ -146,7 +150,7 @@ public class JPEGImageWriterImpl
 				if (encoder == null)
 				{
 					encoder = new ArithmeticEncoder(aOutput);
-					encoder.jinit_encoder(aJPEG);
+					encoder.jinit_encoder(aJPEG, aCompressionType.isProgressive());
 				}
 			}
 			else
@@ -154,10 +158,10 @@ public class JPEGImageWriterImpl
 				if (encoder == null)
 				{
 					encoder = new HuffmanEncoder(aOutput);
-					encoder.jinit_encoder(aJPEG);
+					encoder.jinit_encoder(aJPEG, aCompressionType.isProgressive());
 				}
 
-				if (aJPEG.mOptimizedHuffman || aJPEG.mProgressive)
+				if (aCompressionType == CompressionType.HuffmanOptimized || aCompressionType.isProgressive())
 				{
 					encoder.start_pass(aJPEG, true);
 
@@ -165,19 +169,19 @@ public class JPEGImageWriterImpl
 					{
 						ComponentInfo comp = aJPEG.cur_comp_info[0];
 
-						for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+						for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 						{
 							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 							{
-								if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
+								if (mcuY < num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < height)
 								{
-									for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+									for (int mcuX = 0; mcuX < num_hor_mcu; mcuX++)
 									{
 										for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 										{
-											if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
+											if (mcuX < num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < width)
 											{
-												mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+												mcu[0] = coefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
 												encoder.encode_mcu(aJPEG, mcu, true);
 											}
@@ -189,11 +193,11 @@ public class JPEGImageWriterImpl
 					}
 					else
 					{
-						for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+						for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 						{
-							for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+							for (int mcuX = 0; mcuX < num_hor_mcu; mcuX++)
 							{
-								encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], true);
+								encoder.encode_mcu(aJPEG, coefficients[mcuY][mcuX], true);
 							}
 						}
 					}
@@ -218,19 +222,19 @@ public class JPEGImageWriterImpl
 			{
 				ComponentInfo comp = aJPEG.cur_comp_info[0];
 
-				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+				for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 				{
 					for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 					{
-						if (mcuY < aJPEG.num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
+						if (mcuY < num_ver_mcu - 1 || mcuY * mcuHeight + blockY * 8 < height)
 						{
-							for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+							for (int mcuX = 0; mcuX < num_hor_mcu; mcuX++)
 							{
 								for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 								{
-									if (mcuX < aJPEG.num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
+									if (mcuX < num_hor_mcu - 1 || mcuX * mcuWidth + blockX * 8 < width)
 									{
-										mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
+										mcu[0] = coefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
 
 										encoder.encode_mcu(aJPEG, mcu, false);
 									}
@@ -242,18 +246,18 @@ public class JPEGImageWriterImpl
 			}
 			else
 			{
-				for (int mcuY = 0; mcuY < aJPEG.num_ver_mcu; mcuY++)
+				for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 				{
-					for (int mcuX = 0; mcuX < aJPEG.num_hor_mcu; mcuX++)
+					for (int mcuX = 0; mcuX < num_hor_mcu; mcuX++)
 					{
-						encoder.encode_mcu(aJPEG, aJPEG.mCoefficients[mcuY][mcuX], false);
+						encoder.encode_mcu(aJPEG, coefficients[mcuY][mcuX], false);
 					}
 				}
 			}
 
 			encoder.finish_pass(aJPEG, false);
 
-			aLog.println("<image data %d bytes%s>", aOutput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + (1 + progressionLevel) : "");
+			aLog.println("<image data %d bytes%s>", aOutput.getStreamOffset() - streamOffset, aCompressionType.isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 		}
 	}
 }

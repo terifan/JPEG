@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
+import org.terifan.imageio.jpeg.ImageTransdecode;
 import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
@@ -11,6 +12,7 @@ import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
 import org.terifan.imageio.jpeg.APP1Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
+import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
 import org.terifan.imageio.jpeg.JPEG;
@@ -54,7 +56,7 @@ public class JPEGImageReaderImpl
 				{
 					if (aUpdateImage && image != null)
 					{
-						ImageUpdater.updateImage(aJPEG, aIDCT, image);
+						ImageTransdecode.transform(aJPEG, aIDCT, image);
 					}
 
 					throw new IOException("Error in JPEG stream at offset " + aInput.getStreamOffset() + "; expected segment marker but found: " + Integer.toString(nextSegment, 16));
@@ -95,30 +97,26 @@ public class JPEGImageReaderImpl
 				case DAC: // Arithmetic Table
 					new DACSegment(aJPEG).decode(aInput).print(aLog);
 					break;
-				case SOF0:
-					decoder = new HuffmanDecoder(aInput);
-					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
-					aJPEG.mSOFSegment.decode(aInput).print(aLog);
-					break;
 				case SOF1:
 					throw new IOException("Image encoding not supported: Extended sequential, Huffman");
+				case SOF0:
+					decoder = new HuffmanDecoder(aInput);
+					aJPEG.mSOFSegment = new SOFSegment(aJPEG, CompressionType.Huffman);
+					aJPEG.mSOFSegment.decode(aInput).print(aLog);
+					break;
 				case SOF2:
 					decoder = new HuffmanDecoder(aInput);
-					aJPEG.mProgressive = true;
-					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
+					aJPEG.mSOFSegment = new SOFSegment(aJPEG, CompressionType.HuffmanProgressive);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF9:
 					decoder = new ArithmeticDecoder(aInput);
-					aJPEG.mArithmetic = true;
-					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
+					aJPEG.mSOFSegment = new SOFSegment(aJPEG, CompressionType.Arithmetic);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF10:
 					decoder = new ArithmeticDecoder(aInput);
-					aJPEG.mArithmetic = true;
-					aJPEG.mProgressive = true;
-					aJPEG.mSOFSegment = new SOFSegment(aJPEG);
+					aJPEG.mSOFSegment = new SOFSegment(aJPEG, CompressionType.ArithmeticProgressive);
 					aJPEG.mSOFSegment.decode(aInput).print(aLog);
 					break;
 				case SOF3: // Lossless, Huffman
@@ -151,9 +149,9 @@ public class JPEGImageReaderImpl
 
 						aInput.setHandleMarkers(false);
 
-						if (aUpdateImage && aJPEG.mProgressive && aUpdateProgressiveImage)
+						if (aUpdateImage && aJPEG.mSOFSegment.getCompressionType().isProgressive() && aUpdateProgressiveImage)
 						{
-							ImageUpdater.updateImage(aJPEG, aIDCT, image);
+							ImageTransdecode.transform(aJPEG, aIDCT, image);
 						}
 					}
 					catch (Throwable e)
@@ -162,7 +160,7 @@ public class JPEGImageReaderImpl
 						stop = true;
 					}
 
-					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mProgressive ? ", progression level " + (1 + progressionLevel) : "");
+					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 
 					progressionLevel++;
 
@@ -175,9 +173,9 @@ public class JPEGImageReaderImpl
 					break;
 				case EOI:
 					aLog.println(SegmentMarker.EOI.name());
-					if (aUpdateImage && !(aJPEG.mProgressive && aUpdateProgressiveImage))
+					if (aUpdateImage && !(aJPEG.mSOFSegment.getCompressionType().isProgressive() && aUpdateProgressiveImage))
 					{
-						ImageUpdater.updateImage(aJPEG, aIDCT, image);
+						ImageTransdecode.transform(aJPEG, aIDCT, image);
 					}
 					stop = true;
 					break;
@@ -206,16 +204,16 @@ public class JPEGImageReaderImpl
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
 
-		for (int scanComponentIndex = 0, first = 0; scanComponentIndex < aJPEG.mSOFSegment.getNumComponents(); scanComponentIndex++)
+		int cn = 0;
+		for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
 		{
-			ComponentInfo comp = aJPEG.mSOFSegment.getComponent(scanComponentIndex);
-			comp.setComponentBlockOffset(first);
-			first += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			comp.setComponentBlockOffset(cn);
+			cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
 		if (aProgressionLevel == 0)
 		{
-			aDecoder.initialize(aJPEG);
+			aDecoder.initialize(aJPEG, aJPEG.mSOFSegment.getCompressionType().isProgressive());
 		}
 
 		Arrays.fill(aJPEG.entropy.last_dc_val, 0);

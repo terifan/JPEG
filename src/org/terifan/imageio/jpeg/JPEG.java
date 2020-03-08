@@ -7,9 +7,6 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 public class JPEG
 {
 	public SOFSegment mSOFSegment;
-	public boolean mArithmetic;
-	public boolean mProgressive;
-	public boolean mOptimizedHuffman;
 
 	public QuantizationTable[] mQuantizationTables;
 
@@ -34,9 +31,6 @@ public class JPEG
 	public int[] arith_dc_U;
 	public int[] arith_ac_K;
 
-	public int num_hor_mcu;
-	public int num_ver_mcu;
-
 	public JPEGEntropyState entropy;
 	public int[] MCU_membership;
 	public ComponentInfo[] cur_comp_info;
@@ -46,11 +40,14 @@ public class JPEG
 	public int Se;
 	public int Ah;
 	public int Al;
-	public int[][] coef_bits;
 
 
 	public JPEG()
 	{
+		mDensitiesUnits = 1;
+		mDensityX = 72;
+		mDensityY = 72;
+
 		mQuantizationTables = new QuantizationTable[8];
 		mHuffmanTables = new HuffmanTable[4][2];
 
@@ -76,7 +73,7 @@ public class JPEG
 	}
 
 
-	public String getSubSampling()
+	public SubsamplingMode getSubsamplingMode()
 	{
 		StringBuilder sb = new StringBuilder();
 		for (ComponentInfo ci : mSOFSegment.getComponents())
@@ -88,18 +85,14 @@ public class JPEG
 			sb.append(ci.getHorSampleFactor() + "x" + ci.getVerSampleFactor());
 		}
 
-		switch (sb.toString())
+		for (SubsamplingMode sm : SubsamplingMode.values())
 		{
-			case "1x1,1x1,1x1":	return "4:4:4"; // 1 1
-			case "1x2,1x1,1x1":	return "4:4:0"; // 1 2
-			case "2----------":	return "4:4:1"; // 1 4
-			case "2x1,1x1,1x1":	return "4:2:2"; // 2 1
-			case "2x2,1x1,1x1":	return "4:2:0"; // 2 2
-			case "3----------":	return "4:2:1"; // 2 4
-			case "4x1,1x1,1x1":	return "4:1:1"; // 4 1
-			case "4x1,2x1,2x1":	return "4:1:0"; // 4 2
+			if (sm.getLogic().equals(sb.toString()))
+			{
+				return sm;
+			}
 		}
 
-		return sb.toString();
+		throw new IllegalArgumentException("Unsupported: " + sb.toString());
 	}
 }

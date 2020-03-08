@@ -9,7 +9,8 @@ public class ImageSampler
 	public static void sampleImage(JPEG aJPEG, BufferedImage aImage, FDCT aFDCT) throws UnsupportedOperationException
 	{
 		ColorSpace colorSpace = ColorSpace.YCBCR;
-		int numComponents = aJPEG.mSOFSegment.getComponents().length;
+		ComponentInfo[] components = aJPEG.mSOFSegment.getComponents();
+		int numComponents = components.length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
@@ -20,10 +21,9 @@ public class ImageSampler
 		int ih = aImage.getHeight();
 
 		int blocks_in_MCU = 0;
-		for (int ci = 0; ci < numComponents; ci++)
+		for (ComponentInfo ci : components)
 		{
-			ComponentInfo comp = aJPEG.mSOFSegment.getComponent(ci);
-			blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			blocks_in_MCU += ci.getHorSampleFactor() * ci.getVerSampleFactor();
 		}
 
 		aJPEG.mCoefficients = new int[numVerMCU][numHorMCU][blocks_in_MCU][64];
@@ -44,7 +44,7 @@ public class ImageSampler
 
 				for (int ci = 0, blockIndex = 0; ci < numComponents; ci++)
 				{
-					ComponentInfo comp = aJPEG.mSOFSegment.getComponent(ci);
+					ComponentInfo comp = components[ci];
 					int samplingX = comp.getHorSampleFactor();
 					int samplingY = comp.getVerSampleFactor();
 

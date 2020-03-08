@@ -29,9 +29,7 @@ public class JPEGImageIO
 	private Class<? extends IDCT> mIDCT;
 	private Class<? extends FDCT> mFDCT;
 	private ProgressionScript mProgressionScript;
-	private boolean mArithmetic;
-	private boolean mOptimizedHuffman;
-	private boolean mProgressive;
+	private CompressionType mCompressionType;
 	private double mQuality;
 	private boolean mUpdateProgressiveImage;
 	private SubsamplingMode mSubsampling;
@@ -44,6 +42,7 @@ public class JPEGImageIO
 		mIDCT = IDCTIntegerFast.class;
 		mFDCT = FDCTIntegerFast.class;
 		mSubsampling = SubsamplingMode._422;
+		mCompressionType = CompressionType.Huffman;
 		mLog = new Log();
 	}
 
@@ -66,12 +65,12 @@ public class JPEGImageIO
 			throw new JPEGImageIOException(e);
 		}
 
-		if (image == null)
+		if (image != null)
 		{
-			return null;
+			ColorSpaceTransform.transform(jpeg, image);
 		}
 
-		return new ColorTransform().transform(jpeg, image);
+		return image;
 	}
 
 
@@ -81,11 +80,6 @@ public class JPEGImageIO
 
 		int[][] samplingFactors = mSubsampling.getSamplingFactors();
 
-		System.out.println("-----------");
-		System.out.println(samplingFactors[0][0]+", "+samplingFactors[0][1]);
-		System.out.println(samplingFactors[1][0]+", "+samplingFactors[1][1]);
-		System.out.println(samplingFactors[2][0]+", "+samplingFactors[2][1]);
-
 		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, samplingFactors[0][0], samplingFactors[0][1]);
 		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, samplingFactors[1][0], samplingFactors[1][1]);
 		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, samplingFactors[2][0], samplingFactors[2][1]);
@@ -93,10 +87,7 @@ public class JPEGImageIO
 
 		JPEG jpeg = new JPEG();
 		jpeg.mColorSpace = ColorSpace.YCBCR;
-		jpeg.mArithmetic = mArithmetic;
-		jpeg.mProgressive = mProgressive;
-		jpeg.mOptimizedHuffman = mOptimizedHuffman;
-		jpeg.mSOFSegment = new SOFSegment(jpeg, aInput.getWidth(), aInput.getHeight(), 8, components);
+		jpeg.mSOFSegment = new SOFSegment(jpeg, mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, components);
 		jpeg.mQuantizationTables = new QuantizationTable[2];
 		jpeg.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(mQuality, 0);
 		jpeg.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(mQuality, 1);
@@ -116,9 +107,7 @@ public class JPEGImageIO
 			throw new IllegalStateException("Error decoding source image");
 		}
 
-		jpeg.mArithmetic = mArithmetic;
-		jpeg.mProgressive = mProgressive;
-		jpeg.mOptimizedHuffman = mOptimizedHuffman;
+		jpeg.mSOFSegment.setCompressionType(mCompressionType);
 		jpeg.mRestartInterval = 0;
 
 		encode(jpeg, aOutput);
@@ -149,7 +138,7 @@ public class JPEGImageIO
 		{
 			JPEGImageWriterImpl writer = new JPEGImageWriterImpl();
 			writer.create(aJpeg, out, mLog);
-			writer.encode(aJpeg, out, mLog, mProgressionScript);
+			writer.encode(aJpeg, out, mLog, aJpeg.mSOFSegment.getCompressionType(), mProgressionScript);
 			writer.finish(aJpeg, out, mLog);
 		}
 		catch (IOException e)
@@ -204,41 +193,15 @@ public class JPEGImageIO
 	}
 
 
-	public boolean isArithmetic()
+	public CompressionType getCompressionType()
 	{
-		return mArithmetic;
+		return mCompressionType;
 	}
 
 
-	public JPEGImageIO setArithmetic(boolean aArithmetic)
+	public JPEGImageIO setCompressionType(CompressionType aCompressionType)
 	{
-		mArithmetic = aArithmetic;
-		return this;
-	}
-
-
-	public boolean isOptimizedHuffman()
-	{
-		return mOptimizedHuffman;
-	}
-
-
-	public JPEGImageIO setOptimizedHuffman(boolean aOptimizedHuffman)
-	{
-		mOptimizedHuffman = aOptimizedHuffman;
-		return this;
-	}
-
-
-	public boolean isProgressive()
-	{
-		return mProgressive;
-	}
-
-
-	public JPEGImageIO setProgressive(boolean aProgressive)
-	{
-		mProgressive = aProgressive;
+		mCompressionType = aCompressionType;
 		return this;
 	}
 

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 
 
@@ -40,11 +41,11 @@ public class TestTranscodeBatch
 						ByteArrayOutputStream hufOptData = new ByteArrayOutputStream();
 						ByteArrayOutputStream hufSeqData = new ByteArrayOutputStream();
 
-						BufferedImage ariSeqImage = process(data, ariSeqData, new File(new File(out, "jpg-ari"), file.getName()), true, false, false);
-						BufferedImage ariProImage = process(data, ariProData, new File(new File(out, "jpg-ari-prog"), file.getName()), true, true, false);
-						BufferedImage hufSeqImage = process(data, hufSeqData, new File(new File(out, "jpg-huff"), file.getName()), false, false, false);
-						BufferedImage hufOptImage = process(data, hufOptData, new File(new File(out, "jpg-huff-opt"), file.getName()), false, false, true);
-						BufferedImage hufProImage = process(data, hufProData, new File(new File(out, "jpg-huff-prog"), file.getName()), false, true, false);
+						BufferedImage ariSeqImage = process(data, ariSeqData, new File(new File(out, "jpg-ari"), file.getName()), CompressionType.Arithmetic);
+						BufferedImage ariProImage = process(data, ariProData, new File(new File(out, "jpg-ari-prog"), file.getName()), CompressionType.ArithmeticProgressive);
+						BufferedImage hufSeqImage = process(data, hufSeqData, new File(new File(out, "jpg-huff"), file.getName()), CompressionType.Huffman);
+						BufferedImage hufOptImage = process(data, hufOptData, new File(new File(out, "jpg-huff-opt"), file.getName()), CompressionType.HuffmanOptimized);
+						BufferedImage hufProImage = process(data, hufProData, new File(new File(out, "jpg-huff-prog"), file.getName()), CompressionType.HuffmanProgressive);
 
 						int c0 = compare(ariSeqImage, ariProImage);
 						int c1 = compare(ariSeqImage, hufSeqImage);
@@ -83,9 +84,9 @@ public class TestTranscodeBatch
 	}
 
 
-	private static BufferedImage process(byte[] aImageInData, ByteArrayOutputStream aImageOutData, File aFile, boolean aArithmetic, boolean aProgressive, boolean aOptimizedHuffman) throws IOException
+	private static BufferedImage process(byte[] aImageInData, ByteArrayOutputStream aImageOutData, File aFile, CompressionType aCompressionType) throws IOException
 	{
-		new JPEGImageIO().setArithmetic(aArithmetic).setProgressive(aProgressive).setOptimizedHuffman(aOptimizedHuffman).transcode(new ByteArrayInputStream(aImageInData), aImageOutData);
+		new JPEGImageIO().setCompressionType(aCompressionType).transcode(new ByteArrayInputStream(aImageInData), aImageOutData);
 
 		try (FileOutputStream fos = new FileOutputStream(aFile))
 		{

@@ -13,17 +13,20 @@ public class SOFSegment extends Segment
 	private int mWidth;
 	private ComponentInfo[] mComponents;
 	private JPEG mJPEG;
+	private CompressionType mCompressionType;
 
 
-	public SOFSegment(JPEG aJPEG)
+	public SOFSegment(JPEG aJPEG, CompressionType aCompressionType)
 	{
 		mJPEG = aJPEG;
+		mCompressionType = aCompressionType;
 	}
 
 
-	public SOFSegment(JPEG aJPEG, int aWidth, int aHeight, int aPrecision, ComponentInfo... aComponents)
+	public SOFSegment(JPEG aJPEG, CompressionType aCompressionType, int aWidth, int aHeight, int aPrecision, ComponentInfo... aComponents)
 	{
 		mJPEG = aJPEG;
+		mCompressionType = aCompressionType;
 		mWidth = aWidth;
 		mHeight = aHeight;
 		mPrecision = aPrecision;
@@ -62,6 +65,10 @@ public class SOFSegment extends Segment
 		{
 			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
 		}
+		else
+		{
+			mJPEG.mColorSpace = ColorSpace.YCBCR;
+		}
 
 		return this;
 	}
@@ -70,26 +77,7 @@ public class SOFSegment extends Segment
 	@Override
 	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
 	{
-		SegmentMarker type;
-
-		if (mJPEG.mArithmetic && mJPEG.mProgressive)
-		{
-			type = SegmentMarker.SOF10;
-		}
-		else if (mJPEG.mArithmetic)
-		{
-			type = SegmentMarker.SOF9;
-		}
-		else if (mJPEG.mProgressive)
-		{
-			type = SegmentMarker.SOF2;
-		}
-		else
-		{
-			type = SegmentMarker.SOF0;
-		}
-
-		aBitStream.writeInt16(type.CODE);
+		aBitStream.writeInt16(mCompressionType.getSegmentMarker().CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);
 		aBitStream.writeInt8(mPrecision);
 		aBitStream.writeInt16(mHeight);
@@ -120,6 +108,19 @@ public class SOFSegment extends Segment
 	}
 
 
+	public CompressionType getCompressionType()
+	{
+		return mCompressionType;
+	}
+
+
+	public SOFSegment setCompressionType(CompressionType aCompressionType)
+	{
+		mCompressionType = aCompressionType;
+		return this;
+	}
+
+
 	public int getWidth()
 	{
 		return mWidth;
@@ -129,18 +130,6 @@ public class SOFSegment extends Segment
 	public int getHeight()
 	{
 		return mHeight;
-	}
-
-
-	public int getNumComponents()
-	{
-		return mComponents.length;
-	}
-
-
-	public ComponentInfo getComponent(int aIndex)
-	{
-		return mComponents[aIndex];
 	}
 
 

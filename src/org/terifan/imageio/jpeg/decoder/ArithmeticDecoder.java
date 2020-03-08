@@ -28,6 +28,9 @@ import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
  */
 public class ArithmeticDecoder extends Decoder
 {
+	private boolean mProgressive;
+
+
 	public ArithmeticDecoder(BitInputStream aBitStream)
 	{
 		super(aBitStream);
@@ -37,6 +40,8 @@ public class ArithmeticDecoder extends Decoder
 	private String JERR_NO_ARITH_TABLE = "JERR_NO_ARITH_TABLE";
 	private String JWRN_NOT_SEQUENTIAL = "JWRN_NOT_SEQUENTIAL";
 	private String JERR_BAD_PROGRESSION = "JERR_BAD_PROGRESSION";
+
+	private int[][] coef_bits;
 
 
 	private void ERREXIT(Object... o)
@@ -235,14 +240,14 @@ public class ArithmeticDecoder extends Decoder
 		for (int ci = 0; ci < cinfo.comps_in_scan; ci++)
 		{
 			compptr = cinfo.cur_comp_info[ci];
-			if (!cinfo.mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0))
+			if (!mProgressive || (cinfo.Ss == 0 && cinfo.Ah == 0))
 			{
 				Arrays.fill(entropy.dc_stats[compptr.getTableDC()], 0);
 				/* Reset DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!cinfo.mProgressive && LIM_SE != 0) || (cinfo.mProgressive && cinfo.Ss != 0))
+			if ((!mProgressive && LIM_SE != 0) || (mProgressive && cinfo.Ss != 0))
 			{
 				Arrays.fill(entropy.ac_stats[compptr.getTableAC()], 0);
 			}
@@ -827,7 +832,7 @@ public class ArithmeticDecoder extends Decoder
 		int ci, tbl;
 		ComponentInfo compptr;
 
-		if (aJPEG.mProgressive)
+		if (mProgressive)
 		{
 			/* Validate progressive scan parameters */
 			if (aJPEG.Ss == 0)
@@ -870,18 +875,18 @@ public class ArithmeticDecoder extends Decoder
 			for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 			{
 				int cindex = aJPEG.cur_comp_info[ci].getComponentId() - 1;
-				if (aJPEG.Ss != 0 && aJPEG.coef_bits[cindex][0] < 0) // AC without prior DC scan
+				if (aJPEG.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
 				}
 				for (int coefi = aJPEG.Ss; coefi <= aJPEG.Se; coefi++)
 				{
-					int expected = (aJPEG.coef_bits[cindex][coefi] < 0) ? 0 : aJPEG.coef_bits[cindex][coefi];
+					int expected = (coef_bits[cindex][coefi] < 0) ? 0 : coef_bits[cindex][coefi];
 					if (aJPEG.Ah != expected)
 					{
 						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + aJPEG.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
 					}
-					aJPEG.coef_bits[cindex][coefi] = aJPEG.Al;
+					coef_bits[cindex][coefi] = aJPEG.Al;
 				}
 			}
 			/* Select MCU decoding routine */
@@ -925,7 +930,7 @@ public class ArithmeticDecoder extends Decoder
 		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
 		{
 			compptr = aJPEG.cur_comp_info[ci];
-			if (!aJPEG.mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
+			if (!mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
 			{
 				tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
@@ -937,7 +942,7 @@ public class ArithmeticDecoder extends Decoder
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!aJPEG.mProgressive && LIM_SE != 0) || (aJPEG.mProgressive && aJPEG.Ss != 0))
+			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.Ss != 0))
 			{
 				tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
@@ -964,7 +969,7 @@ public class ArithmeticDecoder extends Decoder
 	 * Finish up at the end of an arithmetic-compressed scan.
 	 */
 	@Override
-	void finishPass(JPEG cinfo)
+	void finishPass(JPEG aJPEG)
 	{
 	}
 
@@ -973,11 +978,13 @@ public class ArithmeticDecoder extends Decoder
 	 * Module initialization routine for arithmetic entropy decoding.
 	 */
 	@Override
-	void initialize(JPEG cinfo)
+	void initialize(JPEG aJPEG, boolean aProgressive)
 	{
-		int numComponents = cinfo.mSOFSegment.getComponents().length;
+		mProgressive = aProgressive;
+
+		int numComponents = aJPEG.mSOFSegment.getComponents().length;
 		JPEGEntropyState entropy = new JPEGEntropyState();
-		cinfo.entropy = entropy;
+		aJPEG.entropy = entropy;
 
 		/* Mark tables unallocated */
 		for (int i = 0; i < NUM_ARITH_TBLS; i++)
@@ -991,15 +998,15 @@ public class ArithmeticDecoder extends Decoder
 		/* Initialize index for fixed probability estimation */
 		entropy.fixed_bin[0] = 113;
 
-		if (cinfo.mProgressive)
+		if (mProgressive)
 		{
 			/* Create progression status table */
-			cinfo.coef_bits = new int[numComponents][DCTSIZE2];
+			coef_bits = new int[numComponents][DCTSIZE2];
 			for (int ci = 0; ci < numComponents; ci++)
 			{
 				for (int i = 0; i < DCTSIZE2; i++)
 				{
-					cinfo.coef_bits[ci][i] = -1;
+					coef_bits[ci][i] = -1;
 				}
 			}
 		}

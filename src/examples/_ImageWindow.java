@@ -1,4 +1,4 @@
-package org.terifan.imageio.jpeg.examples;
+package examples;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
