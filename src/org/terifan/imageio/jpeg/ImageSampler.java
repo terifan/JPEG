@@ -75,37 +75,17 @@ public class ImageSampler
 							{
 								downsample8x16(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX);
 							}
-							else if (samplingX == 2 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 1)
-							{
-								downsample16x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 0);
-							}
 							else if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 1)
 							{
 								downsample16x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 0);
-							}
-							else if (samplingX == 1 && samplingY == 2 && maxSamplingX == 2 && maxSamplingY == 2)
-							{
-								downsample16x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 16 * 8 * blockY);
-							}
-							else if (samplingX == 4 && samplingY == 1 && maxSamplingX == 4 && maxSamplingY == 1)
-							{
-								downsample32x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 32 * 8 * blockY);
 							}
 							else if (samplingX == 1 && samplingY == 1 && maxSamplingX == 4 && maxSamplingY == 1)
 							{
 								downsample32x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 32 * 8 * blockY);
 							}
-							else if (samplingX == 1 && samplingY == 1 && maxSamplingX == 1 && maxSamplingY == 1)
-							{
-								copyBlock(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX, 8 * blockY, mcuWidth);
-							}
-							else if (samplingX == 2 && samplingY == 2)
-							{
-								copyBlock(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX, 8 * blockY, mcuWidth);
-							}
 							else
 							{
-								throw new UnsupportedOperationException(samplingX+" "+samplingY+" "+maxSamplingX+" "+maxSamplingY);
+								copyBlock(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX, 8 * blockY, mcuWidth);
 							}
 							aFDCT.transform(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], quantizationTable);
 						}

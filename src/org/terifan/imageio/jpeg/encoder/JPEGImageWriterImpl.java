@@ -43,7 +43,7 @@ public class JPEGImageWriterImpl
 	{
 		if (aJPEG.mProgressive && aProgressionScript == null)
 		{
-			aProgressionScript = new ProgressionScript(ProgressionScript.DEFAULT);
+			aProgressionScript = ProgressionScript.DEFAULT;
 		}
 
 		aJPEG.num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();

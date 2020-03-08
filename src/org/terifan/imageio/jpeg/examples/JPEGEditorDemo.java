@@ -160,14 +160,14 @@ public class JPEGEditorDemo
 				.setSubsampling((SubsamplingMode)mSubsamplingSelect.getSelectedItem())
 				.write(mImage, baos);
 
-			/*BufferedImage decoded =*/ new JPEGImageIO()
+			BufferedImage decoded = new JPEGImageIO()
 				.setIDCT(idctTypes[mIDCTSelect.getSelectedIndex()])
 				.setLog(System.out)
 				.read(baos.toByteArray());
 
 try
 {
-	BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+//decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
 
 			mImagePanel.setImage(decoded);
 			mQualityLabel.setText("Quality - " + quality);

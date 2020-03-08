@@ -43,7 +43,7 @@ public class JPEGImageIO
 		mQuality = 90;
 		mIDCT = IDCTIntegerFast.class;
 		mFDCT = FDCTIntegerFast.class;
-		mSubsampling = SubsamplingMode._444;
+		mSubsampling = SubsamplingMode._422;
 		mLog = new Log();
 	}
 
