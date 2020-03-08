@@ -5,10 +5,12 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import static java.lang.Math.log10;
 import static java.lang.Math.pow;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -16,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import org.terifan.imageio.jpeg.JPEGImageIO;
+import org.terifan.imageio.jpeg.SubsamplingMode;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
@@ -67,6 +70,7 @@ public class JPEGEditorDemo
 
 	private static class ViewPanel extends JPanel
 	{
+		boolean mLeft;
 		JLabel mFileSizeLabel;
 		JLabel mQualityLabel;
 		JSlider mQualitySlider;
@@ -81,13 +85,11 @@ public class JPEGEditorDemo
 		{
 			JPanel controlPanel = new JPanel(new GridLayout(2, 5, 10, 0));
 
+			mLeft = aLeft;
 			mFileSizeLabel = new JLabel("");
 			mQualityLabel = new JLabel("Quality");
 			mQualitySlider = new JSlider(0, 100, 90);
-			mSubsamplingSelect = new JComboBox(new String[]
-			{
-				"4:4:4", "4:2:2", "4:2:0"
-			});
+			mSubsamplingSelect = new JComboBox(SubsamplingMode.values());
 			mCompressionSelect = new JComboBox(new String[]
 			{
 				"Sequential", "Progressive"
@@ -150,11 +152,31 @@ public class JPEGEditorDemo
 			int quality = mQualitySlider.getValue();
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			new JPEGImageIO().setQuality(quality).setProgressive(mCompressionSelect.getSelectedIndex() == 1).setFDCT(fdctTypes[mFDCTSelect.getSelectedIndex()]).write(mImage, baos);
 
-			mImagePanel.setImage(new JPEGImageIO().setIDCT(idctTypes[mIDCTSelect.getSelectedIndex()]).read(baos.toByteArray()));
+			new JPEGImageIO()
+				.setQuality(quality)
+				.setProgressive(mCompressionSelect.getSelectedIndex() == 1)
+				.setFDCT(fdctTypes[mFDCTSelect.getSelectedIndex()])
+				.setSubsampling((SubsamplingMode)mSubsamplingSelect.getSelectedItem())
+				.write(mImage, baos);
+
+			/*BufferedImage decoded =*/ new JPEGImageIO()
+				.setIDCT(idctTypes[mIDCTSelect.getSelectedIndex()])
+				.setLog(System.out)
+				.read(baos.toByteArray());
+
+try
+{
+	BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+
+			mImagePanel.setImage(decoded);
 			mQualityLabel.setText("Quality - " + quality);
 			mFileSizeLabel.setText(baos.size() + " bytes");
+}
+catch (Exception e)
+{
+	e.printStackTrace(System.out);
+}
 
 			repaint();
 			mFilerPanel.update();
@@ -200,6 +222,11 @@ public class JPEGEditorDemo
 			BufferedImage image1 = mViewPanel1.mImagePanel.getImage();
 			BufferedImage image2 = mViewPanel2.mImagePanel.getImage();
 			BufferedImage dst = mImagePanel.getImage();
+
+			if (image1 == null || image2 == null)
+			{
+				return;
+			}
 
 			long diff = 0;
 
@@ -314,6 +341,10 @@ public class JPEGEditorDemo
 						try
 						{
 							mRunnable.run();
+						}
+						catch (Throwable e)
+						{
+							e.printStackTrace(System.out);
 						}
 						finally
 						{

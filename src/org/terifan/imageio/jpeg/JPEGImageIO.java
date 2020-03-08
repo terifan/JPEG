@@ -34,6 +34,7 @@ public class JPEGImageIO
 	private boolean mProgressive;
 	private double mQuality;
 	private boolean mUpdateProgressiveImage;
+	private SubsamplingMode mSubsampling;
 	private Log mLog;
 
 
@@ -42,6 +43,7 @@ public class JPEGImageIO
 		mQuality = 90;
 		mIDCT = IDCTIntegerFast.class;
 		mFDCT = FDCTIntegerFast.class;
+		mSubsampling = SubsamplingMode._444;
 		mLog = new Log();
 	}
 
@@ -77,10 +79,16 @@ public class JPEGImageIO
 	{
 		FDCT fdct = createFDCTInstance();
 
-		// chroma subsampling 4:4:4 4:2:2 4:2:0
-		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, 2, 2);
-		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, 1, 1);
-		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, 1, 1);
+		int[][] samplingFactors = mSubsampling.getSamplingFactors();
+
+		System.out.println("-----------");
+		System.out.println(samplingFactors[0][0]+", "+samplingFactors[0][1]);
+		System.out.println(samplingFactors[1][0]+", "+samplingFactors[1][1]);
+		System.out.println(samplingFactors[2][0]+", "+samplingFactors[2][1]);
+
+		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, samplingFactors[0][0], samplingFactors[0][1]);
+		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, samplingFactors[1][0], samplingFactors[1][1]);
+		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, samplingFactors[2][0], samplingFactors[2][1]);
 		ComponentInfo[] components = new ComponentInfo[]{lu, cb, cr};
 
 		JPEG jpeg = new JPEG();
@@ -283,6 +291,19 @@ public class JPEGImageIO
 	public JPEGImageIO setFDCT(Class<? extends FDCT> aClass)
 	{
 		mFDCT = aClass;
+		return this;
+	}
+
+
+	public SubsamplingMode getSubsampling()
+	{
+		return mSubsampling;
+	}
+
+
+	public JPEGImageIO setSubsampling(SubsamplingMode aSubsampling)
+	{
+		mSubsampling = aSubsampling;
 		return this;
 	}
 
