@@ -7,8 +7,6 @@ import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import static java.lang.Math.log10;
-import static java.lang.Math.pow;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -26,11 +24,13 @@ import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import examples.res.R;
 import org.terifan.imageio.jpeg.CompressionType;
+import org.terifan.imageio.jpeg.decoder.IDCT;
+import org.terifan.imageio.jpeg.encoder.FDCT;
 
 
 public class JPEGEditorDemo
 {
-	private static BufferedImage mImage;
+	private static BufferedImage mOriginalImage;
 
 
 	public JPEGEditorDemo() throws IOException
@@ -39,40 +39,28 @@ public class JPEGEditorDemo
 
 		FilterPanel filterPanel1 = new FilterPanel();
 		FilterPanel filterPanel2 = new FilterPanel();
-
 		ViewPanel viewPanel1 = new ViewPanel(filterPanel1, true);
 		ViewPanel viewPanel2 = new ViewPanel(filterPanel2, false);
 
-		filterPanel1.setViewPanel(viewPanel1);
-		filterPanel2.setViewPanel(viewPanel2);
-
-		JPanel panel2 = new JPanel(new GridLayout(1, 2, 10, 0));
-		panel2.setBackground(bg);
-
-		JPanel panel3 = new JPanel(new GridLayout(1, 2, 10, 0));
-		panel3.setBackground(bg);
-
-		JPanel panel1 = new JPanel(new GridLayout(2, 1, 0, 10));
-		panel1.setBackground(bg);
-		panel1.add(panel2);
-		panel1.add(panel3);
-		panel1.setBorder(BorderFactory.createLineBorder(bg, 4));
-
-		panel2.add(viewPanel1);
-		panel2.add(viewPanel2);
-		panel3.add(filterPanel1);
-		panel3.add(filterPanel2);
+		JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
+		panel.setBorder(BorderFactory.createLineBorder(bg, 4));
+		panel.setBackground(bg);
+		panel.add(viewPanel1);
+		panel.add(viewPanel2);
+		panel.add(filterPanel1);
+		panel.add(filterPanel2);
 
 		JFrame frame = new JFrame();
 		frame.setBackground(bg);
-		frame.add(panel1);
+		frame.add(panel);
 		frame.setSize(2000, 1300);
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 
-		viewPanel1.mQualitySlider.setValue(50);
-		viewPanel2.mQualitySlider.setValue(95);
+		viewPanel1.mQualitySlider.setValue(76);
+		viewPanel1.mSubsamplingSelect.setSelectedIndex(2);
+		viewPanel2.mQualitySlider.setValue(59);
 	}
 
 
@@ -83,10 +71,10 @@ public class JPEGEditorDemo
 		JLabel mFileSizeLabel;
 		JLabel mQualityLabel;
 		JSlider mQualitySlider;
-		JComboBox mSubsamplingSelect;
-		JComboBox mCompressionSelect;
-		JComboBox mFDCTSelect;
-		JComboBox mIDCTSelect;
+		JComboBox<SubsamplingMode> mSubsamplingSelect;
+		JComboBox<CompressionType> mCompressionSelect;
+		JComboBox<FDCT> mFDCTSelect;
+		JComboBox<IDCT> mIDCTSelect;
 		_ImagePanel mImagePanel;
 
 
@@ -104,11 +92,11 @@ public class JPEGEditorDemo
 			mCompressionSelect = new JComboBox(CompressionType.values());
 			mFDCTSelect = new JComboBox(new String[]
 			{
-				"Float", "FastInt", "SlowInt"
+				FDCTFloat.class.getSimpleName(), FDCTIntegerFast.class.getSimpleName(), FDCTIntegerSlow.class.getSimpleName()
 			});
 			mIDCTSelect = new JComboBox(new String[]
 			{
-				"Float", "FastInt", "SlowInt"
+				IDCTFloat.class.getSimpleName(), IDCTIntegerFast.class.getSimpleName(), IDCTIntegerSlow.class.getSimpleName()
 			});
 
 			mQualitySlider.addChangeListener(e -> loadImage());
@@ -138,6 +126,8 @@ public class JPEGEditorDemo
 			super.add(controlPanel, BorderLayout.NORTH);
 			super.add(mImagePanel, BorderLayout.CENTER);
 			super.add(fileSizePanel, BorderLayout.SOUTH);
+
+			mFilterPanel.mViewPanel = this;
 		}
 
 
@@ -163,28 +153,30 @@ public class JPEGEditorDemo
 
 			new JPEGImageIO()
 				.setQuality(quality)
-				.setCompressionType((CompressionType)mCompressionSelect.getSelectedItem())
 				.setFDCT(fdctTypes[mFDCTSelect.getSelectedIndex()])
+				.setCompressionType((CompressionType)mCompressionSelect.getSelectedItem())
 				.setSubsampling((SubsamplingMode)mSubsamplingSelect.getSelectedItem())
-				.write(mImage, baos);
+				.write(mOriginalImage, baos);
 
-			BufferedImage decoded = new JPEGImageIO()
+			BufferedImage decoded;
+
+			decoded = new JPEGImageIO()
 				.setIDCT(idctTypes[mIDCTSelect.getSelectedIndex()])
 				.setLog(System.out)
 				.read(baos.toByteArray());
 
-try
-{
-//decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+//			try
+//			{
+//				decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+//			}
+//			catch (Exception e)
+//			{
+//				e.printStackTrace(System.out);
+//			}
 
 			mImagePanel.setImage(decoded);
 			mQualityLabel.setText("Quality - " + quality);
 			mFileSizeLabel.setText(baos.size() + " bytes");
-}
-catch (Exception e)
-{
-	e.printStackTrace(System.out);
-}
 
 			repaint();
 			mFilterPanel.update();
@@ -203,63 +195,33 @@ catch (Exception e)
 		{
 			mImagePanel = new _ImagePanel();
 
-			mImagePanel.setImage(new BufferedImage(mImage.getWidth(), mImage.getHeight(), BufferedImage.TYPE_INT_RGB));
+			mImagePanel.setImage(new BufferedImage(mOriginalImage.getWidth(), mOriginalImage.getHeight(), BufferedImage.TYPE_INT_RGB));
 
-			JPanel panel = new JPanel(new GridLayout(4, 4));
-			mResult = new JLabel[16];
-			for (int i = 0; i < 16; i++)
+			JPanel panel = new JPanel(new GridLayout(2, 3));
+			mResult = new JLabel[8];
+			for (int i = 0; i < mResult.length; i++)
 			{
-				mResult[i] = new JLabel((i % 4) == 3 ? " " : "n/a");
-				panel.add(mResult[i]);
+				panel.add(mResult[i] = new JLabel(" "));
 			}
-			mResult[0].setText("Red");
-			mResult[1].setText("Green");
-			mResult[2].setText("Blue");
 
 			super.setLayout(new BorderLayout());
 			super.add(panel, BorderLayout.NORTH);
 			super.add(mImagePanel, BorderLayout.CENTER);
 		}
 
-		public void setViewPanel(ViewPanel aViewPanel)
-		{
-			mViewPanel = aViewPanel;
-		}
 
 		private SingleOp mWorker = new SingleOp(() ->
 		{
 			BufferedImage image = mViewPanel.mImagePanel.getImage();
-			BufferedImage dst = mImagePanel.getImage();
 
-			if (image == null)
+			if (image != null)
 			{
-				return;
+				mImagePanel.repaint();
+
+				measureError(image, mOriginalImage);
+
+				repaint();
 			}
-
-			long diff = 0;
-
-			for (int y = 0; y < image.getHeight(); y++)
-			{
-				for (int x = 0; x < image.getWidth(); x++)
-				{
-					int rgb1 = image.getRGB(x, y);
-					int rgb2 = mImage.getRGB(x, y);
-
-					int r = (0xff & (rgb1 >> 16)) - (0xff & (rgb2 >> 16));
-					int g = (0xff & (rgb1 >> 8)) - (0xff & (rgb2 >> 8));
-					int b = (0xff & rgb1) - (0xff & rgb2);
-
-					diff += Math.abs(r) + Math.abs(g) + Math.abs(b);
-
-					dst.setRGB(x, y, ((128 + r) << 16) + ((128 + g) << 8) + (128 + b));
-				}
-			}
-
-			mResult[7].setText("RGBdiff " + diff);
-
-			mImagePanel.repaint();
-
-			calculatePSNR(image, mImage);
 		});
 
 
@@ -269,46 +231,76 @@ catch (Exception e)
 		}
 
 
-		public void calculatePSNR(BufferedImage aImage1, BufferedImage aImage2)
+		// TODO: https://github.com/Rolinh/VQMT/tree/master/src
+		public void measureError(BufferedImage aImage1, BufferedImage aImage2)
 		{
-			double[] peak = new double[3];
-			double[] noise = new double[3];
+			BufferedImage dst = mImagePanel.getImage();
 
-			for (int y = 0; y < aImage1.getHeight(); y++)
+			long deltaR = 0;
+			long deltaG = 0;
+			long deltaB = 0;
+			long accumDiff = 0;
+			long accumError = 0;
+			int w = aImage1.getWidth();
+			int h = aImage1.getHeight();
+
+			for (int y = 0; y < h; y++)
 			{
-				for (int x = 0; x < aImage1.getWidth(); x++)
+				for (int x = 0; x < w; x++)
 				{
-					for (int c = 0; c < 3; c++)
-					{
-						int i = 0xff & (aImage1.getRGB(x, y) >> (8 * c));
-						int j = 0xff & (aImage2.getRGB(x, y) >> (8 * c));
+					int c0 = aImage1.getRGB(x, y);
+					int c1 = aImage2.getRGB(x, y);
 
-						if (i != j)
-						{
-							noise[c] += pow(i - j, 2);
-						}
-						if (peak[c] < i)
-						{
-							peak[c] = i;
-						}
+					int r0 = 0xff & (c0 >> 16);
+					int g0 = 0xff & (c0 >>  8);
+					int b0 = 0xff & (c0      );
+					int r1 = 0xff & (c1 >> 16);
+					int g1 = 0xff & (c1 >>  8);
+					int b1 = 0xff & (c1      );
+
+					if (r0 != r1)
+					{
+						deltaR += Math.pow(r0 - r1, 2);
 					}
+					if (g0 != g1)
+					{
+						deltaG += Math.pow(g0 - g1, 2);
+					}
+					if (b0 != b1)
+					{
+						deltaB += Math.pow(b0 - b1, 2);
+					}
+
+					int d = Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1);
+					accumDiff += d;
+
+					if (d > 3 * 5)
+					{
+						accumError++;
+					}
+
+					dst.setRGB(x, y, (clamp(128 + r0 - r1) << 16) + (clamp(128 + g0 - g1) << 8) + clamp(128 + b0 - b1));
 				}
 			}
 
-			double db = 0;
+			double mse = (deltaR + deltaG + deltaB) / (w * h) / 3;
 
-			for (int c = 0; c < 3; c++)
-			{
-				double mse = noise[c] / (aImage1.getWidth() * aImage1.getHeight());
+			double psnr = mse == 0 ? 0 : -10 * Math.log10(mse / Math.pow(255, 2));
 
-				mResult[4 * c + 0 + 4].setText("MSE: " + mse);
-				mResult[4 * c + 1 + 4].setText("PSNR(max=255): " + (10 * log10(255 * 255 / mse)));
-				mResult[4 * c + 2 + 4].setText("PSNR(max=" + peak[c] + "): " + 10 * log10(pow(peak[c], 2) / mse));
+			mResult[0].setText("Accum. RGB differance");
+			mResult[1].setText("Accum. error");
+			mResult[2].setText("MSE");
+			mResult[3].setText("PSNR");
+			mResult[4].setText("" + accumDiff);
+			mResult[5].setText("" + accumError);
+			mResult[6].setText("" + mse);
+			mResult[7].setText("" + psnr + " dB");
+		}
 
-				db += mse == 0 || peak[c] == 0 ? 0 : 10 * log10(pow(peak[c], 2) / mse);
-			}
 
-			mResult[15].setText("dB " + db / 3);
+		private int clamp(int v)
+		{
+			return v < 0 ? 0 : v > 255 ? 255 : v;
 		}
 	}
 
@@ -377,7 +369,7 @@ catch (Exception e)
 	{
 		try
 		{
-			mImage = ImageIO.read(R.class.getResource("Lenna.png"));
+			mOriginalImage = ImageIO.read(R.class.getResource("Lenna.png"));
 
 			new JPEGEditorDemo();
 		}
