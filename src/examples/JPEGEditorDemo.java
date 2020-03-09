@@ -31,29 +31,37 @@ import org.terifan.imageio.jpeg.CompressionType;
 public class JPEGEditorDemo
 {
 	private static BufferedImage mImage;
-	private static FilterPanel mFilerPanel;
 
 
 	public JPEGEditorDemo() throws IOException
 	{
 		Color bg = new Color(255, 255, 255);
 
-		ViewPanel viewPanel1 = new ViewPanel(true);
-		ViewPanel viewPanel2 = new ViewPanel(false);
+		FilterPanel filterPanel1 = new FilterPanel();
+		FilterPanel filterPanel2 = new FilterPanel();
 
-		mFilerPanel = new FilterPanel(viewPanel1, viewPanel2);
+		ViewPanel viewPanel1 = new ViewPanel(filterPanel1, true);
+		ViewPanel viewPanel2 = new ViewPanel(filterPanel2, false);
+
+		filterPanel1.setViewPanel(viewPanel1);
+		filterPanel2.setViewPanel(viewPanel2);
 
 		JPanel panel2 = new JPanel(new GridLayout(1, 2, 10, 0));
 		panel2.setBackground(bg);
 
+		JPanel panel3 = new JPanel(new GridLayout(1, 2, 10, 0));
+		panel3.setBackground(bg);
+
 		JPanel panel1 = new JPanel(new GridLayout(2, 1, 0, 10));
 		panel1.setBackground(bg);
 		panel1.add(panel2);
+		panel1.add(panel3);
 		panel1.setBorder(BorderFactory.createLineBorder(bg, 4));
 
 		panel2.add(viewPanel1);
 		panel2.add(viewPanel2);
-		panel1.add(mFilerPanel);
+		panel3.add(filterPanel1);
+		panel3.add(filterPanel2);
 
 		JFrame frame = new JFrame();
 		frame.setBackground(bg);
@@ -70,6 +78,7 @@ public class JPEGEditorDemo
 
 	private static class ViewPanel extends JPanel
 	{
+		FilterPanel mFilterPanel;
 		boolean mLeft;
 		JLabel mFileSizeLabel;
 		JLabel mQualityLabel;
@@ -81,8 +90,10 @@ public class JPEGEditorDemo
 		_ImagePanel mImagePanel;
 
 
-		public ViewPanel(boolean aLeft)
+		public ViewPanel(FilterPanel aFilterPanel, boolean aLeft)
 		{
+			mFilterPanel = aFilterPanel;
+
 			JPanel controlPanel = new JPanel(new GridLayout(2, 5, 10, 0));
 
 			mLeft = aLeft;
@@ -176,7 +187,7 @@ catch (Exception e)
 }
 
 			repaint();
-			mFilerPanel.update();
+			mFilterPanel.update();
 		});
 	}
 
@@ -184,16 +195,12 @@ catch (Exception e)
 	private static class FilterPanel extends JPanel
 	{
 		private _ImagePanel mImagePanel;
-		private ViewPanel mViewPanel1;
-		private ViewPanel mViewPanel2;
+		private ViewPanel mViewPanel;
 		private JLabel[] mResult;
 
 
-		public FilterPanel(ViewPanel aViewPanel1, ViewPanel aViewPanel2)
+		public FilterPanel()
 		{
-
-			mViewPanel1 = aViewPanel1;
-			mViewPanel2 = aViewPanel2;
 			mImagePanel = new _ImagePanel();
 
 			mImagePanel.setImage(new BufferedImage(mImage.getWidth(), mImage.getHeight(), BufferedImage.TYPE_INT_RGB));
@@ -214,25 +221,29 @@ catch (Exception e)
 			super.add(mImagePanel, BorderLayout.CENTER);
 		}
 
+		public void setViewPanel(ViewPanel aViewPanel)
+		{
+			mViewPanel = aViewPanel;
+		}
+
 		private SingleOp mWorker = new SingleOp(() ->
 		{
-			BufferedImage image1 = mViewPanel1.mImagePanel.getImage();
-			BufferedImage image2 = mViewPanel2.mImagePanel.getImage();
+			BufferedImage image = mViewPanel.mImagePanel.getImage();
 			BufferedImage dst = mImagePanel.getImage();
 
-			if (image1 == null || image2 == null)
+			if (image == null)
 			{
 				return;
 			}
 
 			long diff = 0;
 
-			for (int y = 0; y < image1.getHeight(); y++)
+			for (int y = 0; y < image.getHeight(); y++)
 			{
-				for (int x = 0; x < image1.getWidth(); x++)
+				for (int x = 0; x < image.getWidth(); x++)
 				{
-					int rgb1 = image1.getRGB(x, y);
-					int rgb2 = image2.getRGB(x, y);
+					int rgb1 = image.getRGB(x, y);
+					int rgb2 = mImage.getRGB(x, y);
 
 					int r = (0xff & (rgb1 >> 16)) - (0xff & (rgb2 >> 16));
 					int g = (0xff & (rgb1 >> 8)) - (0xff & (rgb2 >> 8));
@@ -248,7 +259,7 @@ catch (Exception e)
 
 			mImagePanel.repaint();
 
-			calculatePSNR(image1, image2);
+			calculatePSNR(image, mImage);
 		});
 
 
