@@ -236,71 +236,16 @@ public class JPEGEditorDemo
 		{
 			BufferedImage dst = mImagePanel.getImage();
 
-			long deltaR = 0;
-			long deltaG = 0;
-			long deltaB = 0;
-			long accumDiff = 0;
-			long accumError = 0;
-			int w = aImage1.getWidth();
-			int h = aImage1.getHeight();
-
-			for (int y = 0; y < h; y++)
-			{
-				for (int x = 0; x < w; x++)
-				{
-					int c0 = aImage1.getRGB(x, y);
-					int c1 = aImage2.getRGB(x, y);
-
-					int r0 = 0xff & (c0 >> 16);
-					int g0 = 0xff & (c0 >>  8);
-					int b0 = 0xff & (c0      );
-					int r1 = 0xff & (c1 >> 16);
-					int g1 = 0xff & (c1 >>  8);
-					int b1 = 0xff & (c1      );
-
-					if (r0 != r1)
-					{
-						deltaR += Math.pow(r0 - r1, 2);
-					}
-					if (g0 != g1)
-					{
-						deltaG += Math.pow(g0 - g1, 2);
-					}
-					if (b0 != b1)
-					{
-						deltaB += Math.pow(b0 - b1, 2);
-					}
-
-					int d = Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1);
-					accumDiff += d;
-
-					if (d > 3 * 5)
-					{
-						accumError++;
-					}
-
-					dst.setRGB(x, y, (clamp(128 + r0 - r1) << 16) + (clamp(128 + g0 - g1) << 8) + clamp(128 + b0 - b1));
-				}
-			}
-
-			double mse = (deltaR + deltaG + deltaB) / (w * h) / 3;
-
-			double psnr = mse == 0 ? 0 : -10 * Math.log10(mse / Math.pow(255, 2));
+			_ImageQualityTest result = new _ImageQualityTest(aImage1, aImage2, dst);
 
 			mResult[0].setText("Accum. RGB differance");
 			mResult[1].setText("Accum. error");
 			mResult[2].setText("MSE");
 			mResult[3].setText("PSNR");
-			mResult[4].setText("" + accumDiff);
-			mResult[5].setText("" + accumError);
-			mResult[6].setText("" + mse);
-			mResult[7].setText("" + psnr + " dB");
-		}
-
-
-		private int clamp(int v)
-		{
-			return v < 0 ? 0 : v > 255 ? 255 : v;
+			mResult[4].setText("" + result.accumDiff);
+			mResult[5].setText("" + result.accumError);
+			mResult[6].setText("" + result.mse);
+			mResult[7].setText("" + result.psnr + " dB");
 		}
 	}
 
