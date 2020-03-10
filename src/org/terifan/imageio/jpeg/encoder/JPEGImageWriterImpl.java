@@ -129,7 +129,7 @@ public class JPEGImageWriterImpl
 				sosSegment.prepareMCU();
 			}
 
-			int[][] mcu = new int[aJPEG.blocks_in_MCU][64];
+			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
 
 			int[][][][] coefficients = aJPEG.mCoefficients;
 			int width = aJPEG.mSOFSegment.getWidth();
@@ -141,9 +141,9 @@ public class JPEGImageWriterImpl
 
 			if (aCompressionType.isArithmetic())
 			{
-				aJPEG.arith_dc_L = new int[]{0,0};
-				aJPEG.arith_dc_U = new int[]{1,1};
-				aJPEG.arith_ac_K = new int[]{5,5};
+				aJPEG.mArithDCL = new int[]{0,0};
+				aJPEG.mArithDCU = new int[]{1,1};
+				aJPEG.mArithACK = new int[]{5,5};
 
 				new DACSegment(aJPEG, sosSegment).encode(aOutput).log(aLog);
 
@@ -165,9 +165,9 @@ public class JPEGImageWriterImpl
 				{
 					encoder.start_pass(aJPEG, true);
 
-					if (aJPEG.comps_in_scan == 1)
+					if (aJPEG.mScanBlockCount == 1)
 					{
-						ComponentInfo comp = aJPEG.cur_comp_info[0];
+						ComponentInfo comp = aJPEG.mComponentInfo[0];
 
 						for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 						{
@@ -218,9 +218,9 @@ public class JPEGImageWriterImpl
 
 			encoder.start_pass(aJPEG, false);
 
-			if (aJPEG.comps_in_scan == 1)
+			if (aJPEG.mScanBlockCount == 1)
 			{
-				ComponentInfo comp = aJPEG.cur_comp_info[0];
+				ComponentInfo comp = aJPEG.mComponentInfo[0];
 
 				for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 				{

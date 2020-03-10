@@ -2,44 +2,44 @@ package org.terifan.imageio.jpeg;
 
 import java.awt.color.ICC_Profile;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
+import static org.terifan.imageio.jpeg.JPEGConstants.NUM_HUFF_TBLS;
 
 
 public class JPEG
 {
 	public SOFSegment mSOFSegment;
 
+	public int[][][][] mCoefficients;
+
+	public ComponentInfo[] mComponentInfo;
+	public int[] mMCUComponentIndices;
+	public int mMCUBlockCount;
+	public int mScanBlockCount;
+
 	public QuantizationTable[] mQuantizationTables;
 
 	public HuffmanTable[][] mHuffmanTables;
-	public HuffmanTable[] dc_huff_tbl_ptrs;
-	public HuffmanTable[] ac_huff_tbl_ptrs;
+	public HuffmanTable[] mHuffmanDCTables;
+	public HuffmanTable[] mHuffmanACTables;
 
 	public ColorSpace mColorSpace;
 	public ICC_Profile mICCProfile;
 	public boolean mHasAdobeMarker;
 
-	public int[][][][] mCoefficients;
+	public int[] mArithDCL;
+	public int[] mArithDCU;
+	public int[] mArithACK;
 
-	public int mDensitiesUnits;
-	public int mDensityX;
-	public int mDensityY;
-
-	public int mRestartInterval;
-	public int mRestartMarkerIndex;
-
-	public int[] arith_dc_L;
-	public int[] arith_dc_U;
-	public int[] arith_ac_K;
-
-	public JPEGEntropyState entropy;
-	public int[] MCU_membership;
-	public ComponentInfo[] cur_comp_info;
-	public int blocks_in_MCU;
-	public int comps_in_scan;
 	public int Ss;
 	public int Se;
 	public int Ah;
 	public int Al;
+
+	public int mDensitiesUnits;
+	public int mDensityX;
+	public int mDensityY;
+	public int mRestartInterval;
+	public int mRestartMarkerIndex;
 
 
 	public JPEG()
@@ -49,20 +49,20 @@ public class JPEG
 		mDensityY = 72;
 
 		mQuantizationTables = new QuantizationTable[8];
-		mHuffmanTables = new HuffmanTable[4][2];
 
-		dc_huff_tbl_ptrs = new HuffmanTable[4];
-		ac_huff_tbl_ptrs = new HuffmanTable[4];
+		mHuffmanTables = new HuffmanTable[NUM_HUFF_TBLS][2];
+		mHuffmanDCTables = new HuffmanTable[NUM_HUFF_TBLS];
+		mHuffmanACTables = new HuffmanTable[NUM_HUFF_TBLS];
 
-		arith_ac_K = new int[NUM_ARITH_TBLS];
-		arith_dc_U = new int[NUM_ARITH_TBLS];
-		arith_dc_L = new int[NUM_ARITH_TBLS];
+		mArithACK = new int[NUM_ARITH_TBLS];
+		mArithDCU = new int[NUM_ARITH_TBLS];
+		mArithDCL = new int[NUM_ARITH_TBLS];
 
 		for (int i = 0; i < NUM_ARITH_TBLS; i++)
 		{
-			arith_dc_L[i] = 0;
-			arith_dc_U[i] = 1;
-			arith_ac_K[i] = 5;
+			mArithDCL[i] = 0;
+			mArithDCU[i] = 1;
+			mArithACK[i] = 5;
 		}
 	}
 
@@ -70,29 +70,5 @@ public class JPEG
 	public int[][][][] getCoefficients()
 	{
 		return mCoefficients;
-	}
-
-
-	public SubsamplingMode getSubsamplingMode()
-	{
-		StringBuilder sb = new StringBuilder();
-		for (ComponentInfo ci : mSOFSegment.getComponents())
-		{
-			if (sb.length() > 0)
-			{
-				sb.append(",");
-			}
-			sb.append(ci.getHorSampleFactor() + "x" + ci.getVerSampleFactor());
-		}
-
-		for (SubsamplingMode sm : SubsamplingMode.values())
-		{
-			if (sm.getLogic().equals(sb.toString()))
-			{
-				return sm;
-			}
-		}
-
-		throw new IllegalArgumentException("Unsupported: " + sb.toString());
 	}
 }

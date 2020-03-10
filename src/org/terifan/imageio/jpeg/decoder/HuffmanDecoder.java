@@ -11,31 +11,31 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 
 public class HuffmanDecoder extends Decoder
 {
-	private int mEOBRun;
 	private boolean mProgressive;
+	private BitInputStream mBitStream;
+	private int mEOBRun;
+	private JPEGEntropyState aJPEG_entropy;
 
 
-	public HuffmanDecoder(BitInputStream aBitStream)
+	public HuffmanDecoder()
 	{
-		super(aBitStream);
 	}
 
 
 	@Override
-	void initialize(JPEG aJPEG, boolean aProgressive)
+	void initialize(BitInputStream aBitStream, JPEG aJPEG)
 	{
-		mProgressive = aProgressive;
+		mBitStream = aBitStream;
+		mProgressive = aJPEG.mSOFSegment.getCompressionType().isProgressive();
 
-		JPEGEntropyState entropy = new JPEGEntropyState();
-
-		aJPEG.entropy = entropy;
+		aJPEG_entropy = new JPEGEntropyState();
 	}
 
 
 	@Override
 	void startPass(JPEG aJPEG) throws IOException
 	{
-		aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
+		aJPEG_entropy.restarts_to_go = aJPEG.mRestartInterval;
 
 		mBitStream.align();
 		mEOBRun = 0;
@@ -54,11 +54,11 @@ public class HuffmanDecoder extends Decoder
 	{
 		if (aJPEG.mRestartInterval != 0)
 		{
-			if (aJPEG.entropy.restarts_to_go == 0)
+			if (aJPEG_entropy.restarts_to_go == 0)
 			{
-				for (int ci = 0; ci < aJPEG.comps_in_scan; ci++)
+				for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 				{
-					aJPEG.entropy.last_dc_val[ci] = 0;
+					aJPEG_entropy.last_dc_val[ci] = 0;
 				}
 
 				mBitStream.align();
@@ -71,10 +71,10 @@ public class HuffmanDecoder extends Decoder
 				}
 
 				aJPEG.mRestartMarkerIndex = (aJPEG.mRestartMarkerIndex + 1) & 7;
-				aJPEG.entropy.restarts_to_go = aJPEG.mRestartInterval;
+				aJPEG_entropy.restarts_to_go = aJPEG.mRestartInterval;
 			}
 
-			aJPEG.entropy.restarts_to_go--;
+			aJPEG_entropy.restarts_to_go--;
 		}
 
 		if (mProgressive)
@@ -102,12 +102,12 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_DC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 
-		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
 		{
-			int ci = aJPEG.MCU_membership[blockIndex];
-			ComponentInfo comp = aJPEG.cur_comp_info[ci];
+			int ci = aJPEG.mMCUComponentIndices[blockIndex];
+			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
 			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 
@@ -138,10 +138,10 @@ public class HuffmanDecoder extends Decoder
 		}
 		else
 		{
-			int ci = aJPEG.MCU_membership[0];
+			int ci = aJPEG.mMCUComponentIndices[0];
 			int[] coefficients = aCoefficients[0];
 
-			ComponentInfo comp = aJPEG.cur_comp_info[ci];
+			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
 			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
@@ -185,7 +185,7 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
 		{
 			if (mBitStream.readBits(1) != 0)
 			{
@@ -202,8 +202,8 @@ public class HuffmanDecoder extends Decoder
 		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
 
-		int ci = aJPEG.MCU_membership[0];
-		ComponentInfo comp = aJPEG.cur_comp_info[ci];
+		int ci = aJPEG.mMCUComponentIndices[0];
+		ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
 		HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
@@ -325,10 +325,10 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decodeImpl(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		for (int blockIndex = 0; blockIndex < aJPEG.blocks_in_MCU; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
 		{
-			int ci = aJPEG.MCU_membership[blockIndex];
-			ComponentInfo comp = aJPEG.cur_comp_info[ci];
+			int ci = aJPEG.mMCUComponentIndices[blockIndex];
+			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
 			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
@@ -344,10 +344,10 @@ public class HuffmanDecoder extends Decoder
 
 			if (value > 0)
 			{
-				aJPEG.entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+				aJPEG_entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
 			}
 
-			aCoefficients[blockIndex][0] = aJPEG.entropy.last_dc_val[ci];
+			aCoefficients[blockIndex][0] = aJPEG_entropy.last_dc_val[ci];
 
 			for (int offset = 1; offset < 64; offset++)
 			{

@@ -56,7 +56,7 @@ public class DHTSegment extends Segment
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		for (HuffmanTable table : mJPEG.dc_huff_tbl_ptrs)
+		for (HuffmanTable table : mJPEG.mHuffmanDCTables)
 		{
 			if (table != null && !table.isSent())
 			{
@@ -70,7 +70,7 @@ public class DHTSegment extends Segment
 			}
 		}
 
-		for (HuffmanTable table : mJPEG.ac_huff_tbl_ptrs)
+		for (HuffmanTable table : mJPEG.mHuffmanACTables)
 		{
 			if (table != null && !table.isSent())
 			{

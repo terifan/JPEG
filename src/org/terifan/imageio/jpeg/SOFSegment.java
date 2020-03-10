@@ -16,10 +16,9 @@ public class SOFSegment extends Segment
 	private CompressionType mCompressionType;
 
 
-	public SOFSegment(JPEG aJPEG, CompressionType aCompressionType)
+	public SOFSegment(JPEG aJPEG)
 	{
 		mJPEG = aJPEG;
-		mCompressionType = aCompressionType;
 	}
 
 

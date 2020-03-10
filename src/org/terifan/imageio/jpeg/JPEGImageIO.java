@@ -58,7 +58,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage);
+			image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage, false);
 		}
 		catch (IOException e)
 		{
@@ -121,7 +121,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			reader.decode(in, jpeg, mLog, null, false, false);
+			reader.decode(in, jpeg, mLog, null, false, false, true);
 		}
 		catch (IOException e)
 		{

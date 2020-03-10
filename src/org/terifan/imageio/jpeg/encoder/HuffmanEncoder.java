@@ -35,11 +35,13 @@ import org.terifan.imageio.jpeg.SegmentMarker;
  */
 public class HuffmanEncoder implements Encoder
 {
-	final static int x_encode_mcu = 0;
-	final static int x_encode_mcu_DC_first = 1;
-	final static int x_encode_mcu_AC_first = 2;
-	final static int x_encode_mcu_DC_refine = 3;
-	final static int x_encode_mcu_AC_refine = 4;
+	private JPEGEntropyState aJPEG_entropy;
+
+	private final static int ENCODE_MCU = 0;
+	private final static int ENCODE_DC_FIRST = 1;
+	private final static int ENCODE_AC_FIRST = 2;
+	private final static int ENCODE_DC_REFINE = 3;
+	private final static int ENCODE_AC_REFINE = 4;
 
 	int MAX_COEF_BITS = 10;
 
@@ -164,7 +166,7 @@ public class HuffmanEncoder implements Encoder
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE" + tblno);
 		}
-		htbl = isDC ? aJPEG.dc_huff_tbl_ptrs[tblno] : aJPEG.ac_huff_tbl_ptrs[tblno];
+		htbl = isDC ? aJPEG.mHuffmanDCTables[tblno] : aJPEG.mHuffmanACTables[tblno];
 		if (htbl == null)
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE " + tblno);
@@ -515,7 +517,7 @@ public class HuffmanEncoder implements Encoder
 		emit_byte_s(state, SegmentMarker.RST0.CODE + restart_num);
 
 		/* Re-initialize DC predictions to 0 */
-		for (ci = 0; ci < state.cinfo.comps_in_scan; ci++)
+		for (ci = 0; ci < state.cinfo.mScanBlockCount; ci++)
 		{
 			state.cur.last_dc_val[ci] = 0;
 		}
@@ -541,7 +543,7 @@ public class HuffmanEncoder implements Encoder
 		if (entropy.cinfo.Ss == 0)
 		{
 			/* Re-initialize DC predictions to 0 */
-			for (ci = 0; ci < entropy.cinfo.comps_in_scan; ci++)
+			for (ci = 0; ci < entropy.cinfo.mScanBlockCount; ci++)
 			{
 				entropy.saved.last_dc_val[ci] = 0;
 			}
@@ -561,7 +563,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_DC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int temp, temp2;
 		int nbits;
 		int blkn, ci, tbl;
@@ -580,10 +582,10 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.MCU_membership[blkn];
-			tbl = aJPEG.cur_comp_info[ci].getTableDC();
+			ci = aJPEG.mMCUComponentIndices[blkn];
+			tbl = aJPEG.mComponentInfo[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
@@ -658,7 +660,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_AC_first(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int[] natural_order;
 		int[] block;
 		int temp, temp2;
@@ -796,7 +798,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int Al, blkn;
 
 //		entropy.next_output_byte = cinfo.next_output_byte;
@@ -814,7 +816,7 @@ public class HuffmanEncoder implements Encoder
 		Al = aJPEG.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
 			emit_bits_e(entropy, (aCoefficients[blkn][0] >> Al) & 1, 1);
@@ -844,7 +846,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int[] natural_order;
 		int[] block;
 		int temp;
@@ -1111,7 +1113,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_huff(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		working_state state = entropy.working_state;
 		int blkn, ci;
 		ComponentInfo compptr;
@@ -1133,10 +1135,10 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.MCU_membership[blkn];
-			compptr = aJPEG.cur_comp_info[ci];
+			ci = aJPEG.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mComponentInfo[ci];
 			encode_one_block(state, aCoefficients[blkn], state.cur.last_dc_val[ci], entropy.dc_derived_tbls[compptr.getTableDC()], entropy.ac_derived_tbls[compptr.getTableAC()]);
 			/* Update last_dc_val */
 			state.cur.last_dc_val[ci] = aCoefficients[blkn][0];
@@ -1182,7 +1184,7 @@ public class HuffmanEncoder implements Encoder
 
 	private void finish_pass_huff(JPEG aJPEG) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		working_state state = new working_state();
 
 		if (mProgressive)
@@ -1323,7 +1325,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private boolean encode_mcu_gather(JPEG aJPEG, int[][] aCoefficients)
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int blkn, ci;
 		ComponentInfo compptr;
 
@@ -1333,7 +1335,7 @@ public class HuffmanEncoder implements Encoder
 			if (entropy.restarts_to_go == 0)
 			{
 				/* Re-initialize DC predictions to 0 */
-				for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
+				for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 				{
 					entropy.saved.last_dc_val[ci] = 0;
 				}
@@ -1343,10 +1345,10 @@ public class HuffmanEncoder implements Encoder
 			entropy.restarts_to_go--;
 		}
 
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.MCU_membership[blkn];
-			compptr = aJPEG.cur_comp_info[ci];
+			ci = aJPEG.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mComponentInfo[ci];
 			htest_one_block(aJPEG, aCoefficients[blkn], entropy.saved.last_dc_val[ci], entropy.dc_count_ptrs[compptr.getTableDC()], entropy.ac_count_ptrs[compptr.getTableAC()]);
 			entropy.saved.last_dc_val[ci] = aCoefficients[blkn][0];
 		}
@@ -1552,7 +1554,7 @@ public class HuffmanEncoder implements Encoder
 	 */
 	private void finish_pass_gather(JPEG aJPEG) throws IOException
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 		boolean[] did_dc = new boolean[NUM_HUFF_TBLS];
@@ -1569,16 +1571,16 @@ public class HuffmanEncoder implements Encoder
 //  MEMZERO(did_dc, SIZEOF(did_dc));
 //  MEMZERO(did_ac, SIZEOF(did_ac));
 
-		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.cur_comp_info[ci];
+			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (!did_dc[tbl])
 				{
-					aJPEG.dc_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
+					aJPEG.mHuffmanDCTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
 					did_dc[tbl] = true;
 				}
 			}
@@ -1588,7 +1590,7 @@ public class HuffmanEncoder implements Encoder
 				tbl = compptr.getTableAC();
 				if (!did_ac[tbl])
 				{
-					aJPEG.ac_huff_tbl_ptrs[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
+					aJPEG.mHuffmanACTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
 					did_ac[tbl] = true;
 				}
 			}
@@ -1604,7 +1606,7 @@ public class HuffmanEncoder implements Encoder
 	@Override
 	public void start_pass(JPEG aJPEG, boolean gather_statistics)
 	{
-		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG.entropy;
+		huff_entropy_encoder entropy = (huff_entropy_encoder)aJPEG_entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
@@ -1621,22 +1623,22 @@ public class HuffmanEncoder implements Encoder
 			{
 				if (aJPEG.Ss == 0)
 				{
-					entropy.encode_mcu = x_encode_mcu_DC_first;
+					entropy.encode_mcu = ENCODE_DC_FIRST;
 				}
 				else
 				{
-					entropy.encode_mcu = x_encode_mcu_AC_first;
+					entropy.encode_mcu = ENCODE_AC_FIRST;
 				}
 			}
 			else
 			{
 				if (aJPEG.Ss == 0)
 				{
-					entropy.encode_mcu = x_encode_mcu_DC_refine;
+					entropy.encode_mcu = ENCODE_DC_REFINE;
 				}
 				else
 				{
-					entropy.encode_mcu = x_encode_mcu_AC_refine;
+					entropy.encode_mcu = ENCODE_AC_REFINE;
 					/* AC refinement needs a correction bit buffer */
 					if (entropy.bit_buffer == null)
 					{
@@ -1646,18 +1648,18 @@ public class HuffmanEncoder implements Encoder
 			}
 
 			/* Initialize AC stuff */
-			entropy.ac_tbl_no = aJPEG.cur_comp_info[0].getTableAC();
+			entropy.ac_tbl_no = aJPEG.mComponentInfo[0].getTableAC();
 			entropy.EOBRUN = 0;
 			entropy.BE = 0;
 		}
 		else
 		{
-			entropy.encode_mcu = x_encode_mcu;
+			entropy.encode_mcu = ENCODE_MCU;
 		}
 
-		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.cur_comp_info[ci];
+			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
@@ -1730,7 +1732,7 @@ public class HuffmanEncoder implements Encoder
 		huff_entropy_encoder entropy = new huff_entropy_encoder();
 		int i;
 
-		aJPEG.entropy = entropy;
+		aJPEG_entropy = entropy;
 
 		/* Mark tables unallocated */
 		for (i = 0; i < NUM_HUFF_TBLS; i++)
@@ -1749,15 +1751,15 @@ public class HuffmanEncoder implements Encoder
 	@Override
 	public boolean encode_mcu(JPEG aJPEG, int[][] aCoefficients, boolean gather_statistics) throws IOException
 	{
-		switch (aJPEG.entropy.encode_mcu)
+		switch (aJPEG_entropy.encode_mcu)
 		{
-			case x_encode_mcu_DC_first:
+			case ENCODE_DC_FIRST:
 				return encode_mcu_DC_first(aJPEG, aCoefficients);
-			case x_encode_mcu_AC_first:
+			case ENCODE_AC_FIRST:
 				return encode_mcu_AC_first(aJPEG, aCoefficients);
-			case x_encode_mcu_DC_refine:
+			case ENCODE_DC_REFINE:
 				return encode_mcu_DC_refine(aJPEG, aCoefficients);
-			case x_encode_mcu_AC_refine:
+			case ENCODE_AC_REFINE:
 				return encode_mcu_AC_refine(aJPEG, aCoefficients);
 		}
 
@@ -1829,12 +1831,12 @@ public class HuffmanEncoder implements Encoder
 			0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
 			0xf9, 0xfa };
 
-		aJPEG.dc_huff_tbl_ptrs = new HuffmanTable[2];
-		aJPEG.ac_huff_tbl_ptrs = new HuffmanTable[2];
+		aJPEG.mHuffmanDCTables = new HuffmanTable[2];
+		aJPEG.mHuffmanACTables = new HuffmanTable[2];
 
-		aJPEG.dc_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
-		aJPEG.dc_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
-		aJPEG.ac_huff_tbl_ptrs[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
-		aJPEG.ac_huff_tbl_ptrs[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
+		aJPEG.mHuffmanDCTables[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
+		aJPEG.mHuffmanDCTables[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
+		aJPEG.mHuffmanACTables[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
+		aJPEG.mHuffmanACTables[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
   }
 }

@@ -28,7 +28,7 @@ public class JPEGConstants
 	};
 
 	public final static int MAX_CHANNELS = 4;
-	public final static int NUM_HUFF_TBLS = 4; // ?????
+	public final static int NUM_HUFF_TBLS = 4;
 
 	/* Arith-coding tables are numbered 0..15 */
 	public final static int NUM_ARITH_TBLS = 16;
