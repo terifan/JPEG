@@ -70,7 +70,7 @@ public class ArithmeticDecoder extends Decoder
 	 * Module initialization routine for arithmetic entropy decoding.
 	 */
 	@Override
-	void initialize(BitInputStream aBitStream, JPEG aJPEG)
+	void initialize(JPEG aJPEG, BitInputStream aBitStream)
 	{
 		mBitStream = aBitStream;
 		mProgressive = aJPEG.mSOFSegment.getCompressionType().isProgressive();

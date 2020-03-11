@@ -22,8 +22,8 @@ public class PerformanceTest
 			for (int iteration = 0; iteration < 10; iteration++)
 			{
 //				for (File file : new File("D:\\dev\\Image Compression Test Images\\8K").listFiles())
-//				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
-				for (File file : new File[]{new File("D:\\Pictures\\earth.jpg")})
+//				for (File file : new File("c:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
+				for (File file : new File[]{new File("D:\\dev\\Image Compression Test Images\\earth.jpg")})
 				{
 					byte[] data = Files.readAllBytes(file.toPath());
 

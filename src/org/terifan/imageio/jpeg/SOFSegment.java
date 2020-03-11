@@ -14,6 +14,7 @@ public class SOFSegment extends Segment
 	private ComponentInfo[] mComponents;
 	private JPEG mJPEG;
 	private CompressionType mCompressionType;
+	private int[] mBlockLookup;
 
 
 	public SOFSegment(JPEG aJPEG)
@@ -69,6 +70,8 @@ public class SOFSegment extends Segment
 			mJPEG.mColorSpace = ColorSpace.YCBCR;
 		}
 
+		updateLookupTable();
+
 		return this;
 	}
 
@@ -87,6 +90,8 @@ public class SOFSegment extends Segment
 		{
 			comp.encode(aBitStream);
 		}
+
+		updateLookupTable();
 
 		return this;
 	}
@@ -211,5 +216,36 @@ public class SOFSegment extends Segment
 		}
 
 		return count;
+	}
+
+
+	public ComponentInfo getComponentByBlockIndex(int aBlockIndex)
+	{
+		return mComponents[mBlockLookup[aBlockIndex]];
+	}
+
+
+	public int getBlocksInMCU()
+	{
+		return mBlockLookup.length;
+	}
+
+
+	private void updateLookupTable()
+	{
+		mBlockLookup = new int[12];
+
+		int cp = 0;
+		int cii = 0;
+		for (ComponentInfo ci : mComponents)
+		{
+			for (int i = 0; i < ci.getVerSampleFactor() * ci.getHorSampleFactor(); i++, cp++)
+			{
+				mBlockLookup[cp] = cii;
+			}
+			cii++;
+		}
+
+		mBlockLookup = Arrays.copyOfRange(mBlockLookup, 0, cp);
 	}
 }

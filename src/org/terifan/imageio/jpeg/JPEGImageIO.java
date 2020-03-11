@@ -49,28 +49,28 @@ public class JPEGImageIO
 
 	public BufferedImage read(Object aInput) throws JPEGImageIOException
 	{
-		JPEG jpeg = new JPEG();
-		jpeg.mColorSpace = ColorSpace.YCBCR;
-
-		IDCT idct = createIDCTInstance();
-		BufferedImage image;
-
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
+			JPEG jpeg = new JPEG();
+			jpeg.mColorSpace = ColorSpace.YCBCR;
+
+			IDCT idct = createIDCTInstance();
+
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage, false);
+
+			BufferedImage image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage, false);
+
+			if (image != null)
+			{
+				ColorSpaceTransform.transform(jpeg, image);
+			}
+
+			return image;
 		}
 		catch (IOException e)
 		{
 			throw new JPEGImageIOException(e);
 		}
-
-		if (image != null)
-		{
-			ColorSpaceTransform.transform(jpeg, image);
-		}
-
-		return image;
 	}
 
 

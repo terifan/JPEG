@@ -23,6 +23,7 @@ import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import examples.res.R;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import javax.swing.JOptionPane;
 import org.terifan.imageio.jpeg.CompressionType;
@@ -211,13 +212,16 @@ public class JPEGEditorDemo
 				.setLog(System.out)
 				.read(baos.toByteArray());
 
-//			try
+//			if (ViewPanel.this == mViewPanel2)
 //			{
-//				decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
-//			}
-//			catch (Exception e)
-//			{
-//				e.printStackTrace(System.out);
+//				try
+//				{
+//					decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+//				}
+//				catch (Exception e)
+//				{
+//					e.printStackTrace(System.out);
+//				}
 //			}
 
 			mImagePanel.setImage(decoded);

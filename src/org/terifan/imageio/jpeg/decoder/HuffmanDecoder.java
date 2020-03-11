@@ -23,7 +23,7 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void initialize(BitInputStream aBitStream, JPEG aJPEG)
+	void initialize(JPEG aJPEG, BitInputStream aBitStream)
 	{
 		mBitStream = aBitStream;
 		mProgressive = aJPEG.mSOFSegment.getCompressionType().isProgressive();
