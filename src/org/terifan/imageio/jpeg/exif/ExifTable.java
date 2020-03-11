@@ -175,7 +175,7 @@ public class ExifTable
 			{
 				if (VERBOSE)
 				{
-					System.out.printf("Ignoring bad record at position: %d%n", startOffset + 12 * entryIndex);
+//					System.out.printf("Ignoring bad record at position: %d%n", startOffset + 12 * entryIndex);
 				}
 			}
 

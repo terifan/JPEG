@@ -70,72 +70,50 @@ public class ImageTransdecode
 		{
 			for (int ix = 0; ix < aJPEG.mSOFSegment.getWidth(); ix++)
 			{
-//		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
-//		{
-//			for (int blockY = 0; blockY < maxSamplingY; blockY++)
-//			{
-//				for (int y = 0; y < 8; y++)
-//				{
-//					for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-//					{
-//						for (int blockX = 0; blockX < maxSamplingX; blockX++)
-//						{
-//							for (int x = 0; x < 8; x++)
-//							{
-//								int ix = mcuX * mcuW + blockX * 8 + x;
-//								int iy = mcuY * mcuH + blockY * 8 + y;
-//
-//								if (ix < mJPEG.width && iy < mJPEG.height)
-//								{
-									int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
-									int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
+				int ixh0 = (ix % mcuW) * h0 / maxSamplingX;
+				int iyv0 = (iy % mcuH) * v0 / maxSamplingY;
 
-									int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
-									int color;
+				int lu = coefficients[iy / mcuH][ix / mcuW][c0 + (ixh0 / 8) + h0 * (iyv0 / 8)][(ixh0 % 8) + 8 * (iyv0 % 8)];
+				int color;
 
-									if (numComponents == 1)
-									{
-										color = aJPEG.mColorSpace.yccToRgb(lu, 0, 0);
-									}
-									else if (numComponents == 3)
-									{
-										int cb;
-										int cr;
+				if (numComponents == 1)
+				{
+					color = aJPEG.mColorSpace.yccToRgb(lu, 0, 0);
+				}
+				else if (numComponents == 3)
+				{
+					int cb;
+					int cr;
 
-										if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-										{
-											cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X3);
-											cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X3);
-										}
-										else if (h0 == 1 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-										{
-											cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X3);
-											cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X3);
-										}
-										else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
-										{
-											cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X1);
-											cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X1);
-										}
-										else
-										{
-											cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X1);
-											cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X1);
-										}
+					if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
+					{
+						cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X3);
+						cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X3);
+					}
+					else if (h0 == 1 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
+					{
+						cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X3);
+						cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X3);
+					}
+					else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1)
+					{
+						cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_3X1);
+						cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_3X1);
+					}
+					else
+					{
+						cb = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h1, v1, maxSamplingX, maxSamplingY, coefficients, c1, KERNEL_1X1);
+						cr = upsampleChroma(aJPEG, ix, iy, mcuW, mcuH, h2, v2, maxSamplingX, maxSamplingY, coefficients, c2, KERNEL_1X1);
+					}
 
-										color = aJPEG.mColorSpace.yccToRgb(lu, cb, cr);
-									}
-									else
-									{
-										throw new IllegalStateException();
-									}
+					color = aJPEG.mColorSpace.yccToRgb(lu, cb, cr);
+				}
+				else
+				{
+					throw new IllegalStateException();
+				}
 
-									aImage.setRGB(ix, iy, color);
-//								}
-//							}
-//						}
-//					}
-//				}
+				aImage.setRGB(ix, iy, color);
 			}
 		}
 	}
@@ -193,7 +171,6 @@ public class ImageTransdecode
 			}
 		}
 
-//		return (sum+kernel[0].length*kernel.length-1) / total;
 		return (int)Math.round(sum / (double)total);
 	}
 }
