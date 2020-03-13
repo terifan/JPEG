@@ -15,7 +15,6 @@ import javax.swing.JPanel;
 public class _ImagePanel extends JPanel implements MouseListener, MouseWheelListener, MouseMotionListener
 {
 	private BufferedImage mImage;
-	private boolean mMouseButtonPressed;
 	private int mStartX;
 	private int mStartY;
 	private int mOffsetX;
@@ -105,7 +104,6 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 	public void mousePressed(MouseEvent aEvent)
 	{
 		requestFocus();
-		mMouseButtonPressed = true;
 		mStartX = mOffsetX;
 		mStartY = mOffsetY;
 		mOldOffsetX = aEvent.getX();
@@ -116,7 +114,6 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 	@Override
 	public void mouseReleased(MouseEvent aEvent)
 	{
-		mMouseButtonPressed = false;
 	}
 
 
@@ -135,19 +132,14 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent aEvent)
 	{
-		int w = mImage.getWidth();
-		int h = mImage.getHeight();
-
 		int scroll = aEvent.getUnitsToScroll() < 0 ? -1 : 1;
 
+		int w = mImage.getWidth();
+		int h = mImage.getHeight();
 		double px = super.getWidth() / 2.0 + mOffsetX - mScale * w / 2.0;
 		double py = super.getHeight() / 2.0 + mOffsetY - mScale * h / 2.0;
-		double pw = mScale * w;
-		double ph = mScale * h;
-
-		double mx = Math.min(Math.max(aEvent.getX(), px), px + pw);
-		double my = Math.min(Math.max(aEvent.getY(), py), py + ph);
-
+		double mx = Math.min(Math.max(aEvent.getX(), px), px + mScale * w);
+		double my = Math.min(Math.max(aEvent.getY(), py), py + mScale * h);
 		int dx = (int)(mx - super.getWidth() / 2.0);
 		int dy = (int)(my - super.getHeight() / 2.0);
 

@@ -83,6 +83,12 @@ public class JPEGEditorDemo
 		mViewPanel1.mQualitySlider.setValue(76);
 		mViewPanel1.mSubsamplingSelect.setSelectedIndex(2);
 		mViewPanel2.mQualitySlider.setValue(59);
+
+		_ImagePanel[] p = {mViewPanel1.mImagePanel, mViewPanel2.mImagePanel, mFilterPanel1.mImagePanel, mFilterPanel2.mImagePanel};
+		mViewPanel1.mImagePanel.setMirrorPanels(p);
+		mViewPanel2.mImagePanel.setMirrorPanels(p);
+		mFilterPanel1.mImagePanel.setMirrorPanels(p);
+		mFilterPanel2.mImagePanel.setMirrorPanels(p);
 	}
 
 
