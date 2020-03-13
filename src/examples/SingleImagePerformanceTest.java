@@ -13,10 +13,10 @@ public class SingleImagePerformanceTest
 	{
 		try
 		{
-			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Image Compression Test Images\\earth.jpg"));
+//			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Image Compression Test Images\\earth.jpg"));
 //			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_444.jpg"));
 //			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_422.jpg"));
-//			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_420.jpg"));
+			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_420.jpg"));
 //			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_440.jpg"));
 //			byte[] data = Files.readAllBytes(Paths.get("D:\\dev\\Lenna_411.jpg"));
 
