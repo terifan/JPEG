@@ -24,7 +24,7 @@ public class PerformanceTest
 		{
 			System.out.printf("%10s %10s %10s %10s %10s %10s  %s%n", "Dec Java", "Dec Teri", "Enc Java", "Enc Teri", "Dec Java", "Dec Teri", "");
 
-			for (int iteration = 0; iteration < 1; iteration++)
+			for (int iteration = 0; iteration < 20; iteration++)
 			{
 //				for (File file : new File("D:\\dev\\Image Compression Test Images\\8K").listFiles())
 //				for (File file : new File("c:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
@@ -44,15 +44,11 @@ public class PerformanceTest
 					ByteArrayOutputStream output2 = new ByteArrayOutputStream();
 
 					long t4 = System.nanoTime();
-					_JavaJPEGEncoder.write(source2, output2, 90, SubsamplingMode._440);
+					_JavaJPEGEncoder.write(source2, output2, 90, SubsamplingMode._444);
 					long t5 = System.nanoTime();
 
-					System.out.println(new JPEGImageIO().decode(output2.toByteArray()).mSOFSegment.getSubsamplingMode());
-
-					_ImageWindow.show(new JPEGImageIO().read(output2.toByteArray()));
-
 					long t6 = System.nanoTime();
-					new JPEGImageIO().setSubsampling(SubsamplingMode._420).setCompressionType(CompressionType.Huffman).setQuality(90).write(source1, output1);
+					new JPEGImageIO().setSubsampling(SubsamplingMode._444).setCompressionType(CompressionType.Huffman).setQuality(90).write(source1, output1);
 					long t7 = System.nanoTime();
 
 					long t8 = System.nanoTime();
