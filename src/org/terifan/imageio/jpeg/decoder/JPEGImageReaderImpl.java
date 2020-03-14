@@ -121,7 +121,7 @@ public class JPEGImageReaderImpl
 						decoder = compression.createDecoderInstance();
 						decoder.initialize(aJPEG, aInput);
 
-						image = new BufferedImage(sof.getWidth(), sof.getHeight(), sof.getComponents().length == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_INT_RGB);
+						image = aJPEG.getColorSpace().createBufferedImage(sof);
 						break;
 					case SOS: // Start Of Scan
 						int streamOffset = aInput.getStreamOffset();

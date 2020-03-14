@@ -5,7 +5,7 @@ import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
 
 
-public class ColorSpaceTransform
+public class ColorICCTransform
 {
 	public static void transform(JPEG aJPEG, BufferedImage aImage)
 	{

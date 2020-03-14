@@ -54,6 +54,8 @@ public class APP0Segment extends Segment
 					throw new IOException("Error in JPEG stream; illegal APP0 segment size.");
 				}
 
+				mJPEG.mJFIFSegmentMarker = this;
+
 				break;
 			case "JFXX":
 				mExtension = true;

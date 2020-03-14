@@ -108,8 +108,6 @@ public class JPEGImageWriterImpl
 					comp.setComponentBlockOffset(cn);
 					cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 				}
-
-				sosSegment.prepareMCU();
 			}
 			else
 			{
@@ -125,9 +123,9 @@ public class JPEGImageWriterImpl
 				sosSegment.setTableAC(1, 1);
 				sosSegment.setTableDC(2, 1);
 				sosSegment.setTableAC(2, 1);
-
-				sosSegment.prepareMCU();
 			}
+
+			sosSegment.prepareMCU();
 
 			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
 

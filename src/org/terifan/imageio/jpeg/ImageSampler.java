@@ -8,7 +8,7 @@ public class ImageSampler
 {
 	public static void sampleImage(JPEG aJPEG, BufferedImage aImage, FDCT aFDCT) throws UnsupportedOperationException
 	{
-		ColorSpace colorSpace = ColorSpace.YCBCR;
+		ColorSpace colorSpace = aJPEG.getColorSpace();
 		ComponentInfo[] components = aJPEG.mSOFSegment.getComponents();
 		int numComponents = components.length;
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
@@ -29,7 +29,7 @@ public class ImageSampler
 		aJPEG.mCoefficients = new int[numVerMCU][numHorMCU][blocks_in_MCU][64];
 
 		int[] raster = new int[mcuWidth * mcuHeight];
-		int[][] colors = new int[numComponents][mcuWidth * mcuHeight];
+		int[][] src = new int[numComponents][mcuWidth * mcuHeight];
 
 		for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 		{
@@ -40,7 +40,7 @@ public class ImageSampler
 
 				copyImageBlockToMCU(bx, by, iw, ih, mcuWidth, mcuHeight, aImage, raster);
 
-				colorSpace.rgbToYuv(raster, colors[0], colors[1], colors[2]);
+				colorSpace.encode(raster, src[0], src[1], src[2]);
 
 				for (int ci = 0, blockIndex = 0; ci < numComponents; ci++)
 				{
@@ -54,28 +54,30 @@ public class ImageSampler
 					{
 						for (int blockX = 0; blockX < samplingX; blockX++, blockIndex++)
 						{
+							int[] dst = aJPEG.mCoefficients[mcuY][mcuX][blockIndex];
+
 							if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample16x16(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci]);
+								downsample16x16(src[ci], dst);
 							}
 							else if (samplingX == 2 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 2)
 							{
-								downsample8x16(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX);
+								downsample8x16(src[ci], dst, 8 * blockX);
 							}
 							else if (samplingX == 1 && samplingY == 1 && maxSamplingX == 2 && maxSamplingY == 1)
 							{
-								downsample16x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 0);
+								downsample16x8(src[ci], dst, 0);
 							}
 							else if (samplingX == 1 && samplingY == 1 && maxSamplingX == 4 && maxSamplingY == 1)
 							{
-								downsample32x8(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 32 * 8 * blockY);
+								downsample32x8(src[ci], dst, 32 * 8 * blockY);
 							}
 							else
 							{
-								copyBlock(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], colors[ci], 8 * blockX, 8 * blockY, mcuWidth);
+								copyBlock(src[ci], dst, 8 * blockX, 8 * blockY, mcuWidth);
 							}
 
-							aFDCT.transform(aJPEG.mCoefficients[mcuY][mcuX][blockIndex], quantizationTable);
+							aFDCT.transform(dst, quantizationTable);
 						}
 					}
 				}
@@ -106,7 +108,7 @@ public class ImageSampler
 	}
 
 
-	private static void downsample16x16(int[] aDst, int[] aSrc)
+	private static void downsample16x16(int[] aSrc, int[] aDst)
 	{
 		for (int y = 0, i = 0; y < 8; y++)
 		{
@@ -124,7 +126,7 @@ public class ImageSampler
 	}
 
 
-	private static void downsample8x16(int[] aDst, int[] aSrc, int aOffsetX)
+	private static void downsample8x16(int[] aSrc, int[] aDst, int aOffsetX)
 	{
 		for (int y = 0; y < 8; y++)
 		{
@@ -140,7 +142,7 @@ public class ImageSampler
 	}
 
 
-	private static void downsample16x8(int[] aDst, int[] aSrc, int aOffsetY)
+	private static void downsample16x8(int[] aSrc, int[] aDst, int aOffsetY)
 	{
 		for (int y = 0; y < 8; y++)
 		{
@@ -156,7 +158,7 @@ public class ImageSampler
 	}
 
 
-	private static void downsample32x8(int[] aDst, int[] aSrc, int aOffsetY)
+	private static void downsample32x8(int[] aSrc, int[] aDst, int aOffsetY)
 	{
 		for (int y = 0; y < 8; y++)
 		{
@@ -174,7 +176,7 @@ public class ImageSampler
 	}
 
 
-	private static void copyBlock(int[] aDst, int[] aSrc, int aSrcOffsetX, int aSrcOffsetY, int aSrcWidth)
+	private static void copyBlock(int[] aSrc, int[] aDst, int aSrcOffsetX, int aSrcOffsetY, int aSrcWidth)
 	{
 		for (int y = 0; y < 8; y++)
 		{

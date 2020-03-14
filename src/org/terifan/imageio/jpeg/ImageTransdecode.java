@@ -1,7 +1,6 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
@@ -13,8 +12,6 @@ public class ImageTransdecode
 		ComponentInfo[] components = sof.getComponents();
 		int maxSamplingX = sof.getMaxHorSampling();
 		int maxSamplingY = sof.getMaxVerSampling();
-		int numHorMCU = sof.getHorMCU();
-		int numVerMCU = sof.getVerMCU();
 		int numComponents = components.length;
 
 		int mcuW = 8 * maxSamplingX;
@@ -59,7 +56,7 @@ public class ImageTransdecode
 			aIDCT.transform(coefficients[blockIndex], quantizationTable);
 		}
 
-		ColorSpace colorSpace = aJPEG.mColorSpace;
+		ColorSpace colorSpace = aJPEG.getColorSpace();
 
 		if (h0 == 1 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:4:4
 		{
@@ -71,7 +68,7 @@ public class ImageTransdecode
 					int cb = coefficients[c1][i];
 					int cr = coefficients[c2][i];
 
-					rgb[i] = colorSpace.yccToRgb(lu, cb, cr);
+					rgb[i] = colorSpace.decode(lu, cb, cr);
 				}
 			}
 		}
@@ -93,10 +90,10 @@ public class ImageTransdecode
 							int cb = coefficients[c1][by * 4 * 8 + iy * 8 + 4 * bx + ix];
 							int cr = coefficients[c2][by * 4 * 8 + iy * 8 + 4 * bx + ix];
 
-							rgb[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 0] = colorSpace.yccToRgb(lu0, cb, cr);
-							rgb[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 1] = colorSpace.yccToRgb(lu1, cb, cr);
-							rgb[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 0] = colorSpace.yccToRgb(lu2, cb, cr);
-							rgb[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 1] = colorSpace.yccToRgb(lu3, cb, cr);
+							rgb[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 0] = colorSpace.decode(lu0, cb, cr);
+							rgb[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 1] = colorSpace.decode(lu1, cb, cr);
+							rgb[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 0] = colorSpace.decode(lu2, cb, cr);
+							rgb[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 1] = colorSpace.decode(lu3, cb, cr);
 						}
 					}
 				}
@@ -116,8 +113,8 @@ public class ImageTransdecode
 						int cb = coefficients[c1][iy * 8 + 4 * bx + ix];
 						int cr = coefficients[c2][iy * 8 + 4 * bx + ix];
 
-						rgb[bx * 8 + iy * 16 + ix * 2 + 0] = colorSpace.yccToRgb(lu0, cb, cr);
-						rgb[bx * 8 + iy * 16 + ix * 2 + 1] = colorSpace.yccToRgb(lu1, cb, cr);
+						rgb[bx * 8 + iy * 16 + ix * 2 + 0] = colorSpace.decode(lu0, cb, cr);
+						rgb[bx * 8 + iy * 16 + ix * 2 + 1] = colorSpace.decode(lu1, cb, cr);
 					}
 				}
 			}
@@ -138,8 +135,8 @@ public class ImageTransdecode
 							int cb = coefficients[c1 + bx][by * 4 * 8 + iy * 8 + ix];
 							int cr = coefficients[c2 + bx][by * 4 * 8 + iy * 8 + ix];
 
-							rgb[by * 8 * 16 + (2 * iy + 0) * 16 + 8 * bx + ix] = colorSpace.yccToRgb(lu0, cb, cr);
-							rgb[by * 8 * 16 + (2 * iy + 1) * 16 + 8 * bx + ix] = colorSpace.yccToRgb(lu1, cb, cr);
+							rgb[by * 8 * 16 + (2 * iy + 0) * 16 + 8 * bx + ix] = colorSpace.decode(lu0, cb, cr);
+							rgb[by * 8 * 16 + (2 * iy + 1) * 16 + 8 * bx + ix] = colorSpace.decode(lu1, cb, cr);
 						}
 					}
 				}
@@ -161,10 +158,10 @@ public class ImageTransdecode
 						int cb = coefficients[c1][iy * 8 + bx * 2 + ix];
 						int cr = coefficients[c2][iy * 8 + bx * 2 + ix];
 
-						rgb[32 * iy + 8 * bx + 4 * ix + 0] = colorSpace.yccToRgb(lu0, cb, cr);
-						rgb[32 * iy + 8 * bx + 4 * ix + 1] = colorSpace.yccToRgb(lu1, cb, cr);
-						rgb[32 * iy + 8 * bx + 4 * ix + 2] = colorSpace.yccToRgb(lu2, cb, cr);
-						rgb[32 * iy + 8 * bx + 4 * ix + 3] = colorSpace.yccToRgb(lu3, cb, cr);
+						rgb[32 * iy + 8 * bx + 4 * ix + 0] = colorSpace.decode(lu0, cb, cr);
+						rgb[32 * iy + 8 * bx + 4 * ix + 1] = colorSpace.decode(lu1, cb, cr);
+						rgb[32 * iy + 8 * bx + 4 * ix + 2] = colorSpace.decode(lu2, cb, cr);
+						rgb[32 * iy + 8 * bx + 4 * ix + 3] = colorSpace.decode(lu3, cb, cr);
 					}
 				}
 			}

@@ -15,7 +15,7 @@ import org.terifan.imageio.jpeg.CompressionType;
 
 public class TestDecodingQuality
 {
-	public static void main(String ... args)
+	public static void main(String... args)
 	{
 		try
 		{
@@ -26,7 +26,7 @@ public class TestDecodingQuality
 			new JPEGImageIO()
 				.setCompressionType(CompressionType.Huffman)
 				.setQuality(100)
-				.setSubsampling(SubsamplingMode._440)
+				.setSubsampling(SubsamplingMode._444)
 				.write(src, output);
 
 			BufferedImage javaImage = ImageIO.read(new ByteArrayInputStream(output.toByteArray()));
@@ -41,12 +41,12 @@ public class TestDecodingQuality
 				for (int x = 0; x < javaImage.getWidth(); x++)
 				{
 					int r0 = 0xff & (javaImage.getRGB(x, y) >> 16);
-					int g0 = 0xff & (javaImage.getRGB(x, y) >>  8);
-					int b0 = 0xff & (javaImage.getRGB(x, y) >>  0);
+					int g0 = 0xff & (javaImage.getRGB(x, y) >> 8);
+					int b0 = 0xff & (javaImage.getRGB(x, y) >> 0);
 					int r1 = 0xff & (teriImage.getRGB(x, y) >> 16);
-					int g1 = 0xff & (teriImage.getRGB(x, y) >>  8);
-					int b1 = 0xff & (teriImage.getRGB(x, y) >>  0);
-					int d = r0!=r1 || g0!=g1 || b0 != b1 ? 0xffffff : 0x000000;
+					int g1 = 0xff & (teriImage.getRGB(x, y) >> 8);
+					int b1 = 0xff & (teriImage.getRGB(x, y) >> 0);
+					int d = r0 != r1 || g0 != g1 || b0 != b1 ? 0xffffff : 0x000000;
 					diffImage.setRGB(x, y, d);
 				}
 			}
@@ -54,16 +54,16 @@ public class TestDecodingQuality
 			_ImagePanel panel1 = new _ImagePanel().setImage(javaImage);
 			_ImagePanel panel2 = new _ImagePanel().setImage(teriImage);
 			_ImagePanel panel3 = new _ImagePanel().setImage(diffImage);
-			panel1.setMirrorPanels(panel2,panel3);
-			panel2.setMirrorPanels(panel1,panel3);
-			panel3.setMirrorPanels(panel1,panel2);
+			panel1.setMirrorPanels(panel2, panel3);
+			panel2.setMirrorPanels(panel1, panel3);
+			panel3.setMirrorPanels(panel1, panel2);
 
 			JFrame frame = new JFrame();
-			frame.setLayout(new GridLayout(2,2));
+			frame.setLayout(new GridLayout(2, 2));
 			frame.add(panel1);
 			frame.add(panel2);
 			frame.add(panel3);
-			frame.setSize(1400, 768);
+			frame.setSize(1455, 1240);
 			frame.setLocationRelativeTo(null);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setVisible(true);

@@ -61,15 +61,6 @@ public class SOFSegment extends Segment
 			mComponents[i] = new ComponentInfo().decode(aBitStream, i);
 		}
 
-		if (numComponents == 1)
-		{
-			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
-		}
-		else
-		{
-			mJPEG.mColorSpace = ColorSpace.YCBCR;
-		}
-
 		updateLookupTable();
 
 		return this;
@@ -247,5 +238,27 @@ public class SOFSegment extends Segment
 		}
 
 		mBlockLookup = Arrays.copyOfRange(mBlockLookup, 0, cp);
+	}
+
+
+	// TODO: https://docs.oracle.com/javase/8/docs/api/javax/imageio/metadata/doc-files/jpeg_metadata.html
+	public String getColorSpaceName()
+	{
+//		if (mJPEG.mJFIFSegmentMarker != null)
+//		{
+			switch (mComponents.length)
+			{
+				case 1:
+					return "grayscale";
+				case 2:
+					return "grayalpha";
+				case 3:
+					return "ycbcr";
+				case 4:
+					return "cmyk";
+				default:
+					throw new IllegalArgumentException();
+			}
+//		}
 	}
 }

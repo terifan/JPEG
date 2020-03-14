@@ -24,7 +24,8 @@ public class JPEG
 
 	public ColorSpace mColorSpace;
 	public ICC_Profile mICCProfile;
-	public boolean mHasAdobeMarker;
+	public APP14Segment mColorSpaceTransform;
+	public APP0Segment mJFIFSegmentMarker;
 
 	public int[] mArithDCL;
 	public int[] mArithDCU;
@@ -70,5 +71,24 @@ public class JPEG
 	public int[][][][] getCoefficients()
 	{
 		return mCoefficients;
+	}
+
+
+	public ColorSpace getColorSpace()
+	{
+		if (mColorSpaceTransform != null)
+		{
+			switch (mColorSpaceTransform.getTransform())
+			{
+				case 1:
+					return JPEGImageIO.createColorSpaceInstance("ycbcr");
+				case 2:
+					return JPEGImageIO.createColorSpaceInstance("ycck");
+				default:
+					return JPEGImageIO.createColorSpaceInstance(mSOFSegment.getComponents().length == 3 ? "rgb" : "cmyk");
+			}
+		}
+
+		return JPEGImageIO.createColorSpaceInstance(mSOFSegment.getColorSpaceName());
 	}
 }

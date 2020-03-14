@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.function.Function;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
@@ -26,6 +27,23 @@ import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
 
 public class JPEGImageIO
 {
+	private static Function<String, ColorSpace> mColorSpaceFactory = name ->
+	{
+		switch (name)
+		{
+			case "grayscale":
+				return new ColorSpaceRGBGrayscale();
+			case "ycbcr":
+//				return new ColorSpaceRGBYCbCrFP();
+				return new ColorSpaceRGBYCbCrTab();
+//				return new ColorSpaceRGBYCbCrFloat();
+			case "rgb":
+				return new ColorSpaceRGBRGB();
+			default:
+				throw new IllegalArgumentException("Unsupported color space: " + name);
+		}
+	};
+
 	private Class<? extends IDCT> mIDCT;
 	private Class<? extends FDCT> mFDCT;
 	private ProgressionScript mProgressionScript;
@@ -52,7 +70,6 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEG jpeg = new JPEG();
-			jpeg.mColorSpace = ColorSpace.YCBCR;
 
 			IDCT idct = createIDCTInstance();
 
@@ -62,7 +79,7 @@ public class JPEGImageIO
 
 			if (image != null)
 			{
-				ColorSpaceTransform.transform(jpeg, image);
+				ColorICCTransform.transform(jpeg, image);
 			}
 
 			return image;
@@ -86,7 +103,7 @@ public class JPEGImageIO
 		ComponentInfo[] components = new ComponentInfo[]{lu, cb, cr};
 
 		JPEG jpeg = new JPEG();
-		jpeg.mColorSpace = ColorSpace.YCBCR;
+		jpeg.mColorSpace = JPEGImageIO.createColorSpaceInstance("ycbcr");
 		jpeg.mSOFSegment = new SOFSegment(jpeg, mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, components);
 		jpeg.mQuantizationTables = new QuantizationTable[2];
 		jpeg.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(mQuality, 0);
@@ -288,5 +305,17 @@ public class JPEGImageIO
 	{
 		mLog = new Log().setPrintStream(aPrintStream);
 		return this;
+	}
+
+
+	public static void setColorSpaceFactory(Function<String,ColorSpace> aFactory)
+	{
+		mColorSpaceFactory = aFactory;
+	}
+
+
+	public static ColorSpace createColorSpaceInstance(String aComponents)
+	{
+		return mColorSpaceFactory.apply(aComponents);
 	}
 }
