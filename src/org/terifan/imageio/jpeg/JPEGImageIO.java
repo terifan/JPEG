@@ -1,6 +1,5 @@
 package org.terifan.imageio.jpeg;
 
-import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -16,11 +15,11 @@ import java.net.URL;
 import java.util.function.Function;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.decoder.IDCT;
-import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 import org.terifan.imageio.jpeg.encoder.FDCT;
-import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
+import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import org.terifan.imageio.jpeg.encoder.JPEGImageWriterImpl;
 import org.terifan.imageio.jpeg.encoder.ProgressionScript;
 import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
@@ -59,8 +58,8 @@ public class JPEGImageIO
 	public JPEGImageIO()
 	{
 		mQuality = 90;
-		mIDCT = IDCTIntegerFast.class;
-		mFDCT = FDCTIntegerFast.class;
+		mIDCT = IDCTIntegerSlow.class;
+		mFDCT = FDCTIntegerSlow.class;
 		mSubsampling = SubsamplingMode._422;
 		mCompressionType = CompressionType.Huffman;
 		mProgressionScript = ProgressionScript.DEFAULT;

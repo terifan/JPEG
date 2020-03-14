@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import org.terifan.imageio.jpeg.CompressionType;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 
 
 public class TestDecodingQuality
@@ -26,7 +27,7 @@ public class TestDecodingQuality
 			new JPEGImageIO()
 				.setCompressionType(CompressionType.Huffman)
 				.setQuality(100)
-				.setSubsampling(SubsamplingMode._444)
+				.setSubsampling(SubsamplingMode._420) // Java ImageIO identical decoding: 444 440 411
 				.write(src, output);
 
 			BufferedImage javaImage = ImageIO.read(new ByteArrayInputStream(output.toByteArray()));

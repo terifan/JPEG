@@ -1,9 +1,11 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.QuantizationTable;
 
 
+/**
+ * Medium speed/quality, IDCT used by Java ImageIO JPEG decoder.
+ */
 public class IDCTIntegerSlow implements IDCT
 {
 	private final static int MAXJSAMPLE = 255;
@@ -136,7 +138,7 @@ public class IDCTIntegerSlow implements IDCT
 			}
 
 			int z3 = workspace[4 + ctr];
-			
+
 			int tmp0 = (z2 + z3) << CONST_BITS;
 			int tmp1 = (z2 - z3) << CONST_BITS;
 
