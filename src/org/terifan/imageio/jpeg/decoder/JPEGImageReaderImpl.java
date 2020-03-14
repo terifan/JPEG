@@ -14,6 +14,7 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
+import org.terifan.imageio.jpeg.FixedThreadExecutor;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SegmentMarker;
@@ -22,16 +23,20 @@ import org.terifan.imageio.jpeg.SegmentMarker;
 public class JPEGImageReaderImpl
 {
 	private boolean mUpdateImage;
+	private FixedThreadExecutor mThreadPool;
+
+
 	public JPEGImageReaderImpl()
 	{
 	}
 
 
-	public BufferedImage decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage, boolean aDecodeCoefficients) throws IOException
+	public BufferedImage decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, boolean aUpdateImage, boolean aUpdateProgressiveImage, boolean aDecodeCoefficients, FixedThreadExecutor aThreadPool) throws IOException
 	{
-		BufferedImage image = null;
-
+		mThreadPool = aThreadPool;
 		mUpdateImage = aUpdateImage;
+
+		BufferedImage image = null;
 
 		try
 		{
@@ -262,8 +267,10 @@ public class JPEGImageReaderImpl
 						}
 					}
 
-					updateMCU(mcuX, mcuY, aJPEG, aIDCT, aImage);
+//					updateMCU(mcuX, mcuY, aJPEG, aIDCT, aImage);
 				}
+
+				updateMCU(mcuY, aJPEG, aIDCT, aImage, numHorMCU);
 			}
 		}
 
@@ -274,7 +281,42 @@ public class JPEGImageReaderImpl
 	private void updateMCU(int aMCUX, int aMCUY, JPEG aJPEG, IDCT aIDCT, BufferedImage aImage)
 	{
 		if (mUpdateImage)
-		ImageTransdecode.transform(aJPEG, aIDCT, aImage, aMCUX, aMCUY);
+		{
+			int[][] coefficients = aJPEG.mCoefficients[aMCUY][aMCUX];
+			int[][] workBlock = new int[coefficients.length][64];
+
+			for (int i = 0; i < workBlock.length; i++)
+			{
+				System.arraycopy(coefficients[i], 0, workBlock[i], 0, 64);
+			}
+
+			mThreadPool.submit(()->
+			{
+				ImageTransdecode.transform(aJPEG, aIDCT, aImage, aMCUX, aMCUY, workBlock);
+			});
+		}
+	}
+
+
+	private void updateMCU(int aMCUY, JPEG aJPEG, IDCT aIDCT, BufferedImage aImage, int numHorMCU)
+	{
+		int[][][] workBlock = new int[numHorMCU][aJPEG.mCoefficients[aMCUY][0].length][64];
+
+		for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+		{
+			for (int blockIndex = 0; blockIndex < workBlock[0].length; blockIndex++)
+			{
+				System.arraycopy(aJPEG.mCoefficients[aMCUY][mcuX][blockIndex], 0, workBlock[mcuX][blockIndex], 0, 64);
+			}
+		}
+
+		mThreadPool.submit(()->
+		{
+			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+			{
+				ImageTransdecode.transform(aJPEG, aIDCT, aImage, mcuX, aMCUY, workBlock[mcuX]);
+			}
+		});
 	}
 
 

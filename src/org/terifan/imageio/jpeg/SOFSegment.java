@@ -261,4 +261,46 @@ public class SOFSegment extends Segment
 			}
 //		}
 	}
+
+
+	public SubsamplingMode getSubsamplingMode()
+	{
+		int h0 = mComponents[0].getHorSampleFactor();
+		int v0 = mComponents[0].getVerSampleFactor();
+		int h1 = mComponents.length == 1 ? 0 : mComponents[1].getHorSampleFactor();
+		int v1 = mComponents.length == 1 ? 0 : mComponents[1].getVerSampleFactor();
+		int h2 = mComponents.length == 1 ? 0 : mComponents[2].getHorSampleFactor();
+		int v2 = mComponents.length == 1 ? 0 : mComponents[2].getVerSampleFactor();
+
+		if (h0 == 1 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:4:4
+		{
+			return SubsamplingMode._444;
+		}
+		else if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:0
+		{
+			return SubsamplingMode._420;
+		}
+		else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:2 (hor)
+		{
+			return SubsamplingMode._422;
+		}
+		else if (h0 == 1 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:2 (ver)
+		{
+			return SubsamplingMode._422;
+		}
+		else if (h0 == 2 && v0 == 2 && h1 == 2 && v1 == 1 && h2 == 2 && v2 == 1) // 4:4:0
+		{
+			return SubsamplingMode._440;
+		}
+		else if (h0 == 4 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:1:1 (hor)
+		{
+			return SubsamplingMode._411;
+		}
+		else if (h0 == 1 && v0 == 4 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:1:1 (ver)
+		{
+//			return SubsamplingMode._411;
+		}
+
+		throw new IllegalArgumentException(h0+" "+v0+" "+h1+" "+v1+" "+h2+" "+v2);
+	}
 }

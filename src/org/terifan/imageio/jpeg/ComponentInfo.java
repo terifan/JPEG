@@ -12,12 +12,6 @@ public class ComponentInfo
 		Y, CB, CR, I, Q
 	}
 
-	public final static int Y = 0;
-	public final static int CB = 1;
-	public final static int CR = 2;
-	public final static int I = 3;
-	public final static int Q = 4;
-
 	private int mComponentIndex; // identifier for this component (0..255)
 	private int mComponentId; // its index in SOF or cinfo->comp_info[]
 	private int mQuantizationTableId;
@@ -67,7 +61,7 @@ public class ComponentInfo
 
 	public void print(Log aLog)
 	{
-		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId - 0*1]);
+		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId]);
 		aLog.println("    id=%d, dc-table=%d, ac-table=%d, quantizationTableId=%d, sample-factor=%dx%d", mComponentIndex, mTableDC, mTableAC, mQuantizationTableId, mHorSampleFactor, mVerSampleFactor);
 	}
 
