@@ -78,18 +78,17 @@ public class JPEGImageIO
 
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
 
-			BufferedImage image;
+			JPEGImage image = new JPEGImage();
+			boolean success;
+
 			try (FixedThreadExecutor threadPool = new FixedThreadExecutor(1f))
 			{
-				image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage, false, threadPool);
+				success = reader.decode(in, jpeg, mLog, idct, image, true, mUpdateProgressiveImage, false, threadPool);
 			}
 
-			if (image != null)
-			{
-				ColorICCTransform.transform(jpeg, image);
-			}
+			ColorICCTransform.transform(jpeg, image);
 
-			return image;
+			return image.getBufferedImage();
 		}
 		catch (IOException e)
 		{
@@ -140,7 +139,7 @@ public class JPEGImageIO
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
 			try (FixedThreadExecutor threadPool = new FixedThreadExecutor(1f))
 			{
-				reader.decode(in, jpeg, mLog, null, false, false, true, threadPool);
+				reader.decode(in, jpeg, mLog, null, null, false, false, true, threadPool);
 			}
 		}
 		catch (IOException e)
@@ -217,22 +216,22 @@ public class JPEGImageIO
 	{
 		int[][] samplingFactors = mSubsampling.getSamplingFactors();
 
-		switch (aInput.getSampleModel().getNumBands())
+		switch (aInput.getType())
 		{
-			case 1:
+			case BufferedImage.TYPE_BYTE_GRAY:
+			case BufferedImage.TYPE_BYTE_BINARY:
+			case BufferedImage.TYPE_USHORT_GRAY:
 				return new ComponentInfo[]
 				{
 					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1])
 				};
-			case 3:
+			default:
 				return new ComponentInfo[]
 				{
 					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1]),
 					new ComponentInfo(ComponentInfo.Type.CB.ordinal(), 2, 1, samplingFactors[1][0], samplingFactors[1][1]),
 					new ComponentInfo(ComponentInfo.Type.CR.ordinal(), 3, 1, samplingFactors[2][0], samplingFactors[2][1])
 				};
-			default:
-				throw new IllegalArgumentException();
 		}
 	}
 
@@ -347,12 +346,9 @@ public class JPEGImageIO
 	}
 
 
-	protected void fireRenderListener()
+	public Runnable getRenderListener()
 	{
-		if (mRenderListener != null)
-		{
-			mRenderListener.run();
-		}
+		return mRenderListener;
 	}
 
 

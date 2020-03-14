@@ -30,11 +30,11 @@ public class SanityCheck
 			src = src.getSubimage(20, 100, 443, 313); // prime number width/height = uneven mcu size
 
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			new JPEGImageIO().setCompressionType(CompressionType.Huffman).setFDCT(FDCTFloat.class).setQuality(95).setSubsampling(SubsamplingMode._411).write(src, output);
-			new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).setFDCT(FDCTIntegerFast.class).setQuality(95).setSubsampling(SubsamplingMode._420).write(src, output);
-			new JPEGImageIO().setCompressionType(CompressionType.Arithmetic).setFDCT(FDCTIntegerSlow.class).setQuality(95).setSubsampling(SubsamplingMode._440).write(src, output);
-			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).setQuality(95).setSubsampling(SubsamplingMode._422).write(src, output);
-			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).setQuality(95).setSubsampling(SubsamplingMode._444).write(src, output);
+			new JPEGImageIO().setCompressionType(CompressionType.Huffman).setFDCT(FDCTFloat.class).setQuality(100).setSubsampling(SubsamplingMode._411).write(src, output);
+			new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).setFDCT(FDCTIntegerFast.class).setQuality(100).setSubsampling(SubsamplingMode._420).write(src, output);
+			new JPEGImageIO().setCompressionType(CompressionType.Arithmetic).setFDCT(FDCTIntegerSlow.class).setQuality(100).setSubsampling(SubsamplingMode._440).write(src, output);
+			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).setQuality(100).setSubsampling(SubsamplingMode._422).write(src, output);
+			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).setQuality(100).setSubsampling(SubsamplingMode._444).write(src, output);
 
 			ByteArrayInputStream in = new ByteArrayInputStream(output.toByteArray());
 			BufferedImage image1 = new JPEGImageIO().setIDCT(IDCTIntegerSlow.class).read(in);

@@ -1,13 +1,12 @@
 package org.terifan.imageio.jpeg;
 
-import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
 public class ImageTransdecode
 {
-	public static void transform(JPEG aJPEG, IDCT aIDCT, BufferedImage aImage, int aMCUX, int aMCUY, int[][] aInput)
+	public static void transform(JPEG aJPEG, IDCT aIDCT, JPEGImage aImage, int aMCUX, int aMCUY, int[][] aInput)
 	{
 		SOFSegment sof = aJPEG.mSOFSegment;
 		ComponentInfo[] components = sof.getComponents();
@@ -81,18 +80,7 @@ public class ImageTransdecode
 			throw new IllegalStateException("Unsupported subsampling");
 		}
 
-		DataBufferInt buffer = (DataBufferInt)aImage.getRaster().getDataBuffer();
-		int[] data = buffer.getData();
-
-		for (int x = aMCUX * mcuW, w = Math.min(x + mcuW, imageW), xi = 0; x < w; x++, xi++)
-		{
-			for (int y = aMCUY * mcuH, h = Math.min(y + mcuH, imageH), yi = 0; y < h; y++, yi++)
-			{
-				data[y * imageW + x] = output[yi * mcuW + xi];
-			}
-		}
-
-//		aImage.setRGB(aMCUX * mcuW, aMCUY * mcuH, Math.min(mcuW, imageW - aMCUX * mcuW), Math.min(mcuH, imageH - aMCUY * mcuH), output, 0, mcuW);
+		aImage.setRGB(aMCUX * mcuW, aMCUY * mcuH, mcuW, mcuH, output);
 	}
 
 

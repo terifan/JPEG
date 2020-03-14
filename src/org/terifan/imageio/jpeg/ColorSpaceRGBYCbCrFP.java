@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg;
 import java.awt.image.BufferedImage;
 
 
-
 public class ColorSpaceRGBYCbCrFP implements ColorSpace
 {
 	private final static int FP_SCALEBITS = 16;
@@ -23,9 +22,9 @@ public class ColorSpaceRGBYCbCrFP implements ColorSpace
 
 
 	@Override
-	public BufferedImage createBufferedImage(SOFSegment aSOFSegment)
+	public void configureImageBuffer(SOFSegment aSOFSegment, JPEGImage aImage)
 	{
-		return new BufferedImage(aSOFSegment.getWidth(), aSOFSegment.getHeight(), BufferedImage.TYPE_INT_RGB);
+		aImage.configure(aSOFSegment.getWidth(), aSOFSegment.getHeight(), BufferedImage.TYPE_INT_RGB);
 	}
 
 

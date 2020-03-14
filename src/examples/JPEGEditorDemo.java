@@ -23,7 +23,6 @@ import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import examples.res.R;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import javax.swing.JOptionPane;
 import org.terifan.imageio.jpeg.CompressionType;
