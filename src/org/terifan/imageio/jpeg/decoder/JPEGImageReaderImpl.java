@@ -278,6 +278,11 @@ public class JPEGImageReaderImpl
 
 	public void update(JPEG aJPEG, IDCT aIDCT, int aMCUY, int[][][] aCoefficients, JPEGImage aImage)
 	{
+		if (aImage == null)
+		{
+			return;
+		}
+
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
 
 		int[][][] workBlock = new int[numHorMCU][aJPEG.mBlockCount][64];
