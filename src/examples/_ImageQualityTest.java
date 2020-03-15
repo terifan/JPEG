@@ -46,10 +46,14 @@ public class _ImageQualityTest
 					deltaB += Math.pow(b0 - b1, 2);
 				}
 
-				int d = Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1);
+				int dr = Math.abs(r0 - r1);
+				int dg = Math.abs(g0 - g1);
+				int db = Math.abs(b0 - b1);
+
+				int d = dr + dg + db;
 				accumDiff += d;
 
-				if (d > 3 * 5)
+				if (dr > 5 || dg > 5 || db > 5)
 				{
 					accumError++;
 				}
@@ -70,5 +74,12 @@ public class _ImageQualityTest
 	private static int clamp(int v)
 	{
 		return v < 0 ? 0 : v > 255 ? 255 : v;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "{" + "psnr=" + psnr + ", mse=" + mse + ", accumError=" + accumError + ", accumDiff=" + accumDiff + '}';
 	}
 }

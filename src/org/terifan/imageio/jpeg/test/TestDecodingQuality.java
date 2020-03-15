@@ -33,8 +33,8 @@ public class TestDecodingQuality
 			BufferedImage javaImage = ImageIO.read(new ByteArrayInputStream(output.toByteArray()));
 			BufferedImage teriImage = new JPEGImageIO().read(output.toByteArray());
 
-			System.out.println(new _ImageQualityTest(src, javaImage, null).accumDiff);
-			System.out.println(new _ImageQualityTest(src, teriImage, null).accumDiff);
+			System.out.println(new _ImageQualityTest(src, javaImage, null));
+			System.out.println(new _ImageQualityTest(src, teriImage, null));
 
 			BufferedImage diffImage = new BufferedImage(javaImage.getWidth(), javaImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 			for (int y = 0; y < javaImage.getHeight(); y++)
