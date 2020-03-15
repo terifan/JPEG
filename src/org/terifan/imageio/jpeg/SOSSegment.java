@@ -133,8 +133,8 @@ public class SOSSegment extends Segment
 	public void prepareMCU()
 	{
 		mJPEG.mScanBlockCount = mComponentIds.length;
-		mJPEG.mMCUBlockCount = 0;
 
+		mJPEG.mMCUBlockCount = 0;
 		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));

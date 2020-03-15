@@ -298,7 +298,7 @@ public class JPEGEditorDemo
 			_ImageQualityTest result = new _ImageQualityTest(aImage1, aImage2, dst);
 
 			mResult[0].setText("Accum. RGB differance");
-			mResult[1].setText("Accum. error");
+			mResult[1].setText("Pixel errors");
 			mResult[2].setText("MSE");
 			mResult[3].setText("PSNR");
 			mResult[4].setText("" + result.accumDiff);

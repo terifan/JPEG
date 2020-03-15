@@ -41,6 +41,7 @@ public class JPEG
 	public int mDensityY;
 	public int mRestartInterval;
 	public int mRestartMarkerIndex;
+	public int mBlockCount;
 
 
 	public JPEG()

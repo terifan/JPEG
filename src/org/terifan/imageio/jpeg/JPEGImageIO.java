@@ -78,15 +78,9 @@ public class JPEGImageIO
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
 
 			JPEGImage image = new JPEGImage();
+			image.setRenderListener(mRenderListener);
 
-			try
-			{
-				reader.decode(in, jpeg, mLog, idct, image, false);
-			}
-			finally
-			{
-				image.finish();
-			}
+			reader.decode(in, jpeg, mLog, idct, image, false);
 
 			ColorICCTransform.transform(jpeg, image);
 

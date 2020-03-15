@@ -5,14 +5,12 @@ import org.terifan.imageio.jpeg.decoder.IDCT;
 
 public class ImageTransdecode
 {
-	public static void transform(JPEG aJPEG, IDCT aIDCT, JPEGImage aImage, int aMCUX, int aMCUY, int[][] aInput)
+	public static void transform(JPEG aJPEG, IDCT aIDCT, JPEGImage aImage, int[][] aInput, int[] output)
 	{
 		SOFSegment sof = aJPEG.mSOFSegment;
 		ComponentInfo[] components = sof.getComponents();
 
 		int numComponents = components.length;
-		int mcuW = 8 * sof.getMaxHorSampling();
-		int mcuH = 8 * sof.getMaxVerSampling();
 
 		int c0 = components[0].getComponentBlockOffset();
 		int c1 = components.length == 1 ? 0 : components[1].getComponentBlockOffset();
@@ -24,8 +22,6 @@ public class ImageTransdecode
 		int v1 = components.length == 1 ? 0 : components[1].getVerSampleFactor();
 		int h2 = components.length == 1 ? 0 : components[2].getHorSampleFactor();
 		int v2 = components.length == 1 ? 0 : components[2].getVerSampleFactor();
-
-		int[] output = new int[mcuW * mcuH];
 
 		if (numComponents == 1)
 		{
@@ -75,8 +71,6 @@ public class ImageTransdecode
 		{
 			throw new IllegalStateException("Unsupported subsampling");
 		}
-
-		aImage.setRGB(aMCUX * mcuW, aMCUY * mcuH, mcuW, mcuH, output);
 	}
 
 

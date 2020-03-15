@@ -12,6 +12,8 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
+import org.terifan.imageio.jpeg.FixedThreadExecutor;
+import org.terifan.imageio.jpeg.ImageTransdecode;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.Log;
@@ -20,6 +22,9 @@ import org.terifan.imageio.jpeg.SegmentMarker;
 
 public class JPEGImageReaderImpl
 {
+	protected FixedThreadExecutor mExecutorService;
+
+
 	public JPEGImageReaderImpl()
 	{
 	}
@@ -119,6 +124,7 @@ public class JPEGImageReaderImpl
 						comp.setComponentBlockOffset(cn);
 						cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 					}
+					aJPEG.mBlockCount = cn;
 
 					if (aImage != null)
 					{
@@ -131,6 +137,8 @@ public class JPEGImageReaderImpl
 						aImage.endOfScan(progressionLevel);
 					}
 
+					mExecutorService = new FixedThreadExecutor(1f);
+
 					int streamOffset = aInput.getStreamOffset();
 					SOSSegment sosSegment = new SOSSegment(aJPEG).decode(aInput).print(aLog);
 					sosSegment.prepareMCU();
@@ -139,6 +147,8 @@ public class JPEGImageReaderImpl
 					aInput.setHandleMarkers(false);
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 					progressionLevel++;
+
+					mExecutorService.shutdown();
 
 					break;
 				case DRI: // Restart marker
@@ -151,7 +161,7 @@ public class JPEGImageReaderImpl
 					aLog.println("%s", marker);
 					if (aImage != null)
 					{
-						aImage.endOfScan(-1);
+						aImage.endOfScan(0);
 					}
 					return;
 				case APP12:
@@ -179,7 +189,7 @@ public class JPEGImageReaderImpl
 
 		aDecoder.startPass(aJPEG);
 
-		int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
+		int[][] mcu = new int[aJPEG.mBlockCount][64];
 
 		if (aJPEG.mScanBlockCount == 1)
 		{
@@ -206,10 +216,7 @@ public class JPEGImageReaderImpl
 					}
 				}
 
-				if (aImage != null)
-				{
-					aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY]);
-				}
+				update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY], aImage);
 			}
 		}
 		else if (aDecodeCoefficients)
@@ -234,10 +241,7 @@ public class JPEGImageReaderImpl
 					aDecoder.decodeMCU(aJPEG, mcu);
 				}
 
-				if (aImage != null)
-				{
-					aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY]);
-				}
+				update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY], aImage);
 			}
 		}
 		else
@@ -264,10 +268,49 @@ public class JPEGImageReaderImpl
 					}
 				}
 
-				aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[0]);
+				update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[0], aImage);
 			}
 		}
 
 		aDecoder.finishPass(aJPEG);
+	}
+
+
+	public void update(JPEG aJPEG, IDCT aIDCT, int aMCUY, int[][][] aCoefficients, JPEGImage aImage)
+	{
+		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
+
+		int[][][] workBlock = new int[numHorMCU][aJPEG.mBlockCount][64];
+
+		for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+		{
+			for (int blockIndex = 0; blockIndex < workBlock[0].length; blockIndex++)
+			{
+				System.arraycopy(aCoefficients[mcuX][blockIndex], 0, workBlock[mcuX][blockIndex], 0, 64);
+			}
+		}
+
+		SOFSegment sof = aJPEG.mSOFSegment;
+		int mcuW = 8 * sof.getMaxHorSampling();
+		int mcuH = 8 * sof.getMaxVerSampling();
+
+		mExecutorService.submit(()->
+		{
+			try
+			{
+				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+				{
+					int[] output = new int[mcuW * mcuH];
+
+					ImageTransdecode.transform(aJPEG, aIDCT, aImage, workBlock[mcuX], output);
+
+					aImage.setRGB(mcuX * mcuW, aMCUY * mcuH, mcuW, mcuH, output);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace(System.out);
+			}
+		});
 	}
 }

@@ -3,9 +3,6 @@ package org.terifan.imageio.jpeg;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.io.File;
-import javax.imageio.ImageIO;
-import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
 public class JPEGImage
@@ -13,7 +10,7 @@ public class JPEGImage
 	protected BufferedImage mImage;
 	protected int[] mIntBuffer;
 	protected byte[] mByteBuffer;
-	protected FixedThreadExecutor mExecutorService;
+	private Runnable mRenderListener;
 
 
 	void configure(int aWidth, int aHeight, int aType)
@@ -30,69 +27,21 @@ public class JPEGImage
 			DataBufferByte buffer = (DataBufferByte)mImage.getRaster().getDataBuffer();
 			mByteBuffer = buffer.getData();
 		}
-
-		mExecutorService = new FixedThreadExecutor(1f);
 	}
 
 
-	void finish()
+	void setRenderListener(Runnable aRenderListener)
 	{
-		if (mExecutorService != null)
-		{
-			mExecutorService.shutdown();
-		}
+		mRenderListener = aRenderListener;
 	}
 
 
 	public void endOfScan(int aProgressionLevel)
 	{
-//		mExecutorService.submit(()->{
-//			try
-//			{
-//				ImageIO.write(mImage, "png", new File("d:\\dev\\out" + aProgressionLevel + ".png"));
-//			}
-//			catch (Exception e)
-//			{
-//				e.printStackTrace(System.out);
-//			}
-//		});
-
-		mExecutorService.shutdown();
-
-		try
+		if (mRenderListener != null)
 		{
-			ImageIO.write(mImage, "png", new File("d:\\dev\\out\\" + aProgressionLevel + ".png"));
+			mRenderListener.run();
 		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.out);
-		}
-
-		mExecutorService = new FixedThreadExecutor(1f);
-	}
-
-
-	public void update(JPEG aJPEG, IDCT aIDCT, int aMCUY, int[][][] aCoefficients)
-	{
-		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
-
-		int[][][] workBlock = new int[numHorMCU][aJPEG.mMCUBlockCount][64];
-
-		for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-		{
-			for (int blockIndex = 0; blockIndex < workBlock[0].length; blockIndex++)
-			{
-				System.arraycopy(aCoefficients[mcuX][blockIndex], 0, workBlock[mcuX][blockIndex], 0, 64);
-			}
-		}
-
-		mExecutorService.submit(()->
-		{
-			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
-			{
-				ImageTransdecode.transform(aJPEG, aIDCT, this, mcuX, aMCUY, workBlock[mcuX]);
-			}
-		});
 	}
 
 
