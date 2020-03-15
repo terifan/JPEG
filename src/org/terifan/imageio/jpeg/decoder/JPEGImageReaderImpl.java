@@ -126,14 +126,20 @@ public class JPEGImageReaderImpl
 					}
 					break;
 				case SOS: // Start Of Scan
+					if (aImage != null && progressionLevel > 0)
+					{
+						aImage.endOfScan(progressionLevel);
+					}
+
 					int streamOffset = aInput.getStreamOffset();
 					SOSSegment sosSegment = new SOSSegment(aJPEG).decode(aInput).print(aLog);
 					sosSegment.prepareMCU();
 					aInput.setHandleMarkers(true);
-					readCoefficients(aJPEG, decoder, aDecodeCoefficients, aIDCT, aImage);
+					readCoefficients(aJPEG, aImage, aIDCT, decoder, aDecodeCoefficients);
 					aInput.setHandleMarkers(false);
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 					progressionLevel++;
+
 					break;
 				case DRI: // Restart marker
 					aInput.skipBytes(2); // skip length
@@ -143,6 +149,10 @@ public class JPEGImageReaderImpl
 					break;
 				case EOI: // End Of Image
 					aLog.println("%s", marker);
+					if (aImage != null)
+					{
+						aImage.endOfScan(-1);
+					}
 					return;
 				case APP12:
 				case APP13:
@@ -158,7 +168,7 @@ public class JPEGImageReaderImpl
 	}
 
 
-	private void readCoefficients(JPEG aJPEG, Decoder aDecoder, boolean aDecodeCoefficients, IDCT aIDCT, JPEGImage aImage) throws IOException
+	private void readCoefficients(JPEG aJPEG, JPEGImage aImage, IDCT aIDCT, Decoder aDecoder, boolean aDecodeCoefficients) throws IOException
 	{
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
@@ -230,7 +240,7 @@ public class JPEGImageReaderImpl
 				}
 			}
 		}
-		else // decoding one mcu at a time
+		else
 		{
 			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 			{

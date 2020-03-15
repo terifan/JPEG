@@ -14,8 +14,10 @@ public class LoadJPEGDemo
 //			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-huff-def.jpg"));
 //			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-huff-opt.jpg"));
 //			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-huff-opt-prog.jpg"));
-//			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari.jpg"));
+			BufferedImage myImage1 = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari.jpg"));
 			BufferedImage myImage = new JPEGImageIO().read(R.class.getResource("Swallowtail-ari-prog.jpg"));
+
+			System.out.println(new _ImageQualityTest(myImage,myImage1,null));
 
 			_ImageWindow.show(myImage);
 		}

@@ -3,6 +3,8 @@ package org.terifan.imageio.jpeg;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.File;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
@@ -33,12 +35,40 @@ public class JPEGImage
 	}
 
 
-	public void finish()
+	void finish()
 	{
 		if (mExecutorService != null)
 		{
 			mExecutorService.shutdown();
 		}
+	}
+
+
+	public void endOfScan(int aProgressionLevel)
+	{
+//		mExecutorService.submit(()->{
+//			try
+//			{
+//				ImageIO.write(mImage, "png", new File("d:\\dev\\out" + aProgressionLevel + ".png"));
+//			}
+//			catch (Exception e)
+//			{
+//				e.printStackTrace(System.out);
+//			}
+//		});
+
+		mExecutorService.shutdown();
+
+		try
+		{
+			ImageIO.write(mImage, "png", new File("d:\\dev\\out\\" + aProgressionLevel + ".png"));
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.out);
+		}
+
+		mExecutorService = new FixedThreadExecutor(1f);
 	}
 
 

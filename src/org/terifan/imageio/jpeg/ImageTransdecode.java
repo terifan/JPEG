@@ -27,9 +27,6 @@ public class ImageTransdecode
 
 		int[] output = new int[mcuW * mcuH];
 
-		int imageW = sof.getWidth();
-		int imageH = sof.getHeight();
-
 		if (numComponents == 1)
 		{
 		}
