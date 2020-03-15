@@ -28,13 +28,15 @@ import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
  */
 public class ArithmeticEncoder implements Encoder
 {
-	OutputStream mOutputStream;
+	private OutputStream mOutputStream;
 	private boolean mProgressive;
+	private JPEGEntropyState aJPEG_entropy;
 
 
 	public ArithmeticEncoder(OutputStream aOutputStream)
 	{
 		mOutputStream = aOutputStream;
+
 	}
 
 
@@ -134,7 +136,7 @@ public class ArithmeticEncoder implements Encoder
 			return;
 		}
 
-		JPEGEntropyState e = aJPEG.entropy;
+		JPEGEntropyState e = aJPEG_entropy;
 		long temp;
 
 		/* Section D.1.8: Termination of encoding */
@@ -262,7 +264,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	void arith_encode(JPEG aJPEG, int[] st, int st_off, int val) throws IOException
 	{
-		JPEGEntropyState e = aJPEG.entropy;
+		JPEGEntropyState e = aJPEG_entropy;
 		int nl, nm;
 		int temp;
 		int sv;
@@ -410,7 +412,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	void emit_restart(JPEG aJPEG, int restart_num) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int ci;
 		ComponentInfo compptr;
 
@@ -420,9 +422,9 @@ public class ArithmeticEncoder implements Encoder
 		emit_byte(SegmentMarker.RST0.CODE + restart_num, aJPEG);
 
 		/* Re-initialize statistics areas */
-		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.cur_comp_info[ci];
+			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
@@ -455,7 +457,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	boolean encode_mcu_DC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int[] st;
 		int st_off;
 		int blkn, ci, tbl;
@@ -475,10 +477,10 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.MCU_membership[blkn];
-			tbl = aJPEG.cur_comp_info[ci].getTableDC();
+			ci = aJPEG.mMCUComponentIndices[blkn];
+			tbl = aJPEG.mComponentInfo[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
@@ -542,11 +544,11 @@ public class ArithmeticEncoder implements Encoder
 				}
 				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << aJPEG.arith_dc_L[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << aJPEG.arith_dc_U[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -569,7 +571,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	boolean encode_mcu_AC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -591,7 +593,7 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = aJPEG.cur_comp_info[0].getTableAC();
+		tbl = aJPEG.mComponentInfo[0].getTableAC();
 
 		/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
 
@@ -665,7 +667,7 @@ public class ArithmeticEncoder implements Encoder
 					arith_encode(aJPEG, st, st_off, 1);
 					m <<= 1;
 					st = entropy.ac_stats[tbl];
-					st_off = (k <= aJPEG.arith_ac_K[tbl] ? 189 : 217);
+					st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
 					while ((v2 >>= 1) != 0)
 					{
 						arith_encode(aJPEG, st, st_off, 1);
@@ -701,7 +703,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int[] st;
 		int st_off = 0;
 		int Al, blkn;
@@ -724,7 +726,7 @@ public class ArithmeticEncoder implements Encoder
 		Al = aJPEG.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
 			arith_encode(aJPEG, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
@@ -739,7 +741,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -761,7 +763,7 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = aJPEG.cur_comp_info[0].getTableAC();
+		tbl = aJPEG.mComponentInfo[0].getTableAC();
 
 		/* Section G.1.3.3: Encoding of AC coefficients */
 
@@ -886,7 +888,7 @@ public class ArithmeticEncoder implements Encoder
 			return true;
 		}
 
-		switch (aJPEG.entropy.encode_mcu)
+		switch (aJPEG_entropy.encode_mcu)
 		{
 			case x_encode_mcu_DC_first:
 				return encode_mcu_DC_first(aJPEG, MCU_data);
@@ -898,7 +900,7 @@ public class ArithmeticEncoder implements Encoder
 				return encode_mcu_AC_refine(aJPEG, MCU_data);
 		}
 
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -921,11 +923,11 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.blocks_in_MCU; blkn++)
+		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
 		{
 			block = MCU_data[blkn];
-			ci = aJPEG.MCU_membership[blkn];
-			compptr = aJPEG.cur_comp_info[ci];
+			ci = aJPEG.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mComponentInfo[ci];
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 			tbl = compptr.getTableDC();
@@ -985,11 +987,11 @@ public class ArithmeticEncoder implements Encoder
 				}
 				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << aJPEG.arith_dc_L[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << aJPEG.arith_dc_U[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -1009,7 +1011,7 @@ public class ArithmeticEncoder implements Encoder
 			tbl = compptr.getTableAC();
 
 			if (tbl >= entropy.ac_stats.length) throw new IllegalArgumentException("ac_stats: " + tbl+" >= "+entropy.ac_stats.length);
-			if (tbl >= aJPEG.arith_ac_K.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+aJPEG.arith_ac_K.length);
+			if (tbl >= aJPEG.mArithACK.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+aJPEG.mArithACK.length);
 
 			/* Establish EOB (end-of-block) index */
 			do
@@ -1058,7 +1060,7 @@ public class ArithmeticEncoder implements Encoder
 						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st = entropy.ac_stats[tbl];
-						st_off = (k <= aJPEG.arith_ac_K[tbl] ? 189 : 217);
+						st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
 						while ((v2 >>= 1) != 0)
 						{
 							arith_encode(aJPEG, st, st_off, 1);
@@ -1112,7 +1114,7 @@ public class ArithmeticEncoder implements Encoder
 			return;
 		}
 
-		JPEGEntropyState entropy = aJPEG.entropy;
+		JPEGEntropyState entropy = aJPEG_entropy;
 		int ci, tbl;
 		ComponentInfo compptr;
 
@@ -1150,9 +1152,9 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (ci = 0; ci < aJPEG.comps_in_scan; ci++)
+		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.cur_comp_info[ci];
+			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
 			{
@@ -1212,18 +1214,18 @@ public class ArithmeticEncoder implements Encoder
 	{
 		mProgressive = aProgressive;
 
-		if(aJPEG.entropy==null)
-		aJPEG.entropy = new JPEGEntropyState();
+		if(aJPEG_entropy==null)
+		aJPEG_entropy = new JPEGEntropyState();
 		int i;
 
 		/* Mark tables unallocated */
 		for (i = 0; i < NUM_ARITH_TBLS; i++)
 		{
-			aJPEG.entropy.dc_stats[i] = null;
-			aJPEG.entropy.ac_stats[i] = null;
+			aJPEG_entropy.dc_stats[i] = null;
+			aJPEG_entropy.ac_stats[i] = null;
 		}
 
 		/* Initialize index for fixed probability estimation */
-		aJPEG.entropy.fixed_bin[0] = 113;
+		aJPEG_entropy.fixed_bin[0] = 113;
 	}
 }

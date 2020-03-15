@@ -27,16 +27,16 @@ public class SOSSegment extends Segment
 	{
 		int length = aBitStream.readInt16();
 
-		mJPEG.comps_in_scan = aBitStream.readInt8();
+		mJPEG.mScanBlockCount = aBitStream.readInt8();
 
-		if (6 + 2 * mJPEG.comps_in_scan != length)
+		if (6 + 2 * mJPEG.mScanBlockCount != length)
 		{
 			throw new IOException("Error in JPEG stream; illegal SOS segment size: " + length + ", offset " + aBitStream.getStreamOffset());
 		}
 
-		mComponentIds = new int[mJPEG.comps_in_scan];
+		mComponentIds = new int[mJPEG.mScanBlockCount];
 
-		for (int i = 0; i < mJPEG.comps_in_scan; i++)
+		for (int i = 0; i < mJPEG.mScanBlockCount; i++)
 		{
 			mComponentIds[i] = aBitStream.readInt8();
 			mTableDC[i] = aBitStream.readBits(4);
@@ -47,7 +47,7 @@ public class SOSSegment extends Segment
 		mJPEG.Se = aBitStream.readInt8();
 		mJPEG.Ah = aBitStream.readBits(4);
 		mJPEG.Al = aBitStream.readBits(4);
-		mJPEG.comps_in_scan = getNumComponents();
+		mJPEG.mScanBlockCount = getNumComponents();
 
 		return this;
 	}
@@ -82,7 +82,7 @@ public class SOSSegment extends Segment
 		aLog.println("  coefficient partitioning");
 		aLog.println("    ss=%d, se=%d, ah=%d, al=%d", mJPEG.Ss, mJPEG.Se, mJPEG.Ah, mJPEG.Al);
 
-		for (int i = 0; i < mJPEG.comps_in_scan; i++)
+		for (int i = 0; i < mJPEG.mScanBlockCount; i++)
 		{
 			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 0*1].name());
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
@@ -132,29 +132,29 @@ public class SOSSegment extends Segment
 
 	public void prepareMCU()
 	{
-		mJPEG.comps_in_scan = mComponentIds.length;
-		mJPEG.blocks_in_MCU = 0;
+		mJPEG.mScanBlockCount = mComponentIds.length;
 
-		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		mJPEG.mMCUBlockCount = 0;
+		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
-			mJPEG.blocks_in_MCU += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			mJPEG.mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		mJPEG.MCU_membership = new int[mJPEG.blocks_in_MCU];
-		mJPEG.cur_comp_info = new ComponentInfo[mJPEG.comps_in_scan];
+		mJPEG.mMCUComponentIndices = new int[mJPEG.mMCUBlockCount];
+		mJPEG.mComponentInfo = new ComponentInfo[mJPEG.mScanBlockCount];
 
-		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.comps_in_scan; scanComponentIndex++)
+		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
 			comp.setTableAC(getACTable(scanComponentIndex));
 			comp.setTableDC(getDCTable(scanComponentIndex));
 
-			mJPEG.cur_comp_info[scanComponentIndex] = comp;
+			mJPEG.mComponentInfo[scanComponentIndex] = comp;
 
 			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
 			{
-				mJPEG.MCU_membership[blockIndex] = scanComponentIndex;
+				mJPEG.mMCUComponentIndices[blockIndex] = scanComponentIndex;
 			}
 		}
 	}

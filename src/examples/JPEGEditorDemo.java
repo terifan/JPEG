@@ -23,6 +23,8 @@ import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import examples.res.R;
+import java.io.File;
+import javax.swing.JOptionPane;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 import org.terifan.imageio.jpeg.encoder.FDCT;
@@ -32,23 +34,40 @@ public class JPEGEditorDemo
 {
 	private static BufferedImage mOriginalImage;
 
+	private JComboBox mFileSelect;
+	private FilterPanel mFilterPanel1;
+	private FilterPanel mFilterPanel2;
+	private ViewPanel mViewPanel1;
+	private ViewPanel mViewPanel2;
 
-	public JPEGEditorDemo() throws IOException
+
+	public JPEGEditorDemo(File aTestImageDirectory) throws IOException
 	{
 		Color bg = new Color(255, 255, 255);
 
-		FilterPanel filterPanel1 = new FilterPanel();
-		FilterPanel filterPanel2 = new FilterPanel();
-		ViewPanel viewPanel1 = new ViewPanel(filterPanel1, true);
-		ViewPanel viewPanel2 = new ViewPanel(filterPanel2, false);
+		mFilterPanel1 = new FilterPanel();
+		mFilterPanel2 = new FilterPanel();
+		mViewPanel1 = new ViewPanel(mFilterPanel1, true);
+		mViewPanel2 = new ViewPanel(mFilterPanel2, false);
 
-		JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
-		panel.setBorder(BorderFactory.createLineBorder(bg, 4));
-		panel.setBackground(bg);
-		panel.add(viewPanel1);
-		panel.add(viewPanel2);
-		panel.add(filterPanel1);
-		panel.add(filterPanel2);
+		mFileSelect = new JComboBox(aTestImageDirectory.exists() ? aTestImageDirectory.listFiles() : new Object[]{"Lenna.png","Swallowtail.png"});
+		mFileSelect.addActionListener(e->loadImage());
+
+		JPanel filePanel = new JPanel(new FlowLayout());
+		filePanel.add(new JLabel("File"));
+		filePanel.add(mFileSelect);
+
+		JPanel mainPanel = new JPanel(new GridLayout(2, 1, 10, 10));
+		mainPanel.setBorder(BorderFactory.createLineBorder(bg, 4));
+		mainPanel.setBackground(bg);
+		mainPanel.add(mViewPanel1);
+		mainPanel.add(mViewPanel2);
+		mainPanel.add(mFilterPanel1);
+		mainPanel.add(mFilterPanel2);
+
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(filePanel, BorderLayout.NORTH);
+		panel.add(mainPanel, BorderLayout.CENTER);
 
 		JFrame frame = new JFrame();
 		frame.setBackground(bg);
@@ -58,13 +77,45 @@ public class JPEGEditorDemo
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 
-		viewPanel1.mQualitySlider.setValue(76);
-		viewPanel1.mSubsamplingSelect.setSelectedIndex(2);
-		viewPanel2.mQualitySlider.setValue(59);
+		loadImage();
+
+		mViewPanel1.mQualitySlider.setValue(76);
+		mViewPanel1.mSubsamplingSelect.setSelectedIndex(2);
+		mViewPanel2.mQualitySlider.setValue(59);
+
+		_ImagePanel[] p = {mViewPanel1.mImagePanel, mViewPanel2.mImagePanel, mFilterPanel1.mImagePanel, mFilterPanel2.mImagePanel};
+		mViewPanel1.mImagePanel.setMirrorPanels(p);
+		mViewPanel2.mImagePanel.setMirrorPanels(p);
+		mFilterPanel1.mImagePanel.setMirrorPanels(p);
+		mFilterPanel2.mImagePanel.setMirrorPanels(p);
 	}
 
 
-	private static class ViewPanel extends JPanel
+	private void loadImage()
+	{
+		try
+		{
+			Object item = mFileSelect.getSelectedItem();
+			if (item instanceof File)
+			{
+				mOriginalImage = ImageIO.read((File)item);
+			}
+			else
+			{
+				mOriginalImage = ImageIO.read(R.class.getResource((String)item));
+			}
+			mViewPanel1.loadImage();
+			mViewPanel2.loadImage();
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(null, e.toString());
+			e.printStackTrace(System.out);
+		}
+	}
+
+
+	private class ViewPanel extends JPanel
 	{
 		FilterPanel mFilterPanel;
 		boolean mLeft;
@@ -136,6 +187,7 @@ public class JPEGEditorDemo
 			mWorker.start();
 		}
 
+
 		private SingleOp mWorker = new SingleOp(() ->
 		{
 			Class[] fdctTypes =
@@ -165,20 +217,25 @@ public class JPEGEditorDemo
 				.setLog(System.out)
 				.read(baos.toByteArray());
 
-//			try
+//			if (ViewPanel.this == mViewPanel2)
 //			{
-//				decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
-//			}
-//			catch (Exception e)
-//			{
-//				e.printStackTrace(System.out);
+//				try
+//				{
+//					decoded = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+//				}
+//				catch (Exception e)
+//				{
+//					e.printStackTrace(System.out);
+//				}
 //			}
 
 			mImagePanel.setImage(decoded);
 			mQualityLabel.setText("Quality - " + quality);
 			mFileSizeLabel.setText(baos.size() + " bytes");
 
+			mImagePanel.repaint();
 			repaint();
+
 			mFilterPanel.update();
 		});
 	}
@@ -194,8 +251,7 @@ public class JPEGEditorDemo
 		public FilterPanel()
 		{
 			mImagePanel = new _ImagePanel();
-
-			mImagePanel.setImage(new BufferedImage(mOriginalImage.getWidth(), mOriginalImage.getHeight(), BufferedImage.TYPE_INT_RGB));
+			mImagePanel.setImage(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB));
 
 			JPanel panel = new JPanel(new GridLayout(2, 3));
 			mResult = new JLabel[8];
@@ -207,6 +263,16 @@ public class JPEGEditorDemo
 			super.setLayout(new BorderLayout());
 			super.add(panel, BorderLayout.NORTH);
 			super.add(mImagePanel, BorderLayout.CENTER);
+		}
+
+
+		public void update()
+		{
+			if (mImagePanel.getImage().getWidth() != mOriginalImage.getWidth() || mImagePanel.getImage().getHeight() != mOriginalImage.getHeight())
+			{
+				mImagePanel.setImage(new BufferedImage(mOriginalImage.getWidth(), mOriginalImage.getHeight(), BufferedImage.TYPE_INT_RGB));
+			}
+			mWorker.start();
 		}
 
 
@@ -225,82 +291,20 @@ public class JPEGEditorDemo
 		});
 
 
-		public void update()
-		{
-			mWorker.start();
-		}
-
-
-		// TODO: https://github.com/Rolinh/VQMT/tree/master/src
 		public void measureError(BufferedImage aImage1, BufferedImage aImage2)
 		{
 			BufferedImage dst = mImagePanel.getImage();
 
-			long deltaR = 0;
-			long deltaG = 0;
-			long deltaB = 0;
-			long accumDiff = 0;
-			long accumError = 0;
-			int w = aImage1.getWidth();
-			int h = aImage1.getHeight();
-
-			for (int y = 0; y < h; y++)
-			{
-				for (int x = 0; x < w; x++)
-				{
-					int c0 = aImage1.getRGB(x, y);
-					int c1 = aImage2.getRGB(x, y);
-
-					int r0 = 0xff & (c0 >> 16);
-					int g0 = 0xff & (c0 >>  8);
-					int b0 = 0xff & (c0      );
-					int r1 = 0xff & (c1 >> 16);
-					int g1 = 0xff & (c1 >>  8);
-					int b1 = 0xff & (c1      );
-
-					if (r0 != r1)
-					{
-						deltaR += Math.pow(r0 - r1, 2);
-					}
-					if (g0 != g1)
-					{
-						deltaG += Math.pow(g0 - g1, 2);
-					}
-					if (b0 != b1)
-					{
-						deltaB += Math.pow(b0 - b1, 2);
-					}
-
-					int d = Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1);
-					accumDiff += d;
-
-					if (d > 3 * 5)
-					{
-						accumError++;
-					}
-
-					dst.setRGB(x, y, (clamp(128 + r0 - r1) << 16) + (clamp(128 + g0 - g1) << 8) + clamp(128 + b0 - b1));
-				}
-			}
-
-			double mse = (deltaR + deltaG + deltaB) / (w * h) / 3;
-
-			double psnr = mse == 0 ? 0 : -10 * Math.log10(mse / Math.pow(255, 2));
+			_ImageQualityTest result = new _ImageQualityTest(aImage1, aImage2, dst);
 
 			mResult[0].setText("Accum. RGB differance");
-			mResult[1].setText("Accum. error");
+			mResult[1].setText("Pixel errors");
 			mResult[2].setText("MSE");
 			mResult[3].setText("PSNR");
-			mResult[4].setText("" + accumDiff);
-			mResult[5].setText("" + accumError);
-			mResult[6].setText("" + mse);
-			mResult[7].setText("" + psnr + " dB");
-		}
-
-
-		private int clamp(int v)
-		{
-			return v < 0 ? 0 : v > 255 ? 255 : v;
+			mResult[4].setText("" + result.accumDiff);
+			mResult[5].setText("" + result.pixelErrors);
+			mResult[6].setText("" + result.mse);
+			mResult[7].setText("" + result.psnr + " dB");
 		}
 	}
 
@@ -320,7 +324,7 @@ public class JPEGEditorDemo
 
 		public void start()
 		{
-			synchronized (SingleOp.class)
+			synchronized (this)
 			{
 				if (mWorking)
 				{
@@ -348,7 +352,7 @@ public class JPEGEditorDemo
 						}
 						finally
 						{
-							synchronized (SingleOp.class)
+							synchronized (this)
 							{
 								if (!mPendingWork)
 								{
@@ -367,11 +371,11 @@ public class JPEGEditorDemo
 
 	public static void main(String... args)
 	{
+		File dir = new File("c:\\pictures\\image compression suit");
+
 		try
 		{
-			mOriginalImage = ImageIO.read(R.class.getResource("Lenna.png"));
-
-			new JPEGEditorDemo();
+			new JPEGEditorDemo(dir);
 		}
 		catch (Throwable e)
 		{

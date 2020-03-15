@@ -1,6 +1,5 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.QuantizationTable;
 
 

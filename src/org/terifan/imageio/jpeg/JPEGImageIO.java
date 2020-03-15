@@ -12,13 +12,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.function.Function;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.decoder.IDCT;
-import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
+import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 import org.terifan.imageio.jpeg.encoder.FDCT;
-import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
+import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import org.terifan.imageio.jpeg.encoder.JPEGImageWriterImpl;
 import org.terifan.imageio.jpeg.encoder.ProgressionScript;
 import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
@@ -26,6 +27,23 @@ import org.terifan.imageio.jpeg.encoder.QuantizationTableFactory;
 
 public class JPEGImageIO
 {
+	private static Function<String, ColorSpace> mColorSpaceFactory = name ->
+	{
+		switch (name)
+		{
+			case "grayscale":
+				return new ColorSpaceRGBGrayscale();
+			case "ycbcr":
+				return new ColorSpaceRGBYCbCrTab();
+//				return new ColorSpaceRGBYCbCrFloat();
+//				return new ColorSpaceRGBYCbCrFP();
+			case "rgb":
+				return new ColorSpaceRGBRGB();
+			default:
+				throw new IllegalArgumentException("Unsupported color space: " + name);
+		}
+	};
+
 	private Class<? extends IDCT> mIDCT;
 	private Class<? extends FDCT> mFDCT;
 	private ProgressionScript mProgressionScript;
@@ -34,43 +52,44 @@ public class JPEGImageIO
 	private boolean mUpdateProgressiveImage;
 	private SubsamplingMode mSubsampling;
 	private Log mLog;
+	private Runnable mRenderListener;
 
 
 	public JPEGImageIO()
 	{
 		mQuality = 90;
-		mIDCT = IDCTIntegerFast.class;
-		mFDCT = FDCTIntegerFast.class;
+		mIDCT = IDCTIntegerSlow.class;
+		mFDCT = FDCTIntegerSlow.class;
 		mSubsampling = SubsamplingMode._422;
 		mCompressionType = CompressionType.Huffman;
+		mProgressionScript = ProgressionScript.DEFAULT;
 		mLog = new Log();
 	}
 
 
 	public BufferedImage read(Object aInput) throws JPEGImageIOException
 	{
-		JPEG jpeg = new JPEG();
-		jpeg.mColorSpace = ColorSpace.YCBCR;
-
-		IDCT idct = createIDCTInstance();
-		BufferedImage image;
-
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
+			JPEG jpeg = new JPEG();
+
+			IDCT idct = createIDCTInstance();
+
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			image = reader.decode(in, jpeg, mLog, idct, true, mUpdateProgressiveImage);
+
+			JPEGImage image = new JPEGImage();
+			image.setRenderListener(mRenderListener);
+
+			reader.decode(in, jpeg, mLog, idct, image, false);
+
+			ColorICCTransform.transform(jpeg, image);
+
+			return image.getBufferedImage();
 		}
 		catch (IOException e)
 		{
 			throw new JPEGImageIOException(e);
 		}
-
-		if (image != null)
-		{
-			ColorSpaceTransform.transform(jpeg, image);
-		}
-
-		return image;
 	}
 
 
@@ -78,16 +97,9 @@ public class JPEGImageIO
 	{
 		FDCT fdct = createFDCTInstance();
 
-		int[][] samplingFactors = mSubsampling.getSamplingFactors();
-
-		ComponentInfo lu = new ComponentInfo(ComponentInfo.Y, 1, 0, samplingFactors[0][0], samplingFactors[0][1]);
-		ComponentInfo cb = new ComponentInfo(ComponentInfo.CB, 2, 1, samplingFactors[1][0], samplingFactors[1][1]);
-		ComponentInfo cr = new ComponentInfo(ComponentInfo.CR, 3, 1, samplingFactors[2][0], samplingFactors[2][1]);
-		ComponentInfo[] components = new ComponentInfo[]{lu, cb, cr};
-
 		JPEG jpeg = new JPEG();
-		jpeg.mColorSpace = ColorSpace.YCBCR;
-		jpeg.mSOFSegment = new SOFSegment(jpeg, mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, components);
+		jpeg.mColorSpace = JPEGImageIO.createColorSpaceInstance("ycbcr");
+		jpeg.mSOFSegment = new SOFSegment(jpeg, mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, getComponentsFromImage(aInput));
 		jpeg.mQuantizationTables = new QuantizationTable[2];
 		jpeg.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(mQuality, 0);
 		jpeg.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(mQuality, 1);
@@ -121,7 +133,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			reader.decode(in, jpeg, mLog, null, false, false);
+			reader.decode(in, jpeg, mLog, null, null, true);
 		}
 		catch (IOException e)
 		{
@@ -190,6 +202,30 @@ public class JPEGImageIO
 		if (aOutput instanceof File) return new BufferedOutputStream(new FileOutputStream((File)aOutput));
 		if (aOutput instanceof String) return new BufferedOutputStream(new FileOutputStream((String)aOutput));
 		return (OutputStream)aOutput;
+	}
+
+
+	protected ComponentInfo[] getComponentsFromImage(BufferedImage aInput) throws IllegalArgumentException
+	{
+		int[][] samplingFactors = mSubsampling.getSamplingFactors();
+
+		switch (aInput.getType())
+		{
+			case BufferedImage.TYPE_BYTE_GRAY:
+			case BufferedImage.TYPE_BYTE_BINARY:
+			case BufferedImage.TYPE_USHORT_GRAY:
+				return new ComponentInfo[]
+				{
+					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1])
+				};
+			default:
+				return new ComponentInfo[]
+				{
+					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1]),
+					new ComponentInfo(ComponentInfo.Type.CB.ordinal(), 2, 1, samplingFactors[1][0], samplingFactors[1][1]),
+					new ComponentInfo(ComponentInfo.Type.CR.ordinal(), 3, 1, samplingFactors[2][0], samplingFactors[2][1])
+				};
+		}
 	}
 
 
@@ -287,6 +323,31 @@ public class JPEGImageIO
 	public JPEGImageIO setLog(PrintStream aPrintStream)
 	{
 		mLog = new Log().setPrintStream(aPrintStream);
+		return this;
+	}
+
+
+	public static void setColorSpaceFactory(Function<String,ColorSpace> aFactory)
+	{
+		mColorSpaceFactory = aFactory;
+	}
+
+
+	public static ColorSpace createColorSpaceInstance(String aComponents)
+	{
+		return mColorSpaceFactory.apply(aComponents);
+	}
+
+
+	public Runnable getRenderListener()
+	{
+		return mRenderListener;
+	}
+
+
+	public JPEGImageIO setRenderListener(Runnable aRenderListener)
+	{
+		mRenderListener = aRenderListener;
 		return this;
 	}
 }

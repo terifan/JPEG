@@ -42,94 +42,18 @@ public class JPEGImageWriterImpl
 
 	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, CompressionType aCompressionType, ProgressionScript aProgressionScript) throws IOException
 	{
-		if (aCompressionType.isProgressive() && aProgressionScript == null)
-		{
-			aProgressionScript = ProgressionScript.DEFAULT;
-		}
-
 		int num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		int num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
 		Encoder encoder = null;
 
-		int progressionLevels = aCompressionType.isProgressive() ? aProgressionScript.getParams().size() : 1;
-
-		for (int progressionLevel = 0; progressionLevel < progressionLevels; progressionLevel++)
+		for (int progressionLevel = 0, levels = aCompressionType.isProgressive() ? aProgressionScript.getParams().size() : 1; progressionLevel < levels; progressionLevel++)
 		{
-			SOSSegment sosSegment;
+			SOSSegment sosSegment = createSOSSegment(aCompressionType, aProgressionScript, progressionLevel, aJPEG);
 
-			if (aCompressionType.isProgressive())
-			{
-				int[][] params = aProgressionScript.getParams().get(progressionLevel);
+			sosSegment.prepareMCU();
 
-				aJPEG.Ss = params[1][0];
-				aJPEG.Se = params[1][1];
-				aJPEG.Ah = params[1][2];
-				aJPEG.Al = params[1][3];
-
-				int[] id = new int[params[0].length];
-				for (int i = 0; i < params[0].length; i++)
-				{
-					id[i] = aJPEG.mSOFSegment.getComponents()[params[0][i]].getComponentId();
-				}
-
-				sosSegment = new SOSSegment(aJPEG, id);
-
-				if (params[0].length == 3)
-				{
-					if (progressionLevel == 0)
-					{
-						sosSegment.setTableDC(0, 0);
-						sosSegment.setTableAC(0, 0);
-						sosSegment.setTableDC(1, 1);
-						sosSegment.setTableAC(1, 0);
-						sosSegment.setTableDC(2, 1);
-						sosSegment.setTableAC(2, 0);
-					}
-					else
-					{
-						sosSegment.setTableDC(0, 0);
-						sosSegment.setTableAC(0, 0);
-						sosSegment.setTableDC(1, 0);
-						sosSegment.setTableAC(1, 0);
-						sosSegment.setTableDC(2, 0);
-						sosSegment.setTableAC(2, 0);
-					}
-				}
-				else
-				{
-					sosSegment.setTableDC(0, 0);
-					sosSegment.setTableAC(0, id[0] == 1 ? 0 : 1);
-				}
-
-				int cn = 0;
-				for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
-				{
-					comp.setComponentBlockOffset(cn);
-					cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-				}
-
-				sosSegment.prepareMCU();
-			}
-			else
-			{
-				aJPEG.Ss = 0;
-				aJPEG.Se = 63;
-				aJPEG.Ah = 0;
-				aJPEG.Al = 0;
-
-				sosSegment = new SOSSegment(aJPEG, aJPEG.mSOFSegment.getComponentIds());
-				sosSegment.setTableDC(0, 0);
-				sosSegment.setTableAC(0, 0);
-				sosSegment.setTableDC(1, 1);
-				sosSegment.setTableAC(1, 1);
-				sosSegment.setTableDC(2, 1);
-				sosSegment.setTableAC(2, 1);
-
-				sosSegment.prepareMCU();
-			}
-
-			int[][] mcu = new int[aJPEG.blocks_in_MCU][64];
+			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
 
 			int[][][][] coefficients = aJPEG.mCoefficients;
 			int width = aJPEG.mSOFSegment.getWidth();
@@ -141,9 +65,9 @@ public class JPEGImageWriterImpl
 
 			if (aCompressionType.isArithmetic())
 			{
-				aJPEG.arith_dc_L = new int[]{0,0};
-				aJPEG.arith_dc_U = new int[]{1,1};
-				aJPEG.arith_ac_K = new int[]{5,5};
+				aJPEG.mArithDCL = new int[]{0,0};
+				aJPEG.mArithDCU = new int[]{1,1};
+				aJPEG.mArithACK = new int[]{5,5};
 
 				new DACSegment(aJPEG, sosSegment).encode(aOutput).log(aLog);
 
@@ -165,9 +89,9 @@ public class JPEGImageWriterImpl
 				{
 					encoder.start_pass(aJPEG, true);
 
-					if (aJPEG.comps_in_scan == 1)
+					if (aJPEG.mScanBlockCount == 1)
 					{
-						ComponentInfo comp = aJPEG.cur_comp_info[0];
+						ComponentInfo comp = aJPEG.mComponentInfo[0];
 
 						for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 						{
@@ -218,9 +142,9 @@ public class JPEGImageWriterImpl
 
 			encoder.start_pass(aJPEG, false);
 
-			if (aJPEG.comps_in_scan == 1)
+			if (aJPEG.mScanBlockCount == 1)
 			{
-				ComponentInfo comp = aJPEG.cur_comp_info[0];
+				ComponentInfo comp = aJPEG.mComponentInfo[0];
 
 				for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 				{
@@ -259,5 +183,80 @@ public class JPEGImageWriterImpl
 
 			aLog.println("<image data %d bytes%s>", aOutput.getStreamOffset() - streamOffset, aCompressionType.isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 		}
+	}
+
+
+	private SOSSegment createSOSSegment(CompressionType aCompressionType, ProgressionScript aProgressionScript, int aProgressionLevel, JPEG aJPEG)
+	{
+		SOSSegment sosSegment;
+
+		if (aCompressionType.isProgressive())
+		{
+			int[][] params = aProgressionScript.getParams().get(aProgressionLevel);
+
+			int[] id = new int[params[0].length];
+			for (int i = 0; i < params[0].length; i++)
+			{
+				id[i] = aJPEG.mSOFSegment.getComponents()[params[0][i]].getComponentId();
+			}
+
+			sosSegment = new SOSSegment(aJPEG, id);
+
+			aJPEG.Ss = params[1][0];
+			aJPEG.Se = params[1][1];
+			aJPEG.Ah = params[1][2];
+			aJPEG.Al = params[1][3];
+
+			if (params[0].length == 3)
+			{
+				if (aProgressionLevel == 0)
+				{
+					sosSegment.setTableDC(0, 0);
+					sosSegment.setTableAC(0, 0);
+					sosSegment.setTableDC(1, 1);
+					sosSegment.setTableAC(1, 0);
+					sosSegment.setTableDC(2, 1);
+					sosSegment.setTableAC(2, 0);
+				}
+				else
+				{
+					sosSegment.setTableDC(0, 0);
+					sosSegment.setTableAC(0, 0);
+					sosSegment.setTableDC(1, 0);
+					sosSegment.setTableAC(1, 0);
+					sosSegment.setTableDC(2, 0);
+					sosSegment.setTableAC(2, 0);
+				}
+			}
+			else
+			{
+				sosSegment.setTableDC(0, 0);
+				sosSegment.setTableAC(0, id[0] == 1 ? 0 : 1);
+			}
+
+			int cn = 0;
+			for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
+			{
+				comp.setComponentBlockOffset(cn);
+				cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			}
+		}
+		else
+		{
+			aJPEG.Ss = 0;
+			aJPEG.Se = 63;
+			aJPEG.Ah = 0;
+			aJPEG.Al = 0;
+
+			sosSegment = new SOSSegment(aJPEG, aJPEG.mSOFSegment.getComponentIds());
+			sosSegment.setTableDC(0, 0);
+			sosSegment.setTableAC(0, 0);
+			sosSegment.setTableDC(1, 1);
+			sosSegment.setTableAC(1, 1);
+			sosSegment.setTableDC(2, 1);
+			sosSegment.setTableAC(2, 1);
+		}
+
+		return sosSegment;
 	}
 }

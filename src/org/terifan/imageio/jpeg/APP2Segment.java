@@ -48,7 +48,7 @@ public class APP2Segment extends Segment
 			case ICC_PROFILE:
 				mVersion = aBitStream.readInt16(); // version
 
-				byte[] buffer = new byte[length - ICC_PROFILE.length() - 1];
+				byte[] buffer = new byte[length - 2 - ICC_PROFILE.length() - 1];
 				aBitStream.read(buffer);
 
 				mJPEG.mICCProfile = ICC_Profile.getInstance(new ByteArrayInputStream(buffer));

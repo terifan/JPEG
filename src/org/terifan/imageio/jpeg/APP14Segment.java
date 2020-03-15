@@ -8,11 +8,21 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 public class APP14Segment extends Segment
 {
 	private JPEG mJPEG;
+	private int mVersion;
+	private int mFlags0;
+	private int mFlags1;
+	private int mTransform;
 
 
 	public APP14Segment(JPEG aJPEG)
 	{
 		mJPEG = aJPEG;
+	}
+
+
+	public int getTransform()
+	{
+		return mTransform;
 	}
 
 
@@ -24,25 +34,12 @@ public class APP14Segment extends Segment
 
 		if (aBitStream.readInt8() == 'A' && aBitStream.readInt8() == 'd' && aBitStream.readInt8() == 'o' && aBitStream.readInt8() == 'b' && aBitStream.readInt8() == 'e')
 		{
-			int version = aBitStream.readInt16();
-			int flags0 = aBitStream.readInt16();
-			int flags1 = aBitStream.readInt16();
-			int transform = aBitStream.readInt8();
+			mVersion = aBitStream.readInt16();
+			mFlags0 = aBitStream.readInt16();
+			mFlags1 = aBitStream.readInt16();
+			mTransform = aBitStream.readInt8();
 
-			switch (transform)
-			{
-				case 1:
-					mJPEG.mColorSpace = ColorSpace.YCBCR;
-					break;
-				case 2:
-					mJPEG.mColorSpace = ColorSpace.YCCK;
-					break;
-				default:
-					mJPEG.mColorSpace = ColorSpace.RGB; // 3-channel images are assumed to be RGB, 4-channel images are assumed to be CMYK
-					break;
-			}
-
-			mJPEG.mHasAdobeMarker = true;
+			mJPEG.mColorSpaceTransform = this;
 		}
 
 		int remaining = offset + length - aBitStream.getStreamOffset();

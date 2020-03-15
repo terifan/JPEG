@@ -59,7 +59,7 @@ public class APP1Segment extends Segment
 				mExif = new Exif().decode(exif);
 				break;
 			default:
-				System.out.printf("  Ignoring unsupported APP1 segment content (%s)%n", header);
+//				System.out.printf("  Ignoring unsupported APP1 segment content (%s)%n", header);
 				aBitStream.skipBytes(length);
 				break;
 		}

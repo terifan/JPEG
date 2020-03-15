@@ -14,12 +14,12 @@ public class SOFSegment extends Segment
 	private ComponentInfo[] mComponents;
 	private JPEG mJPEG;
 	private CompressionType mCompressionType;
+	private int[] mBlockLookup;
 
 
-	public SOFSegment(JPEG aJPEG, CompressionType aCompressionType)
+	public SOFSegment(JPEG aJPEG)
 	{
 		mJPEG = aJPEG;
-		mCompressionType = aCompressionType;
 	}
 
 
@@ -61,14 +61,7 @@ public class SOFSegment extends Segment
 			mComponents[i] = new ComponentInfo().decode(aBitStream, i);
 		}
 
-		if (numComponents == 1)
-		{
-			mJPEG.mColorSpace = ColorSpace.GRAYSCALE;
-		}
-		else
-		{
-			mJPEG.mColorSpace = ColorSpace.YCBCR;
-		}
+		updateLookupTable();
 
 		return this;
 	}
@@ -88,6 +81,8 @@ public class SOFSegment extends Segment
 		{
 			comp.encode(aBitStream);
 		}
+
+		updateLookupTable();
 
 		return this;
 	}
@@ -212,5 +207,100 @@ public class SOFSegment extends Segment
 		}
 
 		return count;
+	}
+
+
+	public ComponentInfo getComponentByBlockIndex(int aBlockIndex)
+	{
+		return mComponents[mBlockLookup[aBlockIndex]];
+	}
+
+
+	public int getBlocksInMCU()
+	{
+		return mBlockLookup.length;
+	}
+
+
+	private void updateLookupTable()
+	{
+		mBlockLookup = new int[12];
+
+		int cp = 0;
+		int cii = 0;
+		for (ComponentInfo ci : mComponents)
+		{
+			for (int i = 0; i < ci.getVerSampleFactor() * ci.getHorSampleFactor(); i++, cp++)
+			{
+				mBlockLookup[cp] = cii;
+			}
+			cii++;
+		}
+
+		mBlockLookup = Arrays.copyOfRange(mBlockLookup, 0, cp);
+	}
+
+
+	// TODO: https://docs.oracle.com/javase/8/docs/api/javax/imageio/metadata/doc-files/jpeg_metadata.html
+	public String getColorSpaceName()
+	{
+//		if (mJPEG.mJFIFSegmentMarker != null)
+//		{
+			switch (mComponents.length)
+			{
+				case 1:
+					return "grayscale";
+				case 2:
+					return "grayalpha";
+				case 3:
+					return "ycbcr";
+				case 4:
+					return "cmyk";
+				default:
+					throw new IllegalArgumentException();
+			}
+//		}
+	}
+
+
+	public SubsamplingMode getSubsamplingMode()
+	{
+		int h0 = mComponents[0].getHorSampleFactor();
+		int v0 = mComponents[0].getVerSampleFactor();
+		int h1 = mComponents.length == 1 ? 0 : mComponents[1].getHorSampleFactor();
+		int v1 = mComponents.length == 1 ? 0 : mComponents[1].getVerSampleFactor();
+		int h2 = mComponents.length == 1 ? 0 : mComponents[2].getHorSampleFactor();
+		int v2 = mComponents.length == 1 ? 0 : mComponents[2].getVerSampleFactor();
+
+		if (h0 == 1 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:4:4
+		{
+			return SubsamplingMode._444;
+		}
+		else if (h0 == 2 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:0
+		{
+			return SubsamplingMode._420;
+		}
+		else if (h0 == 2 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:2 (hor)
+		{
+			return SubsamplingMode._422;
+		}
+		else if (h0 == 1 && v0 == 2 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:2:2 (ver)
+		{
+			return SubsamplingMode._422;
+		}
+		else if (h0 == 2 && v0 == 2 && h1 == 2 && v1 == 1 && h2 == 2 && v2 == 1) // 4:4:0
+		{
+			return SubsamplingMode._440;
+		}
+		else if (h0 == 4 && v0 == 1 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:1:1 (hor)
+		{
+			return SubsamplingMode._411;
+		}
+		else if (h0 == 1 && v0 == 4 && h1 == 1 && v1 == 1 && h2 == 1 && v2 == 1) // 4:1:1 (ver)
+		{
+//			return SubsamplingMode._411;
+		}
+
+		throw new IllegalArgumentException(h0+" "+v0+" "+h1+" "+v1+" "+h2+" "+v2);
 	}
 }
