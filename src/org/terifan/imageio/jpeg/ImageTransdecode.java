@@ -1,6 +1,5 @@
 package org.terifan.imageio.jpeg;
 
-import java.awt.image.DataBufferInt;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 
 

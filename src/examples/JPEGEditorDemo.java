@@ -302,7 +302,7 @@ public class JPEGEditorDemo
 			mResult[2].setText("MSE");
 			mResult[3].setText("PSNR");
 			mResult[4].setText("" + result.accumDiff);
-			mResult[5].setText("" + result.accumError);
+			mResult[5].setText("" + result.pixelErrors);
 			mResult[6].setText("" + result.mse);
 			mResult[7].setText("" + result.psnr + " dB");
 		}

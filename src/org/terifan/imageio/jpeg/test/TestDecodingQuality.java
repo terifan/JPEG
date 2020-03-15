@@ -20,12 +20,12 @@ public class TestDecodingQuality
 	{
 		try
 		{
-			BufferedImage src = ImageIO.read(R.class.getResource("Lenna.png"));
+			BufferedImage src = ImageIO.read(R.class.getResource("LennaGray.png"));
 
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 			new JPEGImageIO()
-				.setCompressionType(CompressionType.Huffman)
+				.setCompressionType(CompressionType.HuffmanProgressive)
 				.setQuality(100)
 				.setSubsampling(SubsamplingMode._420) // Java ImageIO identical decoding: 444 440 411
 				.write(src, output);

@@ -7,7 +7,7 @@ public class _ImageQualityTest
 {
 	public double psnr;
 	public long mse;
-	public long accumError;
+	public long pixelErrors;
 	public long accumDiff;
 
 
@@ -55,7 +55,7 @@ public class _ImageQualityTest
 
 				if (dr > 5 || dg > 5 || db > 5)
 				{
-					accumError++;
+					pixelErrors++;
 				}
 
 				if (dst != null)
@@ -80,6 +80,6 @@ public class _ImageQualityTest
 	@Override
 	public String toString()
 	{
-		return "{" + "psnr=" + psnr + ", mse=" + mse + ", accumError=" + accumError + ", accumDiff=" + accumDiff + '}';
+		return String.format("{psnr=%6.3f, mse=%d, pixelErrors=%d, accumDiff=%d}", psnr, mse, pixelErrors, accumDiff);
 	}
 }

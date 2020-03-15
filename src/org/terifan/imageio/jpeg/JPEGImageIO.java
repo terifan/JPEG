@@ -78,11 +78,14 @@ public class JPEGImageIO
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
 
 			JPEGImage image = new JPEGImage();
-			boolean success;
 
-			try (FixedThreadExecutor threadPool = new FixedThreadExecutor(1f))
+			try
 			{
-				success = reader.decode(in, jpeg, mLog, idct, image, true, mUpdateProgressiveImage, false, threadPool);
+				reader.decode(in, jpeg, mLog, idct, image, false);
+			}
+			finally
+			{
+				image.finish();
 			}
 
 			ColorICCTransform.transform(jpeg, image);
@@ -136,10 +139,7 @@ public class JPEGImageIO
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
-			try (FixedThreadExecutor threadPool = new FixedThreadExecutor(1f))
-			{
-				reader.decode(in, jpeg, mLog, null, null, false, false, true, threadPool);
-			}
+			reader.decode(in, jpeg, mLog, null, null, true);
 		}
 		catch (IOException e)
 		{

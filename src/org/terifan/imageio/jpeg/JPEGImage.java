@@ -11,6 +11,7 @@ public class JPEGImage
 	protected BufferedImage mImage;
 	protected int[] mIntBuffer;
 	protected byte[] mByteBuffer;
+	protected FixedThreadExecutor mExecutorService;
 
 
 	void configure(int aWidth, int aHeight, int aType)
@@ -27,28 +28,41 @@ public class JPEGImage
 			DataBufferByte buffer = (DataBufferByte)mImage.getRaster().getDataBuffer();
 			mByteBuffer = buffer.getData();
 		}
+
+		mExecutorService = new FixedThreadExecutor(1f);
 	}
 
 
-	public void updateMCU(int aMCUY, JPEG aJPEG, IDCT aIDCT, int numHorMCU)
+	public void finish()
 	{
+		if (mExecutorService != null)
+		{
+			mExecutorService.shutdown();
+		}
+	}
+
+
+	public void update(JPEG aJPEG, IDCT aIDCT, int aMCUY, int[][][] aCoefficients)
+	{
+		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
+
 		int[][][] workBlock = new int[numHorMCU][aJPEG.mMCUBlockCount][64];
 
 		for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 		{
 			for (int blockIndex = 0; blockIndex < workBlock[0].length; blockIndex++)
 			{
-				System.arraycopy(aJPEG.mCoefficients[aMCUY][mcuX][blockIndex], 0, workBlock[mcuX][blockIndex], 0, 64);
+				System.arraycopy(aCoefficients[mcuX][blockIndex], 0, workBlock[mcuX][blockIndex], 0, 64);
 			}
 		}
 
-//		mThreadPool.submit(()->
-//		{
+		mExecutorService.submit(()->
+		{
 			for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 			{
 				ImageTransdecode.transform(aJPEG, aIDCT, this, mcuX, aMCUY, workBlock[mcuX]);
 			}
-//		});
+		});
 	}
 
 

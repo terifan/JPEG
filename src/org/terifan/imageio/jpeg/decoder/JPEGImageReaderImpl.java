@@ -1,7 +1,5 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.ImageTransdecode;
-import java.awt.image.BufferedImage;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -14,7 +12,6 @@ import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
-import org.terifan.imageio.jpeg.FixedThreadExecutor;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGImage;
 import org.terifan.imageio.jpeg.Log;
@@ -23,28 +20,21 @@ import org.terifan.imageio.jpeg.SegmentMarker;
 
 public class JPEGImageReaderImpl
 {
-	private boolean mUpdateImage;
-	private FixedThreadExecutor mThreadPool;
-
-
 	public JPEGImageReaderImpl()
 	{
 	}
 
 
-	public boolean decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, JPEGImage aImage, boolean aUpdateImage, boolean aUpdateProgressiveImage, boolean aDecodeCoefficients, FixedThreadExecutor aThreadPool) throws IOException
+	public void decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, JPEGImage aImage, boolean aDecodeCoefficients) throws IOException
 	{
-		mThreadPool = aThreadPool;
-		mUpdateImage = aUpdateImage;
-
 		int progressionLevel = 0;
 		Decoder decoder = null;
 
 		int nextSegment = aInput.readInt16();
 
-		if (nextSegment != SegmentMarker.SOI.CODE) // Start Of Image
+		if (nextSegment != SegmentMarker.SOI.CODE)
 		{
-			throw new IOException("Error in JPEG stream; expected SOI segment marker but found: " + Integer.toString(nextSegment, 16));
+			throw new IOException("This isn't a JPEG image");
 		}
 
 		for (;;)
@@ -60,8 +50,7 @@ public class JPEGImageReaderImpl
 
 				if ((nextSegment & 0xFF00) != 0xFF00 || nextSegment == -1)
 				{
-//					throw new IOException("Error in JPEG stream at offset " + aInput.getStreamOffset() + "; expected segment marker but found: " + Integer.toString(nextSegment, 16));
-					return false;
+					throw new IOException("Error in JPEG stream at offset " + aInput.getStreamOffset() + "; expected segment marker but found: " + Integer.toString(nextSegment, 16));
 				}
 			}
 
@@ -116,20 +105,32 @@ public class JPEGImageReaderImpl
 
 					SOFSegment sof = new SOFSegment(aJPEG).decode(aInput).setCompressionType(compression).print(aLog);
 
+					aDecodeCoefficients |= sof.getCompressionType().isProgressive();
+
 					aJPEG.mSOFSegment = sof;
-					aJPEG.mCoefficients = aJPEG.mSOFSegment.getCompressionType().isProgressive() || aDecodeCoefficients ? new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64] : new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64];
+					aJPEG.mCoefficients = aDecodeCoefficients ? new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64] : new int[1][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64];
 
 					decoder = compression.createDecoderInstance();
 					decoder.initialize(aJPEG, aInput);
 
-					aJPEG.getColorSpace().configureImageBuffer(sof, aImage);
+					int cn = 0;
+					for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
+					{
+						comp.setComponentBlockOffset(cn);
+						cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+					}
+
+					if (aImage != null)
+					{
+						aJPEG.getColorSpace().configureImageBuffer(sof, aImage);
+					}
 					break;
 				case SOS: // Start Of Scan
 					int streamOffset = aInput.getStreamOffset();
 					SOSSegment sosSegment = new SOSSegment(aJPEG).decode(aInput).print(aLog);
 					sosSegment.prepareMCU();
 					aInput.setHandleMarkers(true);
-					readCoefficients(aJPEG, decoder, progressionLevel, aDecodeCoefficients, aIDCT, aImage);
+					readCoefficients(aJPEG, decoder, aDecodeCoefficients, aIDCT, aImage);
 					aInput.setHandleMarkers(false);
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 					progressionLevel++;
@@ -142,7 +143,7 @@ public class JPEGImageReaderImpl
 					break;
 				case EOI: // End Of Image
 					aLog.println("%s", marker);
-					return true;
+					return;
 				case APP12:
 				case APP13:
 				case COM: // Comment
@@ -157,7 +158,7 @@ public class JPEGImageReaderImpl
 	}
 
 
-	private void readCoefficients(JPEG aJPEG, Decoder aDecoder, int aProgressionLevel, boolean aDecodeCoefficients, IDCT aIDCT, JPEGImage aImage) throws IOException
+	private void readCoefficients(JPEG aJPEG, Decoder aDecoder, boolean aDecodeCoefficients, IDCT aIDCT, JPEGImage aImage) throws IOException
 	{
 		int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
 		int maxSamplingY = aJPEG.mSOFSegment.getMaxVerSampling();
@@ -165,13 +166,6 @@ public class JPEGImageReaderImpl
 		int numVerMCU = aJPEG.mSOFSegment.getVerMCU();
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
-
-		int cn = 0;
-		for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
-		{
-			comp.setComponentBlockOffset(cn);
-			cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-		}
 
 		aDecoder.startPass(aJPEG);
 
@@ -202,10 +196,13 @@ public class JPEGImageReaderImpl
 					}
 				}
 
-//				aImage.updateMCU(mcuY, aJPEG, aIDCT, numHorMCU);
+				if (aImage != null)
+				{
+					aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY]);
+				}
 			}
 		}
-		else if (aJPEG.mSOFSegment.getCompressionType().isProgressive() || aDecodeCoefficients)
+		else if (aDecodeCoefficients)
 		{
 			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 			{
@@ -227,7 +224,10 @@ public class JPEGImageReaderImpl
 					aDecoder.decodeMCU(aJPEG, mcu);
 				}
 
-				aImage.updateMCU(mcuY, aJPEG, aIDCT, numHorMCU);
+				if (aImage != null)
+				{
+					aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY]);
+				}
 			}
 		}
 		else // decoding one mcu at a time
@@ -248,13 +248,13 @@ public class JPEGImageReaderImpl
 							{
 //								aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX] = mcu[blockIndex];
 
-								System.arraycopy(mcu[blockIndex], 0, aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX], 0, 64);
+								System.arraycopy(mcu[blockIndex], 0, aJPEG.mCoefficients[0][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX], 0, 64);
 							}
 						}
 					}
 				}
 
-				aImage.updateMCU(mcuY, aJPEG, aIDCT, numHorMCU);
+				aImage.update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[0]);
 			}
 		}
 
