@@ -99,16 +99,16 @@ public class ImageTransdecode
 				{
 					for (int ix = 0; ix < 4; ix++)
 					{
-						int lu0 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 0 + 2 * ix + 0];
-						int lu1 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 0 + 2 * ix + 1];
-						int lu2 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 8 + 2 * ix + 0];
-						int lu3 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 8 + 2 * ix + 1];
-						int cb = aWorkBlock[aC1][by * 4 * 8 + iy * 8 + 4 * bx + ix];
-						int cr = aWorkBlock[aC2][by * 4 * 8 + iy * 8 + 4 * bx + ix];
-						aOutput[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 0] = aColorSpace.decode(lu0, cb, cr);
-						aOutput[by * 8 * 16 + bx * 8 + (2*iy + 0) * 16 + ix * 2 + 1] = aColorSpace.decode(lu1, cb, cr);
-						aOutput[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 0] = aColorSpace.decode(lu2, cb, cr);
-						aOutput[by * 8 * 16 + bx * 8 + (2*iy + 1) * 16 + ix * 2 + 1] = aColorSpace.decode(lu3, cb, cr);
+						int lu0 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 0 + 2 * ix + 0];
+						int lu1 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 0 + 2 * ix + 1];
+						int lu2 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 8 + 2 * ix + 0];
+						int lu3 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 8 + 2 * ix + 1];
+						int cb = aWorkBlock[aC1][by * 4 * 8 + bx * 4 + iy * 8 + ix];
+						int cr = aWorkBlock[aC2][by * 4 * 8 + bx * 4 + iy * 8 + ix];
+						aOutput[by * 8 * 16 + bx * 8 + (2 * iy + 0) * 16 + ix * 2 + 0] = aColorSpace.decode(lu0, cb, cr);
+						aOutput[by * 8 * 16 + bx * 8 + (2 * iy + 0) * 16 + ix * 2 + 1] = aColorSpace.decode(lu1, cb, cr);
+						aOutput[by * 8 * 16 + bx * 8 + (2 * iy + 1) * 16 + ix * 2 + 0] = aColorSpace.decode(lu2, cb, cr);
+						aOutput[by * 8 * 16 + bx * 8 + (2 * iy + 1) * 16 + ix * 2 + 1] = aColorSpace.decode(lu3, cb, cr);
 					}
 				}
 			}
@@ -146,8 +146,8 @@ public class ImageTransdecode
 				{
 					for (int ix = 0; ix < 8; ix++)
 					{
-						int lu0 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 0 + ix];
-						int lu1 = aWorkBlock[aC0 + by*2 + bx][iy * 2 * 8 + 8 + ix];
+						int lu0 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 0 + ix];
+						int lu1 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 8 + ix];
 						int cb = aWorkBlock[aC1 + bx][by * 4 * 8 + iy * 8 + ix];
 						int cr = aWorkBlock[aC2 + bx][by * 4 * 8 + iy * 8 + ix];
 						aOutput[by * 8 * 16 + (2 * iy + 0) * 16 + 8 * bx + ix] = aColorSpace.decode(lu0, cb, cr);
@@ -181,7 +181,6 @@ public class ImageTransdecode
 			}
 		}
 	}
-
 
 //	public static void transform(JPEG aJPEG, IDCT aIDCT, BufferedImage aImage)
 //	{

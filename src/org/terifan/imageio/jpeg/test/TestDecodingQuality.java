@@ -20,12 +20,12 @@ public class TestDecodingQuality
 	{
 		try
 		{
-			BufferedImage src = ImageIO.read(R.class.getResource("LennaGray.png"));
+			BufferedImage src = ImageIO.read(R.class.getResource("Lenna.png"));
 
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 			new JPEGImageIO()
-				.setCompressionType(CompressionType.HuffmanProgressive)
+				.setCompressionType(CompressionType.Huffman)
 				.setQuality(100)
 				.setSubsampling(SubsamplingMode._420) // Java ImageIO identical decoding: 444 440 411
 				.write(src, output);
@@ -47,6 +47,9 @@ public class TestDecodingQuality
 					int r1 = 0xff & (teriImage.getRGB(x, y) >> 16);
 					int g1 = 0xff & (teriImage.getRGB(x, y) >> 8);
 					int b1 = 0xff & (teriImage.getRGB(x, y) >> 0);
+
+					System.out.printf("%4d %4d, %4d %4d, %4d %4d%n", r0,r1,g0,g1,b0,b1);
+
 					int d = r0 != r1 || g0 != g1 || b0 != b1 ? 0xffffff : 0x000000;
 					diffImage.setRGB(x, y, d);
 				}
