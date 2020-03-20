@@ -48,7 +48,7 @@ public class TestDecodingQuality
 					int g1 = 0xff & (teriImage.getRGB(x, y) >> 8);
 					int b1 = 0xff & (teriImage.getRGB(x, y) >> 0);
 
-					System.out.printf("%4d %4d, %4d %4d, %4d %4d%n", r0,r1,g0,g1,b0,b1);
+//					System.out.printf("%4d %4d, %4d %4d, %4d %4d%n", r0,r1,g0,g1,b0,b1);
 
 					int d = r0 != r1 || g0 != g1 || b0 != b1 ? 0xffffff : 0x000000;
 					diffImage.setRGB(x, y, d);
