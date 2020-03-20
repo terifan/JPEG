@@ -90,10 +90,25 @@ public class ImageTransdecode
 
 
 	/*
-	 *   x  o  x  o
-	 *   o  o  o  o
-	 *   x  o  x  o
-	 *   o  o  o  o
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
+	 *   x  o  x  o   x  o  x  o   x  o  x  o   x  o  x  o
+	 *   o  o  o  o   o  o  o  o   o  o  o  o   o  o  o  o
 	 */
 	private static void upsample420(int[][] aWorkBlock, int aC0, int aC1, int aC2, int[] aOutput, ColorSpace aColorSpace)
 	{
@@ -110,30 +125,30 @@ public class ImageTransdecode
 						int lu2 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 8 + 2 * ix + 0];
 						int lu3 = aWorkBlock[aC0 + by * 2 + bx][iy * 2 * 8 + 8 + 2 * ix + 1];
 						int co = by * 4 * 8 + iy * 8 + 4 * bx + ix;
-						try
+//						try
 						{
 							int cb00 = aWorkBlock[aC1][co + 0 + 0];
 							int cr00 = aWorkBlock[aC2][co + 0 + 0];
-							int cb01 = aWorkBlock[aC1][co + 0 + 1];
-							int cr01 = aWorkBlock[aC2][co + 0 + 1];
-							int cb10 = aWorkBlock[aC1][co + 8 + 0];
-							int cr10 = aWorkBlock[aC2][co + 8 + 0];
-							int cb11 = aWorkBlock[aC1][co + 8 + 1];
-							int cr11 = aWorkBlock[aC2][co + 8 + 1];
+							int cb01 = bx==1&&ix==3?cb00:aWorkBlock[aC1][co + 0 + 1];
+							int cr01 = bx==1&&ix==3?cr00:aWorkBlock[aC2][co + 0 + 1];
+							int cb10 = by==1&&iy==3?cb00:aWorkBlock[aC1][co + 8 + 0];
+							int cr10 = by==1&&iy==3?cr00:aWorkBlock[aC2][co + 8 + 0];
+							int cb11 = bx==1&&ix==3||by==1&&iy==3?cb00:aWorkBlock[aC1][co + 8 + 1];
+							int cr11 = bx==1&&ix==3||by==1&&iy==3?cr00:aWorkBlock[aC2][co + 8 + 1];
 							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 0] = aColorSpace.decode(lu0, cb00, cr00);
 							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 1] = aColorSpace.decode(lu1, (cb00 + cb01) / 2, (cr00 + cr01) / 2);
 							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 0] = aColorSpace.decode(lu2, (cb00 + cb10) / 2, (cr00 + cr10) / 2);
 							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 1] = aColorSpace.decode(lu3, (cb00 + cb01 + cb10 + cb11) / 4, (cr00 + cr01 + cr10 + cr11) / 4);
 						}
-						catch (Exception e)
-						{
-							int cb = aWorkBlock[aC1][co];
-							int cr = aWorkBlock[aC2][co];
-							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 0] = aColorSpace.decode(lu0, cb, cr);
-							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 1] = aColorSpace.decode(lu1, cb, cr);
-							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 0] = aColorSpace.decode(lu2, cb, cr);
-							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 1] = aColorSpace.decode(lu3, cb, cr);
-						}
+//						catch (Exception e)
+//						{
+//							int cb = aWorkBlock[aC1][co];
+//							int cr = aWorkBlock[aC2][co];
+//							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 0] = aColorSpace.decode(lu0, cb, cr);
+//							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 +  0 + ix * 2 + 1] = aColorSpace.decode(lu1, cb, cr);
+//							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 0] = aColorSpace.decode(lu2, cb, cr);
+//							aOutput[by * 8 * 16 + bx * 8 + iy * 2 * 16 + 16 + ix * 2 + 1] = aColorSpace.decode(lu3, cb, cr);
+//						}
 					}
 				}
 			}

@@ -5,6 +5,10 @@ import java.awt.image.BufferedImage;
 
 public class ColorSpaceRGBYCbCrTab implements ColorSpace
 {
+	private final static int FP_SCALEBITS = 16;
+	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
+	private static int FIX(double x) { return (int)(x * (1<<FP_SCALEBITS) + 0.5);}
+
 	private final static int[] CR_R_TAB = new int[256];
 	private final static int[] CB_B_TAB = new int[256];
 	private final static int[] CR_G_TAB = new int[256];
@@ -14,10 +18,10 @@ public class ColorSpaceRGBYCbCrTab implements ColorSpace
 	{
 		for (int i = 0, x = -128; i <= 255; i++, x++)
 		{
-			CR_R_TAB[i] = (int)( (1.40200 * 65536 + 0.5) * x + 32768) >> 16;
-			CB_B_TAB[i] = (int)( (1.77200 * 65536 + 0.5) * x + 32768) >> 16;
-			CR_G_TAB[i] = (int)(-(0.71414 * 65536 + 0.5)) * x;
-			CB_G_TAB[i] = (int)(-(0.34414 * 65536 + 0.5)) * x + 32768;
+			CR_R_TAB[i] = (FIX(1.402) * x) >> FP_SCALEBITS;
+			CB_B_TAB[i] = (FIX(1.772) * x) >> FP_SCALEBITS;
+			CR_G_TAB[i] = -FIX(0.714136286) * x;
+			CB_G_TAB[i] = -FIX(0.344136286) * x + FP_HALF;
 		}
 	}
 
@@ -54,7 +58,7 @@ public class ColorSpaceRGBYCbCrTab implements ColorSpace
 		int cr = aCr;
 
 		int r = clamp(y + CR_R_TAB[cr]);
-		int g = clamp(y + ((CB_G_TAB[cb] + CR_G_TAB[cr]) >> 16));
+		int g = clamp(y + ((CB_G_TAB[cb] + CR_G_TAB[cr]) >> FP_SCALEBITS));
 		int b = clamp(y + CB_B_TAB[cb]);
 
 		return (r << 16) + (g << 8) + b;

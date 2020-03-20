@@ -41,12 +41,18 @@ public class TestDecodingQuality
 			{
 				for (int x = 0; x < javaImage.getWidth(); x++)
 				{
-					int r0 = 0xff & (javaImage.getRGB(x, y) >> 16);
-					int g0 = 0xff & (javaImage.getRGB(x, y) >> 8);
-					int b0 = 0xff & (javaImage.getRGB(x, y) >> 0);
-					int r1 = 0xff & (teriImage.getRGB(x, y) >> 16);
-					int g1 = 0xff & (teriImage.getRGB(x, y) >> 8);
-					int b1 = 0xff & (teriImage.getRGB(x, y) >> 0);
+					int r0 = 0xff & (teriImage.getRGB(x, y) >> 16);
+					int g0 = 0xff & (teriImage.getRGB(x, y) >> 8);
+					int b0 = 0xff & (teriImage.getRGB(x, y) >> 0);
+					int r1 = 0xff & (javaImage.getRGB(x, y) >> 16);
+					int g1 = 0xff & (javaImage.getRGB(x, y) >> 8);
+					int b1 = 0xff & (javaImage.getRGB(x, y) >> 0);
+
+					if (r0==0&&g0==0&&b0==0)
+					{
+						diffImage.setRGB(x, y, 0x000000);
+						continue;
+					}
 
 //					System.out.printf("%4d %4d, %4d %4d, %4d %4d%n", r0,r1,g0,g1,b0,b1);
 
