@@ -29,7 +29,7 @@ public class IDCTFloat implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		double[] workspace = new double[64];
 
@@ -37,19 +37,19 @@ public class IDCTFloat implements IDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				workspace[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 0.125;
+				workspace[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 256 / 8;
 			}
 		}
 
 		transform(workspace);
-		
+
 		for (int i = 0; i < 64; i++)
 		{
 			aCoefficients[i] = (int)workspace[i];
 		}
 	}
 
-	
+
 	private void transform(double[] aCoefficients)
 	{
 		double[] workspace = new double[64];

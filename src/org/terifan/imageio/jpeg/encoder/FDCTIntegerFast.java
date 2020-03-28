@@ -40,7 +40,6 @@ public class FDCTIntegerFast implements FDCT
 {
 	private final static int CENTERJSAMPLE = 128;
 	private final static int CONST_BITS = 8;
-	private final static int IFAST_SCALE_BITS = 2;
 	private final static int FIX_0_382683433 = 98;
 	private final static int FIX_0_541196100 = 139;
 	private final static int FIX_0_707106781 = 181;
@@ -63,11 +62,11 @@ public class FDCTIntegerFast implements FDCT
 	{
 		transform(aCoefficients);
 
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] /= 256 * quantval[i] * AANSCALES[i] / 16384 / 8;
+			aCoefficients[i] = (int)(aCoefficients[i] * 256L * 256 * 8 / quantval[i] / AANSCALES[i]);
 		}
 	}
 
@@ -133,12 +132,12 @@ public class FDCTIntegerFast implements FDCT
 			int tmp11 = tmp1 + tmp2;
 			int tmp12 = tmp1 - tmp2;
 
-			aCoefficients[ctr + 8 * 0] = (tmp10 + tmp11) << IFAST_SCALE_BITS;
-			aCoefficients[ctr + 8 * 4] = (tmp10 - tmp11) << IFAST_SCALE_BITS;
+			aCoefficients[ctr + 8 * 0] = (tmp10 + tmp11);
+			aCoefficients[ctr + 8 * 4] = (tmp10 - tmp11);
 
 			int z1 = MULTIPLY(tmp12 + tmp13, FIX_0_707106781);
-			aCoefficients[ctr + 8 * 2] = (tmp13 + z1) << IFAST_SCALE_BITS;
-			aCoefficients[ctr + 8 * 6] = (tmp13 - z1) << IFAST_SCALE_BITS;
+			aCoefficients[ctr + 8 * 2] = (tmp13 + z1);
+			aCoefficients[ctr + 8 * 6] = (tmp13 - z1);
 
 			tmp10 = tmp4 + tmp5;
 			tmp11 = tmp5 + tmp6;
@@ -152,10 +151,10 @@ public class FDCTIntegerFast implements FDCT
 			int z11 = tmp7 + z3;
 			int z13 = tmp7 - z3;
 
-			aCoefficients[ctr + 8 * 5] = (z13 + z2) << IFAST_SCALE_BITS;
-			aCoefficients[ctr + 8 * 3] = (z13 - z2) << IFAST_SCALE_BITS;
-			aCoefficients[ctr + 8 * 1] = (z11 + z4) << IFAST_SCALE_BITS;
-			aCoefficients[ctr + 8 * 7] = (z11 - z4) << IFAST_SCALE_BITS;
+			aCoefficients[ctr + 8 * 5] = (z13 + z2);
+			aCoefficients[ctr + 8 * 3] = (z13 - z2);
+			aCoefficients[ctr + 8 * 1] = (z11 + z4);
+			aCoefficients[ctr + 8 * 7] = (z11 - z4);
 		}
 	}
 

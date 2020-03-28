@@ -23,7 +23,7 @@ public class IDCTIntegerFast implements IDCT
 	private final static int CONST_BITS = 8;
 	private final static int PASS1_BITS = 2;
 
-	private final static int[] AANSCALES = {
+	private final static long[] AANSCALES = {
 	  16384, 22725, 21407, 19266, 16384, 12873,  8867,  4520,
 	  22725, 31521, 29692, 26722, 22725, 17855, 12299,  6270,
 	  21407, 29692, 27969, 25172, 21407, 16819, 11585,  5906,
@@ -38,11 +38,11 @@ public class IDCTIntegerFast implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] *= 256 * quantval[i] * AANSCALES[i] / 16384 / 8;
+			aCoefficients[i] = (int)(aCoefficients[i] * quantval[i] * AANSCALES[i] / 512 / 256);
 		}
 
 		transform(aCoefficients);

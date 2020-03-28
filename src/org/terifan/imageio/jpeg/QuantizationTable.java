@@ -1,41 +1,42 @@
 package org.terifan.imageio.jpeg;
 
-import java.io.PrintStream;
-
-
 
 public class QuantizationTable
 {
 	public final static int PRECISION_8_BITS = 1;
 	public final static int PRECISION_16_BITS = 2;
 
-	private double[] mTable;
+	/**
+	 * 16-bit quantization values.
+	 */
+	private int[] mTable;
 	private int mPrecision;
 	private int mIdentity;
 
 
+	/**
+	 *
+	 * @param aIdentity
+	 * @param aPrecision
+	 * @param aTable
+	 *    8 or 16 bit values depending on the precision parameter, 8 bit values will be scaled to 16 bits.
+	 */
 	public QuantizationTable(int aIdentity, int aPrecision, int... aTable)
 	{
 		mIdentity = aIdentity;
 		mPrecision = aPrecision;
-		mTable = new double[64];
+		mTable = new int[64];
+
+		boolean b = aPrecision == PRECISION_8_BITS;
 
 		for (int i = 0; i < 64; i++)
 		{
-			mTable[i] = aTable[i];
+			mTable[i] = b ? (aTable[i] << 8) + aTable[i] : aTable[i];
 		}
 	}
 
 
-	public QuantizationTable(int aIdentity, int aPrecision, double... aTable)
-	{
-		mIdentity = aIdentity;
-		mPrecision = aPrecision;
-		mTable = aTable;
-	}
-
-
-	public double[] getDivisors()
+	public int[] getDivisors()
 	{
 		return mTable;
 	}

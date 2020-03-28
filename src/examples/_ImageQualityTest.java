@@ -34,8 +34,6 @@ public class _ImageQualityTest
 				int g1 = 0xff & (c1 >>  8);
 				int b1 = 0xff & (c1      );
 
-				if (r0==0&&g0==0&&b0==0)continue;
-
 				if (r0 != r1)
 				{
 					deltaR += Math.pow(r0 - r1, 2);

@@ -55,11 +55,11 @@ public class FDCTIntegerSlow implements FDCT
 	{
 		transform(aCoefficients);
 
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] /= quantval[i] * 8;
+			aCoefficients[i] = aCoefficients[i] * 8 * 4 / quantval[i];
 		}
 	}
 
@@ -99,7 +99,7 @@ public class FDCTIntegerSlow implements FDCT
 
 			z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);
 			z1 += 1 << (CONST_BITS - PASS1_BITS - 1);
-			
+
 			tmp12 = MULTIPLY(tmp12, -FIX_0_390180644);
 			tmp13 = MULTIPLY(tmp13, -FIX_1_961570560);
 			tmp12 += z1;
@@ -145,13 +145,13 @@ public class FDCTIntegerSlow implements FDCT
 
 			int z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);
 			z1 += 1 << (CONST_BITS + PASS1_BITS - 1);
-			
+
 			aCoefficients[8 * 2 + ctr] = RIGHT_SHIFT(z1 + MULTIPLY(tmp12, FIX_0_765366865), CONST_BITS + PASS1_BITS);
 			aCoefficients[8 * 6 + ctr] = RIGHT_SHIFT(z1 - MULTIPLY(tmp13, FIX_1_847759065), CONST_BITS + PASS1_BITS);
-			
+
 			tmp12 = tmp0 + tmp2;
 			tmp13 = tmp1 + tmp3;
-			
+
 			z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);
 			z1 += 1 << (CONST_BITS+PASS1_BITS-1);
 

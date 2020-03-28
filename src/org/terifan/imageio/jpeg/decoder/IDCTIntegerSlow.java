@@ -8,8 +8,6 @@ import org.terifan.imageio.jpeg.QuantizationTable;
  */
 public class IDCTIntegerSlow implements IDCT
 {
-	private final static int MAXJSAMPLE = 255;
-	private final static int RANGE_CENTER = MAXJSAMPLE * 2 + 2;
 	private final static int CONST_BITS = 13;
 	private final static int PASS1_BITS = 2;
 	private final static int FIX_0_298631336 = 2446;
@@ -29,11 +27,11 @@ public class IDCTIntegerSlow implements IDCT
 	@Override
 	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] *= quantval[i];
+			aCoefficients[i] = aCoefficients[i] * quantval[i] / 256;
 		}
 
 		transform(aCoefficients);
@@ -207,11 +205,5 @@ public class IDCTIntegerSlow implements IDCT
 	private static int RIGHT_SHIFT(int v, int q)
 	{
 		return v >> q;
-	}
-
-
-	private static int DESCALE(int x, int n)
-	{
-		return (x + (1 << (n - 1))) >> n;
 	}
 }

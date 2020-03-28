@@ -8,6 +8,9 @@ import org.terifan.imageio.jpeg.SubsamplingMode;
 import org.terifan.imageio.jpeg.encoder.ProgressionScript;
 import examples.res.R;
 import org.terifan.imageio.jpeg.CompressionType;
+import org.terifan.imageio.jpeg.encoder.FDCTFloat;
+import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
+import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 
 
 public class SaveJPEGDemo
@@ -27,6 +30,7 @@ public class SaveJPEGDemo
 				.setQuality(95)
 				.setProgressionScript(ProgressionScript.DC_THEN_AC)
 				.setSubsampling(SubsamplingMode._444)
+				.setFDCT(FDCTIntegerSlow.class)
 				.setLog(System.out)
 				.write(myImage, output);
 
