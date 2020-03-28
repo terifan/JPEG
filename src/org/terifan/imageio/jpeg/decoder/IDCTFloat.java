@@ -37,7 +37,7 @@ public class IDCTFloat implements IDCT
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				workspace[i] = aCoefficients[i] * quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 256 / 8;
+				workspace[i] = aCoefficients[i] * quantval[i] / 256 * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] / 8;
 			}
 		}
 

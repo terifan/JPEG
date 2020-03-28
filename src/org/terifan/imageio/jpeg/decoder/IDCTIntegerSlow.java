@@ -31,7 +31,7 @@ public class IDCTIntegerSlow implements IDCT
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] = aCoefficients[i] * quantval[i] / 256;
+			aCoefficients[i] = DESCALE(aCoefficients[i] * quantval[i], 8);
 		}
 
 		transform(aCoefficients);
@@ -122,7 +122,7 @@ public class IDCTIntegerSlow implements IDCT
 
 			if (workspace[1 + ctr] == 0 && workspace[2 + ctr] == 0 && workspace[3 + ctr] == 0 && workspace[4 + ctr] == 0 && workspace[5 + ctr] == 0 && workspace[6 + ctr] == 0 && workspace[7 + ctr] == 0)
 			{
-				int dcval = clamp(z2, PASS1_BITS + 3);
+				int dcval = CLAMP(z2, PASS1_BITS + 3);
 
 				aCoefficients[0 + ctr] = dcval;
 				aCoefficients[1 + ctr] = dcval;
@@ -178,19 +178,19 @@ public class IDCTIntegerSlow implements IDCT
 			tmp1 += z1 + z3;
 			tmp2 += z1 + z2;
 
-			aCoefficients[0 + ctr] = clamp(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[7 + ctr] = clamp(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[1 + ctr] = clamp(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[6 + ctr] = clamp(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[2 + ctr] = clamp(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[5 + ctr] = clamp(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[3 + ctr] = clamp(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3);
-			aCoefficients[4 + ctr] = clamp(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[0 + ctr] = CLAMP(tmp10 + tmp3, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[7 + ctr] = CLAMP(tmp10 - tmp3, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[1 + ctr] = CLAMP(tmp11 + tmp2, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[6 + ctr] = CLAMP(tmp11 - tmp2, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[2 + ctr] = CLAMP(tmp12 + tmp1, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[5 + ctr] = CLAMP(tmp12 - tmp1, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[3 + ctr] = CLAMP(tmp13 + tmp0, CONST_BITS + PASS1_BITS + 3);
+			aCoefficients[4 + ctr] = CLAMP(tmp13 - tmp0, CONST_BITS + PASS1_BITS + 3);
 		}
 	}
 
 
-	private static int clamp(int x, int q)
+	private static int CLAMP(int x, int q)
 	{
 		return x >> q;
 	}
@@ -205,5 +205,11 @@ public class IDCTIntegerSlow implements IDCT
 	private static int RIGHT_SHIFT(int v, int q)
 	{
 		return v >> q;
+	}
+
+
+	private static int DESCALE(int x, int n)
+	{
+		return (x + (1 << (n - 1))) >> n;
 	}
 }

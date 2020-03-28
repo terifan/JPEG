@@ -31,7 +31,7 @@ public class QuantizationTable
 
 		for (int i = 0; i < 64; i++)
 		{
-			mTable[i] = b ? (aTable[i] << 8) + aTable[i] : aTable[i];
+			mTable[i] = b ? aTable[i] << 8 : aTable[i];
 		}
 	}
 

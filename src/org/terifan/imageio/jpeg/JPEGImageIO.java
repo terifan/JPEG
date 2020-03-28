@@ -19,6 +19,7 @@ import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 import org.terifan.imageio.jpeg.encoder.FDCT;
+import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import org.terifan.imageio.jpeg.encoder.JPEGImageWriterImpl;
 import org.terifan.imageio.jpeg.encoder.ProgressionScript;
@@ -59,7 +60,7 @@ public class JPEGImageIO
 	{
 		mQuality = 90;
 		mIDCT = IDCTIntegerSlow.class;
-		mFDCT = FDCTIntegerSlow.class;
+		mFDCT = FDCTFloat.class;
 		mSubsampling = SubsamplingMode._422;
 		mCompressionType = CompressionType.Huffman;
 		mProgressionScript = ProgressionScript.DEFAULT;
