@@ -25,7 +25,7 @@ public class TestTranscodeBatch
 
 			String out = "D:\\dev";
 
-			for (File dir : new File("C:\\Pictures").listFiles(e->e.isDirectory()))
+			for (File dir : new File("d:\\").listFiles(e->e.isDirectory()))
 			{
 				for (File file : dir.listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
 //				for (File file : new File("D:\\Pictures\\Wallpapers High Quality").listFiles(e->e.getName().toLowerCase().endsWith(".jpg")))
