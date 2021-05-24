@@ -14,10 +14,11 @@ public class TranscodeJPEGDemo
 		try
 		{
 			URL input = R.class.getResource("Swallowtail.jpg");
+//			File input = new File("d:\\desktop\\ad6e9852-9c3e-43ec-832d-3b0e52abbecb.jpg");
 
 			File output = new File("d:\\Swallowtail-arithmetic.jpg");
 
-			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).transcode(input, output);
+			new JPEGImageIO().setCompressionType(CompressionType.Huffman).transcode(input, output);
 
 			_ImageWindow.show(output).setTitle("" + output.length());
 		}
