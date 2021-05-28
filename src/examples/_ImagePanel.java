@@ -32,6 +32,7 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
+		setLabel("");
 	}
 
 

@@ -1,15 +1,13 @@
 package org.terifan.imageio.jpeg.test;
 
-import examples._ImageWindow;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.File;
+import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import org.terifan.imageio.jpeg.CompressionType;
-import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.JPEGImageIO;
-import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
 
 
 public class TestTranscode2
@@ -18,30 +16,37 @@ public class TestTranscode2
 	{
 		try
 		{
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-//			JPEGConstants.VERBOSE = true;
-
-			System.out.println("=================================================================================================================================================================================");
-
-			BufferedImage imagex = new JPEGImageIO().read(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"));
-
-			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).transcode(TestTranscode2.class.getResource("Swallowtail-ari-prog.jpg"), baos);
-//			new Transcode().setArithmetic(true).setProgressive(true).setOptimizedHuffman(true).transcode(new FileInputStream("d:\\ari-test.jpg"), baos);
-
-			System.out.println(baos.size());
-
-			System.out.println("=================================================================================================================================================================================");
-
-			try (FileOutputStream fos = new FileOutputStream("d:\\test.jpg"))
+			Stream.of(new File("D:\\Pictures\\Wallpapers Fantasy").listFiles(e->e.getName().matches("(i?).*jpg"))).parallel().forEach(file->
 			{
-				fos.write(baos.toByteArray());
-			}
+				try
+				{
+					ByteArrayOutputStream ariImage = new ByteArrayOutputStream();
 
-//			BufferedImage image = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
-			BufferedImage image = new JPEGImageIO().read(new ByteArrayInputStream(baos.toByteArray()));
+					new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).transcode(file, ariImage);
 
-			_ImageWindow.show(image);
+					ByteArrayOutputStream hufImage = new ByteArrayOutputStream();
+
+					new JPEGImageIO().setCompressionType(CompressionType.Huffman).transcode(ariImage.toByteArray(), hufImage);
+
+					BufferedImage image1 = ImageIO.read(new ByteArrayInputStream(hufImage.toByteArray()));
+					BufferedImage image2 = ImageIO.read(file);
+
+					double err = MeasureErrorRate.measureError(image1, image2);
+
+					if (err == 0)
+					{
+						System.out.print("OK ");
+					}
+					else
+					{
+						System.out.print("\n[" + err + "] " + file + " ");
+					}
+				}
+				catch (Throwable e)
+				{
+					System.out.println(file + " ");
+				}
+			});
 		}
 		catch (Throwable e)
 		{

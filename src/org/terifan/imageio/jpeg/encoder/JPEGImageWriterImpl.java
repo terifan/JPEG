@@ -1,6 +1,8 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Random;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -56,6 +58,24 @@ public class JPEGImageWriterImpl
 			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
 
 			int[][][][] coefficients = aJPEG.mCoefficients;
+
+
+//			for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
+//			{
+//				for (int mcuX = 0; mcuX < num_hor_mcu; mcuX++)
+//				{
+//					for (int block = 0; block < coefficients[mcuY][mcuX].length; block++)
+//					{
+//						for (int sample = 1; sample < 64; sample++)
+//						{
+//							coefficients[mcuY][mcuX][block][sample] &= ~1;
+//							coefficients[mcuY][mcuX][block][sample] |= new Random().nextInt(2);
+//						}
+//					}
+//				}
+//			}
+
+
 			int width = aJPEG.mSOFSegment.getWidth();
 			int height = aJPEG.mSOFSegment.getHeight();
 			int maxSamplingX = aJPEG.mSOFSegment.getMaxHorSampling();
