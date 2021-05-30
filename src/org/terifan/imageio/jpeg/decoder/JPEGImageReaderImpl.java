@@ -145,7 +145,14 @@ public class JPEGImageReaderImpl
 					aInput.setHandleMarkers(true);
 					readCoefficients(aJPEG, aImage, aIDCT, decoder, aDecodeCoefficients);
 					aInput.setHandleMarkers(false);
+
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
+
+					if (progressionLevel == 1)
+					{
+						return;
+					}
+
 					progressionLevel++;
 
 					mExecutorService.shutdown();

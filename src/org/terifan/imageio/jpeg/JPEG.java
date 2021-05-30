@@ -77,6 +77,16 @@ public class JPEG
 
 	public ColorSpace getColorSpace()
 	{
+		if (mColorSpace == null)
+		{
+			mColorSpace = guessColorSpace();
+		}
+		return mColorSpace;
+	}
+
+
+	public ColorSpace guessColorSpace()
+	{
 		if (mColorSpaceTransform != null)
 		{
 			switch (mColorSpaceTransform.getTransform())

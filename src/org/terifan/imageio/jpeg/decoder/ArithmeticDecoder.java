@@ -155,7 +155,11 @@ public class ArithmeticDecoder extends Decoder
 			 */
 			for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 			{
-				int cindex = aJPEG.mComponentInfo[ci].getComponentId() - 1;
+
+
+				int cindex = aJPEG.mComponentInfo[ci].getComponentId();
+
+
 				if (aJPEG.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");

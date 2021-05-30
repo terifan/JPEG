@@ -84,7 +84,7 @@ public class SOSSegment extends Segment
 
 		for (int i = 0; i < mJPEG.mScanBlockCount; i++)
 		{
-			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 0*1].name());
+			aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentIds[i]).name());
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
 		}
 

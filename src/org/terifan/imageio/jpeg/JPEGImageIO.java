@@ -34,6 +34,8 @@ public class JPEGImageIO
 		{
 			case "grayscale":
 				return new ColorSpaceRGBGrayscale();
+			case "bg_ycc":
+				return new ColorSpaceRGBBGYCCFloat();
 			case "ycbcr":
 				return new ColorSpaceRGBYCbCrTab();
 //				return new ColorSpaceRGBYCbCrFloat();
@@ -217,14 +219,14 @@ public class JPEGImageIO
 			case BufferedImage.TYPE_USHORT_GRAY:
 				return new ComponentInfo[]
 				{
-					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1])
+					new ComponentInfo(0, 1, 0, samplingFactors[0][0], samplingFactors[0][1])
 				};
 			default:
 				return new ComponentInfo[]
 				{
-					new ComponentInfo(ComponentInfo.Type.Y.ordinal(), 1, 0, samplingFactors[0][0], samplingFactors[0][1]),
-					new ComponentInfo(ComponentInfo.Type.CB.ordinal(), 2, 1, samplingFactors[1][0], samplingFactors[1][1]),
-					new ComponentInfo(ComponentInfo.Type.CR.ordinal(), 3, 1, samplingFactors[2][0], samplingFactors[2][1])
+					new ComponentInfo(0, 1, 0, samplingFactors[0][0], samplingFactors[0][1]),
+					new ComponentInfo(1, 2, 1, samplingFactors[1][0], samplingFactors[1][1]),
+					new ComponentInfo(2, 3, 1, samplingFactors[2][0], samplingFactors[2][1])
 				};
 		}
 	}
