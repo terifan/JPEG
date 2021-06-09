@@ -148,10 +148,10 @@ public class JPEGImageReaderImpl
 
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
 
-					if (progressionLevel == 1)
-					{
-						return;
-					}
+//					if (progressionLevel == 2)
+//					{
+//						return;
+//					}
 
 					progressionLevel++;
 
@@ -194,12 +194,107 @@ public class JPEGImageReaderImpl
 		int mcuWidth = 8 * maxSamplingX;
 		int mcuHeight = 8 * maxSamplingY;
 
+//		System.out.println(maxSamplingX+" "+maxSamplingY+" "+numHorMCU+" "+numVerMCU+" "+mcuWidth+" "+mcuHeight+" "+aJPEG.mCoefficients.length+" "+aJPEG.mSOFSegment.getSubsamplingMode());
+
 		aDecoder.startPass(aJPEG);
 
 		int[][] mcu = new int[aJPEG.mBlockCount][64];
 
 		if (aJPEG.mScanBlockCount == 1)
 		{
+//			ComponentInfo comp = aJPEG.mComponentInfo[0];
+//
+//			System.out.println(comp);
+//
+//			try
+//			{
+//				int mcuY = 0;
+//				int mcuX = 0;
+//
+//				while (mcuY < mcuHeight)
+//				{
+//					aDecoder.decodeMCU(aJPEG, mcu);
+//
+//					System.arraycopy(mcu[0], 0, aJPEG.mCoefficients[mcuY][mcuX][0], 0, 64);
+//					System.arraycopy(mcu[1], 0, aJPEG.mCoefficients[mcuY][mcuX][1], 0, 64);
+//
+//					mcuX++;
+//					if (mcuX >= mcuWidth)
+//					{
+//						mcuX = 0;
+//						mcuY++;
+//					}
+//
+//					System.arraycopy(mcu[2], 0, aJPEG.mCoefficients[mcuY][mcuX][0], 0, 64);
+//					System.arraycopy(mcu[3], 0, aJPEG.mCoefficients[mcuY][mcuX][1], 0, 64);
+//
+//					mcuX++;
+//					if (mcuX >= mcuWidth)
+//					{
+//						mcuX = 0;
+//						mcuY++;
+//					}
+
+//					System.arraycopy(mcu[4], 0, aJPEG.mCoefficients[mcuY][mcuX][0], 0, 64);
+//					System.arraycopy(mcu[5], 0, aJPEG.mCoefficients[mcuY][mcuX][1], 0, 64);
+//
+//					mcuX++;
+//					if (mcuX >= mcuWidth)
+//					{
+//						mcuX = 0;
+//						mcuY++;
+//					}
+
+
+//					for (int blockIndex = 0; blockIndex < comp.getHorSampleFactor() * comp.getVerSampleFactor(); )
+//					{
+//						System.arraycopy(mcu[blockIndex], 0, aJPEG.mCoefficients[mcuY][mcuX][blockIndex], 0, 64);
+//
+//						mcuX++;
+//						if (mcuX == mcuWidth)
+//						{
+//							mcuX = 0;
+//							mcuY++;
+//						}
+//					}
+//				}
+
+//				for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+//				{
+//					if (mcuY * mcuHeight + blockY * 8 < aJPEG.mSOFSegment.getHeight())
+//					{
+//						for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
+//						{
+//							aDecoder.decodeMCU(aJPEG, mcu);
+//
+//							System.arraycopy(mcu[0], 0, aJPEG.mCoefficients[mcuY][mcuX][0], 0, 64);
+//
+//							for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
+//							{
+//								for (int blockX = 0, blockIndex = 0; blockX < comp.getHorSampleFactor(); blockX++)
+//								{
+//									if (mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
+//									{
+////										aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX] = mcu[blockIndex];
+//
+//										System.arraycopy(mcu[blockIndex], 0, aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX], 0, 64);
+//
+//										blockIndex++;
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+//			finally
+//			{
+//				for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
+//				{
+//					update(aJPEG, aIDCT, mcuY, aJPEG.mCoefficients[mcuY], aImage);
+//				}
+//			}
+
 			ComponentInfo comp = aJPEG.mComponentInfo[0];
 
 			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
@@ -212,6 +307,8 @@ public class JPEGImageReaderImpl
 						{
 							for (int blockX = 0; blockX < comp.getHorSampleFactor(); blockX++)
 							{
+//								System.out.println(mcuY+"/"+numVerMCU+" "+mcuX+"/"+numHorMCU+" "+blockY+"/"+comp.getVerSampleFactor()+" "+blockX+"/"+comp.getHorSampleFactor());
+
 								if (mcuX < numHorMCU - 1 || mcuX * mcuWidth + blockX * 8 < aJPEG.mSOFSegment.getWidth())
 								{
 									mcu[0] = aJPEG.mCoefficients[mcuY][mcuX][comp.getComponentBlockOffset() + comp.getHorSampleFactor() * blockY + blockX];
@@ -257,7 +354,14 @@ public class JPEGImageReaderImpl
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
+					try
+					{
 					aDecoder.decodeMCU(aJPEG, mcu);
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace(System.out);
+					}
 
 					for (int ci = 0, blockIndex = 0; ci < aJPEG.mScanBlockCount; ci++)
 					{

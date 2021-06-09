@@ -83,7 +83,14 @@ public class JPEGImageIO
 			JPEGImage image = new JPEGImage();
 			image.setRenderListener(mRenderListener);
 
-			reader.decode(in, jpeg, mLog, idct, image, false);
+			try
+			{
+				reader.decode(in, jpeg, mLog, idct, image, false);
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace(System.out);
+			}
 
 			ColorICCTransform.transform(jpeg, image);
 

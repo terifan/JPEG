@@ -110,7 +110,6 @@ public class ArithmeticDecoder extends Decoder
 	void startPass(JPEG aJPEG)
 	{
 		JPEGEntropyState entropy = aJPEG_entropy;
-		int ci, tbl;
 		ComponentInfo compptr;
 
 		if (mProgressive)
@@ -153,13 +152,9 @@ public class ArithmeticDecoder extends Decoder
 			 * Note that inter-scan inconsistencies are treated as warnings
 			 * not fatal errors ... not clear if this is right way to behave.
 			 */
-			for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+			for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 			{
-
-
-				int cindex = aJPEG.mComponentInfo[ci].getComponentId();
-
-
+				int cindex = aJPEG.mComponentInfo[ci].getComponentIndex();
 				if (aJPEG.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
@@ -212,12 +207,12 @@ public class ArithmeticDecoder extends Decoder
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
 			if (!mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
 			{
-				tbl = compptr.getTableDC();
+				int tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
 					ERREXIT(aJPEG, JERR_NO_ARITH_TABLE, tbl);
@@ -229,7 +224,7 @@ public class ArithmeticDecoder extends Decoder
 			}
 			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.Ss != 0))
 			{
-				tbl = compptr.getTableAC();
+				int tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
 				{
 					ERREXIT(aJPEG, JERR_NO_ARITH_TABLE, tbl);
@@ -247,6 +242,12 @@ public class ArithmeticDecoder extends Decoder
 
 		/* Initialize restart counter */
 		entropy.restarts_to_go = aJPEG.mRestartInterval;
+
+		// ????????
+//		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+//		{
+//			aJPEG_entropy.last_dc_val[ci] = 0;
+//		}
 	}
 
 

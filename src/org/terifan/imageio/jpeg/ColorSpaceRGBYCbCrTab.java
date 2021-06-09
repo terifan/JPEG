@@ -68,6 +68,8 @@ public class ColorSpaceRGBYCbCrTab implements ColorSpace
 	@Override
 	public int decode(int aY, int aCb, int aCr)
 	{
+		try
+		{
 		int y = aY;
 		int cb = aCb;
 		int cr = aCr;
@@ -79,6 +81,11 @@ public class ColorSpaceRGBYCbCrTab implements ColorSpace
 		int b = clamp(y + CB_B_TAB[cb]);
 
 		return (r << 16) + (g << 8) + b;
+		}
+		catch (Exception e)
+		{
+		return 0;
+		}
 	}
 
 

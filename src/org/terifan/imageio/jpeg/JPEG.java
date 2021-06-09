@@ -43,6 +43,8 @@ public class JPEG
 	public int mRestartMarkerIndex;
 	public int mBlockCount;
 
+	int mAdjustComponentId;
+
 
 	public JPEG()
 	{

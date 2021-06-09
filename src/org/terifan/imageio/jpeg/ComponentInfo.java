@@ -84,6 +84,12 @@ public class ComponentInfo
 	}
 
 
+	public void setComponentId(int aComponentId)
+	{
+		mComponentId = aComponentId;
+	}
+
+
 	public int getQuantizationTableId()
 	{
 		return mQuantizationTableId;

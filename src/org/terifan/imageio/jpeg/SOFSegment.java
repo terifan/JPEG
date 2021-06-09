@@ -61,6 +61,16 @@ public class SOFSegment extends Segment
 			mComponents[i] = new ComponentInfo().decode(aBitStream, i);
 		}
 
+		if (mComponents.length == 3 && mComponents[0].getComponentId() == 0 && mComponents[1].getComponentId() == 1 && mComponents[2].getComponentId() == 2)
+		{
+			mJPEG.mAdjustComponentId = 1;
+
+			for (int i = 0; i < mComponents.length; i++)
+			{
+				mComponents[i].setComponentId(mComponents[i].getComponentId() + 1);
+			}
+		}
+
 		updateLookupTable();
 
 		return this;

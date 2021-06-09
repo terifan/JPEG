@@ -24,12 +24,14 @@ public class TestTranscode2
 	{
 		try
 		{
-			File file = new File("D:/dev/[broken]/autumn-landscape-wallpaper-1920x1080-1008099.jpg");
-//			File file = new File("D:/Pictures/3gupyxzeq0v21.jpg");
+			//File file = new File("D:/dev/[broken]/jbw2-06066.jpg"); // cmyk
+
+			File file = new File("D:/dev/[broken]/71b7e2c0229e0122a6d98be8ecb6fd9b.jpg");
+//			File file = new File("D:/Pictures/51SrjCN.jpg");
 
 			BufferedImage myImage = new JPEGImageIO().setLog(System.out).read(file);
 			_ImageWindow.show(myImage);
-
+//
 //			processFile(file);
 
 //			process("D:\\dev\\[broken]");
@@ -76,7 +78,7 @@ public class TestTranscode2
 		ByteArrayOutputStream ariImage = new ByteArrayOutputStream();
 
 		new JPEGImageIO()
-			.setLog(System.out)
+//			.setLog(System.out)
 			.setCompressionType(CompressionType.ArithmeticProgressive).transcode(aFile, ariImage);
 
 		ByteArrayOutputStream hufImage = new ByteArrayOutputStream();
