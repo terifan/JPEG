@@ -38,7 +38,7 @@ public class SOSSegment extends Segment
 
 		for (int i = 0; i < mJPEG.mScanBlockCount; i++)
 		{
-			mComponentIds[i] = aBitStream.readInt8();
+			mComponentIds[i] = aBitStream.readInt8() + 0*mJPEG.mAdjustComponentId;
 			mTableDC[i] = aBitStream.readBits(4);
 			mTableAC[i] = aBitStream.readBits(4);
 		}
@@ -84,7 +84,7 @@ public class SOSSegment extends Segment
 
 		for (int i = 0; i < mJPEG.mScanBlockCount; i++)
 		{
-			aLog.println("  component %s", ComponentInfo.Type.values()[mComponentIds[i] - 0*1].name());
+			aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentIds[i]).name());
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
 		}
 
@@ -92,7 +92,7 @@ public class SOSSegment extends Segment
 	}
 
 
-	public int getComponentByIndex(int aIndex)
+	public int getComponentIdByIndex(int aIndex)
 	{
 		return mComponentIds[aIndex];
 	}
@@ -137,7 +137,7 @@ public class SOSSegment extends Segment
 		mJPEG.mMCUBlockCount = 0;
 		for (int scanComponentIndex = 0; scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
 		{
-			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
+			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
 			mJPEG.mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
@@ -146,7 +146,8 @@ public class SOSSegment extends Segment
 
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
 		{
-			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentByIndex(scanComponentIndex));
+			ComponentInfo comp = mJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
+
 			comp.setTableAC(getACTable(scanComponentIndex));
 			comp.setTableDC(getDCTable(scanComponentIndex));
 

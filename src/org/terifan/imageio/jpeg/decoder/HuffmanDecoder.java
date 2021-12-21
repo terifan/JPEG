@@ -37,6 +37,11 @@ public class HuffmanDecoder extends Decoder
 	{
 		aJPEG_entropy.restarts_to_go = aJPEG.mRestartInterval;
 
+		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		{
+			aJPEG_entropy.last_dc_val[ci] = 0;
+		}
+
 		mBitStream.align();
 		mEOBRun = 0;
 	}

@@ -9,7 +9,13 @@ public class ComponentInfo
 {
 	public enum Type
 	{
-		Y, CB, CR, I, Q
+		Y, CB, CR, I, Q;
+
+
+		static Type fromComponentId(int aComponentId)
+		{
+			return values()[aComponentId - 1];
+		}
 	}
 
 	private int mComponentIndex; // identifier for this component (0..255)
@@ -61,7 +67,7 @@ public class ComponentInfo
 
 	public void print(Log aLog)
 	{
-		aLog.println("  component %s", ComponentInfo.Type.values()[mComponentId]);
+		aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentId));
 		aLog.println("    id=%d, dc-table=%d, ac-table=%d, quantizationTableId=%d, sample-factor=%dx%d", mComponentIndex, mTableDC, mTableAC, mQuantizationTableId, mHorSampleFactor, mVerSampleFactor);
 	}
 
@@ -75,6 +81,12 @@ public class ComponentInfo
 	public int getComponentId()
 	{
 		return mComponentId;
+	}
+
+
+	public void setComponentId(int aComponentId)
+	{
+		mComponentId = aComponentId;
 	}
 
 

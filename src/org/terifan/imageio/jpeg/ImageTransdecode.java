@@ -67,9 +67,13 @@ public class ImageTransdecode
 //		{
 //			upsample411(aInput, c0, c1, c2, output, colorSpace);
 //		}
+		else if (h0 == 1 && v0 == 1 && h1 == 0 && v1 == 0 && h2 == 0 && v2 == 0) // 1:0:0 (grayscale)
+		{
+			upsample444(aInput, c0, c1, c2, output, colorSpace);
+		}
 		else
 		{
-			throw new IllegalStateException("Unsupported subsampling");
+			throw new IllegalStateException("Unsupported subsampling: h0=" + h0 + ", v0=" + v0 + ", h1=" + h1 + ", v1=" + v1 + ", h2=" + h2 + ", v2=" + v2);
 		}
 	}
 

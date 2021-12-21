@@ -68,7 +68,7 @@ public class HuffmanTable
 	{
 		int temp = aInput.read();
 		mIndex = temp & 0x07;
-		mType = (temp & 16) == 0 ? TYPE_DC : TYPE_AC;
+		mType = (temp & 0x10) == 0 ? TYPE_DC : TYPE_AC;
 
 		int[] counts = new int[17];
 

@@ -30,7 +30,7 @@ public class DQTSegment extends Segment
 
 			mJPEG.mQuantizationTables[table.getIdentity()] = table;
 
-			length -= 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 128);
+			length -= 1 + (table.getPrecision() == PRECISION_8_BITS ? 1 * 64 : 2 * 64);
 
 			if (length < 0)
 			{
@@ -53,24 +53,26 @@ public class DQTSegment extends Segment
 				continue;
 			}
 
-			int len = 2 + 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 128);
+			int len = 2 + 1 + (table.getPrecision() == PRECISION_8_BITS ? 1 * 64 : 2 * 64);
 
 			aBitStream.writeInt16(SegmentMarker.DQT.CODE);
 			aBitStream.writeInt16(len);
 			aBitStream.writeInt8(((table.getPrecision() == PRECISION_8_BITS ? 0 : 1) << 3) | table.getIdentity());
 
-			double[] data = table.getDivisors();
+			int[] data = table.getDivisors();
 
 			for (int i = 0; i < 64; i++)
 			{
-				double v = data[NATURAL_ORDER[i]];
+				int v = data[NATURAL_ORDER[i]];
 
-				if (table.getPrecision() == PRECISION_16_BITS)
+				if (table.getPrecision() == PRECISION_8_BITS)
 				{
-					v *= 256.0;
+					aBitStream.writeInt8(v >> 8);
 				}
-
-				aBitStream.write((int)v);
+				else
+				{
+					aBitStream.writeInt16(v);
+				}
 			}
 		}
 
@@ -84,7 +86,7 @@ public class DQTSegment extends Segment
 		int identity = temp & 0x07;
 		int precision = (temp >> 3) == 0 ? PRECISION_8_BITS : PRECISION_16_BITS;
 
-		double[] data = new double[64];
+		int[] data = new int[64];
 
 		for (int i = 0; i < 64; i++)
 		{
@@ -94,7 +96,7 @@ public class DQTSegment extends Segment
 			}
 			else
 			{
-				data[NATURAL_ORDER[i]] = aBitStream.readInt16() / 256.0;
+				data[NATURAL_ORDER[i]] = aBitStream.readInt16();
 			}
 		}
 
