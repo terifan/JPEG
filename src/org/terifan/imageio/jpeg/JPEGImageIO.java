@@ -67,6 +67,16 @@ public class JPEGImageIO
 	}
 
 
+	/**
+	 * Reads JPEG content returning an image.
+	 *
+	 * @param aInput input for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>byte[] - image content</li>
+	 *   <li>URL - pointing to a file</li>
+	 *   <li>InputStream - of image content</li>
+	 */
 	public BufferedImage read(Object aInput) throws JPEGImageIOException
 	{
 		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
@@ -93,6 +103,14 @@ public class JPEGImageIO
 	}
 
 
+	/**
+	 * Saves an image as a JPEG file
+	 *
+	 * @param aOutput output for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>OutputStream - of image content</li>
+	 */
 	public void write(BufferedImage aInput, Object aOutput) throws JPEGImageIOException
 	{
 		FDCT fdct = createFDCTInstance();
@@ -110,6 +128,20 @@ public class JPEGImageIO
 	}
 
 
+	/**
+	 * Lossless transcoding of an JPEG image from one format to another.
+	 *
+	 * @param aInput input for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>byte[] - image content</li>
+	 *   <li>URL - pointing to a file</li>
+	 *   <li>InputStream - of image content</li>
+	 * @param aOutput output for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>OutputStream - of image content</li>
+	 */
 	public void transcode(Object aInput, Object aOutput) throws JPEGImageIOException
 	{
 		JPEG jpeg = decode(aInput);
@@ -126,6 +158,16 @@ public class JPEGImageIO
 	}
 
 
+	/**
+	 * Reads JPEG content returning an JPEG object containing the internal representation of the image such as coefficients.
+	 *
+	 * @param aInput input for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>byte[] - image content</li>
+	 *   <li>URL - pointing to a file</li>
+	 *   <li>InputStream - of image content</li>
+	 */
 	public JPEG decode(Object aInput) throws JPEGImageIOException
 	{
 		JPEG jpeg = new JPEG();
@@ -144,6 +186,14 @@ public class JPEGImageIO
 	}
 
 
+	/**
+	 * Encodes an internal representation of an JPEG to a file
+	 *
+	 * @param aOutput output for a JPEG file, supports:
+	 *   <li>String - with the path to a file</li>
+	 *   <li>File - object</li>
+	 *   <li>OutputStream - of image content</li>
+	 */
 	public void encode(JPEG aJpeg, Object aOutput) throws JPEGImageIOException
 	{
 		try (final BitOutputStream out = new BitOutputStream(toOutputStream(aOutput)))
