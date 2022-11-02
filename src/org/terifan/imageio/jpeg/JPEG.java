@@ -43,6 +43,8 @@ public class JPEG
 	public int mRestartMarkerIndex;
 	public int mBlockCount;
 
+	int mAdjustComponentId;
+
 
 	public JPEG()
 	{
@@ -76,6 +78,16 @@ public class JPEG
 
 
 	public ColorSpace getColorSpace()
+	{
+		if (mColorSpace == null)
+		{
+			mColorSpace = guessColorSpace();
+		}
+		return mColorSpace;
+	}
+
+
+	public ColorSpace guessColorSpace()
 	{
 		if (mColorSpaceTransform != null)
 		{

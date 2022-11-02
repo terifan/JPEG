@@ -57,11 +57,11 @@ public class SanityCheck
 
 	private static void run(BufferedImage aSrc, JFrame aFrame) throws JPEGImageIOException, IOException
 	{
-		ByteArrayOutputStream output1 = new ByteArrayOutputStream();
-		ByteArrayOutputStream output2 = new ByteArrayOutputStream();
-		ByteArrayOutputStream output3 = new ByteArrayOutputStream();
-		ByteArrayOutputStream output4 = new ByteArrayOutputStream();
-		ByteArrayOutputStream output5 = new ByteArrayOutputStream();
+		ByteArrayOutputStream output411 = new ByteArrayOutputStream();
+		ByteArrayOutputStream output420 = new ByteArrayOutputStream();
+		ByteArrayOutputStream output440 = new ByteArrayOutputStream();
+		ByteArrayOutputStream output422 = new ByteArrayOutputStream();
+		ByteArrayOutputStream output444 = new ByteArrayOutputStream();
 
 		BufferedImage javaImage411 = getJavaDecodedImage(aSrc, SubsamplingMode._411);
 		BufferedImage javaImage420 = getJavaDecodedImage(aSrc, SubsamplingMode._420);
@@ -69,23 +69,23 @@ public class SanityCheck
 		BufferedImage javaImage422 = getJavaDecodedImage(aSrc, SubsamplingMode._422);
 		BufferedImage javaImage444 = getJavaDecodedImage(aSrc, SubsamplingMode._444);
 
-		new JPEGImageIO().setCompressionType(CompressionType.Huffman).setQuality(100).setSubsampling(SubsamplingMode._411).write(aSrc, output1);
-		new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).setQuality(100).setSubsampling(SubsamplingMode._420).write(aSrc, output2);
-		new JPEGImageIO().setCompressionType(CompressionType.Arithmetic).setQuality(100).setSubsampling(SubsamplingMode._440).write(aSrc, output3);
-		new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).setQuality(100).setSubsampling(SubsamplingMode._422).write(aSrc, output4);
-		new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).setQuality(100).setSubsampling(SubsamplingMode._444).write(aSrc, output5);
+		new JPEGImageIO().setCompressionType(CompressionType.Huffman).setQuality(100).setSubsampling(SubsamplingMode._411).write(aSrc, output411);
+		new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).setQuality(100).setSubsampling(SubsamplingMode._420).write(aSrc, output420);
+		new JPEGImageIO().setCompressionType(CompressionType.Arithmetic).setQuality(100).setSubsampling(SubsamplingMode._440).write(aSrc, output440);
+		new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).setQuality(100).setSubsampling(SubsamplingMode._422).write(aSrc, output422);
+		new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).setQuality(100).setSubsampling(SubsamplingMode._444).write(aSrc, output444);
 
-		BufferedImage image1 = new JPEGImageIO().read(new ByteArrayInputStream(output1.toByteArray()));
-		BufferedImage image2 = new JPEGImageIO().read(new ByteArrayInputStream(output2.toByteArray()));
-		BufferedImage image3 = new JPEGImageIO().read(new ByteArrayInputStream(output3.toByteArray()));
-		BufferedImage image4 = new JPEGImageIO().read(new ByteArrayInputStream(output4.toByteArray()));
-		BufferedImage image5 = new JPEGImageIO().read(new ByteArrayInputStream(output5.toByteArray()));
+		BufferedImage teriImage411 = new JPEGImageIO().read(new ByteArrayInputStream(output411.toByteArray()));
+		BufferedImage teriImage420 = new JPEGImageIO().read(new ByteArrayInputStream(output420.toByteArray()));
+		BufferedImage teriImage440 = new JPEGImageIO().read(new ByteArrayInputStream(output440.toByteArray()));
+		BufferedImage teriImage422 = new JPEGImageIO().read(new ByteArrayInputStream(output422.toByteArray()));
+		BufferedImage teriImage444 = new JPEGImageIO().read(new ByteArrayInputStream(output444.toByteArray()));
 
-		add(image1, javaImage411, aFrame, "H 4:1:1");
-		add(image2, javaImage420, aFrame, "HO 4:2:0");
-		add(image3, javaImage440, aFrame, "A 4:4:0");
-		add(image4, javaImage422, aFrame, "HP 4:2:2");
-		add(image5, javaImage444, aFrame, "AP 4:4:4");
+		add(teriImage411, javaImage411, aFrame, "H 4:1:1");
+		add(teriImage420, javaImage420, aFrame, "HO 4:2:0");
+		add(teriImage440, javaImage440, aFrame, "A 4:4:0");
+		add(teriImage422, javaImage422, aFrame, "HP 4:2:2");
+		add(teriImage444, javaImage444, aFrame, "AP 4:4:4");
 	}
 
 

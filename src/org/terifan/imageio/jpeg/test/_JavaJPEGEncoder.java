@@ -59,7 +59,7 @@ public class _JavaJPEGEncoder
 	private static void setJpegSubsamplingMode(IIOMetadata metadata, int aSamplingMode) throws IIOInvalidTreeException
 	{
 		// Tweaking the image metadata to override default subsampling(4:2:0) with 4:4:4.
-		Node rootNode = metadata.getAsTree(nativeImageMetadataFormatName);
+		Node rootNode = metadata.getAsTree("javax_imageio_jpeg_image_1.0"); // com.sun.imageio.plugins.jpeg.JPEG.nativeImageMetadataFormatName
 		boolean metadataUpdated = false;
 		// The top level root node has two children, out of which the second one will
 		// contain all the information related to image markers.
@@ -92,7 +92,7 @@ public class _JavaJPEGEncoder
 		// Read the updated metadata from the metadata node tree.
 		if (metadataUpdated)
 		{
-			metadata.setFromTree(nativeImageMetadataFormatName, rootNode);
+			metadata.setFromTree("javax_imageio_jpeg_image_1.0", rootNode); // com.sun.imageio.plugins.jpeg.JPEG.nativeImageMetadataFormatName
 		}
 	}
 }

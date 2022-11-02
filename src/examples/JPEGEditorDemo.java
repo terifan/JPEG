@@ -23,6 +23,7 @@ import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerFast;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
 import examples.res.R;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import javax.swing.JOptionPane;
 import org.terifan.imageio.jpeg.CompressionType;
@@ -79,9 +80,13 @@ public class JPEGEditorDemo
 
 		loadImage();
 
-		mViewPanel1.mQualitySlider.setValue(76);
-		mViewPanel1.mSubsamplingSelect.setSelectedIndex(2);
-		mViewPanel2.mQualitySlider.setValue(59);
+//		mViewPanel1.mQualitySlider.setValue(76);
+//		mViewPanel1.mSubsamplingSelect.setSelectedIndex(2);
+//		mViewPanel2.mQualitySlider.setValue(59);
+
+		mViewPanel1.mQualitySlider.setValue(75);
+		mViewPanel2.mQualitySlider.setValue(75);
+		mViewPanel2.mFDCTSelect.setSelectedIndex(2);
 
 		_ImagePanel[] p = {mViewPanel1.mImagePanel, mViewPanel2.mImagePanel, mFilterPanel1.mImagePanel, mFilterPanel2.mImagePanel};
 		mViewPanel1.mImagePanel.setMirrorPanels(p);
@@ -225,6 +230,7 @@ public class JPEGEditorDemo
 //				}
 //				catch (Exception e)
 //				{
+//					decoded = null;
 //					e.printStackTrace(System.out);
 //				}
 //			}

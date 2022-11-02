@@ -61,13 +61,13 @@ public class FDCTFloat implements FDCT
 
 		transform(workspace);
 
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int row = 0, i = 0; row < 8; row++)
 		{
 			for (int col = 0; col < 8; col++, i++)
 			{
-				aCoefficients[i] = (int)(workspace[i] / (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8) + 16384.5) - 16384;
+				aCoefficients[i] = (int)(workspace[i] / (quantval[i] * AANSCALEFACTORS[row] * AANSCALEFACTORS[col] * 8 / 256) + 16384.5) - 16384;
 			}
 		}
 	}

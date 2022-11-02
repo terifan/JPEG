@@ -34,15 +34,20 @@ public class IDCTIntegerFast implements IDCT
 	   4520,  6270,  5906,  5315,  4520,  3552,  2446,  1247
 	};
 
+	private final static int FIX_1_082392200 = 277; // FIX(1.082392200)
+	private final static int FIX_1_414213562 = 362;	// FIX(1.414213562)
+	private final static int FIX_1_847759065 = 473;	// FIX(1.847759065)
+	private final static int FIX_2_613125930 = 669;	// FIX(2.613125930)
+
 
 	@Override
 	public void transform(int[] aCoefficients, QuantizationTable aQuantizationTable)
 	{
-		double[] quantval = aQuantizationTable.getDivisors();
+		int[] quantval = aQuantizationTable.getDivisors();
 
 		for (int i = 0; i < 64; i++)
 		{
-			aCoefficients[i] *= 256 * quantval[i] * AANSCALES[i] / 16384 / 8;
+			aCoefficients[i] = aCoefficients[i] * quantval[i] / 256 * AANSCALES[i] / 512;
 		}
 
 		transform(aCoefficients);
@@ -61,38 +66,38 @@ public class IDCTIntegerFast implements IDCT
 				// AC terms all zero
 				int dcval = aCoefficients[ctr];
 
-				workspace[ctr] = dcval;
-				workspace[8 + ctr] = dcval;
-				workspace[16 + ctr] = dcval;
-				workspace[24 + ctr] = dcval;
-				workspace[32 + ctr] = dcval;
-				workspace[40 + ctr] = dcval;
-				workspace[48 + ctr] = dcval;
-				workspace[56 + ctr] = dcval;
+				workspace[0 * 8 + ctr] = dcval;
+				workspace[1 * 8 + ctr] = dcval;
+				workspace[2 * 8 + ctr] = dcval;
+				workspace[3 * 8 + ctr] = dcval;
+				workspace[4 * 8 + ctr] = dcval;
+				workspace[5 * 8 + ctr] = dcval;
+				workspace[6 * 8 + ctr] = dcval;
+				workspace[7 * 8 + ctr] = dcval;
 
 				continue;
 			}
 
-			int tmp0 = aCoefficients[ctr];
-			int tmp1 = aCoefficients[16 + ctr];
-			int tmp2 = aCoefficients[32 + ctr];
-			int tmp3 = aCoefficients[48 + ctr];
+			int tmp0 = aCoefficients[0 * 8 + ctr];
+			int tmp1 = aCoefficients[2 * 8 + ctr];
+			int tmp2 = aCoefficients[4 * 8 + ctr];
+			int tmp3 = aCoefficients[6 * 8 + ctr];
 
 			int tmp10 = tmp0 + tmp2;
 			int tmp11 = tmp0 - tmp2;
 
 			int tmp13 = tmp1 + tmp3;
-			int tmp12 = MULTIPLY(tmp1 - tmp3, 362) - tmp13;
+			int tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13;
 
 			tmp0 = tmp10 + tmp13;
 			tmp3 = tmp10 - tmp13;
 			tmp1 = tmp11 + tmp12;
 			tmp2 = tmp11 - tmp12;
 
-			int tmp4 = aCoefficients[8 + ctr];
-			int tmp5 = aCoefficients[24 + ctr];
-			int tmp6 = aCoefficients[40 + ctr];
-			int tmp7 = aCoefficients[56 + ctr];
+			int tmp4 = aCoefficients[1 * 8 + ctr];
+			int tmp5 = aCoefficients[3 * 8 + ctr];
+			int tmp6 = aCoefficients[5 * 8 + ctr];
+			int tmp7 = aCoefficients[7 * 8 + ctr];
 
 			int z13 = tmp6 + tmp5;
 			int z10 = tmp6 - tmp5;
@@ -100,33 +105,35 @@ public class IDCTIntegerFast implements IDCT
 			int z12 = tmp4 - tmp7;
 
 			tmp7 = z11 + z13;
-			tmp11 = MULTIPLY(z11 - z13, 362);
+			tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562);
 
-			int z5 = MULTIPLY(z10 + z12, 473);
-			tmp10 = MULTIPLY(z12, 277) - z5;
-			tmp12 = MULTIPLY(z10, -669) + z5;
+			int z5 = MULTIPLY(z10 + z12, FIX_1_847759065);
+			tmp10 = z5 - MULTIPLY(z12, FIX_1_082392200);
+			tmp12 = z5 - MULTIPLY(z10, FIX_2_613125930);
 
 			tmp6 = tmp12 - tmp7;
 			tmp5 = tmp11 - tmp6;
-			tmp4 = tmp10 + tmp5;
+			tmp4 = tmp10 - tmp5;
 
-			workspace[ctr] = tmp0 + tmp7;
-			workspace[8 + ctr] = tmp1 + tmp6;
-			workspace[16 + ctr] = tmp2 + tmp5;
-			workspace[24 + ctr] = tmp3 - tmp4;
-			workspace[32 + ctr] = tmp3 + tmp4;
-			workspace[40 + ctr] = tmp2 - tmp5;
-			workspace[48 + ctr] = tmp1 - tmp6;
-			workspace[56 + ctr] = tmp0 - tmp7;
+			workspace[0 * 8 + ctr] = tmp0 + tmp7;
+			workspace[1 * 8 + ctr] = tmp1 + tmp6;
+			workspace[2 * 8 + ctr] = tmp2 + tmp5;
+			workspace[3 * 8 + ctr] = tmp3 + tmp4;
+			workspace[4 * 8 + ctr] = tmp3 - tmp4;
+			workspace[5 * 8 + ctr] = tmp2 - tmp5;
+			workspace[6 * 8 + ctr] = tmp1 - tmp6;
+			workspace[7 * 8 + ctr] = tmp0 - tmp7;
 		}
 
 		// Pass 2: process rows from work array, store into output array.
 		for (int ctr = 0; ctr < 64; ctr += 8)
 		{
+			int z5 = workspace[ctr] + ((128 << (PASS1_BITS + 3)) + (1 << (PASS1_BITS + 2)));
+
 			if (workspace[ctr + 1] == 0 && workspace[ctr + 2] == 0 && workspace[ctr + 3] == 0 && workspace[ctr + 4] == 0 && workspace[ctr + 5] == 0 && workspace[ctr + 6] == 0 && workspace[ctr + 7] == 0)
 			{
 				// AC terms all zero
-				int dcval = clamp(workspace[ctr], PASS1_BITS + 3);
+				int dcval = CLAMP(workspace[ctr], PASS1_BITS + 3);
 
 				aCoefficients[ctr + 0] = dcval;
 				aCoefficients[ctr + 1] = dcval;
@@ -140,11 +147,11 @@ public class IDCTIntegerFast implements IDCT
 				continue;
 			}
 
-			int tmp10 = workspace[ctr] + workspace[ctr + 4];
-			int tmp11 = workspace[ctr] - workspace[ctr + 4];
+			int tmp10 = z5 + workspace[ctr + 4];
+			int tmp11 = z5 - workspace[ctr + 4];
 
 			int tmp13 = workspace[ctr + 2] + workspace[ctr + 6];
-			int tmp12 = MULTIPLY(workspace[ctr + 2] - workspace[ctr + 6], 362) - tmp13;
+			int tmp12 = MULTIPLY(workspace[ctr + 2] - workspace[ctr + 6], FIX_1_414213562) - tmp13;
 
 			int tmp0 = tmp10 + tmp13;
 			int tmp3 = tmp10 - tmp13;
@@ -157,34 +164,35 @@ public class IDCTIntegerFast implements IDCT
 			int z12 = workspace[ctr + 1] - workspace[ctr + 7];
 
 			int tmp7 = z11 + z13;
-			tmp11 = MULTIPLY(z11 - z13, 362);
+			tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562);
 
-			int z5 = MULTIPLY((z10 + z12), 473);
-			tmp10 = MULTIPLY(z12, 277) - z5;
-			tmp12 = MULTIPLY(z10, -669) + z5;
+			z5 = MULTIPLY((z10 + z12), FIX_1_847759065);
+			tmp10 = z5 - MULTIPLY(z12, FIX_1_082392200);
+			tmp12 = z5 - MULTIPLY(z10, FIX_2_613125930);
 
 			int tmp6 = tmp12 - tmp7;
 			int tmp5 = tmp11 - tmp6;
-			int tmp4 = tmp10 + tmp5;
+			int tmp4 = tmp10 - tmp5;
 
 			// Final output stage: scale down by a factor of 8
-			aCoefficients[ctr + 0] = clamp(tmp0 + tmp7, PASS1_BITS + 3);
-			aCoefficients[ctr + 1] = clamp(tmp1 + tmp6, PASS1_BITS + 3);
-			aCoefficients[ctr + 2] = clamp(tmp2 + tmp5, PASS1_BITS + 3);
-			aCoefficients[ctr + 3] = clamp(tmp3 - tmp4, PASS1_BITS + 3);
-			aCoefficients[ctr + 4] = clamp(tmp3 + tmp4, PASS1_BITS + 3);
-			aCoefficients[ctr + 5] = clamp(tmp2 - tmp5, PASS1_BITS + 3);
-			aCoefficients[ctr + 6] = clamp(tmp1 - tmp6, PASS1_BITS + 3);
-			aCoefficients[ctr + 7] = clamp(tmp0 - tmp7, PASS1_BITS + 3);
+			aCoefficients[ctr + 0] = CLAMP(tmp0 + tmp7, PASS1_BITS + 3);
+			aCoefficients[ctr + 1] = CLAMP(tmp1 + tmp6, PASS1_BITS + 3);
+			aCoefficients[ctr + 2] = CLAMP(tmp2 + tmp5, PASS1_BITS + 3);
+			aCoefficients[ctr + 3] = CLAMP(tmp3 + tmp4, PASS1_BITS + 3);
+			aCoefficients[ctr + 4] = CLAMP(tmp3 - tmp4, PASS1_BITS + 3);
+			aCoefficients[ctr + 5] = CLAMP(tmp2 - tmp5, PASS1_BITS + 3);
+			aCoefficients[ctr + 6] = CLAMP(tmp1 - tmp6, PASS1_BITS + 3);
+			aCoefficients[ctr + 7] = CLAMP(tmp0 - tmp7, PASS1_BITS + 3);
 		}
 	}
 
 
-	private static int clamp(int x, int n)
+	private static int CLAMP(int x, int n)
 	{
-		x = 128 + DESCALE(x, n + 3);
+//		x = 128 + DESCALE(x, n + 3);
+//		return x < 0 ? 0 : x > 255 ? 255 : x;
 
-		return x < 0 ? 0 : x > 255 ? 255 : x;
+		return x >> (n + 3);
 	}
 
 

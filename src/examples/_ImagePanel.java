@@ -23,6 +23,7 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 	private int mOldOffsetY;
 	private double mScale;
 	private _ImagePanel[] mMirrorPanels;
+	private String mLabel;
 
 
 	public _ImagePanel()
@@ -31,6 +32,13 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
+	}
+
+
+	public _ImagePanel setLabel(String aLabel)
+	{
+		mLabel = aLabel;
+		return this;
 	}
 
 
@@ -66,6 +74,14 @@ public class _ImagePanel extends JPanel implements MouseListener, MouseWheelList
 			int y = (int)(0.5 * getHeight() - 0.5 * ih + mOffsetY);
 
 			aGraphics.drawImage(mImage, x, y, iw, ih, null);
+		}
+
+		if (mLabel != null && mLabel.length() > 0)
+		{
+			aGraphics.setColor(new Color(0, 0, 0, 32));
+			aGraphics.fillRect(5, 5, aGraphics.getFontMetrics().stringWidth(mLabel) + 10, 20);
+			aGraphics.setColor(Color.WHITE);
+			aGraphics.drawString(mLabel, 10, 5 + aGraphics.getFontMetrics().getAscent());
 		}
 	}
 
