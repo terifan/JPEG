@@ -21,11 +21,13 @@ public class ShuffleCoefficientDemo
 	{
 		try
 		{
-			Path file = Files.createTempFile("suffleimage", ".jpg"); // Paths.get("d:\\test.jpg")
+			Path file = Files.createTempFile("shuffleimage", ".jpg"); // Paths.get("d:\\test.jpg")
 
 			System.out.println(file);
 
 			{
+				// Load image and extract coefficients, shuffle all MCU:s and save the image to disk. The pin code initilizes the random order.
+
 				int pin = 1;
 
 				JPEG input = new JPEGImageIO().decode(R.class.getResource("Swallowtail.jpg"));
@@ -38,6 +40,8 @@ public class ShuffleCoefficientDemo
 			}
 
 			{
+				// Load shuffled image and extract coefficients, restore shuffle MCU:s. An incorrect pin code will result in a bad image.
+
 				int pin = 1;
 
 				byte[] shuffledImageData = Files.readAllBytes(file);
