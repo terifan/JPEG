@@ -1,6 +1,5 @@
 package examples;
 
-import java.io.File;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
@@ -26,28 +25,33 @@ public class BatchTranscodeJPEG
 				return;
 			}
 
-			File dir = chooser.getSelectedFile();
-
 			int columnCount = CompressionType.values().length;
 
-			System.out.printf("%-9s ", "Original");
+			System.out.printf("%9s ", "Original");
 			for (int i = 0; i < columnCount; i++)
 			{
 				System.out.printf("%-28s  ", CompressionType.values()[i]);
 			}
 			System.out.println("Image File");
 
+			System.out.printf("%9s ", "=========");
+			for (int i = 0; i < columnCount; i++)
+			{
+				System.out.printf("%-28s  ", "============================");
+			}
+			System.out.println("");
+
 			int[] outputSizes = new int[columnCount];
 			int[] inputSizes = new int[columnCount];
 			int[] diffSizes = new int[columnCount];
 
-			for (Path file : Files.walk(dir.toPath(), 10).filter(e -> e.toString().matches("(?i).*jpg")).limit(10_000).collect(Collectors.toList()))
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+			for (Path file : Files.walk(chooser.getSelectedFile().toPath(), 10).filter(e -> e.toString().matches("(?i).*jpg")).limit(10_000).collect(Collectors.toList()))
 			{
 				try
 				{
 					byte[] input = Files.readAllBytes(file);
-
-					ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 					System.out.printf("%9d ", input.length);
 
@@ -57,8 +61,8 @@ public class BatchTranscodeJPEG
 
 						System.out.printf("[%9d %5.1f%% %9d]  ", output.size(), output.size() * 100.0 / input.length, output.size() - input.length);
 
-						outputSizes[i] += output.size();
 						inputSizes[i] += input.length;
+						outputSizes[i] += output.size();
 						diffSizes[i] += output.size() - input.length;
 
 						output.reset();
@@ -72,14 +76,14 @@ public class BatchTranscodeJPEG
 				}
 			}
 
-			System.out.printf("%-9s ", "=========");
+			System.out.printf("%9s ", "=========");
 			for (int i = 0; i < columnCount; i++)
 			{
 				System.out.printf("%-28s  ", "============================");
 			}
 			System.out.println("");
 
-			System.out.printf("%-9s ", "");
+			System.out.printf("%9s ", "");
 			for (int i = 0; i < columnCount; i++)
 			{
 				System.out.printf("[%9d %5.1f%% %9d]  ", outputSizes[i], outputSizes[i] * 100.0 / inputSizes[i], diffSizes[i]);
