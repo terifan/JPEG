@@ -19,6 +19,9 @@ import org.w3c.dom.NodeList;
 
 public class _JavaJPEGEncoder
 {
+	private final static String nativeImageMetadataFormatName = "javax_imageio_jpeg_image_1.0";
+
+
 	public static void write(BufferedImage aImage, OutputStream aOutput, int aCompression, SubsamplingMode aSubsamplingMode)
 	{
 		if (aSubsamplingMode == SubsamplingMode._440)
