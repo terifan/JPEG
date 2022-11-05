@@ -15,10 +15,10 @@ public class JPEGImageReaderNGTest
 	@Test
 	public void testReadImage() throws IOException
 	{
-		try (InputStream input = JPEGImageReaderNGTest.class.getResourceAsStream("testimg.jpg"); InputStream input2 = JPEGImageReaderNGTest.class.getResourceAsStream("testimg.jpg"))
+		try (InputStream input1 = JPEGImageReaderNGTest.class.getResourceAsStream("testimg.jpg"); InputStream input2 = JPEGImageReaderNGTest.class.getResourceAsStream("testimg.jpg"))
 		{
+			BufferedImage image = new JPEGImageIO().read(input1);
 			BufferedImage comparison = ImageIO.read(input2);
-			BufferedImage image = new JPEGImageIO().read(input);
 
 			assertEquals((int)new _ImageQualityTest(image, comparison, null).mse, 0);
 		}

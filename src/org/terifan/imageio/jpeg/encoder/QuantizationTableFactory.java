@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg.encoder;
 
-import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.DQTSegment;
+import org.terifan.imageio.jpeg.DQTSegment.QuantizationTable;
 
 
 public class QuantizationTableFactory
@@ -75,6 +76,6 @@ public class QuantizationTableFactory
 			}
 		}
 
-		return new QuantizationTable(aComponent, QuantizationTable.PRECISION_8_BITS, quantval);
+		return new QuantizationTable(aComponent, DQTSegment.PRECISION_8_BITS, quantval);
 	}
 }

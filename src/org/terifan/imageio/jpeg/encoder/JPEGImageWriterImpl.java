@@ -1,8 +1,6 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Random;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ComponentInfo;
@@ -22,16 +20,15 @@ public class JPEGImageWriterImpl
 	{
 		aOutput.writeInt16(SegmentMarker.SOI.CODE);
 
-		new APP0Segment(aJPEG).encode(aOutput).log(aLog);
+		new APP0Segment().encode(aJPEG, aOutput).log(aJPEG, aLog);
 
 		if (aJPEG.mICCProfile != null)
 		{
-			new APP2Segment(aJPEG).setType(APP2Segment.ICC_PROFILE).encode(aOutput);
+			new APP2Segment().setType(APP2Segment.ICC_PROFILE).encode(aJPEG, aOutput);
 		}
 
-		new DQTSegment(aJPEG).encode(aOutput).log(aLog);
-
-		aJPEG.mSOFSegment.encode(aOutput).log(aLog);
+		aJPEG.mDQTSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+		aJPEG.mSOFSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
 	}
 
 
@@ -53,7 +50,7 @@ public class JPEGImageWriterImpl
 		{
 			SOSSegment sosSegment = createSOSSegment(aCompressionType, aProgressionScript, progressionLevel, aJPEG);
 
-			sosSegment.prepareMCU();
+			sosSegment.prepareMCU(aJPEG);
 
 			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
 
@@ -89,7 +86,7 @@ public class JPEGImageWriterImpl
 				aJPEG.mArithDCU = new int[]{1,1};
 				aJPEG.mArithACK = new int[]{5,5};
 
-				new DACSegment(aJPEG, sosSegment).encode(aOutput).log(aLog);
+				new DACSegment(sosSegment).encode(aJPEG, aOutput).log(aJPEG, aLog);
 
 				if (encoder == null)
 				{
@@ -153,10 +150,10 @@ public class JPEGImageWriterImpl
 					HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
 				}
 
-				new DHTSegment(aJPEG).encode(aOutput).log(aLog);
+				new DHTSegment().encode(aJPEG, aOutput).log(aJPEG, aLog);
 			}
 
-			sosSegment.encode(aOutput).log(aLog);
+			sosSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
 
 			int streamOffset = aOutput.getStreamOffset();
 
@@ -220,7 +217,7 @@ public class JPEGImageWriterImpl
 				id[i] = aJPEG.mSOFSegment.getComponents()[params[0][i]].getComponentId();
 			}
 
-			sosSegment = new SOSSegment(aJPEG, id);
+			sosSegment = new SOSSegment(id);
 
 			aJPEG.Ss = params[1][0];
 			aJPEG.Se = params[1][1];
@@ -268,7 +265,7 @@ public class JPEGImageWriterImpl
 			aJPEG.Ah = 0;
 			aJPEG.Al = 0;
 
-			sosSegment = new SOSSegment(aJPEG, aJPEG.mSOFSegment.getComponentIds());
+			sosSegment = new SOSSegment(aJPEG.mSOFSegment.getComponentIds());
 			sosSegment.setTableDC(0, 0);
 			sosSegment.setTableAC(0, 0);
 			sosSegment.setTableDC(1, 1);

@@ -1,6 +1,6 @@
 package org.terifan.imageio.jpeg.decoder;
 
-import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.DQTSegment.QuantizationTable;
 
 
 public interface IDCT

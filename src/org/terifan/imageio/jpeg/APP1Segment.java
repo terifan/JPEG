@@ -10,13 +10,11 @@ public class APP1Segment extends Segment
 {
 	private final static String EXIF = "Exif";
 
-	private JPEG mJPEG;
 	private Exif mExif;
 
 
-	public APP1Segment(JPEG aJPEG)
+	public APP1Segment()
 	{
-		mJPEG = aJPEG;
 	}
 
 
@@ -33,7 +31,7 @@ public class APP1Segment extends Segment
 
 
 	@Override
-	public APP1Segment decode(BitInputStream aBitStream) throws IOException
+	public APP1Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -69,7 +67,7 @@ public class APP1Segment extends Segment
 
 
 	@Override
-	public APP1Segment encode(BitOutputStream aBitStream) throws IOException
+	public APP1Segment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		if (mExif != null)
 		{
@@ -85,7 +83,7 @@ public class APP1Segment extends Segment
 
 
 	@Override
-	public APP1Segment print(Log aLog) throws IOException
+	public APP1Segment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		if (mExif != null)
 		{

@@ -73,25 +73,25 @@ public class JPEGImageReaderImpl
 			switch (marker)
 			{
 				case APP0: // Thumbnail
-					new APP0Segment(aJPEG).decode(aInput).print(aLog);
+					new APP0Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case APP1: // Exif
-					new APP1Segment(aJPEG).decode(aInput).print(aLog);
+					new APP1Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case APP2: // Color space
-					new APP2Segment(aJPEG).decode(aInput).print(aLog);
+					new APP2Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case APP14: // Adobe color profiles
-					new APP14Segment(aJPEG).decode(aInput).print(aLog);
+					new APP14Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case DQT: // Quantisations tables
-					new DQTSegment(aJPEG).decode(aInput).print(aLog);
+					aJPEG.mDQTSegment.decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case DHT: // Huffman Table
-					new DHTSegment(aJPEG).decode(aInput).print(aLog);
+					new DHTSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case DAC: // Arithmetic Table
-					new DACSegment(aJPEG).decode(aInput).print(aLog);
+					new DACSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
 					break;
 				case SOF0: // Huffman
 				case SOF1: // Huffman extended
@@ -108,7 +108,7 @@ public class JPEGImageReaderImpl
 				case SOF15: // Differential lossless, arithmetic
 					CompressionType compression = CompressionType.decode(marker);
 
-					SOFSegment sof = new SOFSegment(aJPEG).decode(aInput).setCompressionType(compression).print(aLog);
+					SOFSegment sof = new SOFSegment().decode(aJPEG, aInput).setCompressionType(compression).print(aJPEG, aLog);
 
 					aDecodeCoefficients |= sof.getCompressionType().isProgressive();
 
@@ -140,8 +140,8 @@ public class JPEGImageReaderImpl
 					mExecutorService = new FixedThreadExecutor(1f);
 
 					int streamOffset = aInput.getStreamOffset();
-					SOSSegment sosSegment = new SOSSegment(aJPEG).decode(aInput).print(aLog);
-					sosSegment.prepareMCU();
+					SOSSegment sosSegment = new SOSSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					sosSegment.prepareMCU(aJPEG);
 					aInput.setHandleMarkers(true);
 					readCoefficients(aJPEG, aImage, aIDCT, decoder, aDecodeCoefficients);
 					aInput.setHandleMarkers(false);

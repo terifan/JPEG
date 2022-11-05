@@ -1,7 +1,7 @@
 package org.terifan.imageio.jpeg.test;
 
 import java.util.Random;
-import org.terifan.imageio.jpeg.QuantizationTable;
+import org.terifan.imageio.jpeg.DQTSegment.QuantizationTable;
 import org.terifan.imageio.jpeg.decoder.IDCTFloat;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerFast;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;

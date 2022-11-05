@@ -1,11 +1,12 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 
 
 public class ColorSpaceRGBYCbCrTab implements ColorSpace
 {
+	private final static long serialVersionUID = 1L;
+
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
 	private static int FIX(double x) { return (int)(x * (1<<FP_SCALEBITS) + 0.5);}

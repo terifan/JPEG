@@ -1,12 +1,15 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.Serializable;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class ComponentInfo
+public class ComponentInfo implements Serializable
 {
+	private final static long serialVersionUID = 1L;
+
 	public enum Type
 	{
 		Y, CB, CR, I, Q;

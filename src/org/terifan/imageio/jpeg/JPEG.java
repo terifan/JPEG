@@ -8,6 +8,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NUM_HUFF_TBLS;
 public class JPEG
 {
 	public SOFSegment mSOFSegment;
+	public DQTSegment mDQTSegment;
 
 	public int[][][][] mCoefficients;
 
@@ -15,8 +16,6 @@ public class JPEG
 	public int[] mMCUComponentIndices;
 	public int mMCUBlockCount;
 	public int mScanBlockCount;
-
-	public QuantizationTable[] mQuantizationTables;
 
 	public HuffmanTable[][] mHuffmanTables;
 	public HuffmanTable[] mHuffmanDCTables;
@@ -43,7 +42,7 @@ public class JPEG
 	public int mRestartMarkerIndex;
 	public int mBlockCount;
 
-	int mAdjustComponentId;
+//	int mAdjustComponentId;
 
 
 	public JPEG()
@@ -52,7 +51,7 @@ public class JPEG
 		mDensityX = 72;
 		mDensityY = 72;
 
-		mQuantizationTables = new QuantizationTable[8];
+		mDQTSegment = new DQTSegment();
 
 		mHuffmanTables = new HuffmanTable[NUM_HUFF_TBLS][2];
 		mHuffmanDCTables = new HuffmanTable[NUM_HUFF_TBLS];

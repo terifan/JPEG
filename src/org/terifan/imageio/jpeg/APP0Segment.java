@@ -7,7 +7,6 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public class APP0Segment extends Segment
 {
-	private JPEG mJPEG;
 	private boolean mExtension;
 	private int mThumbnailWidth;
 	private int mThumbnailHeight;
@@ -15,16 +14,14 @@ public class APP0Segment extends Segment
 	private int mThumbnailFormat;
 
 
-	public APP0Segment(JPEG aJPEG)
+	public APP0Segment()
 	{
-		mJPEG = aJPEG;
-
 		mThumbnailData = new byte[0];
 	}
 
 
 	@Override
-	public APP0Segment decode(BitInputStream aBitStream) throws IOException
+	public APP0Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 		String type = aBitStream.readString();
@@ -39,9 +36,9 @@ public class APP0Segment extends Segment
 					throw new IOException("Error in JPEG stream; unsupported version: " + (version >> 8) + "." + (version & 255));
 				}
 
-				mJPEG.mDensitiesUnits = aBitStream.readInt8();
-				mJPEG.mDensityX = aBitStream.readInt16();
-				mJPEG.mDensityY = aBitStream.readInt16();
+				aJPEG.mDensitiesUnits = aBitStream.readInt8();
+				aJPEG.mDensityX = aBitStream.readInt16();
+				aJPEG.mDensityY = aBitStream.readInt16();
 
 				mThumbnailWidth = aBitStream.readInt8();
 				mThumbnailHeight = aBitStream.readInt8();
@@ -54,7 +51,7 @@ public class APP0Segment extends Segment
 					throw new IOException("Error in JPEG stream; illegal APP0 segment size.");
 				}
 
-				mJPEG.mJFIFSegmentMarker = this;
+				aJPEG.mJFIFSegmentMarker = this;
 
 				break;
 			case "JFXX":
@@ -76,7 +73,7 @@ public class APP0Segment extends Segment
 
 
 	@Override
-	public APP0Segment encode(BitOutputStream aBitStream) throws IOException
+	public APP0Segment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(SegmentMarker.APP0.CODE);
 
@@ -92,9 +89,9 @@ public class APP0Segment extends Segment
 			aBitStream.writeInt16(2 + 5 + 2 + 1 + 2 + 2 + 1 + 1 + mThumbnailData.length);
 			aBitStream.writeString("JFIF");
 			aBitStream.writeInt16(0x0102); // version
-			aBitStream.writeInt8(mJPEG.mDensitiesUnits);
-			aBitStream.writeInt16(mJPEG.mDensityX);
-			aBitStream.writeInt16(mJPEG.mDensityY);
+			aBitStream.writeInt8(aJPEG.mDensitiesUnits);
+			aBitStream.writeInt16(aJPEG.mDensityX);
+			aBitStream.writeInt16(aJPEG.mDensityY);
 			aBitStream.writeInt8(mThumbnailWidth); // thumbnail width
 			aBitStream.writeInt8(mThumbnailHeight); // thumbnail height
 			aBitStream.write(mThumbnailData);
@@ -105,7 +102,7 @@ public class APP0Segment extends Segment
 
 
 	@Override
-	public APP0Segment print(Log aLog) throws IOException
+	public APP0Segment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		if (mExtension)
 		{

@@ -1,34 +1,135 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.Serializable;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_16_BITS;
-import static org.terifan.imageio.jpeg.QuantizationTable.PRECISION_8_BITS;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class DQTSegment extends Segment
+public class DQTSegment extends Segment implements Serializable
 {
-	private JPEG mJPEG;
+	private final static long serialVersionUID = 1L;
+
+	public final static int PRECISION_8_BITS = 1;
+	public final static int PRECISION_16_BITS = 2;
+
+	private QuantizationTable[] mTables;
 
 
-	public DQTSegment(JPEG aJPEG)
+	public DQTSegment()
 	{
-		mJPEG = aJPEG;
+		mTables = new QuantizationTable[8];
+	}
+
+
+	public QuantizationTable getTable(int aIndex)
+	{
+		QuantizationTable table = mTables[aIndex];
+		if (table == null)
+		{
+			throw new IllegalArgumentException("No such table: " + aIndex);
+		}
+		return table;
+	}
+
+
+	public DQTSegment setTable(int aIndex, QuantizationTable aTable)
+	{
+		mTables[aIndex] = aTable;
+		return this;
+	}
+
+
+	public static class QuantizationTable implements Serializable
+	{
+		private final static long serialVersionUID = 1L;
+
+		/**
+		 * 16-bit quantization values.
+		 */
+		private int[] mDivisors;
+		private int mPrecision;
+		private int mIdentity;
+
+
+		/**
+		 * @param aDivisors 8 or 16 bit values depending on the precision parameter, 8 bit values will be scaled to 16 bits.
+		 */
+		public QuantizationTable(int aIdentity, int aPrecision, int... aDivisors)
+		{
+			mIdentity = aIdentity;
+			mPrecision = aPrecision;
+			mDivisors = new int[64];
+
+			boolean b = aPrecision == PRECISION_8_BITS;
+
+			for (int i = 0; i < 64; i++)
+			{
+				mDivisors[i] = b ? aDivisors[i] << 8 : aDivisors[i];
+			}
+		}
+
+
+		public int[] getDivisors()
+		{
+			return mDivisors;
+		}
+
+
+		public int getIdentity()
+		{
+			return mIdentity;
+		}
+
+
+		public int getPrecision()
+		{
+			return mPrecision;
+		}
+
+
+		public void print(Log aLog)
+		{
+			for (int row = 0, i = 0; row < 8; row++)
+			{
+				aLog.print("  ");
+				for (int col = 0; col < 8; col++, i++)
+				{
+					aLog.print("%7.3f ", mDivisors[i]);
+				}
+				aLog.println("");
+			}
+		}
 	}
 
 
 	@Override
-	public DQTSegment decode(BitInputStream aBitStream) throws IOException
+	public DQTSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
 		do
 		{
-			QuantizationTable table = readTable(aBitStream);
+			int temp = aBitStream.readInt8();
+			int identity = temp & 0x07;
+			int precision = (temp >> 3) == 0 ? PRECISION_8_BITS : PRECISION_16_BITS;
 
-			mJPEG.mQuantizationTables[table.getIdentity()] = table;
+			int[] data = new int[64];
+
+			for (int i = 0; i < 64; i++)
+			{
+				if (precision == PRECISION_8_BITS)
+				{
+					data[NATURAL_ORDER[i]] = aBitStream.readInt8();
+				}
+				else
+				{
+					data[NATURAL_ORDER[i]] = aBitStream.readInt16();
+				}
+			}
+
+			QuantizationTable table = mTables[identity] = new QuantizationTable(identity, precision, data);
 
 			length -= 1 + (table.getPrecision() == PRECISION_8_BITS ? 1 * 64 : 2 * 64);
 
@@ -44,9 +145,9 @@ public class DQTSegment extends Segment
 
 
 	@Override
-	public DQTSegment encode(BitOutputStream aBitStream) throws IOException
+	public DQTSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
-		for (QuantizationTable table : mJPEG.mQuantizationTables)
+		for (QuantizationTable table : mTables)
 		{
 			if (table == null)
 			{
@@ -80,35 +181,11 @@ public class DQTSegment extends Segment
 	}
 
 
-	private QuantizationTable readTable(BitInputStream aBitStream) throws IOException
-	{
-		int temp = aBitStream.readInt8();
-		int identity = temp & 0x07;
-		int precision = (temp >> 3) == 0 ? PRECISION_8_BITS : PRECISION_16_BITS;
-
-		int[] data = new int[64];
-
-		for (int i = 0; i < 64; i++)
-		{
-			if (precision == PRECISION_8_BITS)
-			{
-				data[NATURAL_ORDER[i]] = aBitStream.readInt8();
-			}
-			else
-			{
-				data[NATURAL_ORDER[i]] = aBitStream.readInt16();
-			}
-		}
-
-		return new QuantizationTable(identity, precision, data);
-	}
-
-
 	@Override
-	public DQTSegment print(Log aLog) throws IOException
+	public DQTSegment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		aLog.println("DQT segment");
-		for (QuantizationTable table : mJPEG.mQuantizationTables)
+		for (QuantizationTable table : mTables)
 		{
 			if (table != null)
 			{

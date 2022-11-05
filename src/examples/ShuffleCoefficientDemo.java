@@ -66,7 +66,7 @@ public class ShuffleCoefficientDemo
 	private static byte[] updateAndShowImage(int[][][][] aCoefficients, JPEG aInput) throws JPEGImageIOException
 	{
 		JPEG output = new JPEG();
-		output.mQuantizationTables = aInput.mQuantizationTables;
+		output.mDQTSegment = aInput.mDQTSegment;
 		output.mColorSpace = aInput.mColorSpace;
 		output.mSOFSegment = aInput.mSOFSegment;
 		output.mCoefficients = aCoefficients;

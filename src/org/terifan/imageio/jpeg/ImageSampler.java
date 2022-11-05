@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.awt.image.BufferedImage;
+import org.terifan.imageio.jpeg.DQTSegment.QuantizationTable;
 import org.terifan.imageio.jpeg.encoder.FDCT;
 
 
@@ -48,7 +49,7 @@ public class ImageSampler
 					int samplingX = comp.getHorSampleFactor();
 					int samplingY = comp.getVerSampleFactor();
 
-					QuantizationTable quantizationTable = aJPEG.mQuantizationTables[comp.getQuantizationTableId()];
+					QuantizationTable quantizationTable = aJPEG.mDQTSegment.getTable(comp.getQuantizationTableId());
 
 					for (int blockY = 0; blockY < samplingY; blockY++)
 					{

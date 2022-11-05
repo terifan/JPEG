@@ -5,6 +5,9 @@ import java.awt.image.BufferedImage;
 
 public class ColorSpaceRGBBGYCCFloat implements ColorSpace
 {
+	private final static long serialVersionUID = 1L;
+
+
 	@Override
 	public void configureImageBuffer(SOFSegment aSOFSegment, JPEGImage aImage)
 	{

@@ -127,10 +127,10 @@ public class JPEGImageIO
 
 		JPEG jpeg = new JPEG();
 		jpeg.mColorSpace = JPEGImageIO.createColorSpaceInstance("ycbcr");
-		jpeg.mSOFSegment = new SOFSegment(jpeg, mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, getComponentsFromImage(aInput));
-		jpeg.mQuantizationTables = new QuantizationTable[2];
-		jpeg.mQuantizationTables[0] = QuantizationTableFactory.buildQuantTable(mQuality, 0);
-		jpeg.mQuantizationTables[1] = QuantizationTableFactory.buildQuantTable(mQuality, 1);
+		jpeg.mSOFSegment = new SOFSegment(mCompressionType, aInput.getWidth(), aInput.getHeight(), 8, getComponentsFromImage(aInput));
+		jpeg.mDQTSegment = new DQTSegment()
+			.setTable(0, QuantizationTableFactory.buildQuantTable(mQuality, 0))
+			.setTable(1, QuantizationTableFactory.buildQuantTable(mQuality, 1));
 
 		ImageSampler.sampleImage(jpeg, aInput, fdct);
 

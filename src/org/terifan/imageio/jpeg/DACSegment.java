@@ -8,25 +8,22 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public class DACSegment extends Segment
 {
-	private JPEG mJPEG;
 	private SOSSegment mSOSSegment;
 
 
-	public DACSegment(JPEG aJPEG)
+	public DACSegment()
 	{
-		mJPEG = aJPEG;
 	}
 
 
-	public DACSegment(JPEG aJPEG, SOSSegment aSOSSegment)
+	public DACSegment(SOSSegment aSOSSegment)
 	{
-		mJPEG = aJPEG;
 		mSOSSegment = aSOSSegment;
 	}
 
 
 	@Override
-	public DACSegment decode(BitInputStream aBitStream) throws IOException
+	public DACSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -43,14 +40,14 @@ public class DACSegment extends Segment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-				mJPEG.mArithACK[index - NUM_ARITH_TBLS] = val;
+				aJPEG.mArithACK[index - NUM_ARITH_TBLS] = val;
 			}
 			else // define DC table
 			{
-				mJPEG.mArithDCU[index] = val >> 4;
-				mJPEG.mArithDCL[index] = val & 0x0F;
+				aJPEG.mArithDCU[index] = val >> 4;
+				aJPEG.mArithDCL[index] = val & 0x0F;
 
-				if (mJPEG.mArithDCL[index] > mJPEG.mArithDCU[index])
+				if (aJPEG.mArithDCL[index] > aJPEG.mArithDCU[index])
 				{
 					throw new IllegalArgumentException("Bad DAC value: " + val);
 				}
@@ -67,13 +64,13 @@ public class DACSegment extends Segment
 
 
 	@Override
-	public DACSegment encode(BitOutputStream aBitStream) throws IOException
+	public DACSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		int ac = 0;
-		for (int i = 0; i < mJPEG.mArithACK.length; i++)
+		for (int i = 0; i < aJPEG.mArithACK.length; i++)
 		{
 			boolean found = false;
-			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
 			{
 				found = mSOSSegment.getACTable(scanComponentIndex) == i;
 			}
@@ -85,17 +82,17 @@ public class DACSegment extends Segment
 		}
 
 		aBitStream.writeInt16(SegmentMarker.DAC.CODE);
-		aBitStream.writeInt16(2 + 2 * (mJPEG.mArithDCU.length + ac));
+		aBitStream.writeInt16(2 + 2 * (aJPEG.mArithDCU.length + ac));
 
-		for (int i = 0; i < mJPEG.mArithDCU.length; i++)
+		for (int i = 0; i < aJPEG.mArithDCU.length; i++)
 		{
 			aBitStream.writeInt8(i);
-			aBitStream.writeInt8((mJPEG.mArithDCU[i] << 4) + mJPEG.mArithDCL[i]);
+			aBitStream.writeInt8((aJPEG.mArithDCU[i] << 4) + aJPEG.mArithDCL[i]);
 		}
-		for (int i = 0; i < mJPEG.mArithACK.length; i++)
+		for (int i = 0; i < aJPEG.mArithACK.length; i++)
 		{
 			boolean found = false;
-			for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
 			{
 				found = mSOSSegment.getACTable(scanComponentIndex) == i;
 			}
@@ -103,7 +100,7 @@ public class DACSegment extends Segment
 			if (found)
 			{
 				aBitStream.writeInt8(NUM_ARITH_TBLS + i);
-				aBitStream.writeInt8(mJPEG.mArithACK[i]);
+				aBitStream.writeInt8(aJPEG.mArithACK[i]);
 			}
 		}
 
@@ -112,24 +109,24 @@ public class DACSegment extends Segment
 
 
 	@Override
-	public DACSegment print(Log aLog) throws IOException
+	public DACSegment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		aLog.println("DAC segment");
 
-		aLog.println("  DC=%d, AC=%d", mJPEG.mArithDCU.length, mJPEG.mArithACK.length);
+		aLog.println("  DC=%d, AC=%d", aJPEG.mArithDCU.length, aJPEG.mArithACK.length);
 
 		if (aLog.isDetailed())
 		{
-			for (int i = 0; i < mJPEG.mArithDCU.length; i++)
+			for (int i = 0; i < aJPEG.mArithDCU.length; i++)
 			{
 				aLog.println("    DC %d", i);
-				aLog.println("      u=%d, l=%d", mJPEG.mArithDCU[i], mJPEG.mArithDCL[i]);
+				aLog.println("      u=%d, l=%d", aJPEG.mArithDCU[i], aJPEG.mArithDCL[i]);
 			}
 
-			for (int i = 0; i < mJPEG.mArithACK.length; i++)
+			for (int i = 0; i < aJPEG.mArithACK.length; i++)
 			{
 				boolean found = false;
-				for (int scanComponentIndex = 0; !found && scanComponentIndex < mJPEG.mScanBlockCount; scanComponentIndex++)
+				for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
 				{
 					found = mSOSSegment.getACTable(scanComponentIndex) == i;
 				}
@@ -137,7 +134,7 @@ public class DACSegment extends Segment
 				if (found)
 				{
 					aLog.println("    AC %d", i);
-					aLog.println("      k=%d", mJPEG.mArithACK[i]);
+					aLog.println("      k=%d", aJPEG.mArithACK[i]);
 				}
 			}
 		}

@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 
 public class ColorSpaceRGBYCbCrFP implements ColorSpace
 {
+	private final static long serialVersionUID = 1L;
+
 	private final static int FP_SCALEBITS = 16;
 	private final static int FP_HALF = 1 << (FP_SCALEBITS - 1);
 	private final static int FP_140200 = (int)(0.5 + (1 << FP_SCALEBITS) * 1.402000);

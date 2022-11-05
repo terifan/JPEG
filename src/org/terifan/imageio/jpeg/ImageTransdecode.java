@@ -1,5 +1,6 @@
 package org.terifan.imageio.jpeg;
 
+import org.terifan.imageio.jpeg.DQTSegment.QuantizationTable;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 
 
@@ -7,9 +8,10 @@ public class ImageTransdecode
 {
 	public static void transform(JPEG aJPEG, IDCT aIDCT, JPEGImage aImage, int[][] aInput, int[] output)
 	{
+		DQTSegment dqt = aJPEG.mDQTSegment;
 		SOFSegment sof = aJPEG.mSOFSegment;
-		ComponentInfo[] components = sof.getComponents();
 
+		ComponentInfo[] components = sof.getComponents();
 		int numComponents = components.length;
 
 		int c0 = components[0].getComponentBlockOffset();
@@ -32,7 +34,7 @@ public class ImageTransdecode
 
 		for (int blockIndex = 0; blockIndex < sof.getBlocksInMCU(); blockIndex++)
 		{
-			QuantizationTable quantizationTable = aJPEG.mQuantizationTables[sof.getComponentByBlockIndex(blockIndex).getQuantizationTableId()];
+			QuantizationTable quantizationTable = dqt.getTable(sof.getComponentByBlockIndex(blockIndex).getQuantizationTableId());
 
 			aIDCT.transform(aInput[blockIndex], quantizationTable);
 		}

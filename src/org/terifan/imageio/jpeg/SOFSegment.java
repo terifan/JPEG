@@ -1,31 +1,31 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
-public class SOFSegment extends Segment
+public class SOFSegment extends Segment implements Serializable
 {
+	private final static long serialVersionUID = 1L;
+
 	private int mPrecision;
 	private int mHeight;
 	private int mWidth;
 	private ComponentInfo[] mComponents;
-	private JPEG mJPEG;
 	private CompressionType mCompressionType;
 	private int[] mBlockLookup;
 
 
-	public SOFSegment(JPEG aJPEG)
+	public SOFSegment()
 	{
-		mJPEG = aJPEG;
 	}
 
 
-	public SOFSegment(JPEG aJPEG, CompressionType aCompressionType, int aWidth, int aHeight, int aPrecision, ComponentInfo... aComponents)
+	public SOFSegment(CompressionType aCompressionType, int aWidth, int aHeight, int aPrecision, ComponentInfo... aComponents)
 	{
-		mJPEG = aJPEG;
 		mCompressionType = aCompressionType;
 		mWidth = aWidth;
 		mHeight = aHeight;
@@ -35,7 +35,7 @@ public class SOFSegment extends Segment
 
 
 	@Override
-	public SOFSegment decode(BitInputStream aBitStream) throws IOException
+	public SOFSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
 
@@ -63,7 +63,7 @@ public class SOFSegment extends Segment
 
 		if (mComponents.length == 3 && mComponents[0].getComponentId() == 0 && mComponents[1].getComponentId() == 1 && mComponents[2].getComponentId() == 2)
 		{
-			mJPEG.mAdjustComponentId = 1;
+//			mJPEG.mAdjustComponentId = 1;
 
 			for (int i = 0; i < mComponents.length; i++)
 			{
@@ -78,7 +78,7 @@ public class SOFSegment extends Segment
 
 
 	@Override
-	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
+	public SOFSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(mCompressionType.getSegmentMarker().CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);
@@ -99,7 +99,7 @@ public class SOFSegment extends Segment
 
 
 	@Override
-	public SOFSegment print(Log aLog) throws IOException
+	public SOFSegment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		aLog.println("SOF segment");
 		aLog.println("  precision=%d bits, width=%d, height=%d", mPrecision, mWidth, mHeight);

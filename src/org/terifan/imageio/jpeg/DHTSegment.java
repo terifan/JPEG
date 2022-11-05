@@ -8,18 +8,16 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public class DHTSegment extends Segment
 {
-	private JPEG mJPEG;
 	private String mLog;
 
 
-	public DHTSegment(JPEG aJPEG) throws IOException
+	public DHTSegment()
 	{
-		mJPEG = aJPEG;
 	}
 
 
 	@Override
-	public DHTSegment decode(BitInputStream aBitStream) throws IOException
+	public DHTSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -29,7 +27,7 @@ public class DHTSegment extends Segment
 		{
 			HuffmanTable table = new HuffmanTable().decode(aBitStream);
 
-			mJPEG.mHuffmanTables[table.getIndex()][table.getType()] = table;
+			aJPEG.mHuffmanTables[table.getIndex()][table.getType()] = table;
 
 			if (mLog.length() > 0)
 			{
@@ -50,13 +48,13 @@ public class DHTSegment extends Segment
 
 
 	@Override
-	public DHTSegment encode(BitOutputStream aBitStream) throws IOException
+	public DHTSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		mLog = "";
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		for (HuffmanTable table : mJPEG.mHuffmanDCTables)
+		for (HuffmanTable table : aJPEG.mHuffmanDCTables)
 		{
 			if (table != null && !table.isSent())
 			{
@@ -70,7 +68,7 @@ public class DHTSegment extends Segment
 			}
 		}
 
-		for (HuffmanTable table : mJPEG.mHuffmanACTables)
+		for (HuffmanTable table : aJPEG.mHuffmanACTables)
 		{
 			if (table != null && !table.isSent())
 			{
@@ -96,7 +94,7 @@ public class DHTSegment extends Segment
 
 
 	@Override
-	public DHTSegment print(Log aLog) throws IOException
+	public DHTSegment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		aLog.println("DHT segment");
 
@@ -107,7 +105,7 @@ public class DHTSegment extends Segment
 
 		if (aLog.isDetailed())
 		{
-			for (HuffmanTable[] tables : mJPEG.mHuffmanTables)
+			for (HuffmanTable[] tables : aJPEG.mHuffmanTables)
 			{
 				for (HuffmanTable table : tables)
 				{
