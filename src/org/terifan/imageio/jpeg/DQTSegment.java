@@ -105,7 +105,7 @@ public class DQTSegment extends Segment implements Serializable
 
 
 	@Override
-	public DQTSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public DQTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 

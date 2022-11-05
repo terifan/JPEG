@@ -166,7 +166,7 @@ public class HuffmanEncoder implements Encoder
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE" + tblno);
 		}
-		htbl = isDC ? aJPEG.mHuffmanDCTables[tblno] : aJPEG.mHuffmanACTables[tblno];
+		htbl = isDC ? aJPEG.mDHTSegment.mHuffmanDCTables[tblno] : aJPEG.mDHTSegment.mHuffmanACTables[tblno];
 		if (htbl == null)
 		{
 			throw new IllegalStateException("JERR_NO_HUFF_TABLE " + tblno);
@@ -517,7 +517,7 @@ public class HuffmanEncoder implements Encoder
 		emit_byte_s(state, SegmentMarker.RST0.CODE + restart_num);
 
 		/* Re-initialize DC predictions to 0 */
-		for (ci = 0; ci < state.cinfo.mScanBlockCount; ci++)
+		for (ci = 0; ci < state.cinfo.mSOSSegment.mScanBlockCount; ci++)
 		{
 			state.cur.last_dc_val[ci] = 0;
 		}
@@ -540,10 +540,10 @@ public class HuffmanEncoder implements Encoder
 			emit_byte_e(entropy, SegmentMarker.RST0.CODE + restart_num);
 		}
 
-		if (entropy.cinfo.Ss == 0)
+		if (entropy.cinfo.mSOSSegment.Ss == 0)
 		{
 			/* Re-initialize DC predictions to 0 */
-			for (ci = 0; ci < entropy.cinfo.mScanBlockCount; ci++)
+			for (ci = 0; ci < entropy.cinfo.mSOSSegment.mScanBlockCount; ci++)
 			{
 				entropy.saved.last_dc_val[ci] = 0;
 			}
@@ -590,7 +590,7 @@ public class HuffmanEncoder implements Encoder
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
 			 */
-			temp = aCoefficients[blkn][0] >> aJPEG.Al;
+			temp = aCoefficients[blkn][0] >> aJPEG.mSOSSegment.Al;
 
 			/* DC differences are figured on the point-transformed values. */
 			temp2 = temp - entropy.saved.last_dc_val[ci];
@@ -680,8 +680,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Se = aJPEG.Se;
-		Al = aJPEG.Al;
+		Se = aJPEG.mSOSSegment.Se;
+		Al = aJPEG.mSOSSegment.Al;
 		natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the MCU data block */
@@ -691,7 +691,7 @@ public class HuffmanEncoder implements Encoder
 		r = 0;
 		/* r = run length of zeros */
 
-		for (k = aJPEG.Ss; k <= Se; k++)
+		for (k = aJPEG.mSOSSegment.Ss; k <= Se; k++)
 		{
 			if ((temp = block[natural_order[k]]) == 0)
 			{
@@ -813,7 +813,7 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Al = aJPEG.Al;
+		Al = aJPEG.mSOSSegment.Al;
 
 		/* Encode the MCU data blocks */
 		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
@@ -869,8 +869,8 @@ public class HuffmanEncoder implements Encoder
 			}
 		}
 
-		Se = aJPEG.Se;
-		Al = aJPEG.Al;
+		Se = aJPEG.mSOSSegment.Se;
+		Al = aJPEG.mSOSSegment.Al;
 		natural_order = JPEGConstants.NATURAL_ORDER;
 
 		/* Encode the MCU data block */
@@ -880,7 +880,7 @@ public class HuffmanEncoder implements Encoder
 		 * coefficients' absolute values and the EOB position.
 		 */
 		EOB = 0;
-		for (k = aJPEG.Ss; k <= Se; k++)
+		for (k = aJPEG.mSOSSegment.Ss; k <= Se; k++)
 		{
 			temp = block[natural_order[k]];
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -910,7 +910,7 @@ public class HuffmanEncoder implements Encoder
 		/* Append bits to buffer */
 		int BR_offset = entropy.BE;
 
-		for (k = aJPEG.Ss; k <= Se; k++)
+		for (k = aJPEG.mSOSSegment.Ss; k <= Se; k++)
 		{
 			if ((temp = absvalues[k]) == 0)
 			{
@@ -1335,7 +1335,7 @@ public class HuffmanEncoder implements Encoder
 			if (entropy.restarts_to_go == 0)
 			{
 				/* Re-initialize DC predictions to 0 */
-				for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+				for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 				{
 					entropy.saved.last_dc_val[ci] = 0;
 				}
@@ -1571,26 +1571,26 @@ public class HuffmanEncoder implements Encoder
 //  MEMZERO(did_dc, SIZEOF(did_dc));
 //  MEMZERO(did_ac, SIZEOF(did_ac));
 
-		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
-			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (!did_dc[tbl])
 				{
-					aJPEG.mHuffmanDCTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
+					aJPEG.mDHTSegment.mHuffmanDCTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.dc_count_ptrs[tbl], HuffmanTable.TYPE_DC, tbl);
 					did_dc[tbl] = true;
 				}
 			}
 			/* AC needs no table when not present */
-			if (aJPEG.Se != 0)
+			if (aJPEG.mSOSSegment.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (!did_ac[tbl])
 				{
-					aJPEG.mHuffmanACTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
+					aJPEG.mDHTSegment.mHuffmanACTables[tbl] = jpeg_gen_optimal_table(aJPEG, entropy.ac_count_ptrs[tbl], HuffmanTable.TYPE_AC, tbl);
 					did_ac[tbl] = true;
 				}
 			}
@@ -1619,9 +1619,9 @@ public class HuffmanEncoder implements Encoder
 			/* We assume jcmaster.c already validated the scan parameters. */
 
 			/* Select execution routine */
-			if (aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ah == 0)
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.encode_mcu = ENCODE_DC_FIRST;
 				}
@@ -1632,7 +1632,7 @@ public class HuffmanEncoder implements Encoder
 			}
 			else
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.encode_mcu = ENCODE_DC_REFINE;
 				}
@@ -1657,11 +1657,11 @@ public class HuffmanEncoder implements Encoder
 			entropy.encode_mcu = ENCODE_MCU;
 		}
 
-		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
-			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (gather_statistics)
@@ -1689,7 +1689,7 @@ public class HuffmanEncoder implements Encoder
 				entropy.saved.last_dc_val[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (aJPEG.Se != 0)
+			if (aJPEG.mSOSSegment.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (gather_statistics)
@@ -1831,12 +1831,12 @@ public class HuffmanEncoder implements Encoder
 			0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
 			0xf9, 0xfa };
 
-		aJPEG.mHuffmanDCTables = new HuffmanTable[2];
-		aJPEG.mHuffmanACTables = new HuffmanTable[2];
+		aJPEG.mDHTSegment.mHuffmanDCTables = new HuffmanTable[2];
+		aJPEG.mDHTSegment.mHuffmanACTables = new HuffmanTable[2];
 
-		aJPEG.mHuffmanDCTables[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
-		aJPEG.mHuffmanDCTables[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
-		aJPEG.mHuffmanACTables[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
-		aJPEG.mHuffmanACTables[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
+		aJPEG.mDHTSegment.mHuffmanDCTables[0] = new HuffmanTable(HuffmanTable.TYPE_DC, 0, bits_dc_luminance, val_dc_luminance);
+		aJPEG.mDHTSegment.mHuffmanDCTables[1] = new HuffmanTable(HuffmanTable.TYPE_DC, 1, bits_dc_chrominance, val_dc_chrominance);
+		aJPEG.mDHTSegment.mHuffmanACTables[0] = new HuffmanTable(HuffmanTable.TYPE_AC, 0, bits_ac_luminance, val_ac_luminance);
+		aJPEG.mDHTSegment.mHuffmanACTables[1] = new HuffmanTable(HuffmanTable.TYPE_AC, 1, bits_ac_chrominance, val_ac_chrominance);
   }
 }

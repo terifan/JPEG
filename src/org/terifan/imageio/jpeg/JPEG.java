@@ -1,72 +1,33 @@
 package org.terifan.imageio.jpeg;
 
-import java.awt.color.ICC_Profile;
-import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import static org.terifan.imageio.jpeg.JPEGConstants.NUM_HUFF_TBLS;
-
 
 public class JPEG
 {
+	public APP0Segment mAPP0Segment;
+	public APP2Segment mAPP2Segment;
 	public SOFSegment mSOFSegment;
+	public SOSSegment mSOSSegment;
 	public DQTSegment mDQTSegment;
+	public DHTSegment mDHTSegment;
+	public DACSegment mDACSegment;
+	public APP14Segment mColorSpaceTransform;
 
 	public int[][][][] mCoefficients;
 
 	public ComponentInfo[] mComponentInfo;
 	public int[] mMCUComponentIndices;
 	public int mMCUBlockCount;
-	public int mScanBlockCount;
-
-	public HuffmanTable[][] mHuffmanTables;
-	public HuffmanTable[] mHuffmanDCTables;
-	public HuffmanTable[] mHuffmanACTables;
-
 	public ColorSpace mColorSpace;
-	public ICC_Profile mICCProfile;
-	public APP14Segment mColorSpaceTransform;
-	public APP0Segment mJFIFSegmentMarker;
 
-	public int[] mArithDCL;
-	public int[] mArithDCU;
-	public int[] mArithACK;
-
-	public int Ss;
-	public int Se;
-	public int Ah;
-	public int Al;
-
-	public int mDensitiesUnits;
-	public int mDensityX;
-	public int mDensityY;
 	public int mRestartInterval;
 	public int mRestartMarkerIndex;
 	public int mBlockCount;
 
-//	int mAdjustComponentId;
-
 
 	public JPEG()
 	{
-		mDensitiesUnits = 1;
-		mDensityX = 72;
-		mDensityY = 72;
-
+		mAPP0Segment = new APP0Segment();
 		mDQTSegment = new DQTSegment();
-
-		mHuffmanTables = new HuffmanTable[NUM_HUFF_TBLS][2];
-		mHuffmanDCTables = new HuffmanTable[NUM_HUFF_TBLS];
-		mHuffmanACTables = new HuffmanTable[NUM_HUFF_TBLS];
-
-		mArithACK = new int[NUM_ARITH_TBLS];
-		mArithDCU = new int[NUM_ARITH_TBLS];
-		mArithDCL = new int[NUM_ARITH_TBLS];
-
-		for (int i = 0; i < NUM_ARITH_TBLS; i++)
-		{
-			mArithDCL[i] = 0;
-			mArithDCU[i] = 1;
-			mArithACK[i] = 5;
-		}
 	}
 
 

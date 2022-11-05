@@ -25,7 +25,7 @@ public class APP14Segment extends Segment
 
 
 	@Override
-	public APP14Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public APP14Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int offset = aBitStream.getStreamOffset();
 		int length = aBitStream.readInt16();
@@ -36,8 +36,6 @@ public class APP14Segment extends Segment
 			mFlags0 = aBitStream.readInt16();
 			mFlags1 = aBitStream.readInt16();
 			mTransform = aBitStream.readInt8();
-
-			aJPEG.mColorSpaceTransform = this;
 		}
 
 		int remaining = offset + length - aBitStream.getStreamOffset();

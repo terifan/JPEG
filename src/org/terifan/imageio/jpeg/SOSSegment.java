@@ -11,6 +11,12 @@ public class SOSSegment extends Segment
 	private int[] mTableAC;
 	private int[] mTableDC;
 
+	public int mScanBlockCount;
+	public int Ss;
+	public int Se;
+	public int Ah;
+	public int Al;
+
 
 	public SOSSegment(int... aComponentIds)
 	{
@@ -21,31 +27,30 @@ public class SOSSegment extends Segment
 
 
 	@Override
-	public SOSSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public SOSSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 
-		aJPEG.mScanBlockCount = aBitStream.readInt8();
+		mScanBlockCount = aBitStream.readInt8();
 
-		if (6 + 2 * aJPEG.mScanBlockCount != length)
+		if (6 + 2 * mScanBlockCount != length)
 		{
 			throw new IOException("Error in JPEG stream; illegal SOS segment size: " + length + ", offset " + aBitStream.getStreamOffset());
 		}
 
-		mComponentIds = new int[aJPEG.mScanBlockCount];
+		mComponentIds = new int[mScanBlockCount];
 
-		for (int i = 0; i < aJPEG.mScanBlockCount; i++)
+		for (int i = 0; i < mScanBlockCount; i++)
 		{
-			mComponentIds[i] = aBitStream.readInt8() /*+ 0*mJPEG.mAdjustComponentId*/;
+			mComponentIds[i] = aBitStream.readInt8();
 			mTableDC[i] = aBitStream.readBits(4);
 			mTableAC[i] = aBitStream.readBits(4);
 		}
 
-		aJPEG.Ss = aBitStream.readInt8();
-		aJPEG.Se = aBitStream.readInt8();
-		aJPEG.Ah = aBitStream.readBits(4);
-		aJPEG.Al = aBitStream.readBits(4);
-		aJPEG.mScanBlockCount = getNumComponents();
+		Ss = aBitStream.readInt8();
+		Se = aBitStream.readInt8();
+		Ah = aBitStream.readBits(4);
+		Al = aBitStream.readBits(4);
 
 		return this;
 	}
@@ -65,9 +70,9 @@ public class SOSSegment extends Segment
 			aBitStream.writeInt8((mTableDC[i] << 4)  + mTableAC[i]);
 		}
 
-		aBitStream.writeInt8(aJPEG.Ss);
-		aBitStream.writeInt8(aJPEG.Se);
-		aBitStream.writeInt8((aJPEG.Ah << 4) + aJPEG.Al);
+		aBitStream.writeInt8(Ss);
+		aBitStream.writeInt8(Se);
+		aBitStream.writeInt8((Ah << 4) + Al);
 
 		return this;
 	}
@@ -78,9 +83,9 @@ public class SOSSegment extends Segment
 	{
 		aLog.println("SOS segment");
 		aLog.println("  coefficient partitioning");
-		aLog.println("    ss=%d, se=%d, ah=%d, al=%d", aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+		aLog.println("    ss=%d, se=%d, ah=%d, al=%d", Ss, Se, Ah, Al);
 
-		for (int i = 0; i < aJPEG.mScanBlockCount; i++)
+		for (int i = 0; i < mScanBlockCount; i++)
 		{
 			aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentIds[i]).name());
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
@@ -130,19 +135,19 @@ public class SOSSegment extends Segment
 
 	public void prepareMCU(JPEG aJPEG)
 	{
-		aJPEG.mScanBlockCount = mComponentIds.length;
+		mScanBlockCount = mComponentIds.length;
 
 		aJPEG.mMCUBlockCount = 0;
-		for (int scanComponentIndex = 0; scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
+		for (int scanComponentIndex = 0; scanComponentIndex < mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
 			aJPEG.mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
 		aJPEG.mMCUComponentIndices = new int[aJPEG.mMCUBlockCount];
-		aJPEG.mComponentInfo = new ComponentInfo[aJPEG.mScanBlockCount];
+		aJPEG.mComponentInfo = new ComponentInfo[mScanBlockCount];
 
-		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
+		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
 

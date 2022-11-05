@@ -27,7 +27,7 @@ public class TranscodeJPEGDemo
 			new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).transcode(input, output4);
 			new JPEGImageIO().setCompressionType(CompressionType.HuffmanProgressive).transcode(input, output5);
 
-			_ImageWindow.show(output1).setTitle("" + output1.length());
+//			_ImageWindow.show(output1).setTitle("" + output1.length());
 		}
 		catch (Throwable e)
 		{

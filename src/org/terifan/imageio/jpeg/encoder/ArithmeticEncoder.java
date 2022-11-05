@@ -422,11 +422,11 @@ public class ArithmeticEncoder implements Encoder
 		emit_byte(SegmentMarker.RST0.CODE + restart_num, aJPEG);
 
 		/* Re-initialize statistics areas */
-		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
-			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
 				MEMZERO(entropy.dc_stats[compptr.getTableDC()], DC_STAT_BINS);
 				/* Reset DC predictions to 0 */
@@ -434,7 +434,7 @@ public class ArithmeticEncoder implements Encoder
 				entropy.dc_context[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (aJPEG.Se != 0)
+			if (aJPEG.mSOSSegment.Se != 0)
 			{
 				MEMZERO(entropy.ac_stats[compptr.getTableAC()], AC_STAT_BINS);
 			}
@@ -485,7 +485,7 @@ public class ArithmeticEncoder implements Encoder
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
 			 */
-			m = MCU_data[blkn][0] >> aJPEG.Al;
+			m = MCU_data[blkn][0] >> aJPEG.mSOSSegment.Al;
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 
@@ -544,11 +544,11 @@ public class ArithmeticEncoder implements Encoder
 				}
 				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << aJPEG.mArithDCL[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.mDACSegment.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << aJPEG.mArithDCU[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.mDACSegment.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -598,7 +598,7 @@ public class ArithmeticEncoder implements Encoder
 		/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
 
 		/* Establish EOB (end-of-block) index */
-		ke = aJPEG.Se;
+		ke = aJPEG.mSOSSegment.Se;
 		do
 		{
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -607,7 +607,7 @@ public class ArithmeticEncoder implements Encoder
 			 */
 			if ((v = block[NATURAL_ORDER[ke]]) >= 0)
 			{
-				if ((v >>= aJPEG.Al) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 				{
 					break;
 				}
@@ -615,7 +615,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= aJPEG.Al) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 				{
 					break;
 				}
@@ -624,7 +624,7 @@ public class ArithmeticEncoder implements Encoder
 		while ((--ke) != 0);
 
 		/* Figure F.5: Encode_AC_Coefficients */
-		for (k = aJPEG.Ss - 1; k < ke;)
+		for (k = aJPEG.mSOSSegment.Ss - 1; k < ke;)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
@@ -634,7 +634,7 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if ((v = block[NATURAL_ORDER[++k]]) >= 0)
 				{
-					if ((v >>= aJPEG.Al) != 0)
+					if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 					{
 						arith_encode(aJPEG, st, st_off + 1, 1);
 						arith_encode(aJPEG, entropy.fixed_bin, 0, 0);
@@ -644,7 +644,7 @@ public class ArithmeticEncoder implements Encoder
 				else
 				{
 					v = -v;
-					if ((v >>= aJPEG.Al) != 0)
+					if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 					{
 						arith_encode(aJPEG, st, st_off + 1, 1);
 						arith_encode(aJPEG, entropy.fixed_bin, 0, 1);
@@ -667,7 +667,7 @@ public class ArithmeticEncoder implements Encoder
 					arith_encode(aJPEG, st, st_off, 1);
 					m <<= 1;
 					st = entropy.ac_stats[tbl];
-					st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
+					st_off = (k <= aJPEG.mDACSegment.mArithACK[tbl] ? 189 : 217);
 					while ((v2 >>= 1) != 0)
 					{
 						arith_encode(aJPEG, st, st_off, 1);
@@ -685,7 +685,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 		}
 		/* Encode EOB decision only if k < cinfo.Se */
-		if (k < aJPEG.Se)
+		if (k < aJPEG.mSOSSegment.Se)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
@@ -723,7 +723,7 @@ public class ArithmeticEncoder implements Encoder
 
 		st = entropy.fixed_bin;
 		/* use fixed probability estimation */
-		Al = aJPEG.Al;
+		Al = aJPEG.mSOSSegment.Al;
 
 		/* Encode the MCU data blocks */
 		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
@@ -768,7 +768,7 @@ public class ArithmeticEncoder implements Encoder
 		/* Section G.1.3.3: Encoding of AC coefficients */
 
 		/* Establish EOB (end-of-block) index */
-		ke = aJPEG.Se;
+		ke = aJPEG.mSOSSegment.Se;
 		do
 		{
 			/* We must apply the point transform by Al.  For AC coefficients this
@@ -777,7 +777,7 @@ public class ArithmeticEncoder implements Encoder
 			 */
 			if ((v = block[NATURAL_ORDER[ke]]) >= 0)
 			{
-				if ((v >>= aJPEG.Al) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 				{
 					break;
 				}
@@ -785,7 +785,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= aJPEG.Al) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 				{
 					break;
 				}
@@ -798,7 +798,7 @@ public class ArithmeticEncoder implements Encoder
 		{
 			if ((v = block[NATURAL_ORDER[kex]]) >= 0)
 			{
-				if ((v >>= aJPEG.Ah) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Ah) != 0)
 				{
 					break;
 				}
@@ -806,7 +806,7 @@ public class ArithmeticEncoder implements Encoder
 			else
 			{
 				v = -v;
-				if ((v >>= aJPEG.Ah) != 0)
+				if ((v >>= aJPEG.mSOSSegment.Ah) != 0)
 				{
 					break;
 				}
@@ -814,7 +814,7 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Figure G.10: Encode_AC_Coefficients_SA */
-		for (k = aJPEG.Ss - 1; k < ke;)
+		for (k = aJPEG.mSOSSegment.Ss - 1; k < ke;)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
@@ -826,7 +826,7 @@ public class ArithmeticEncoder implements Encoder
 			{
 				if ((v = block[NATURAL_ORDER[++k]]) >= 0)
 				{
-					if ((v >>= aJPEG.Al) != 0)
+					if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 					{
 						if ((v >> 1) != 0)
 						/* previously nonzero coef */
@@ -845,7 +845,7 @@ public class ArithmeticEncoder implements Encoder
 				else
 				{
 					v = -v;
-					if ((v >>= aJPEG.Al) != 0)
+					if ((v >>= aJPEG.mSOSSegment.Al) != 0)
 					{
 						if ((v >> 1) != 0)
 						/* previously nonzero coef */
@@ -866,7 +866,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 		}
 		/* Encode EOB decision only if k < cinfo.Se */
-		if (k < aJPEG.Se)
+		if (k < aJPEG.mSOSSegment.Se)
 		{
 			st = entropy.ac_stats[tbl];
 			st_off = 3 * k;
@@ -987,11 +987,11 @@ public class ArithmeticEncoder implements Encoder
 				}
 				arith_encode(aJPEG, st, st_off, 0);
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < (int)((1L << aJPEG.mArithDCL[tbl]) >> 1))
+				if (m < (int)((1L << aJPEG.mDACSegment.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;	/* zero diff category */
 				}
-				else if (m > (int)((1L << aJPEG.mArithDCU[tbl]) >> 1))
+				else if (m > (int)((1L << aJPEG.mDACSegment.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] += 8;	/* large diff category */
 				}
@@ -1011,7 +1011,7 @@ public class ArithmeticEncoder implements Encoder
 			tbl = compptr.getTableAC();
 
 			if (tbl >= entropy.ac_stats.length) throw new IllegalArgumentException("ac_stats: " + tbl+" >= "+entropy.ac_stats.length);
-			if (tbl >= aJPEG.mArithACK.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+aJPEG.mArithACK.length);
+			if (tbl >= aJPEG.mDACSegment.mArithACK.length) throw new IllegalArgumentException("arith_ac_K: " + tbl+" >= "+aJPEG.mDACSegment.mArithACK.length);
 
 			/* Establish EOB (end-of-block) index */
 			do
@@ -1060,7 +1060,7 @@ public class ArithmeticEncoder implements Encoder
 						arith_encode(aJPEG, st, st_off, 1);
 						m <<= 1;
 						st = entropy.ac_stats[tbl];
-						st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
+						st_off = (k <= aJPEG.mDACSegment.mArithACK[tbl] ? 189 : 217);
 						while ((v2 >>= 1) != 0)
 						{
 							arith_encode(aJPEG, st, st_off, 1);
@@ -1123,9 +1123,9 @@ public class ArithmeticEncoder implements Encoder
 		/* Select execution routines */
 		if (mProgressive)
 		{
-			if (aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ah == 0)
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_first;
 				}
@@ -1136,7 +1136,7 @@ public class ArithmeticEncoder implements Encoder
 			}
 			else
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.encode_mcu = x_encode_mcu_DC_refine;
 				}
@@ -1152,11 +1152,11 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
-			if (aJPEG.Ss == 0 && aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
 				tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
@@ -1172,7 +1172,7 @@ public class ArithmeticEncoder implements Encoder
 				entropy.dc_context[ci] = 0;
 			}
 			/* AC needs no table when not present */
-			if (aJPEG.Se != 0)
+			if (aJPEG.mSOSSegment.Se != 0)
 			{
 				tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)

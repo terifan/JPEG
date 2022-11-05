@@ -8,9 +8,9 @@ public class ColorICCTransform
 {
 	public static void transform(JPEG aJPEG, JPEGImage aImage)
 	{
-		if (aJPEG.mICCProfile != null)
+		if (aJPEG.mAPP2Segment != null && aJPEG.mAPP2Segment.mICCProfile != null)
 		{
-			int profileClass = aJPEG.mICCProfile.getProfileClass();
+			int profileClass = aJPEG.mAPP2Segment.mICCProfile.getProfileClass();
 
 			if ((profileClass != ICC_Profile.CLASS_INPUT) && (profileClass != ICC_Profile.CLASS_DISPLAY) && (profileClass != ICC_Profile.CLASS_OUTPUT) && (profileClass != ICC_Profile.CLASS_COLORSPACECONVERSION) && (profileClass != ICC_Profile.CLASS_NAMEDCOLOR) && (profileClass != ICC_Profile.CLASS_ABSTRACT))
 			{
@@ -27,7 +27,7 @@ public class ColorICCTransform
 //
 //			module.createTransform(transformList).colorConvert(image, image);
 
-			java.awt.color.ColorSpace colorSpace = new ICC_ColorSpace(aJPEG.mICCProfile);
+			java.awt.color.ColorSpace colorSpace = new ICC_ColorSpace(aJPEG.mAPP2Segment.mICCProfile);
 
 			float[] colorvalue = new float[3];
 

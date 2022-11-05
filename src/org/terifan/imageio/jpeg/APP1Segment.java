@@ -31,7 +31,7 @@ public class APP1Segment extends Segment
 
 
 	@Override
-	public APP1Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public APP1Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 

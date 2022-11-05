@@ -73,46 +73,55 @@ public class JPEGImageReaderImpl
 			switch (marker)
 			{
 				case APP0: // Thumbnail
-					new APP0Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					aJPEG.mAPP0Segment.decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP1: // Exif
-					new APP1Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					new APP1Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP2: // Color space
-					new APP2Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					new APP2Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP14: // Adobe color profiles
-					new APP14Segment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					aJPEG.mColorSpaceTransform = new APP14Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case DQT: // Quantisations tables
-					aJPEG.mDQTSegment.decode(aJPEG, aInput).print(aJPEG, aLog);
+					aJPEG.mDQTSegment.decode(aInput).print(aJPEG, aLog);
 					break;
 				case DHT: // Huffman Table
-					new DHTSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					aJPEG.mDHTSegment.decode(aInput).print(aJPEG, aLog);
 					break;
 				case DAC: // Arithmetic Table
-					new DACSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
+					aJPEG.mDACSegment.decode(aInput).print(aJPEG, aLog);
 					break;
-				case SOF0: // Huffman
 				case SOF1: // Huffman extended
-				case SOF2: // Huffman progressive
 				case SOF3: // Lossless, Huffman
 				case SOF5: // Differential sequential, Huffman
 				case SOF6: // Differential progressive, Huffman
 				case SOF7: // Differential lossless, Huffman
-				case SOF9: // Arithmetic
-				case SOF10: // Arithmetic progressive
 				case SOF11: // Lossless, arithmetic
 				case SOF13: // Differential sequential, arithmetic
 				case SOF14: // Differential progressive, arithmetic
 				case SOF15: // Differential lossless, arithmetic
+					throw new IOException("Unsupported compression");
+				case SOF0: // Huffman
+				case SOF2: // Huffman progressive
+				case SOF9: // Arithmetic
+				case SOF10: // Arithmetic progressive
 					CompressionType compression = CompressionType.decode(marker);
 
-					SOFSegment sof = new SOFSegment().decode(aJPEG, aInput).setCompressionType(compression).print(aJPEG, aLog);
+					if (compression.isArithmetic())
+					{
+						aJPEG.mDACSegment = new DACSegment();
+					}
+					else
+					{
+						aJPEG.mDHTSegment = new DHTSegment();
+					}
 
-					aDecodeCoefficients |= sof.getCompressionType().isProgressive();
+					SOFSegment sof = aJPEG.mSOFSegment = new SOFSegment().decode(aInput).setCompressionType(compression).print(aJPEG, aLog);
 
-					aJPEG.mSOFSegment = sof;
+					aDecodeCoefficients |= compression.isProgressive();
+
 					aJPEG.mCoefficients = aDecodeCoefficients ? new int[sof.getVerMCU()][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64] : new int[1][sof.getHorMCU()][sof.getMaxBlocksInMCU()][64];
 
 					decoder = compression.createDecoderInstance();
@@ -140,8 +149,10 @@ public class JPEGImageReaderImpl
 					mExecutorService = new FixedThreadExecutor(1f);
 
 					int streamOffset = aInput.getStreamOffset();
-					SOSSegment sosSegment = new SOSSegment().decode(aJPEG, aInput).print(aJPEG, aLog);
-					sosSegment.prepareMCU(aJPEG);
+
+					aJPEG.mSOSSegment = new SOSSegment().decode(aInput).print(aJPEG, aLog);
+					aJPEG.mSOSSegment.prepareMCU(aJPEG);
+
 					aInput.setHandleMarkers(true);
 					readCoefficients(aJPEG, aImage, aIDCT, decoder, aDecodeCoefficients);
 					aInput.setHandleMarkers(false);
@@ -200,7 +211,7 @@ public class JPEGImageReaderImpl
 
 		int[][] mcu = new int[aJPEG.mBlockCount][64];
 
-		if (aJPEG.mScanBlockCount == 1)
+		if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 		{
 //			ComponentInfo comp = aJPEG.mComponentInfo[0];
 //
@@ -329,7 +340,7 @@ public class JPEGImageReaderImpl
 			{
 				for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 				{
-					for (int ci = 0, blockIndex = 0; ci < aJPEG.mScanBlockCount; ci++)
+					for (int ci = 0, blockIndex = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 					{
 						ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
@@ -363,7 +374,7 @@ public class JPEGImageReaderImpl
 						e.printStackTrace(System.out);
 					}
 
-					for (int ci = 0, blockIndex = 0; ci < aJPEG.mScanBlockCount; ci++)
+					for (int ci = 0, blockIndex = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 					{
 						ComponentInfo comp = aJPEG.mComponentInfo[ci];
 

@@ -2,22 +2,30 @@ package org.terifan.imageio.jpeg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import static org.terifan.imageio.jpeg.JPEGConstants.NUM_HUFF_TBLS;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 
 public class DHTSegment extends Segment
 {
+	public HuffmanTable[][] mHuffmanTables;
+	public HuffmanTable[] mHuffmanDCTables;
+	public HuffmanTable[] mHuffmanACTables;
+
 	private String mLog;
 
 
 	public DHTSegment()
 	{
+		mHuffmanTables = new HuffmanTable[NUM_HUFF_TBLS][2];
+		mHuffmanDCTables = new HuffmanTable[NUM_HUFF_TBLS];
+		mHuffmanACTables = new HuffmanTable[NUM_HUFF_TBLS];
 	}
 
 
 	@Override
-	public DHTSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public DHTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -27,7 +35,7 @@ public class DHTSegment extends Segment
 		{
 			HuffmanTable table = new HuffmanTable().decode(aBitStream);
 
-			aJPEG.mHuffmanTables[table.getIndex()][table.getType()] = table;
+			mHuffmanTables[table.getIndex()][table.getType()] = table;
 
 			if (mLog.length() > 0)
 			{
@@ -54,7 +62,7 @@ public class DHTSegment extends Segment
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		for (HuffmanTable table : aJPEG.mHuffmanDCTables)
+		for (HuffmanTable table : mHuffmanDCTables)
 		{
 			if (table != null && !table.isSent())
 			{
@@ -68,7 +76,7 @@ public class DHTSegment extends Segment
 			}
 		}
 
-		for (HuffmanTable table : aJPEG.mHuffmanACTables)
+		for (HuffmanTable table : mHuffmanACTables)
 		{
 			if (table != null && !table.isSent())
 			{
@@ -105,7 +113,7 @@ public class DHTSegment extends Segment
 
 		if (aLog.isDetailed())
 		{
-			for (HuffmanTable[] tables : aJPEG.mHuffmanTables)
+			for (HuffmanTable[] tables : mHuffmanTables)
 			{
 				for (HuffmanTable table : tables)
 				{

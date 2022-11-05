@@ -7,7 +7,6 @@ import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;
 import org.terifan.imageio.jpeg.DHTSegment;
-import org.terifan.imageio.jpeg.DQTSegment;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.Log;
 import org.terifan.imageio.jpeg.SOSSegment;
@@ -20,11 +19,12 @@ public class JPEGImageWriterImpl
 	{
 		aOutput.writeInt16(SegmentMarker.SOI.CODE);
 
-		new APP0Segment().encode(aJPEG, aOutput).log(aJPEG, aLog);
+		aJPEG.mAPP0Segment.encode(aJPEG, aOutput).log(aJPEG, aLog);
 
-		if (aJPEG.mICCProfile != null)
+		if (aJPEG.mAPP2Segment != null) // && aJPEG.mAPP2Segment.mICCProfile != null)
 		{
-			new APP2Segment().setType(APP2Segment.ICC_PROFILE).encode(aJPEG, aOutput);
+//			aJPEG.mAPP2Segment.setType(APP2Segment.ICC_PROFILE).encode(aJPEG, aOutput);
+			aJPEG.mAPP2Segment.encode(aJPEG, aOutput);
 		}
 
 		aJPEG.mDQTSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
@@ -41,6 +41,17 @@ public class JPEGImageWriterImpl
 
 	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, CompressionType aCompressionType, ProgressionScript aProgressionScript) throws IOException
 	{
+		if (aCompressionType.isArithmetic())
+		{
+			aJPEG.mDACSegment = new DACSegment();
+			aJPEG.mDHTSegment = null;
+		}
+		else
+		{
+			aJPEG.mDACSegment = null;
+			aJPEG.mDHTSegment = new DHTSegment();
+		}
+
 		int num_hor_mcu = aJPEG.mSOFSegment.getHorMCU();
 		int num_ver_mcu = aJPEG.mSOFSegment.getVerMCU();
 
@@ -48,7 +59,7 @@ public class JPEGImageWriterImpl
 
 		for (int progressionLevel = 0, levels = aCompressionType.isProgressive() ? aProgressionScript.getParams().size() : 1; progressionLevel < levels; progressionLevel++)
 		{
-			SOSSegment sosSegment = createSOSSegment(aCompressionType, aProgressionScript, progressionLevel, aJPEG);
+			SOSSegment sosSegment = aJPEG.mSOSSegment = createSOSSegment(aJPEG, aCompressionType, aProgressionScript, progressionLevel);
 
 			sosSegment.prepareMCU(aJPEG);
 
@@ -82,11 +93,12 @@ public class JPEGImageWriterImpl
 
 			if (aCompressionType.isArithmetic())
 			{
-				aJPEG.mArithDCL = new int[]{0,0};
-				aJPEG.mArithDCU = new int[]{1,1};
-				aJPEG.mArithACK = new int[]{5,5};
+//				aJPEG.mDACSegment.mArithDCL = new int[]{0,0};
+//				aJPEG.mDACSegment.mArithDCU = new int[]{1,1};
+//				aJPEG.mDACSegment.mArithACK = new int[]{5,5};
 
-				new DACSegment(sosSegment).encode(aJPEG, aOutput).log(aJPEG, aLog);
+				aJPEG.mDACSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+//				new DACSegment().encode(aJPEG, aOutput).log(aJPEG, aLog);
 
 				if (encoder == null)
 				{
@@ -106,7 +118,7 @@ public class JPEGImageWriterImpl
 				{
 					encoder.start_pass(aJPEG, true);
 
-					if (aJPEG.mScanBlockCount == 1)
+					if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 					{
 						ComponentInfo comp = aJPEG.mComponentInfo[0];
 
@@ -150,7 +162,7 @@ public class JPEGImageWriterImpl
 					HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
 				}
 
-				new DHTSegment().encode(aJPEG, aOutput).log(aJPEG, aLog);
+				aJPEG.mDHTSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
 			}
 
 			sosSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
@@ -159,7 +171,7 @@ public class JPEGImageWriterImpl
 
 			encoder.start_pass(aJPEG, false);
 
-			if (aJPEG.mScanBlockCount == 1)
+			if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 			{
 				ComponentInfo comp = aJPEG.mComponentInfo[0];
 
@@ -203,7 +215,7 @@ public class JPEGImageWriterImpl
 	}
 
 
-	private SOSSegment createSOSSegment(CompressionType aCompressionType, ProgressionScript aProgressionScript, int aProgressionLevel, JPEG aJPEG)
+	private SOSSegment createSOSSegment(JPEG aJPEG, CompressionType aCompressionType, ProgressionScript aProgressionScript, int aProgressionLevel)
 	{
 		SOSSegment sosSegment;
 
@@ -218,11 +230,10 @@ public class JPEGImageWriterImpl
 			}
 
 			sosSegment = new SOSSegment(id);
-
-			aJPEG.Ss = params[1][0];
-			aJPEG.Se = params[1][1];
-			aJPEG.Ah = params[1][2];
-			aJPEG.Al = params[1][3];
+			sosSegment.Ss = params[1][0];
+			sosSegment.Se = params[1][1];
+			sosSegment.Ah = params[1][2];
+			sosSegment.Al = params[1][3];
 
 			if (params[0].length == 3)
 			{
@@ -260,12 +271,11 @@ public class JPEGImageWriterImpl
 		}
 		else
 		{
-			aJPEG.Ss = 0;
-			aJPEG.Se = 63;
-			aJPEG.Ah = 0;
-			aJPEG.Al = 0;
-
 			sosSegment = new SOSSegment(aJPEG.mSOFSegment.getComponentIds());
+			sosSegment.Ss = 0;
+			sosSegment.Se = 63;
+			sosSegment.Ah = 0;
+			sosSegment.Al = 0;
 			sosSegment.setTableDC(0, 0);
 			sosSegment.setTableAC(0, 0);
 			sosSegment.setTableDC(1, 1);

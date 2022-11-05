@@ -115,64 +115,64 @@ public class ArithmeticDecoder extends Decoder
 		if (mProgressive)
 		{
 			/* Validate progressive scan parameters */
-			if (aJPEG.Ss == 0)
+			if (aJPEG.mSOSSegment.Ss == 0)
 			{
-				if (aJPEG.Se != 0)
+				if (aJPEG.mSOSSegment.Se != 0)
 				{
-					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.mSOSSegment.Ss, aJPEG.mSOSSegment.Se, aJPEG.mSOSSegment.Ah, aJPEG.mSOSSegment.Al);
 				}
 			}
 			else
 			{
 				/* need not check Ss/Se < 0 since they came from unsigned bytes */
-				if (aJPEG.Se < aJPEG.Ss || aJPEG.Se > LIM_SE)
+				if (aJPEG.mSOSSegment.Se < aJPEG.mSOSSegment.Ss || aJPEG.mSOSSegment.Se > LIM_SE)
 				{
-					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.mSOSSegment.Ss, aJPEG.mSOSSegment.Se, aJPEG.mSOSSegment.Ah, aJPEG.mSOSSegment.Al);
 				}
 				/* AC scans may have only one component */
-				if (aJPEG.mScanBlockCount != 1)
+				if (aJPEG.mSOSSegment.mScanBlockCount != 1)
 				{
-					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.mSOSSegment.Ss, aJPEG.mSOSSegment.Se, aJPEG.mSOSSegment.Ah, aJPEG.mSOSSegment.Al);
 				}
 			}
-			if (aJPEG.Ah != 0)
+			if (aJPEG.mSOSSegment.Ah != 0)
 			{
 				/* Successive approximation refinement scan: must have Al = Ah-1. */
-				if (aJPEG.Ah - 1 != aJPEG.Al)
+				if (aJPEG.mSOSSegment.Ah - 1 != aJPEG.mSOSSegment.Al)
 				{
-					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+					ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.mSOSSegment.Ss, aJPEG.mSOSSegment.Se, aJPEG.mSOSSegment.Ah, aJPEG.mSOSSegment.Al);
 				}
 			}
-			if (aJPEG.Al > 13)
+			if (aJPEG.mSOSSegment.Al > 13)
 			{
 				/* need not check for < 0 */
-				ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.Ss, aJPEG.Se, aJPEG.Ah, aJPEG.Al);
+				ERREXIT(aJPEG, JERR_BAD_PROGRESSION, aJPEG.mSOSSegment.Ss, aJPEG.mSOSSegment.Se, aJPEG.mSOSSegment.Ah, aJPEG.mSOSSegment.Al);
 			}
 			/* Update progression status, and verify that scan order is legal.
 			 * Note that inter-scan inconsistencies are treated as warnings
 			 * not fatal errors ... not clear if this is right way to behave.
 			 */
-			for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+			for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 			{
 				int cindex = aJPEG.mComponentInfo[ci].getComponentIndex();
-				if (aJPEG.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
+				if (aJPEG.mSOSSegment.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
 				}
-				for (int coefi = aJPEG.Ss; coefi <= aJPEG.Se; coefi++)
+				for (int coefi = aJPEG.mSOSSegment.Ss; coefi <= aJPEG.mSOSSegment.Se; coefi++)
 				{
 					int expected = (coef_bits[cindex][coefi] < 0) ? 0 : coef_bits[cindex][coefi];
-					if (aJPEG.Ah != expected)
+					if (aJPEG.mSOSSegment.Ah != expected)
 					{
-						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + aJPEG.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
+						throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - " + aJPEG.mSOSSegment.Ah + " != " + expected +", component " + cindex + ", coefi " + coefi);
 					}
-					coef_bits[cindex][coefi] = aJPEG.Al;
+					coef_bits[cindex][coefi] = aJPEG.mSOSSegment.Al;
 				}
 			}
 			/* Select MCU decoding routine */
-			if (aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ah == 0)
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.decode_mcu = DECODE_DC_FIRST;
 				}
@@ -183,7 +183,7 @@ public class ArithmeticDecoder extends Decoder
 			}
 			else
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					entropy.decode_mcu = DECODE_DC_REFINE;
 				}
@@ -198,7 +198,7 @@ public class ArithmeticDecoder extends Decoder
 			/* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.
 			 * This ought to be an error condition, but we make it a warning.
 			 */
-			if (aJPEG.Ss != 0 || aJPEG.Ah != 0 || aJPEG.Al != 0 || (aJPEG.Se < DCTSIZE2 && aJPEG.Se != LIM_SE))
+			if (aJPEG.mSOSSegment.Ss != 0 || aJPEG.mSOSSegment.Ah != 0 || aJPEG.mSOSSegment.Al != 0 || (aJPEG.mSOSSegment.Se < DCTSIZE2 && aJPEG.mSOSSegment.Se != LIM_SE))
 			{
 				WARNMS(aJPEG, JWRN_NOT_SEQUENTIAL);
 			}
@@ -207,10 +207,10 @@ public class ArithmeticDecoder extends Decoder
 		}
 
 		/* Allocate & initialize requested statistics areas */
-		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
-			if (!mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
+			if (!mProgressive || (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0))
 			{
 				int tbl = compptr.getTableDC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
@@ -222,7 +222,7 @@ public class ArithmeticDecoder extends Decoder
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.Ss != 0))
+			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.mSOSSegment.Ss != 0))
 			{
 				int tbl = compptr.getTableAC();
 				if (tbl < 0 || tbl >= NUM_ARITH_TBLS)
@@ -244,7 +244,7 @@ public class ArithmeticDecoder extends Decoder
 		entropy.restarts_to_go = aJPEG.mRestartInterval;
 
 		// ????????
-//		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+//		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 //		{
 //			aJPEG_entropy.last_dc_val[ci] = 0;
 //		}
@@ -461,17 +461,17 @@ public class ArithmeticDecoder extends Decoder
 		//    ERREXIT(cinfo, JERR_CANT_SUSPEND);
 
 		/* Re-initialize statistics areas */
-		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			compptr = aJPEG.mComponentInfo[ci];
-			if (!mProgressive || (aJPEG.Ss == 0 && aJPEG.Ah == 0))
+			if (!mProgressive || (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0))
 			{
 				Arrays.fill(entropy.dc_stats[compptr.getTableDC()], 0);
 				/* Reset DC predictions to 0 */
 				entropy.last_dc_val[ci] = 0;
 				entropy.dc_context[ci] = 0;
 			}
-			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.Ss != 0))
+			if ((!mProgressive && LIM_SE != 0) || (mProgressive && aJPEG.mSOSSegment.Ss != 0))
 			{
 				Arrays.fill(entropy.ac_stats[compptr.getTableAC()], 0);
 			}
@@ -560,12 +560,12 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < ((1 << aJPEG.mArithDCL[tbl]) >> 1))
+				if (m < ((1 << aJPEG.mDACSegment.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;
 					/* zero diff category */
 				}
-				else if (m > ((1 << aJPEG.mArithDCU[tbl]) >> 1))
+				else if (m > ((1 << aJPEG.mDACSegment.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 12 + (sign * 4);
 					/* large diff category */
@@ -593,7 +593,7 @@ public class ArithmeticDecoder extends Decoder
 				entropy.last_dc_val[ci] += v;
 			}
 
-			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << aJPEG.Al;
+			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << aJPEG.mSOSSegment.Al;
 		}
 
 		return true;
@@ -626,7 +626,7 @@ public class ArithmeticDecoder extends Decoder
 		/* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
 		/* Figure F.20: Decode_AC_coefficients */
-		k = aJPEG.Ss - 1;
+		k = aJPEG.mSOSSegment.Ss - 1;
 		do
 		{
 			st = entropy.ac_stats[tbl];
@@ -644,9 +644,9 @@ public class ArithmeticDecoder extends Decoder
 					break;
 				}
 				st_off += 3;
-				if (k >= aJPEG.Se)
+				if (k >= aJPEG.mSOSSegment.Se)
 				{
-					throw new IllegalStateException("JWRN_ARITH_BAD_CODE - 2: " + k + ">=" + aJPEG.Se);
+					throw new IllegalStateException("JWRN_ARITH_BAD_CODE - 2: " + k + ">=" + aJPEG.mSOSSegment.Se);
 //					entropy.ct = -1;
 					/* spectral overflow */
 //					return true;
@@ -663,7 +663,7 @@ public class ArithmeticDecoder extends Decoder
 				{
 					m <<= 1;
 					st = entropy.ac_stats[tbl];
-					st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
+					st_off = (k <= aJPEG.mDACSegment.mArithACK[tbl] ? 189 : 217);
 					while (arith_decode(st, st_off) != 0)
 					{
 						if ((m <<= 1) == 0x8000)
@@ -693,9 +693,9 @@ public class ArithmeticDecoder extends Decoder
 				v = -v;
 			}
 			/* Scale and output coefficient in natural (dezigzagged) order */
-			block[NATURAL_ORDER[k]] = v << aJPEG.Al;
+			block[NATURAL_ORDER[k]] = v << aJPEG.mSOSSegment.Al;
 		}
-		while (k < aJPEG.Se);
+		while (k < aJPEG.mSOSSegment.Se);
 
 		return true;
 	}
@@ -716,7 +716,7 @@ public class ArithmeticDecoder extends Decoder
 		{
 			if (arith_decode(st, 0) != 0)
 			{
-				aCoefficients[blockIndex][0] |= 1 << aJPEG.Al;
+				aCoefficients[blockIndex][0] |= 1 << aJPEG.mSOSSegment.Al;
 			}
 		}
 
@@ -747,11 +747,11 @@ public class ArithmeticDecoder extends Decoder
 		block = aCoefficients[0];
 		tbl = aJPEG.mComponentInfo[0].getTableAC();
 
-		p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
-		m1 = -1 << aJPEG.Al; // -1 in the bit position being coded
+		p1 = 1 << aJPEG.mSOSSegment.Al; // 1 in the bit position being coded
+		m1 = -1 << aJPEG.mSOSSegment.Al; // -1 in the bit position being coded
 
 		// Establish EOBx (previous stage end-of-block) index
-		kex = aJPEG.Se;
+		kex = aJPEG.mSOSSegment.Se;
 		do
 		{
 			if (block[NATURAL_ORDER[kex]] != 0)
@@ -761,7 +761,7 @@ public class ArithmeticDecoder extends Decoder
 		}
 		while (--kex != 0);
 
-		int k = aJPEG.Ss - 1;
+		int k = aJPEG.mSOSSegment.Ss - 1;
 		do
 		{
 			st = entropy.ac_stats[tbl];
@@ -807,16 +807,16 @@ public class ArithmeticDecoder extends Decoder
 					break;
 				}
 				st_off += 3;
-				if (k >= aJPEG.Se)
+				if (k >= aJPEG.mSOSSegment.Se)
 				{
-					WARNMS(aJPEG, JWRN_ARITH_BAD_CODE + " - 4 " + k + " >= " + aJPEG.Se + " " + tbl);
+					WARNMS(aJPEG, JWRN_ARITH_BAD_CODE + " - 4 " + k + " >= " + aJPEG.mSOSSegment.Se + " " + tbl);
 					entropy.ct = -1;
 					/* spectral overflow */
 					return true;
 				}
 			}
 		}
-		while (k < aJPEG.Se);
+		while (k < aJPEG.mSOSSegment.Se);
 
 		return true;
 	}
@@ -888,12 +888,12 @@ public class ArithmeticDecoder extends Decoder
 					}
 				}
 				/* Section F.1.4.4.1.2: Establish dc_context conditioning category */
-				if (m < ((1 << aJPEG.mArithDCL[tbl]) >> 1))
+				if (m < ((1 << aJPEG.mDACSegment.mArithDCL[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 0;
 					/* zero diff category */
 				}
-				else if (m > ((1 << aJPEG.mArithDCU[tbl]) >> 1))
+				else if (m > ((1 << aJPEG.mDACSegment.mArithDCU[tbl]) >> 1))
 				{
 					entropy.dc_context[ci] = 12 + (sign * 4);
 					/* large diff category */
@@ -968,7 +968,7 @@ public class ArithmeticDecoder extends Decoder
 					{
 						m <<= 1;
 						st = entropy.ac_stats[tbl];
-						st_off = (k <= aJPEG.mArithACK[tbl] ? 189 : 217);
+						st_off = (k <= aJPEG.mDACSegment.mArithACK[tbl] ? 189 : 217);
 						while (arith_decode(st, st_off) != 0)
 						{
 							if ((m <<= 1) == 0x8000)

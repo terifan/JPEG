@@ -13,15 +13,23 @@ public class APP0Segment extends Segment
 	private byte[] mThumbnailData;
 	private int mThumbnailFormat;
 
+	public int mDensitiesUnits;
+	public int mDensityX;
+	public int mDensityY;
+
 
 	public APP0Segment()
 	{
+		mDensitiesUnits = 1;
+		mDensityX = 72;
+		mDensityY = 72;
+
 		mThumbnailData = new byte[0];
 	}
 
 
 	@Override
-	public APP0Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public APP0Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 		String type = aBitStream.readString();
@@ -36,9 +44,9 @@ public class APP0Segment extends Segment
 					throw new IOException("Error in JPEG stream; unsupported version: " + (version >> 8) + "." + (version & 255));
 				}
 
-				aJPEG.mDensitiesUnits = aBitStream.readInt8();
-				aJPEG.mDensityX = aBitStream.readInt16();
-				aJPEG.mDensityY = aBitStream.readInt16();
+				mDensitiesUnits = aBitStream.readInt8();
+				mDensityX = aBitStream.readInt16();
+				mDensityY = aBitStream.readInt16();
 
 				mThumbnailWidth = aBitStream.readInt8();
 				mThumbnailHeight = aBitStream.readInt8();
@@ -50,8 +58,6 @@ public class APP0Segment extends Segment
 				{
 					throw new IOException("Error in JPEG stream; illegal APP0 segment size.");
 				}
-
-				aJPEG.mJFIFSegmentMarker = this;
 
 				break;
 			case "JFXX":
@@ -89,9 +95,9 @@ public class APP0Segment extends Segment
 			aBitStream.writeInt16(2 + 5 + 2 + 1 + 2 + 2 + 1 + 1 + mThumbnailData.length);
 			aBitStream.writeString("JFIF");
 			aBitStream.writeInt16(0x0102); // version
-			aBitStream.writeInt8(aJPEG.mDensitiesUnits);
-			aBitStream.writeInt16(aJPEG.mDensityX);
-			aBitStream.writeInt16(aJPEG.mDensityY);
+			aBitStream.writeInt8(mDensitiesUnits);
+			aBitStream.writeInt16(mDensityX);
+			aBitStream.writeInt16(mDensityY);
 			aBitStream.writeInt8(mThumbnailWidth); // thumbnail width
 			aBitStream.writeInt8(mThumbnailHeight); // thumbnail height
 			aBitStream.write(mThumbnailData);

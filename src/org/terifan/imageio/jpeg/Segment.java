@@ -7,7 +7,7 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public abstract class Segment<T extends Segment>
 {
-	abstract T decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException;
+	abstract T decode(BitInputStream aBitStream) throws IOException;
 
 	abstract T encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException;
 

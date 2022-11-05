@@ -14,6 +14,8 @@ public class APP2Segment extends Segment
 	private String mType;
 	private int mVersion;
 
+	public ICC_Profile mICCProfile;
+
 
 	public APP2Segment()
 	{
@@ -35,7 +37,7 @@ public class APP2Segment extends Segment
 
 
 	@Override
-	public APP2Segment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public APP2Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -49,7 +51,7 @@ public class APP2Segment extends Segment
 				byte[] buffer = new byte[length - 2 - ICC_PROFILE.length() - 1];
 				aBitStream.read(buffer);
 
-				aJPEG.mICCProfile = ICC_Profile.getInstance(new ByteArrayInputStream(buffer));
+				mICCProfile = ICC_Profile.getInstance(new ByteArrayInputStream(buffer));
 				break;
 			default:
 				aBitStream.skipBytes(length - mType.length() - 1);
@@ -63,9 +65,9 @@ public class APP2Segment extends Segment
 	@Override
 	public APP2Segment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
-		if (aJPEG.mICCProfile != null)
+		if (mICCProfile != null)
 		{
-			byte[] data = aJPEG.mICCProfile.getData();
+			byte[] data = mICCProfile.getData();
 
 			aBitStream.writeInt16(SegmentMarker.APP2.CODE);
 			aBitStream.writeInt16(2 + 12 + 2 + data.length);

@@ -1,6 +1,7 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
+import java.util.Arrays;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
 import org.terifan.imageio.jpeg.decoder.BitInputStream;
 import org.terifan.imageio.jpeg.encoder.BitOutputStream;
@@ -8,22 +9,25 @@ import org.terifan.imageio.jpeg.encoder.BitOutputStream;
 
 public class DACSegment extends Segment
 {
-	private SOSSegment mSOSSegment;
+	public int[] mArithDCL;
+	public int[] mArithDCU;
+	public int[] mArithACK;
 
 
 	public DACSegment()
 	{
-	}
+		mArithACK = new int[NUM_ARITH_TBLS];
+		mArithDCU = new int[NUM_ARITH_TBLS];
+		mArithDCL = new int[NUM_ARITH_TBLS];
 
-
-	public DACSegment(SOSSegment aSOSSegment)
-	{
-		mSOSSegment = aSOSSegment;
+		Arrays.fill(mArithDCL, 0);
+		Arrays.fill(mArithDCU, 1);
+		Arrays.fill(mArithACK, 5);
 	}
 
 
 	@Override
-	public DACSegment decode(JPEG aJPEG, BitInputStream aBitStream) throws IOException
+	public DACSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -40,14 +44,14 @@ public class DACSegment extends Segment
 
 			if (index >= NUM_ARITH_TBLS) // define AC table
 			{
-				aJPEG.mArithACK[index - NUM_ARITH_TBLS] = val;
+				mArithACK[index - NUM_ARITH_TBLS] = val;
 			}
 			else // define DC table
 			{
-				aJPEG.mArithDCU[index] = val >> 4;
-				aJPEG.mArithDCL[index] = val & 0x0F;
+				mArithDCU[index] = val >> 4;
+				mArithDCL[index] = val & 0x0F;
 
-				if (aJPEG.mArithDCL[index] > aJPEG.mArithDCU[index])
+				if (mArithDCL[index] > mArithDCU[index])
 				{
 					throw new IllegalArgumentException("Bad DAC value: " + val);
 				}
@@ -67,12 +71,12 @@ public class DACSegment extends Segment
 	public DACSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		int ac = 0;
-		for (int i = 0; i < aJPEG.mArithACK.length; i++)
+		for (int i = 0; i < mArithACK.length; i++)
 		{
 			boolean found = false;
-			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mSOSSegment.mScanBlockCount; scanComponentIndex++)
 			{
-				found = mSOSSegment.getACTable(scanComponentIndex) == i;
+				found = aJPEG.mSOSSegment.getACTable(scanComponentIndex) == i;
 			}
 
 			if (found)
@@ -82,25 +86,25 @@ public class DACSegment extends Segment
 		}
 
 		aBitStream.writeInt16(SegmentMarker.DAC.CODE);
-		aBitStream.writeInt16(2 + 2 * (aJPEG.mArithDCU.length + ac));
+		aBitStream.writeInt16(2 + 2 * (mArithDCU.length + ac));
 
-		for (int i = 0; i < aJPEG.mArithDCU.length; i++)
+		for (int i = 0; i < mArithDCU.length; i++)
 		{
 			aBitStream.writeInt8(i);
-			aBitStream.writeInt8((aJPEG.mArithDCU[i] << 4) + aJPEG.mArithDCL[i]);
+			aBitStream.writeInt8((mArithDCU[i] << 4) + mArithDCL[i]);
 		}
-		for (int i = 0; i < aJPEG.mArithACK.length; i++)
+		for (int i = 0; i < mArithACK.length; i++)
 		{
 			boolean found = false;
-			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
+			for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mSOSSegment.mScanBlockCount; scanComponentIndex++)
 			{
-				found = mSOSSegment.getACTable(scanComponentIndex) == i;
+				found = aJPEG.mSOSSegment.getACTable(scanComponentIndex) == i;
 			}
 
 			if (found)
 			{
 				aBitStream.writeInt8(NUM_ARITH_TBLS + i);
-				aBitStream.writeInt8(aJPEG.mArithACK[i]);
+				aBitStream.writeInt8(mArithACK[i]);
 			}
 		}
 
@@ -113,28 +117,28 @@ public class DACSegment extends Segment
 	{
 		aLog.println("DAC segment");
 
-		aLog.println("  DC=%d, AC=%d", aJPEG.mArithDCU.length, aJPEG.mArithACK.length);
+		aLog.println("  DC=%d, AC=%d", mArithDCU.length, mArithACK.length);
 
 		if (aLog.isDetailed())
 		{
-			for (int i = 0; i < aJPEG.mArithDCU.length; i++)
+			for (int i = 0; i < mArithDCU.length; i++)
 			{
 				aLog.println("    DC %d", i);
-				aLog.println("      u=%d, l=%d", aJPEG.mArithDCU[i], aJPEG.mArithDCL[i]);
+				aLog.println("      u=%d, l=%d", mArithDCU[i], mArithDCL[i]);
 			}
 
-			for (int i = 0; i < aJPEG.mArithACK.length; i++)
+			for (int i = 0; i < mArithACK.length; i++)
 			{
 				boolean found = false;
-				for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mScanBlockCount; scanComponentIndex++)
+				for (int scanComponentIndex = 0; !found && scanComponentIndex < aJPEG.mSOSSegment.mScanBlockCount; scanComponentIndex++)
 				{
-					found = mSOSSegment.getACTable(scanComponentIndex) == i;
+					found = aJPEG.mSOSSegment.getACTable(scanComponentIndex) == i;
 				}
 
 				if (found)
 				{
 					aLog.println("    AC %d", i);
-					aLog.println("      k=%d", aJPEG.mArithACK[i]);
+					aLog.println("      k=%d", mArithACK[i]);
 				}
 			}
 		}

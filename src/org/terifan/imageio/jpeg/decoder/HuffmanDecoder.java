@@ -37,7 +37,7 @@ public class HuffmanDecoder extends Decoder
 	{
 		aJPEG_entropy.restarts_to_go = aJPEG.mRestartInterval;
 
-		for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
 			aJPEG_entropy.last_dc_val[ci] = 0;
 		}
@@ -61,7 +61,7 @@ public class HuffmanDecoder extends Decoder
 		{
 			if (aJPEG_entropy.restarts_to_go == 0)
 			{
-				for (int ci = 0; ci < aJPEG.mScanBlockCount; ci++)
+				for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 				{
 					aJPEG_entropy.last_dc_val[ci] = 0;
 				}
@@ -84,16 +84,16 @@ public class HuffmanDecoder extends Decoder
 
 		if (mProgressive)
 		{
-			if (aJPEG.Ah == 0)
+			if (aJPEG.mSOSSegment.Ah == 0)
 			{
-				if (aJPEG.Ss == 0)
+				if (aJPEG.mSOSSegment.Ss == 0)
 				{
 					return decode_mcu_DC_first(aJPEG, aCoefficients);
 				}
 				return decode_mcu_AC_first(aJPEG, aCoefficients);
 			}
 
-			if (aJPEG.Ss == 0)
+			if (aJPEG.mSOSSegment.Ss == 0)
 			{
 				return decode_mcu_DC_refine(aJPEG, aCoefficients);
 			}
@@ -114,7 +114,7 @@ public class HuffmanDecoder extends Decoder
 			int ci = aJPEG.mMCUComponentIndices[blockIndex];
 			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
-			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
+			HuffmanTable dcTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 
 			int value = dcTable.decodeSymbol(mBitStream);
 
@@ -128,7 +128,7 @@ public class HuffmanDecoder extends Decoder
 				entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value);
 			}
 
-			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << aJPEG.Al;
+			aCoefficients[blockIndex][0] = entropy.last_dc_val[ci] << aJPEG.mSOSSegment.Al;
 		}
 
 		return true;
@@ -148,9 +148,9 @@ public class HuffmanDecoder extends Decoder
 
 			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
-			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
+			HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
-			for (int k = aJPEG.Ss; k <= aJPEG.Se; k++)
+			for (int k = aJPEG.mSOSSegment.Ss; k <= aJPEG.mSOSSegment.Se; k++)
 			{
 				int s = acTable.decodeSymbol(mBitStream);
 
@@ -166,7 +166,7 @@ public class HuffmanDecoder extends Decoder
 				{
 					k += r;
 
-					coefficients[NATURAL_ORDER[k]] = acTable.readCoefficient(mBitStream, s) << aJPEG.Al;
+					coefficients[NATURAL_ORDER[k]] = acTable.readCoefficient(mBitStream, s) << aJPEG.mSOSSegment.Al;
 				}
 				else
 				{
@@ -194,7 +194,7 @@ public class HuffmanDecoder extends Decoder
 		{
 			if (mBitStream.readBits(1) != 0)
 			{
-				aCoefficients[blockIndex][0] |= 1 << aJPEG.Al;
+				aCoefficients[blockIndex][0] |= 1 << aJPEG.mSOSSegment.Al;
 			}
 		}
 
@@ -204,15 +204,15 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_AC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		int p1 = 1 << aJPEG.Al; // 1 in the bit position being coded
-		int m1 = (-1) << aJPEG.Al; // -1 in the bit position being coded
+		int p1 = 1 << aJPEG.mSOSSegment.Al; // 1 in the bit position being coded
+		int m1 = (-1) << aJPEG.mSOSSegment.Al; // -1 in the bit position being coded
 
 		int ci = aJPEG.mMCUComponentIndices[0];
 		ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
-		HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
+		HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
-		int k = aJPEG.Ss;
+		int k = aJPEG.mSOSSegment.Ss;
 		int[] coefficients = aCoefficients[0];
 
 		if (mEOBRun == 0)
@@ -284,14 +284,14 @@ public class HuffmanDecoder extends Decoder
 					}
 					k++;
 				}
-				while (k <= aJPEG.Se);
+				while (k <= aJPEG.mSOSSegment.Se);
 				if (s != 0)
 				{
 					coefficients[NATURAL_ORDER[k]] = s; // Output newly nonzero coefficient
 				}
 				k++;
 			}
-			while (k <= aJPEG.Se);
+			while (k <= aJPEG.mSOSSegment.Se);
 		}
 
 		if (mEOBRun != 0)
@@ -319,7 +319,7 @@ public class HuffmanDecoder extends Decoder
 				}
 				k++;
 			}
-			while (k <= aJPEG.Se);
+			while (k <= aJPEG.mSOSSegment.Se);
 
 			mEOBRun--; // Count one block completed in EOB run
 		}
@@ -335,8 +335,8 @@ public class HuffmanDecoder extends Decoder
 			int ci = aJPEG.mMCUComponentIndices[blockIndex];
 			ComponentInfo comp = aJPEG.mComponentInfo[ci];
 
-			HuffmanTable dcTable = aJPEG.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
-			HuffmanTable acTable = aJPEG.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
+			HuffmanTable dcTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
+			HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
 			Arrays.fill(aCoefficients[blockIndex], 0);
 
@@ -349,7 +349,7 @@ public class HuffmanDecoder extends Decoder
 
 			if (value > 0)
 			{
-				aJPEG_entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.Al;
+				aJPEG_entropy.last_dc_val[ci] += dcTable.readCoefficient(mBitStream, value) << aJPEG.mSOSSegment.Al;
 			}
 
 			aCoefficients[blockIndex][0] = aJPEG_entropy.last_dc_val[ci];
@@ -370,7 +370,7 @@ public class HuffmanDecoder extends Decoder
 
 				if (codeLength > 0)
 				{
-					aCoefficients[blockIndex][NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength) << aJPEG.Al;
+					aCoefficients[blockIndex][NATURAL_ORDER[offset]] = acTable.readCoefficient(mBitStream, codeLength) << aJPEG.mSOSSegment.Al;
 				}
 				else if (zeroCount == 0)
 				{
