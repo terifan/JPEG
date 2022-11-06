@@ -109,10 +109,10 @@ public class HuffmanDecoder extends Decoder
 	{
 		JPEGEntropyState entropy = aJPEG_entropy;
 
-		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mSOSSegment.mMCUBlockCount; blockIndex++)
 		{
-			int ci = aJPEG.mMCUComponentIndices[blockIndex];
-			ComponentInfo comp = aJPEG.mComponentInfo[ci];
+			int ci = aJPEG.mSOSSegment.mMCUComponentIndices[blockIndex];
+			ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 			HuffmanTable dcTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 
@@ -143,10 +143,10 @@ public class HuffmanDecoder extends Decoder
 		}
 		else
 		{
-			int ci = aJPEG.mMCUComponentIndices[0];
+			int ci = aJPEG.mSOSSegment.mMCUComponentIndices[0];
 			int[] coefficients = aCoefficients[0];
 
-			ComponentInfo comp = aJPEG.mComponentInfo[ci];
+			ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 			HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
@@ -190,7 +190,7 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decode_mcu_DC_refine(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mSOSSegment.mMCUBlockCount; blockIndex++)
 		{
 			if (mBitStream.readBits(1) != 0)
 			{
@@ -207,8 +207,8 @@ public class HuffmanDecoder extends Decoder
 		int p1 = 1 << aJPEG.mSOSSegment.Al; // 1 in the bit position being coded
 		int m1 = (-1) << aJPEG.mSOSSegment.Al; // -1 in the bit position being coded
 
-		int ci = aJPEG.mMCUComponentIndices[0];
-		ComponentInfo comp = aJPEG.mComponentInfo[ci];
+		int ci = aJPEG.mSOSSegment.mMCUComponentIndices[0];
+		ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 		HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];
 
@@ -330,10 +330,10 @@ public class HuffmanDecoder extends Decoder
 
 	private boolean decodeImpl(JPEG aJPEG, int[][] aCoefficients) throws IOException
 	{
-		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mSOSSegment.mMCUBlockCount; blockIndex++)
 		{
-			int ci = aJPEG.mMCUComponentIndices[blockIndex];
-			ComponentInfo comp = aJPEG.mComponentInfo[ci];
+			int ci = aJPEG.mSOSSegment.mMCUComponentIndices[blockIndex];
+			ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 			HuffmanTable dcTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableDC()][HuffmanTable.TYPE_DC];
 			HuffmanTable acTable = aJPEG.mDHTSegment.mHuffmanTables[comp.getTableAC()][HuffmanTable.TYPE_AC];

@@ -154,7 +154,7 @@ public class ArithmeticDecoder extends Decoder
 			 */
 			for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 			{
-				int cindex = aJPEG.mComponentInfo[ci].getComponentIndex();
+				int cindex = aJPEG.mSOSSegment.mComponentInfo[ci].getComponentIndex();
 				if (aJPEG.mSOSSegment.Ss != 0 && coef_bits[cindex][0] < 0) // AC without prior DC scan
 				{
 					throw new IllegalStateException("JWRN_BOGUS_PROGRESSION - AC without prior DC scan: component: " + cindex + ", 0");
@@ -209,7 +209,7 @@ public class ArithmeticDecoder extends Decoder
 		/* Allocate & initialize requested statistics areas */
 		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			if (!mProgressive || (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0))
 			{
 				int tbl = compptr.getTableDC();
@@ -463,7 +463,7 @@ public class ArithmeticDecoder extends Decoder
 		/* Re-initialize statistics areas */
 		for (int ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			if (!mProgressive || (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0))
 			{
 				Arrays.fill(entropy.dc_stats[compptr.getTableDC()], 0);
@@ -518,10 +518,10 @@ public class ArithmeticDecoder extends Decoder
 		}
 
 		/* Outer loop handles each block in the MCU */
-		for (blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
+		for (blockIndex = 0; blockIndex < aJPEG.mSOSSegment.mMCUBlockCount; blockIndex++)
 		{
-			int ci = aJPEG.mMCUComponentIndices[blockIndex];
-			int tbl = aJPEG.mComponentInfo[ci].getTableDC();
+			int ci = aJPEG.mSOSSegment.mMCUComponentIndices[blockIndex];
+			int tbl = aJPEG.mSOSSegment.mComponentInfo[ci].getTableDC();
 
 			/* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 
@@ -621,7 +621,7 @@ public class ArithmeticDecoder extends Decoder
 
 		/* There is always only one block per MCU */
 		block = aCoefficients[0];
-		tbl = aJPEG.mComponentInfo[0].getTableAC();
+		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		/* Sections F.2.4.2 & F.1.4.4.2: Decoding of AC coefficients */
 
@@ -712,7 +712,7 @@ public class ArithmeticDecoder extends Decoder
 
 		int[] st = entropy.fixed_bin;
 
-		for (int blockIndex = 0; blockIndex < aJPEG.mMCUBlockCount; blockIndex++)
+		for (int blockIndex = 0; blockIndex < aJPEG.mSOSSegment.mMCUBlockCount; blockIndex++)
 		{
 			if (arith_decode(st, 0) != 0)
 			{
@@ -745,7 +745,7 @@ public class ArithmeticDecoder extends Decoder
 
 		/* There is always only one block per MCU */
 		block = aCoefficients[0];
-		tbl = aJPEG.mComponentInfo[0].getTableAC();
+		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		p1 = 1 << aJPEG.mSOSSegment.Al; // 1 in the bit position being coded
 		m1 = -1 << aJPEG.mSOSSegment.Al; // -1 in the bit position being coded
@@ -844,11 +844,11 @@ public class ArithmeticDecoder extends Decoder
 		}
 
 		/* Outer loop handles each block in the MCU */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
 			block = aCoefficients[blkn];
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			compptr = aJPEG.mComponentInfo[ci];
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 			/* Sections F.2.4.1 & F.1.4.4.1: Decoding of DC coefficients */
 			tbl = compptr.getTableDC();

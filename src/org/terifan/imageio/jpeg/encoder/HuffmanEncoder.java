@@ -582,10 +582,10 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			tbl = aJPEG.mComponentInfo[ci].getTableDC();
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			tbl = aJPEG.mSOSSegment.mComponentInfo[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
@@ -816,7 +816,7 @@ public class HuffmanEncoder implements Encoder
 		Al = aJPEG.mSOSSegment.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
 			emit_bits_e(entropy, (aCoefficients[blkn][0] >> Al) & 1, 1);
@@ -1135,10 +1135,10 @@ public class HuffmanEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			compptr = aJPEG.mComponentInfo[ci];
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			encode_one_block(state, aCoefficients[blkn], state.cur.last_dc_val[ci], entropy.dc_derived_tbls[compptr.getTableDC()], entropy.ac_derived_tbls[compptr.getTableAC()]);
 			/* Update last_dc_val */
 			state.cur.last_dc_val[ci] = aCoefficients[blkn][0];
@@ -1345,10 +1345,10 @@ public class HuffmanEncoder implements Encoder
 			entropy.restarts_to_go--;
 		}
 
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			compptr = aJPEG.mComponentInfo[ci];
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			htest_one_block(aJPEG, aCoefficients[blkn], entropy.saved.last_dc_val[ci], entropy.dc_count_ptrs[compptr.getTableDC()], entropy.ac_count_ptrs[compptr.getTableAC()]);
 			entropy.saved.last_dc_val[ci] = aCoefficients[blkn][0];
 		}
@@ -1573,7 +1573,7 @@ public class HuffmanEncoder implements Encoder
 
 		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
@@ -1648,7 +1648,7 @@ public class HuffmanEncoder implements Encoder
 			}
 
 			/* Initialize AC stuff */
-			entropy.ac_tbl_no = aJPEG.mComponentInfo[0].getTableAC();
+			entropy.ac_tbl_no = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 			entropy.EOBRUN = 0;
 			entropy.BE = 0;
 		}
@@ -1659,7 +1659,7 @@ public class HuffmanEncoder implements Encoder
 
 		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{

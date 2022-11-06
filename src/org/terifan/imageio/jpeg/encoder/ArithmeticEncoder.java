@@ -424,7 +424,7 @@ public class ArithmeticEncoder implements Encoder
 		/* Re-initialize statistics areas */
 		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{
@@ -477,10 +477,10 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			tbl = aJPEG.mComponentInfo[ci].getTableDC();
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			tbl = aJPEG.mSOSSegment.mComponentInfo[ci].getTableDC();
 
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
@@ -593,7 +593,7 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = aJPEG.mComponentInfo[0].getTableAC();
+		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
 
@@ -726,7 +726,7 @@ public class ArithmeticEncoder implements Encoder
 		Al = aJPEG.mSOSSegment.Al;
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
 			arith_encode(aJPEG, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
@@ -763,7 +763,7 @@ public class ArithmeticEncoder implements Encoder
 
 		/* Encode the MCU data block */
 		block = MCU_data[0];
-		tbl = aJPEG.mComponentInfo[0].getTableAC();
+		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		/* Section G.1.3.3: Encoding of AC coefficients */
 
@@ -923,11 +923,11 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data blocks */
-		for (blkn = 0; blkn < aJPEG.mMCUBlockCount; blkn++)
+		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
 			block = MCU_data[blkn];
-			ci = aJPEG.mMCUComponentIndices[blkn];
-			compptr = aJPEG.mComponentInfo[ci];
+			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 			tbl = compptr.getTableDC();
@@ -1154,7 +1154,7 @@ public class ArithmeticEncoder implements Encoder
 		/* Allocate & initialize requested statistics areas */
 		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 		{
-			compptr = aJPEG.mComponentInfo[ci];
+			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 			/* DC needs no table for refinement scan */
 			if (aJPEG.mSOSSegment.Ss == 0 && aJPEG.mSOSSegment.Ah == 0)
 			{

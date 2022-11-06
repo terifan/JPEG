@@ -127,14 +127,6 @@ public class JPEGImageReaderImpl
 					decoder = compression.createDecoderInstance();
 					decoder.initialize(aJPEG, aInput);
 
-					int cn = 0;
-					for (ComponentInfo comp : aJPEG.mSOFSegment.getComponents())
-					{
-						comp.setComponentBlockOffset(cn);
-						cn += comp.getHorSampleFactor() * comp.getVerSampleFactor();
-					}
-					aJPEG.mBlockCount = cn;
-
 					if (aImage != null)
 					{
 						aJPEG.getColorSpace().configureImageBuffer(sof, aImage);
@@ -209,7 +201,7 @@ public class JPEGImageReaderImpl
 
 		aDecoder.startPass(aJPEG);
 
-		int[][] mcu = new int[aJPEG.mBlockCount][64];
+		int[][] mcu = new int[aJPEG.mSOFSegment.getMaxBlocksInMCU()][64];
 
 		if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 		{
@@ -306,7 +298,7 @@ public class JPEGImageReaderImpl
 //				}
 //			}
 
-			ComponentInfo comp = aJPEG.mComponentInfo[0];
+			ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[0];
 
 			for (int mcuY = 0; mcuY < numVerMCU; mcuY++)
 			{
@@ -342,7 +334,7 @@ public class JPEGImageReaderImpl
 				{
 					for (int ci = 0, blockIndex = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 					{
-						ComponentInfo comp = aJPEG.mComponentInfo[ci];
+						ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 						for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 						{
@@ -376,7 +368,7 @@ public class JPEGImageReaderImpl
 
 					for (int ci = 0, blockIndex = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
 					{
-						ComponentInfo comp = aJPEG.mComponentInfo[ci];
+						ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[ci];
 
 						for (int blockY = 0; blockY < comp.getVerSampleFactor(); blockY++)
 						{
@@ -407,7 +399,7 @@ public class JPEGImageReaderImpl
 
 		int numHorMCU = aJPEG.mSOFSegment.getHorMCU();
 
-		int[][][] workBlock = new int[numHorMCU][aJPEG.mBlockCount][64];
+		int[][][] workBlock = new int[numHorMCU][aJPEG.mSOFSegment.getMaxBlocksInMCU()][64];
 
 		for (int mcuX = 0; mcuX < numHorMCU; mcuX++)
 		{

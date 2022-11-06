@@ -63,7 +63,7 @@ public class JPEGImageWriterImpl
 
 			sosSegment.prepareMCU(aJPEG);
 
-			int[][] mcu = new int[aJPEG.mMCUBlockCount][64];
+			int[][] mcu = new int[aJPEG.mSOSSegment.mMCUBlockCount][64];
 
 			int[][][][] coefficients = aJPEG.mCoefficients;
 
@@ -120,7 +120,7 @@ public class JPEGImageWriterImpl
 
 					if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 					{
-						ComponentInfo comp = aJPEG.mComponentInfo[0];
+						ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[0];
 
 						for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 						{
@@ -173,7 +173,7 @@ public class JPEGImageWriterImpl
 
 			if (aJPEG.mSOSSegment.mScanBlockCount == 1)
 			{
-				ComponentInfo comp = aJPEG.mComponentInfo[0];
+				ComponentInfo comp = aJPEG.mSOSSegment.mComponentInfo[0];
 
 				for (int mcuY = 0; mcuY < num_ver_mcu; mcuY++)
 				{

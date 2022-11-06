@@ -17,6 +17,7 @@ public class SOFSegment extends Segment implements Serializable
 	private ComponentInfo[] mComponents;
 	private CompressionType mCompressionType;
 	private int[] mBlockLookup;
+//	private int mBlockCount;
 
 
 	public SOFSegment()
@@ -72,6 +73,13 @@ public class SOFSegment extends Segment implements Serializable
 		}
 
 		updateLookupTable();
+
+		int count = 0;
+		for (ComponentInfo ci : mComponents)
+		{
+			ci.setComponentBlockOffset(count);
+			count += ci.getHorSampleFactor() * ci.getVerSampleFactor();
+		}
 
 		return this;
 	}

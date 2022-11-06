@@ -11,7 +11,11 @@ public class SOSSegment extends Segment
 	private int[] mTableAC;
 	private int[] mTableDC;
 
+	public ComponentInfo[] mComponentInfo;
+	public int[] mMCUComponentIndices;
+	public int mMCUBlockCount;
 	public int mScanBlockCount;
+
 	public int Ss;
 	public int Se;
 	public int Ah;
@@ -137,15 +141,15 @@ public class SOSSegment extends Segment
 	{
 		mScanBlockCount = mComponentIds.length;
 
-		aJPEG.mMCUBlockCount = 0;
+		mMCUBlockCount = 0;
 		for (int scanComponentIndex = 0; scanComponentIndex < mScanBlockCount; scanComponentIndex++)
 		{
 			ComponentInfo comp = aJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
-			aJPEG.mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
+			mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 
-		aJPEG.mMCUComponentIndices = new int[aJPEG.mMCUBlockCount];
-		aJPEG.mComponentInfo = new ComponentInfo[mScanBlockCount];
+		mMCUComponentIndices = new int[mMCUBlockCount];
+		mComponentInfo = new ComponentInfo[mScanBlockCount];
 
 		for (int scanComponentIndex = 0, blockIndex = 0; scanComponentIndex < mScanBlockCount; scanComponentIndex++)
 		{
@@ -154,11 +158,11 @@ public class SOSSegment extends Segment
 			comp.setTableAC(getACTable(scanComponentIndex));
 			comp.setTableDC(getDCTable(scanComponentIndex));
 
-			aJPEG.mComponentInfo[scanComponentIndex] = comp;
+			mComponentInfo[scanComponentIndex] = comp;
 
 			for (int i = 0; i < comp.getHorSampleFactor() * comp.getVerSampleFactor(); i++, blockIndex++)
 			{
-				aJPEG.mMCUComponentIndices[blockIndex] = scanComponentIndex;
+				mMCUComponentIndices[blockIndex] = scanComponentIndex;
 			}
 		}
 	}

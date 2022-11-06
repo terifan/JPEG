@@ -14,14 +14,10 @@ public class JPEG
 
 	public int[][][][] mCoefficients;
 
-	public ComponentInfo[] mComponentInfo;
-	public int[] mMCUComponentIndices;
-	public int mMCUBlockCount;
 	public ColorSpace mColorSpace;
 
 	public int mRestartInterval;
 	public int mRestartMarkerIndex;
-	public int mBlockCount;
 
 
 	public JPEG()
