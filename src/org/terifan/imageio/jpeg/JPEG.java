@@ -4,6 +4,7 @@ package org.terifan.imageio.jpeg;
 public class JPEG
 {
 	public APP0Segment mAPP0Segment;
+	public APP1Segment mAPP1Segment;
 	public APP2Segment mAPP2Segment;
 	public SOFSegment mSOFSegment;
 	public SOSSegment mSOSSegment;

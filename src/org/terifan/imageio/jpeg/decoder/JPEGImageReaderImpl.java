@@ -3,7 +3,6 @@ package org.terifan.imageio.jpeg.decoder;
 import org.terifan.imageio.jpeg.SOSSegment;
 import org.terifan.imageio.jpeg.SOFSegment;
 import org.terifan.imageio.jpeg.ComponentInfo;
-import org.terifan.imageio.jpeg.DQTSegment;
 import java.io.IOException;
 import org.terifan.imageio.jpeg.APP0Segment;
 import org.terifan.imageio.jpeg.APP14Segment;
@@ -73,13 +72,13 @@ public class JPEGImageReaderImpl
 			switch (marker)
 			{
 				case APP0: // Thumbnail
-					aJPEG.mAPP0Segment.decode(aInput).print(aJPEG, aLog);
+					aJPEG.mAPP0Segment = new APP0Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP1: // Exif
-					new APP1Segment().decode(aInput).print(aJPEG, aLog);
+					aJPEG.mAPP1Segment = new APP1Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP2: // Color space
-					new APP2Segment().decode(aInput).print(aJPEG, aLog);
+					aJPEG.mAPP2Segment = new APP2Segment().decode(aInput).print(aJPEG, aLog);
 					break;
 				case APP14: // Adobe color profiles
 					aJPEG.mColorSpaceTransform = new APP14Segment().decode(aInput).print(aJPEG, aLog);
@@ -150,11 +149,6 @@ public class JPEGImageReaderImpl
 					aInput.setHandleMarkers(false);
 
 					aLog.println("<image data %d bytes%s>", aInput.getStreamOffset() - streamOffset, aJPEG.mSOFSegment.getCompressionType().isProgressive() ? ", progression level " + (1 + progressionLevel) : "");
-
-//					if (progressionLevel == 2)
-//					{
-//						return;
-//					}
 
 					progressionLevel++;
 
