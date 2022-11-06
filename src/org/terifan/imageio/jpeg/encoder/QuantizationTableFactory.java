@@ -49,7 +49,7 @@ public class QuantizationTableFactory
 
 		int[] quantval = new int[W * H];
 
-		if (aComponent > 1) // was > 2 ????
+		if (aComponent > 2)
 		{
 			for (int i = 0; i < quantval.length; i++)
 			{

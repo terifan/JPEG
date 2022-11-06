@@ -24,6 +24,7 @@ public class JPEG
 	public JPEG()
 	{
 		mAPP0Segment = new APP0Segment();
+		mSOFSegment = new SOFSegment();
 		mDQTSegment = new DQTSegment();
 	}
 

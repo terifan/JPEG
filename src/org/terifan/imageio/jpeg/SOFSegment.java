@@ -11,13 +11,12 @@ public class SOFSegment extends Segment implements Serializable
 {
 	private final static long serialVersionUID = 1L;
 
+	private CompressionType mCompressionType;
 	private int mPrecision;
 	private int mHeight;
 	private int mWidth;
 	private ComponentInfo[] mComponents;
-	private CompressionType mCompressionType;
 	private int[] mBlockLookup;
-//	private int mBlockCount;
 
 
 	public SOFSegment()

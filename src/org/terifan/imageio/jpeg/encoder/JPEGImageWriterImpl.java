@@ -1,8 +1,6 @@
 package org.terifan.imageio.jpeg.encoder;
 
 import java.io.IOException;
-import org.terifan.imageio.jpeg.APP0Segment;
-import org.terifan.imageio.jpeg.APP2Segment;
 import org.terifan.imageio.jpeg.ComponentInfo;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.DACSegment;

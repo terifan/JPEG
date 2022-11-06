@@ -117,7 +117,7 @@ public class JPEGImageReaderImpl
 						aJPEG.mDHTSegment = new DHTSegment();
 					}
 
-					SOFSegment sof = aJPEG.mSOFSegment = new SOFSegment().decode(aInput).setCompressionType(compression).print(aJPEG, aLog);
+					SOFSegment sof = aJPEG.mSOFSegment.decode(aInput).setCompressionType(compression).print(aJPEG, aLog);
 
 					aDecodeCoefficients |= compression.isProgressive();
 
