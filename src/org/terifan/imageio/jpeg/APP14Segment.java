@@ -24,7 +24,6 @@ public class APP14Segment extends Segment
 	}
 
 
-	@Override
 	public APP14Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int offset = aBitStream.getStreamOffset();
@@ -54,18 +53,11 @@ public class APP14Segment extends Segment
 
 
 	@Override
-	public APP14Segment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
-	{
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-
-
-	@Override
 	public APP14Segment print(JPEG aJPEG, Log aLog) throws IOException
 	{
 		aLog.println("APP14 segment");
 		aLog.println("  Adobe");
-		aLog.println("  Color space %d", aJPEG.mColorSpace);
+//		aLog.println("  Color space %d", aJPEG.mColorSpace);
 
 		return this;
 	}

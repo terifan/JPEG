@@ -104,7 +104,6 @@ public class DQTSegment extends Segment implements Serializable
 	}
 
 
-	@Override
 	public DQTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -144,8 +143,7 @@ public class DQTSegment extends Segment implements Serializable
 	}
 
 
-	@Override
-	public DQTSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public DQTSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		for (QuantizationTable table : mTables)
 		{

@@ -30,7 +30,6 @@ public class SOSSegment extends Segment
 	}
 
 
-	@Override
 	public SOSSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
@@ -60,8 +59,7 @@ public class SOSSegment extends Segment
 	}
 
 
-	@Override
-	public SOSSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public SOSSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(SegmentMarker.SOS.CODE);
 		aBitStream.writeInt16(2 + 1 + mComponentIds.length * 2 + 3);

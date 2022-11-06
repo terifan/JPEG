@@ -35,7 +35,6 @@ public class SOFSegment extends Segment implements Serializable
 	}
 
 
-	@Override
 	public SOFSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
@@ -85,8 +84,7 @@ public class SOFSegment extends Segment implements Serializable
 	}
 
 
-	@Override
-	public SOFSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(mCompressionType.getSegmentMarker().CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);

@@ -36,7 +36,6 @@ public class APP2Segment extends Segment
 	}
 
 
-	@Override
 	public APP2Segment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -62,8 +61,7 @@ public class APP2Segment extends Segment
 	}
 
 
-	@Override
-	public APP2Segment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public APP2Segment encode(BitOutputStream aBitStream) throws IOException
 	{
 		if (mICCProfile != null)
 		{

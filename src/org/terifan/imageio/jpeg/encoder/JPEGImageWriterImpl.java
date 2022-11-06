@@ -19,16 +19,16 @@ public class JPEGImageWriterImpl
 	{
 		aOutput.writeInt16(SegmentMarker.SOI.CODE);
 
-		aJPEG.mAPP0Segment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+		aJPEG.mAPP0Segment.encode(aOutput).log(aJPEG, aLog);
 
 		if (aJPEG.mAPP2Segment != null) // && aJPEG.mAPP2Segment.mICCProfile != null)
 		{
 //			aJPEG.mAPP2Segment.setType(APP2Segment.ICC_PROFILE).encode(aJPEG, aOutput);
-			aJPEG.mAPP2Segment.encode(aJPEG, aOutput);
+			aJPEG.mAPP2Segment.encode(aOutput);
 		}
 
-		aJPEG.mDQTSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
-		aJPEG.mSOFSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+		aJPEG.mDQTSegment.encode(aOutput).log(aJPEG, aLog);
+		aJPEG.mSOFSegment.encode(aOutput).log(aJPEG, aLog);
 	}
 
 
@@ -162,10 +162,10 @@ public class JPEGImageWriterImpl
 					HuffmanEncoder.setupStandardHuffmanTables(aJPEG);
 				}
 
-				aJPEG.mDHTSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+				aJPEG.mDHTSegment.encode(aOutput).log(aJPEG, aLog);
 			}
 
-			sosSegment.encode(aJPEG, aOutput).log(aJPEG, aLog);
+			sosSegment.encode(aOutput).log(aJPEG, aLog);
 
 			int streamOffset = aOutput.getStreamOffset();
 

@@ -24,7 +24,6 @@ public class DHTSegment extends Segment
 	}
 
 
-	@Override
 	public DHTSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -55,8 +54,7 @@ public class DHTSegment extends Segment
 	}
 
 
-	@Override
-	public DHTSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public DHTSegment encode(BitOutputStream aBitStream) throws IOException
 	{
 		mLog = "";
 

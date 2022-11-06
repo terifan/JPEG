@@ -26,7 +26,6 @@ public class DACSegment extends Segment
 	}
 
 
-	@Override
 	public DACSegment decode(BitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
@@ -67,7 +66,6 @@ public class DACSegment extends Segment
 	}
 
 
-	@Override
 	public DACSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
 	{
 		int ac = 0;
