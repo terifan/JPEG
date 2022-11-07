@@ -147,6 +147,12 @@ public class ComponentInfo implements Serializable
 	}
 
 
+	public Type getComponentType()
+	{
+		return Type.fromComponentId(mComponentId);
+	}
+
+
 	@Override
 	public String toString()
 	{

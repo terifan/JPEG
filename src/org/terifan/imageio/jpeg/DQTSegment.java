@@ -145,32 +145,36 @@ public class DQTSegment extends Segment implements Serializable
 
 	public DQTSegment encode(BitOutputStream aBitStream) throws IOException
 	{
+		int len = 2;
 		for (QuantizationTable table : mTables)
 		{
-			if (table == null)
+			len += table == null ? 0 : 1 + (table.getPrecision() == PRECISION_8_BITS ? 64 : 2 * 64);
+		}
+
+		aBitStream.writeInt16(SegmentMarker.DQT.CODE);
+		aBitStream.writeInt16(len);
+
+		for (QuantizationTable table : mTables)
+		{
+			if (table != null)
 			{
-				continue;
-			}
+				boolean extended = table.getPrecision() == PRECISION_16_BITS;
+				int[] data = table.getDivisors();
 
-			int len = 2 + 1 + (table.getPrecision() == PRECISION_8_BITS ? 1 * 64 : 2 * 64);
+				aBitStream.writeInt8(((extended ? 1 : 0) << 3) + table.getIdentity());
 
-			aBitStream.writeInt16(SegmentMarker.DQT.CODE);
-			aBitStream.writeInt16(len);
-			aBitStream.writeInt8(((table.getPrecision() == PRECISION_8_BITS ? 0 : 1) << 3) | table.getIdentity());
-
-			int[] data = table.getDivisors();
-
-			for (int i = 0; i < 64; i++)
-			{
-				int v = data[NATURAL_ORDER[i]];
-
-				if (table.getPrecision() == PRECISION_8_BITS)
+				for (int i = 0; i < 64; i++)
 				{
-					aBitStream.writeInt8(v >> 8);
-				}
-				else
-				{
-					aBitStream.writeInt16(v);
+					int v = data[NATURAL_ORDER[i]];
+
+					if (extended)
+					{
+						aBitStream.writeInt16(v);
+					}
+					else
+					{
+						aBitStream.writeInt8(v >> 8);
+					}
 				}
 			}
 		}

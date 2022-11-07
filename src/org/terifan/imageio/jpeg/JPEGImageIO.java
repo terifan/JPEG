@@ -52,7 +52,6 @@ public class JPEGImageIO
 	private ProgressionScript mProgressionScript;
 	private CompressionType mCompressionType;
 	private double mQuality;
-	private boolean mUpdateProgressiveImage;
 	private SubsamplingMode mSubsampling;
 	private Log mLog;
 	private Runnable mRenderListener;
