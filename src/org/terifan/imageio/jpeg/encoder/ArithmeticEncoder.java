@@ -30,7 +30,7 @@ public class ArithmeticEncoder implements Encoder
 {
 	private OutputStream mOutputStream;
 	private boolean mProgressive;
-	private JPEGEntropyState aJPEG_entropy;
+	private JPEGEntropyState mEntropyState;
 
 
 	public ArithmeticEncoder(OutputStream aOutputStream)
@@ -136,7 +136,7 @@ public class ArithmeticEncoder implements Encoder
 			return;
 		}
 
-		JPEGEntropyState e = aJPEG_entropy;
+		JPEGEntropyState e = mEntropyState;
 		long temp;
 
 		/* Section D.1.8: Termination of encoding */
@@ -264,7 +264,7 @@ public class ArithmeticEncoder implements Encoder
 	 */
 	void arith_encode(JPEG aJPEG, int[] st, int st_off, int val) throws IOException
 	{
-		JPEGEntropyState e = aJPEG_entropy;
+		JPEGEntropyState e = mEntropyState;
 		int nl, nm;
 		int temp;
 		int sv;
@@ -410,16 +410,16 @@ public class ArithmeticEncoder implements Encoder
 	/*
 	 * Emit a restart marker & resynchronize predictions.
 	 */
-	void emit_restart(JPEG aJPEG, int restart_num) throws IOException
+	void emit_restart(JPEG aJPEG, int aRestartNum) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int ci;
 		ComponentInfo compptr;
 
 		finish_pass(aJPEG, false);
 
 		emit_byte(0xFF, aJPEG);
-		emit_byte(SegmentMarker.RST0.CODE + restart_num, aJPEG);
+		emit_byte(SegmentMarker.RST0.CODE + aRestartNum, aJPEG);
 
 		/* Re-initialize statistics areas */
 		for (ci = 0; ci < aJPEG.mSOSSegment.mScanBlockCount; ci++)
@@ -455,9 +455,9 @@ public class ArithmeticEncoder implements Encoder
 	 * MCU encoding for DC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_DC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
+	boolean encode_mcu_DC_first(JPEG aJPEG, int[][] aMCUData) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int[] st;
 		int st_off;
 		int blkn, ci, tbl;
@@ -485,7 +485,7 @@ public class ArithmeticEncoder implements Encoder
 			/* Compute the DC value after the required point transform by Al.
 			 * This is simply an arithmetic right shift.
 			 */
-			m = MCU_data[blkn][0] >> aJPEG.mSOSSegment.Al;
+			m = aMCUData[blkn][0] >> aJPEG.mSOSSegment.Al;
 
 			/* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 
@@ -569,9 +569,9 @@ public class ArithmeticEncoder implements Encoder
 	 * MCU encoding for AC initial scan (either spectral selection,
 	 * or first pass of successive approximation).
 	 */
-	boolean encode_mcu_AC_first(JPEG aJPEG, int[][] MCU_data) throws IOException
+	boolean encode_mcu_AC_first(JPEG aJPEG, int[][] aMCUData) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -592,7 +592,7 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data block */
-		block = MCU_data[0];
+		block = aMCUData[0];
 		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		/* Sections F.1.4.2 & F.1.4.4.2: Encoding of AC coefficients */
@@ -701,9 +701,9 @@ public class ArithmeticEncoder implements Encoder
 	 * Note: we assume such scans can be multi-component,
 	 * although the spec is not very clear on the point.
 	 */
-	boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
+	boolean encode_mcu_DC_refine(JPEG aJPEG, int[][] aMCUData) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int[] st;
 		int st_off = 0;
 		int Al, blkn;
@@ -729,7 +729,7 @@ public class ArithmeticEncoder implements Encoder
 		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
 			/* We simply emit the Al'th bit of the DC coefficient value. */
-			arith_encode(aJPEG, st, st_off, (MCU_data[blkn][0] >> Al) & 1);
+			arith_encode(aJPEG, st, st_off, (aMCUData[blkn][0] >> Al) & 1);
 		}
 
 		return true;
@@ -739,9 +739,9 @@ public class ArithmeticEncoder implements Encoder
 	/*
 	 * MCU encoding for AC successive approximation refinement scan.
 	 */
-	boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] MCU_data) throws IOException
+	boolean encode_mcu_AC_refine(JPEG aJPEG, int[][] aMCUData) throws IOException
 	{
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -762,7 +762,7 @@ public class ArithmeticEncoder implements Encoder
 		}
 
 		/* Encode the MCU data block */
-		block = MCU_data[0];
+		block = aMCUData[0];
 		tbl = aJPEG.mSOSSegment.mComponentInfo[0].getTableAC();
 
 		/* Section G.1.3.3: Encoding of AC coefficients */
@@ -881,26 +881,26 @@ public class ArithmeticEncoder implements Encoder
 	 * Encode and output one MCU's worth of arithmetic-compressed coefficients.
 	 */
 	@Override
-	public boolean encode_mcu(JPEG aJPEG, int[][] MCU_data, boolean gather_statistics) throws IOException
+	public boolean encode_mcu(JPEG aJPEG, int[][] aMCUData, boolean aGatherStatistics) throws IOException
 	{
-		if (gather_statistics)
+		if (aGatherStatistics)
 		{
 			return true;
 		}
 
-		switch (aJPEG_entropy.encode_mcu)
+		switch (mEntropyState.encode_mcu)
 		{
 			case x_encode_mcu_DC_first:
-				return encode_mcu_DC_first(aJPEG, MCU_data);
+				return encode_mcu_DC_first(aJPEG, aMCUData);
 			case x_encode_mcu_AC_first:
-				return encode_mcu_AC_first(aJPEG, MCU_data);
+				return encode_mcu_AC_first(aJPEG, aMCUData);
 			case x_encode_mcu_DC_refine:
-				return encode_mcu_DC_refine(aJPEG, MCU_data);
+				return encode_mcu_DC_refine(aJPEG, aMCUData);
 			case x_encode_mcu_AC_refine:
-				return encode_mcu_AC_refine(aJPEG, MCU_data);
+				return encode_mcu_AC_refine(aJPEG, aMCUData);
 		}
 
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int[] block;
 		int[] st;
 		int st_off;
@@ -925,7 +925,7 @@ public class ArithmeticEncoder implements Encoder
 		/* Encode the MCU data blocks */
 		for (blkn = 0; blkn < aJPEG.mSOSSegment.mMCUBlockCount; blkn++)
 		{
-			block = MCU_data[blkn];
+			block = aMCUData[blkn];
 			ci = aJPEG.mSOSSegment.mMCUComponentIndices[blkn];
 			compptr = aJPEG.mSOSSegment.mComponentInfo[ci];
 
@@ -1107,14 +1107,14 @@ public class ArithmeticEncoder implements Encoder
 
 
 	@Override
-	public void start_pass(JPEG aJPEG, boolean gather_statistics)
+	public void start_pass(JPEG aJPEG, boolean aGatherStatistics)
 	{
-		if (gather_statistics)
+		if (aGatherStatistics)
 		{
 			return;
 		}
 
-		JPEGEntropyState entropy = aJPEG_entropy;
+		JPEGEntropyState entropy = mEntropyState;
 		int ci, tbl;
 		ComponentInfo compptr;
 
@@ -1214,18 +1214,18 @@ public class ArithmeticEncoder implements Encoder
 	{
 		mProgressive = aProgressive;
 
-		if(aJPEG_entropy==null)
-		aJPEG_entropy = new JPEGEntropyState();
+		if(mEntropyState==null)
+		mEntropyState = new JPEGEntropyState();
 		int i;
 
 		/* Mark tables unallocated */
 		for (i = 0; i < NUM_ARITH_TBLS; i++)
 		{
-			aJPEG_entropy.dc_stats[i] = null;
-			aJPEG_entropy.ac_stats[i] = null;
+			mEntropyState.dc_stats[i] = null;
+			mEntropyState.ac_stats[i] = null;
 		}
 
 		/* Initialize index for fixed probability estimation */
-		aJPEG_entropy.fixed_bin[0] = 113;
+		mEntropyState.fixed_bin[0] = 113;
 	}
 }
