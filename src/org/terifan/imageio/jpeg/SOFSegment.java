@@ -3,8 +3,8 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class SOFSegment extends Segment implements Serializable
@@ -34,7 +34,7 @@ public class SOFSegment extends Segment implements Serializable
 	}
 
 
-	public SOFSegment decode(BitInputStream aBitStream) throws IOException
+	public SOFSegment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int segmentLength = aBitStream.readInt16();
 
@@ -83,7 +83,7 @@ public class SOFSegment extends Segment implements Serializable
 	}
 
 
-	public SOFSegment encode(BitOutputStream aBitStream) throws IOException
+	public SOFSegment encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(mCompressionType.getSegmentMarker().CODE);
 		aBitStream.writeInt16(2 + 6 + 3 * mComponents.length);

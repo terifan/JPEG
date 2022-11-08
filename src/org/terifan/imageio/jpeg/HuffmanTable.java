@@ -3,7 +3,7 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
 
 
 public class HuffmanTable
@@ -157,7 +157,7 @@ public class HuffmanTable
 	}
 
 
-	public int decodeSymbol(BitInputStream aBitStream) throws IOException
+	public int decodeSymbol(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int p = aBitStream.peekBits(mMaxLength);
 		int s = mLookup[p];
@@ -174,7 +174,7 @@ public class HuffmanTable
 	}
 
 
-	public int readCoefficient(BitInputStream aBitStream, int aLength) throws IOException
+	public int readCoefficient(JPEGBitInputStream aBitStream, int aLength) throws IOException
 	{
 		int symbol = aBitStream.readBits(aLength);
 

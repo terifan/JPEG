@@ -1,8 +1,8 @@
 package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class APP0Segment extends Segment
@@ -28,7 +28,7 @@ public class APP0Segment extends Segment
 	}
 
 
-	public APP0Segment decode(BitInputStream aBitStream) throws IOException
+	public APP0Segment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16();
 		String type = aBitStream.readString();
@@ -77,7 +77,7 @@ public class APP0Segment extends Segment
 	}
 
 
-	public APP0Segment encode(BitOutputStream aBitStream) throws IOException
+	public APP0Segment encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt16(SegmentMarker.APP0.CODE);
 

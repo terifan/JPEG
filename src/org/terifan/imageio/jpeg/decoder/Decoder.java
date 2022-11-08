@@ -6,7 +6,7 @@ import org.terifan.imageio.jpeg.JPEG;
 
 public abstract class Decoder
 {
-	abstract void initialize(JPEG aJPEG, BitInputStream aBitStream) throws IOException;
+	abstract void initialize(JPEG aJPEG, JPEGBitInputStream aBitStream) throws IOException;
 
 	abstract void finishPass(JPEG aJPEG) throws IOException;
 

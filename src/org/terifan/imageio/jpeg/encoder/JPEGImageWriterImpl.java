@@ -13,7 +13,7 @@ import org.terifan.imageio.jpeg.SegmentMarker;
 
 public class JPEGImageWriterImpl
 {
-	public void create(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
+	public void create(JPEG aJPEG, JPEGBitOutputStream aOutput, Log aLog) throws IOException
 	{
 		aOutput.writeInt16(SegmentMarker.SOI.CODE);
 
@@ -30,14 +30,14 @@ public class JPEGImageWriterImpl
 	}
 
 
-	public void finish(JPEG aJPEG, BitOutputStream aOutput, Log aLog) throws IOException
+	public void finish(JPEG aJPEG, JPEGBitOutputStream aOutput, Log aLog) throws IOException
 	{
 		aOutput.writeInt16(SegmentMarker.EOI.CODE);
 		aLog.println("EOI");
 	}
 
 
-	public void encode(JPEG aJPEG, BitOutputStream aOutput, Log aLog, CompressionType aCompressionType, ProgressionScript aProgressionScript) throws IOException
+	public void encode(JPEG aJPEG, JPEGBitOutputStream aOutput, Log aLog, CompressionType aCompressionType, ProgressionScript aProgressionScript) throws IOException
 	{
 		if (aCompressionType.isArithmetic())
 		{

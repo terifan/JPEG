@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-public class BitInputStream extends InputStream
+public class JPEGBitInputStream extends InputStream
 {
 	private InputStream mInputStream;
 	private int mBitBuffer;
@@ -14,7 +14,7 @@ public class BitInputStream extends InputStream
 	private int mUnreadMarker;
 
 
-	public BitInputStream(InputStream aInputStream)
+	public JPEGBitInputStream(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
 	}

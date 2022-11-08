@@ -29,7 +29,7 @@ public class JPEGImageReaderImpl
 	}
 
 
-	public void decode(BitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, JPEGImage aImage, boolean aDecodeCoefficients) throws IOException
+	public void decode(JPEGBitInputStream aInput, JPEG aJPEG, Log aLog, IDCT aIDCT, JPEGImage aImage, boolean aDecodeCoefficients) throws IOException
 	{
 		int progressionLevel = 0;
 		Decoder decoder = null;

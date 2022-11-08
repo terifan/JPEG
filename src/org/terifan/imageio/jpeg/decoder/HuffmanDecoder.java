@@ -12,7 +12,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
 public class HuffmanDecoder extends Decoder
 {
 	private boolean mProgressive;
-	private BitInputStream mBitStream;
+	private JPEGBitInputStream mBitStream;
 	private int mEOBRun;
 	private JPEGEntropyState aJPEG_entropy;
 
@@ -23,7 +23,7 @@ public class HuffmanDecoder extends Decoder
 
 
 	@Override
-	void initialize(JPEG aJPEG, BitInputStream aBitStream)
+	void initialize(JPEG aJPEG, JPEGBitInputStream aBitStream)
 	{
 		mBitStream = aBitStream;
 		mProgressive = aJPEG.mSOFSegment.getCompressionType().isProgressive();

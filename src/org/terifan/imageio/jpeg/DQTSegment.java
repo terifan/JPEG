@@ -2,9 +2,9 @@ package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
 import java.io.Serializable;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
 import static org.terifan.imageio.jpeg.JPEGConstants.NATURAL_ORDER;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class DQTSegment extends Segment implements Serializable
@@ -104,7 +104,7 @@ public class DQTSegment extends Segment implements Serializable
 	}
 
 
-	public DQTSegment decode(BitInputStream aBitStream) throws IOException
+	public DQTSegment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -143,7 +143,7 @@ public class DQTSegment extends Segment implements Serializable
 	}
 
 
-	public DQTSegment encode(BitOutputStream aBitStream) throws IOException
+	public DQTSegment encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		int len = 2;
 		for (QuantizationTable table : mTables)

@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
 
 
 public class Debug
@@ -33,7 +33,7 @@ public class Debug
 	}
 
 
-	public static void hexDump(BitInputStream aInput) throws IOException
+	public static void hexDump(JPEGBitInputStream aInput) throws IOException
 	{
 		int streamOffset = aInput.getStreamOffset();
 

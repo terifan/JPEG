@@ -2,8 +2,8 @@ package org.terifan.imageio.jpeg;
 
 import java.io.IOException;
 import java.io.Serializable;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class ComponentInfo implements Serializable
@@ -46,7 +46,7 @@ public class ComponentInfo implements Serializable
 	}
 
 
-	public ComponentInfo decode(BitInputStream aInputStream, int aComponentIndex) throws IOException
+	public ComponentInfo decode(JPEGBitInputStream aInputStream, int aComponentIndex) throws IOException
 	{
 		mComponentIndex = aComponentIndex;
 		mComponentId = aInputStream.readInt8();
@@ -58,7 +58,7 @@ public class ComponentInfo implements Serializable
 	}
 
 
-	public ComponentInfo encode(BitOutputStream aBitStream) throws IOException
+	public ComponentInfo encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		aBitStream.writeInt8(mComponentId);
 		aBitStream.writeInt8((mHorSampleFactor << 4) + mVerSampleFactor);

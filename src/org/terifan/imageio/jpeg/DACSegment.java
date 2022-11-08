@@ -3,8 +3,8 @@ package org.terifan.imageio.jpeg;
 import java.io.IOException;
 import java.util.Arrays;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_ARITH_TBLS;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class DACSegment extends Segment
@@ -26,7 +26,7 @@ public class DACSegment extends Segment
 	}
 
 
-	public DACSegment decode(BitInputStream aBitStream) throws IOException
+	public DACSegment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -66,7 +66,7 @@ public class DACSegment extends Segment
 	}
 
 
-	public DACSegment encode(JPEG aJPEG, BitOutputStream aBitStream) throws IOException
+	public DACSegment encode(JPEG aJPEG, JPEGBitOutputStream aBitStream) throws IOException
 	{
 		int ac = 0;
 		for (int i = 0; i < mArithACK.length; i++)

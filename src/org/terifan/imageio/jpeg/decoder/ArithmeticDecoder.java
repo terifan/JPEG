@@ -28,7 +28,7 @@ import static org.terifan.imageio.jpeg.JPEGConstants.ARITAB;
  */
 public class ArithmeticDecoder extends Decoder
 {
-	private BitInputStream mBitStream;
+	private JPEGBitInputStream mBitStream;
 	private boolean mProgressive;
 	private JPEGEntropyState aJPEG_entropy;
 
@@ -70,7 +70,7 @@ public class ArithmeticDecoder extends Decoder
 	 * Module initialization routine for arithmetic entropy decoding.
 	 */
 	@Override
-	void initialize(JPEG aJPEG, BitInputStream aBitStream)
+	void initialize(JPEG aJPEG, JPEGBitInputStream aBitStream)
 	{
 		mBitStream = aBitStream;
 		mProgressive = aJPEG.mSOFSegment.getCompressionType().isProgressive();

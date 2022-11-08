@@ -13,11 +13,11 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.function.Function;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
 import org.terifan.imageio.jpeg.decoder.IDCT;
 import org.terifan.imageio.jpeg.decoder.IDCTIntegerSlow;
 import org.terifan.imageio.jpeg.decoder.JPEGImageReaderImpl;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 import org.terifan.imageio.jpeg.encoder.FDCT;
 import org.terifan.imageio.jpeg.encoder.FDCTFloat;
 import org.terifan.imageio.jpeg.encoder.FDCTIntegerSlow;
@@ -81,7 +81,7 @@ public class JPEGImageIO
 	 */
 	public BufferedImage read(Object aInput) throws JPEGImageIOException
 	{
-		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
+		try (JPEGBitInputStream in = new JPEGBitInputStream(toInputStream(aInput)))
 		{
 			JPEG jpeg = new JPEG();
 
@@ -181,7 +181,7 @@ public class JPEGImageIO
 	{
 		JPEG jpeg = new JPEG();
 
-		try (BitInputStream in = new BitInputStream(toInputStream(aInput)))
+		try (JPEGBitInputStream in = new JPEGBitInputStream(toInputStream(aInput)))
 		{
 			JPEGImageReaderImpl reader = new JPEGImageReaderImpl();
 			reader.decode(in, jpeg, mLog, null, null, true);
@@ -205,7 +205,7 @@ public class JPEGImageIO
 	 */
 	public void encode(JPEG aJpeg, Object aOutput) throws JPEGImageIOException
 	{
-		try (final BitOutputStream out = new BitOutputStream(toOutputStream(aOutput)))
+		try (final JPEGBitOutputStream out = new JPEGBitOutputStream(toOutputStream(aOutput)))
 		{
 			JPEGImageWriterImpl writer = new JPEGImageWriterImpl();
 			writer.create(aJpeg, out, mLog);

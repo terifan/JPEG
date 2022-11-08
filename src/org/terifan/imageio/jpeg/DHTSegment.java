@@ -3,8 +3,8 @@ package org.terifan.imageio.jpeg;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import static org.terifan.imageio.jpeg.JPEGConstants.NUM_HUFF_TBLS;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class DHTSegment extends Segment
@@ -24,7 +24,7 @@ public class DHTSegment extends Segment
 	}
 
 
-	public DHTSegment decode(BitInputStream aBitStream) throws IOException
+	public DHTSegment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -54,7 +54,7 @@ public class DHTSegment extends Segment
 	}
 
 
-	public DHTSegment encode(BitOutputStream aBitStream) throws IOException
+	public DHTSegment encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		mLog = "";
 

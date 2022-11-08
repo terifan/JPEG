@@ -3,8 +3,8 @@ package org.terifan.imageio.jpeg;
 import java.awt.color.ICC_Profile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import org.terifan.imageio.jpeg.decoder.BitInputStream;
-import org.terifan.imageio.jpeg.encoder.BitOutputStream;
+import org.terifan.imageio.jpeg.decoder.JPEGBitInputStream;
+import org.terifan.imageio.jpeg.encoder.JPEGBitOutputStream;
 
 
 public class APP2Segment extends Segment
@@ -36,7 +36,7 @@ public class APP2Segment extends Segment
 	}
 
 
-	public APP2Segment decode(BitInputStream aBitStream) throws IOException
+	public APP2Segment decode(JPEGBitInputStream aBitStream) throws IOException
 	{
 		int length = aBitStream.readInt16() - 2;
 
@@ -61,7 +61,7 @@ public class APP2Segment extends Segment
 	}
 
 
-	public APP2Segment encode(BitOutputStream aBitStream) throws IOException
+	public APP2Segment encode(JPEGBitOutputStream aBitStream) throws IOException
 	{
 		if (mICCProfile != null)
 		{
