@@ -109,7 +109,7 @@ public class JPEGBitOutputStream extends OutputStream
 	{
 		if (mOutputStream != null)
 		{
-			align();
+			flush();
 
 			mOutputStream.close();
 			mOutputStream = null;
@@ -117,7 +117,7 @@ public class JPEGBitOutputStream extends OutputStream
 	}
 
 
-	public void align() throws IOException
+	public void flush() throws IOException
 	{
 		if (mBitsToGo < 8)
 		{
