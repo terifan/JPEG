@@ -89,24 +89,24 @@ public class ShuffleCoefficientDemo
 		int cols = aCoefficients[0].length;
 		int[][][][] outCoefficients = new int[rows][cols][][];
 
-		ArrayList<Position> inList = new ArrayList<>();
-		ArrayList<Position> outList = new ArrayList<>();
+		ArrayList<Position> fromList = new ArrayList<>();
+		ArrayList<Position> toList = new ArrayList<>();
 		for (int row = 0; row < rows; row++)
 		{
 			for (int col = 0; col < cols; col++)
 			{
-				inList.add(new Position(row, col, 0));
-				outList.add(new Position(row, col, 0));
+				fromList.add(new Position(row, col, 0));
+				toList.add(new Position(row, col, 0));
 			}
 		}
 
-		Collections.shuffle(aEncode ? outList : inList, new Random(aPinCode));
+		Collections.shuffle(aEncode ? toList : fromList, new Random(aPinCode));
 
-		for (int i = 0; i < inList.size(); i++)
+		for (int i = 0; i < fromList.size(); i++)
 		{
-			Position in = inList.get(i);
-			Position out = outList.get(i);
-			outCoefficients[out.row][out.col] = aCoefficients[in.row][in.col];
+			Position from = fromList.get(i);
+			Position to = toList.get(i);
+			outCoefficients[to.row][to.col] = aCoefficients[from.row][from.col];
 		}
 
 		return outCoefficients;
@@ -120,8 +120,8 @@ public class ShuffleCoefficientDemo
 		int mcus = aCoefficients[0][0].length;
 		int[][][][] outCoefficients = aCoefficients.clone();
 
-		ArrayList<Position> inList = new ArrayList<>();
-		ArrayList<Position> outList = new ArrayList<>();
+		ArrayList<Position> fromList = new ArrayList<>();
+		ArrayList<Position> toList = new ArrayList<>();
 		for (int row = 10; row < rows - 10; row++)
 		{
 			outCoefficients[row] = aCoefficients[row].clone();
@@ -131,19 +131,19 @@ public class ShuffleCoefficientDemo
 				for (int mcu = 0; mcu < mcus; mcu++)
 				{
 					outCoefficients[row][col][mcu] = aCoefficients[row][col][mcu].clone();
-					inList.add(new Position(row, col, mcu));
-					outList.add(new Position(row, col, mcu));
+					fromList.add(new Position(row, col, mcu));
+					toList.add(new Position(row, col, mcu));
 				}
 			}
 		}
 
-		Collections.shuffle(aEncode ? outList : inList, new Random(aPinCode));
+		Collections.shuffle(aEncode ? toList : fromList, new Random(aPinCode));
 
-		for (int i = 0; i < inList.size(); i++)
+		for (int i = 0; i < fromList.size(); i++)
 		{
-			Position in = inList.get(i);
-			Position out = outList.get(i);
-			outCoefficients[out.row][out.col][out.mcu] = aCoefficients[in.row][in.col][in.mcu];
+			Position from = fromList.get(i);
+			Position to = toList.get(i);
+			outCoefficients[to.row][to.col][to.mcu] = aCoefficients[from.row][from.col][from.mcu];
 		}
 
 		return outCoefficients;
