@@ -8,6 +8,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import org.terifan.imageio.jpeg.JPEG;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 import org.terifan.imageio.jpeg.JPEGImageIOException;
@@ -27,6 +31,9 @@ public class ShuffleCoefficientDemo
 
 			System.out.println(destinationFile);
 
+			boolean shuffleCoef = !false;
+			boolean shuffleBlocks = false;
+
 			{
 				// Load image and extract coefficients, shuffle all MCU:s and save the image to disk. The pin code initilizes the random order.
 
@@ -35,7 +42,7 @@ public class ShuffleCoefficientDemo
 				JPEG input = new JPEGImageIO().decode(R.class.getResource("Swallowtail.jpg"));
 //				JPEG input = new JPEGImageIO().decode("D:\\Pictures\\bztizllhrpq91.jpg");
 
-				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin, shuffleCoef, shuffleBlocks);
 //				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), true, pin);
 
 				byte[] shuffledImageData = updateAndShowImage(shuffledCoefficients, input);
@@ -52,7 +59,7 @@ public class ShuffleCoefficientDemo
 
 				JPEG input = new JPEGImageIO().decode(shuffledImageData);
 
-				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin, shuffleCoef, shuffleBlocks);
 //				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), false, pin);
 
 				updateAndShowImage(shuffledCoefficients, input);
@@ -113,7 +120,7 @@ public class ShuffleCoefficientDemo
 	}
 
 
-	private static int[][][][] shuffleBlock(int[][][][] aCoefficients, boolean aEncode, int aPinCode)
+	private static int[][][][] shuffleBlock(int[][][][] aCoefficients, boolean aEncode, int aPinCode, boolean aShuffleCoef, boolean aShuffleBlocks)
 	{
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
@@ -139,16 +146,35 @@ public class ShuffleCoefficientDemo
 
 		Collections.shuffle(aEncode ? toList : fromList, new Random(aPinCode));
 
+		List<Integer> coefOrder = IntStream.rangeClosed(1, 63).boxed().collect(Collectors.toList());
+		Collections.shuffle(coefOrder, new Random(aPinCode));
+
 		for (int i = 0; i < fromList.size(); i++)
 		{
 			Position from = fromList.get(i);
-			Position to = toList.get(i);
-			outCoefficients[to.row][to.col][to.mcu] = aCoefficients[from.row][from.col][from.mcu];
+			Position to = aShuffleBlocks ? toList.get(i) : from;
+
+			int[] fromCoef = aCoefficients[from.row][from.col][from.mcu];
+			int[] toCoef = fromCoef.clone();
+
+			if (aShuffleCoef)
+			{
+				for (int j = 0; j < 63; j++)
+				{
+					int a = 1 + j;
+					int b = coefOrder.get(j);
+					toCoef[aEncode ? a : b] = fromCoef[aEncode ? b : a];
+				}
+			}
+
+			outCoefficients[to.row][to.col][to.mcu] = toCoef;
 		}
 
 		return outCoefficients;
 	}
 
 
-	private record Position(int row, int col, int mcu) {}
+	private record Position(int row, int col, int mcu)
+		{
+	}
 }
