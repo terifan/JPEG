@@ -2,6 +2,7 @@ package examples;
 
 import examples.res.R;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -21,7 +22,8 @@ public class ShuffleCoefficientDemo
 	{
 		try
 		{
-			Path file = Files.createTempFile("shuffleimage", ".jpg");
+//			Path file = Files.createTempFile("shuffleimage", ".jpg");
+			Path file = new File("d:\\shuffleimage.jpg").toPath();
 
 			System.out.println(file);
 
@@ -33,8 +35,8 @@ public class ShuffleCoefficientDemo
 				JPEG input = new JPEGImageIO().decode(R.class.getResource("Swallowtail.jpg"));
 //				JPEG input = new JPEGImageIO().decode("D:\\Pictures\\bztizllhrpq91.jpg");
 
-//				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin);
-				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), true, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin);
+//				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), true, pin);
 
 				byte[] shuffledImageData = updateAndShowImage(shuffledCoefficients, input);
 
@@ -50,8 +52,8 @@ public class ShuffleCoefficientDemo
 
 				JPEG input = new JPEGImageIO().decode(shuffledImageData);
 
-//				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin);
-				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), false, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin);
+//				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), false, pin);
 
 				updateAndShowImage(shuffledCoefficients, input);
 			}
@@ -85,35 +87,28 @@ public class ShuffleCoefficientDemo
 	{
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
+		int[][][][] coefficients = new int[rows][cols][][];
 
-		ArrayList<int[]> list = new ArrayList<>();
+		ArrayList<Position> inList = new ArrayList<>();
+		ArrayList<Position> outList = new ArrayList<>();
 		for (int row = 0; row < rows; row++)
 		{
 			for (int col = 0; col < cols; col++)
 			{
-				list.add(new int[]{row, col});
+				inList.add(new Position(row, col, 0));
+				outList.add(new Position(row, col, 0));
 			}
 		}
 
-		Collections.shuffle(list, new Random(aPinCode));
+		Collections.shuffle(outList, new Random(aPinCode));
 
-		int[][][][] coefficients = new int[rows][cols][][];
-		for (int row = 0, i = 0; row < rows; row++)
+		for (int i = 0; i < inList.size(); i++)
 		{
-			for (int col = 0; col < cols; col++, i++)
-			{
-				int r = list.get(i)[0];
-				int c = list.get(i)[1];
-				if (aEncode)
-				{
-					coefficients[r][c] = aCoefficients[row][col];
-				}
-				else
-				{
-					coefficients[row][col] = aCoefficients[r][c];
-				}
-			}
+			Position in = aEncode ? inList.get(i) : outList.get(i);
+			Position out = !aEncode ? inList.get(i) : outList.get(i);
+			coefficients[out.row][out.col] = aCoefficients[in.row][in.col];
 		}
+
 		return coefficients;
 	}
 
@@ -123,42 +118,33 @@ public class ShuffleCoefficientDemo
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
 		int mcus = aCoefficients[0][0].length;
+		int[][][][] coefficients = new int[rows][cols][mcus][];
 
-		ArrayList<int[]> list = new ArrayList<>();
+		ArrayList<Position> inList = new ArrayList<>();
+		ArrayList<Position> outList = new ArrayList<>();
 		for (int row = 0; row < rows; row++)
 		{
 			for (int col = 0; col < cols; col++)
 			{
 				for (int mcu = 0; mcu < mcus; mcu++)
 				{
-					list.add(new int[]{row, col, mcu});
+					inList.add(new Position(row, col, mcu));
+					outList.add(new Position(row, col, mcu));
 				}
 			}
 		}
 
-		Collections.shuffle(list, new Random(aPinCode));
+		Collections.shuffle(outList, new Random(aPinCode));
 
-		int[][][][] coefficients = new int[rows][cols][mcus][];
-		for (int row = 0, i = 0; row < rows; row++)
+		for (int i = 0; i < inList.size(); i++)
 		{
-			for (int col = 0; col < cols; col++)
-			{
-				for (int mcu = 0; mcu < mcus; mcu++, i++)
-				{
-					int r = list.get(i)[0];
-					int c = list.get(i)[1];
-					int m = list.get(i)[2];
-					if (aEncode)
-					{
-						coefficients[r][c][m] = aCoefficients[row][col][mcu];
-					}
-					else
-					{
-						coefficients[row][col][mcu] = aCoefficients[r][c][m];
-					}
-				}
-			}
+			Position in = aEncode ? inList.get(i) : outList.get(i);
+			Position out = !aEncode ? inList.get(i) : outList.get(i);
+			coefficients[out.row][out.col][out.mcu] = aCoefficients[in.row][in.col][in.mcu];
 		}
+
 		return coefficients;
 	}
+
+	private record Position(int row, int col, int mcu) {}
 }
