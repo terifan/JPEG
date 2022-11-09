@@ -22,10 +22,10 @@ public class ShuffleCoefficientDemo
 	{
 		try
 		{
-			Path file = Files.createTempFile("shuffleimage", ".jpg");
-//			Path file = Paths.get("d:\\shuffleimage.jpg");
+//			Path destinationFile = Files.createTempFile("shuffleimage", ".jpg");
+			Path destinationFile = Paths.get("d:\\shuffleimage.jpg");
 
-			System.out.println(file);
+			System.out.println(destinationFile);
 
 			{
 				// Load image and extract coefficients, shuffle all MCU:s and save the image to disk. The pin code initilizes the random order.
@@ -40,7 +40,7 @@ public class ShuffleCoefficientDemo
 
 				byte[] shuffledImageData = updateAndShowImage(shuffledCoefficients, input);
 
-				Files.write(file, shuffledImageData);
+				Files.write(destinationFile, shuffledImageData);
 			}
 
 			{
@@ -48,7 +48,7 @@ public class ShuffleCoefficientDemo
 
 				int pin = 1;
 
-				byte[] shuffledImageData = Files.readAllBytes(file);
+				byte[] shuffledImageData = Files.readAllBytes(destinationFile);
 
 				JPEG input = new JPEGImageIO().decode(shuffledImageData);
 
@@ -118,16 +118,19 @@ public class ShuffleCoefficientDemo
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
 		int mcus = aCoefficients[0][0].length;
-		int[][][][] outCoefficients = new int[rows][cols][mcus][];
+		int[][][][] outCoefficients = aCoefficients.clone();
 
 		ArrayList<Position> inList = new ArrayList<>();
 		ArrayList<Position> outList = new ArrayList<>();
-		for (int row = 0; row < rows; row++)
+		for (int row = 10; row < rows - 10; row++)
 		{
-			for (int col = 0; col < cols; col++)
+			outCoefficients[row] = aCoefficients[row].clone();
+			for (int col = 10; col < cols - 10; col++)
 			{
+				outCoefficients[row][col] = aCoefficients[row][col].clone();
 				for (int mcu = 0; mcu < mcus; mcu++)
 				{
+					outCoefficients[row][col][mcu] = aCoefficients[row][col][mcu].clone();
 					inList.add(new Position(row, col, mcu));
 					outList.add(new Position(row, col, mcu));
 				}
@@ -145,6 +148,7 @@ public class ShuffleCoefficientDemo
 
 		return outCoefficients;
 	}
+
 
 	private record Position(int row, int col, int mcu) {}
 }
