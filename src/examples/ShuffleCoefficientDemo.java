@@ -87,7 +87,7 @@ public class ShuffleCoefficientDemo
 	{
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
-		int[][][][] coefficients = new int[rows][cols][][];
+		int[][][][] outCoefficients = new int[rows][cols][][];
 
 		ArrayList<Position> inList = new ArrayList<>();
 		ArrayList<Position> outList = new ArrayList<>();
@@ -100,16 +100,16 @@ public class ShuffleCoefficientDemo
 			}
 		}
 
-		Collections.shuffle(outList, new Random(aPinCode));
+		Collections.shuffle(aEncode ? outList : inList, new Random(aPinCode));
 
 		for (int i = 0; i < inList.size(); i++)
 		{
-			Position in = aEncode ? inList.get(i) : outList.get(i);
-			Position out = !aEncode ? inList.get(i) : outList.get(i);
-			coefficients[out.row][out.col] = aCoefficients[in.row][in.col];
+			Position in = inList.get(i);
+			Position out = outList.get(i);
+			outCoefficients[out.row][out.col] = aCoefficients[in.row][in.col];
 		}
 
-		return coefficients;
+		return outCoefficients;
 	}
 
 
@@ -118,7 +118,7 @@ public class ShuffleCoefficientDemo
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
 		int mcus = aCoefficients[0][0].length;
-		int[][][][] coefficients = new int[rows][cols][mcus][];
+		int[][][][] outCoefficients = new int[rows][cols][mcus][];
 
 		ArrayList<Position> inList = new ArrayList<>();
 		ArrayList<Position> outList = new ArrayList<>();
@@ -134,16 +134,16 @@ public class ShuffleCoefficientDemo
 			}
 		}
 
-		Collections.shuffle(outList, new Random(aPinCode));
+		Collections.shuffle(aEncode ? outList : inList, new Random(aPinCode));
 
 		for (int i = 0; i < inList.size(); i++)
 		{
-			Position in = aEncode ? inList.get(i) : outList.get(i);
-			Position out = !aEncode ? inList.get(i) : outList.get(i);
-			coefficients[out.row][out.col][out.mcu] = aCoefficients[in.row][in.col][in.mcu];
+			Position in = inList.get(i);
+			Position out = outList.get(i);
+			outCoefficients[out.row][out.col][out.mcu] = aCoefficients[in.row][in.col][in.mcu];
 		}
 
-		return coefficients;
+		return outCoefficients;
 	}
 
 	private record Position(int row, int col, int mcu) {}
