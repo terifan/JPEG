@@ -4,6 +4,7 @@ import examples.res.R;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -21,24 +22,28 @@ public class ShuffleCoefficientDemo
 	{
 		try
 		{
-			Path file = Files.createTempFile("shuffleimage", ".jpg");
+//			Path destinationFile = Files.createTempFile("shuffleimage", ".jpg");
+			Path destinationFile = Paths.get("d:\\shuffleimage.jpg");
 
-			System.out.println(file);
+			System.out.println(destinationFile);
+
+			boolean shuffleAC = true;
+			boolean shuffleDC = !true;
 
 			{
 				// Load image and extract coefficients, shuffle all MCU:s and save the image to disk. The pin code initilizes the random order.
 
 				int pin = 1;
 
-				JPEG input = new JPEGImageIO().decode(R.class.getResource("Swallowtail.jpg"));
+//				JPEG input = new JPEGImageIO().decode(R.class.getResource("Swallowtail.jpg"));
 //				JPEG input = new JPEGImageIO().decode("D:\\Pictures\\bztizllhrpq91.jpg");
+				JPEG input = new JPEGImageIO().decode("D:\\Pictures\\wallpapers\\t3_6nyw6m.jpg");
 
-//				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin);
-				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), true, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), true, pin, shuffleAC, shuffleDC);
 
 				byte[] shuffledImageData = updateAndShowImage(shuffledCoefficients, input);
 
-				Files.write(file, shuffledImageData);
+				Files.write(destinationFile, shuffledImageData);
 			}
 
 			{
@@ -46,12 +51,11 @@ public class ShuffleCoefficientDemo
 
 				int pin = 1;
 
-				byte[] shuffledImageData = Files.readAllBytes(file);
+				byte[] shuffledImageData = Files.readAllBytes(destinationFile);
 
 				JPEG input = new JPEGImageIO().decode(shuffledImageData);
 
-//				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin);
-				int[][][][] shuffledCoefficients = shuffleMCU(input.getCoefficients(), false, pin);
+				int[][][][] shuffledCoefficients = shuffleBlock(input.getCoefficients(), false, pin, shuffleAC, shuffleDC);
 
 				updateAndShowImage(shuffledCoefficients, input);
 			}
@@ -81,84 +85,67 @@ public class ShuffleCoefficientDemo
 	}
 
 
-	private static int[][][][] shuffleMCU(int[][][][] aCoefficients, boolean aEncode, int aPinCode)
-	{
-		int rows = aCoefficients.length;
-		int cols = aCoefficients[0].length;
-
-		ArrayList<int[]> list = new ArrayList<>();
-		for (int row = 0; row < rows; row++)
-		{
-			for (int col = 0; col < cols; col++)
-			{
-				list.add(new int[]{row, col});
-			}
-		}
-
-		Collections.shuffle(list, new Random(aPinCode));
-
-		int[][][][] coefficients = new int[rows][cols][][];
-		for (int row = 0, i = 0; row < rows; row++)
-		{
-			for (int col = 0; col < cols; col++, i++)
-			{
-				int r = list.get(i)[0];
-				int c = list.get(i)[1];
-				if (aEncode)
-				{
-					coefficients[r][c] = aCoefficients[row][col];
-				}
-				else
-				{
-					coefficients[row][col] = aCoefficients[r][c];
-				}
-			}
-		}
-		return coefficients;
-	}
-
-
-	private static int[][][][] shuffleBlock(int[][][][] aCoefficients, boolean aEncode, int aPinCode)
+	private static int[][][][] shuffleBlock(int[][][][] aCoefficients, boolean aEncode, int aPinCode, boolean aShuffleAC, boolean aShuffleDC)
 	{
 		int rows = aCoefficients.length;
 		int cols = aCoefficients[0].length;
 		int mcus = aCoefficients[0][0].length;
+		int[][][][] outCoefficients = aCoefficients.clone();
 
-		ArrayList<int[]> list = new ArrayList<>();
-		for (int row = 0; row < rows; row++)
+		ArrayList<Position> fromListAC = new ArrayList<>();
+		ArrayList<Position> toListAC = new ArrayList<>();
+		ArrayList<Position> fromListDC = new ArrayList<>();
+		ArrayList<Position> toListDC = new ArrayList<>();
+
+		for (int row = 10; row < rows - 10; row++)
 		{
-			for (int col = 0; col < cols; col++)
+			outCoefficients[row] = aCoefficients[row].clone();
+			for (int col = 10; col < cols - 10; col++)
 			{
+				outCoefficients[row][col] = aCoefficients[row][col].clone();
 				for (int mcu = 0; mcu < mcus; mcu++)
 				{
-					list.add(new int[]{row, col, mcu});
+					outCoefficients[row][col][mcu] = aCoefficients[row][col][mcu].clone();
+					for (int coef = 1; coef < 64; coef++)
+					{
+						fromListAC.add(new Position(row, col, mcu, coef));
+						toListAC.add(new Position(row, col, mcu, coef));
+					}
+					fromListDC.add(new Position(row, col, mcu, 0));
+					toListDC.add(new Position(row, col, mcu, 0));
 				}
 			}
 		}
 
-		Collections.shuffle(list, new Random(aPinCode));
+		Random rnd = new Random(aPinCode);
 
-		int[][][][] coefficients = new int[rows][cols][mcus][];
-		for (int row = 0, i = 0; row < rows; row++)
+		if (aShuffleAC)
 		{
-			for (int col = 0; col < cols; col++)
+			Collections.shuffle(aEncode ? toListAC : fromListAC, rnd);
+			for (int i = 0; i < fromListAC.size(); i++)
 			{
-				for (int mcu = 0; mcu < mcus; mcu++, i++)
-				{
-					int r = list.get(i)[0];
-					int c = list.get(i)[1];
-					int m = list.get(i)[2];
-					if (aEncode)
-					{
-						coefficients[r][c][m] = aCoefficients[row][col][mcu];
-					}
-					else
-					{
-						coefficients[row][col][mcu] = aCoefficients[r][c][m];
-					}
-				}
+				Position from = fromListAC.get(i);
+				Position to = toListAC.get(i);
+				outCoefficients[to.row][to.col][to.mcu][to.coef] = aCoefficients[from.row][from.col][from.mcu][from.coef];
 			}
 		}
-		return coefficients;
+
+		if (aShuffleDC)
+		{
+			Collections.shuffle(aEncode ? toListDC : fromListDC, rnd);
+			for (int i = 0; i < fromListDC.size(); i++)
+			{
+				Position from = fromListDC.get(i);
+				Position to = toListDC.get(i);
+				outCoefficients[to.row][to.col][to.mcu][to.coef] = aCoefficients[from.row][from.col][from.mcu][from.coef];
+			}
+		}
+
+		return outCoefficients;
+	}
+
+
+	private record Position(int row, int col, int mcu, int coef)
+		{
 	}
 }
