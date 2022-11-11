@@ -1,6 +1,5 @@
 package examples;
 
-import examples.res.R;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
