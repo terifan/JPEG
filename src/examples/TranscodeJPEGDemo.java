@@ -13,7 +13,8 @@ public class TranscodeJPEGDemo
 	{
 		try
 		{
-			URL input = R.class.getResource("Swallowtail.jpg");
+//			URL input = R.class.getResource("Swallowtail.jpg");
+			File input = new File("D:\\Pictures\\Roliga bilder\\baby.jpg");
 
 			File output1 = new File("d:\\Swallowtail-arithmetic.jpg");
 			File output2 = new File("d:\\Swallowtail-arithmetic-progressive.jpg");
@@ -21,7 +22,7 @@ public class TranscodeJPEGDemo
 			File output4 = new File("d:\\Swallowtail-huffman-optimized.jpg");
 			File output5 = new File("d:\\Swallowtail-huffman-progressive.jpg");
 
-			new JPEGImageIO().setCompressionType(CompressionType.Arithmetic).transcode(input, output1);
+			new JPEGImageIO().setLog(System.out).setCompressionType(CompressionType.Arithmetic).transcode(input, output1);
 			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).transcode(input, output2);
 			new JPEGImageIO().setCompressionType(CompressionType.Huffman).transcode(input, output3);
 			new JPEGImageIO().setCompressionType(CompressionType.HuffmanOptimized).transcode(input, output4);

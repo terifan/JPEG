@@ -66,7 +66,8 @@ public class SOFSegment extends Segment implements Serializable
 
 			for (int i = 0; i < mComponents.length; i++)
 			{
-				mComponents[i].setComponentId(mComponents[i].getComponentId() + 1);
+//				mComponents[i].setComponentId(mComponents[i].getComponentId() + 1);
+				mComponents[i].setComponentId(mComponents[i].getComponentId());
 			}
 		}
 
@@ -109,9 +110,9 @@ public class SOFSegment extends Segment implements Serializable
 		aLog.println("SOF segment");
 		aLog.println("  precision=%d bits, width=%d, height=%d", mPrecision, mWidth, mHeight);
 
-		for (ComponentInfo mComponent : mComponents)
+		for (ComponentInfo component : mComponents)
 		{
-			mComponent.print(aLog);
+			component.print(aLog);
 		}
 
 		return this;
@@ -190,6 +191,11 @@ public class SOFSegment extends Segment implements Serializable
 				return ci;
 			}
 		}
+
+//		if (mComponents.length == 1)
+//		{
+//			return mComponents[0];
+//		}
 
 		throw new IllegalStateException("Component with ID " + aComponentId + " not found: "+Arrays.asList(mComponents)+"");
 	}

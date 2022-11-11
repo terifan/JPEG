@@ -15,10 +15,10 @@ public class ComponentInfo implements Serializable
 		Y, CB, CR, I, Q;
 
 
-		static Type fromComponentId(int aComponentId)
-		{
-			return values()[aComponentId - 1];
-		}
+//		static Type fromComponentId(int aComponentId)
+//		{
+//			return values()[aComponentId - 1];
+//		}
 	}
 
 	private int mComponentIndex; // identifier for this component (0..255)
@@ -29,6 +29,8 @@ public class ComponentInfo implements Serializable
 	private int mTableDC; // DC entropy table selector (0..3)
 	private int mTableAC; // AC entropy table selector (0..3)
 	private int mComponentBlockOffset;
+
+	int componentIdX; // its index in SOF or cinfo->comp_info[]
 
 
 	public ComponentInfo()
@@ -43,6 +45,8 @@ public class ComponentInfo implements Serializable
 		mQuantizationTableId = aQuantizationTableId;
 		mHorSampleFactor = aHorSampleFactor;
 		mVerSampleFactor = aVerSampleFactor;
+
+		componentIdX = mComponentId;
 	}
 
 
@@ -53,6 +57,8 @@ public class ComponentInfo implements Serializable
 		mHorSampleFactor = aInputStream.readBits(4);
 		mVerSampleFactor = aInputStream.readBits(4);
 		mQuantizationTableId = aInputStream.readInt8();
+
+		componentIdX = mComponentId;
 
 		return this;
 	}
@@ -70,7 +76,8 @@ public class ComponentInfo implements Serializable
 
 	public void print(Log aLog)
 	{
-		aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentId));
+		aLog.println("  component %s", mComponentId);
+//		aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentId));
 		aLog.println("    id=%d, dc-table=%d, ac-table=%d, quantizationTableId=%d, sample-factor=%dx%d", mComponentIndex, mTableDC, mTableAC, mQuantizationTableId, mHorSampleFactor, mVerSampleFactor);
 	}
 
@@ -147,10 +154,10 @@ public class ComponentInfo implements Serializable
 	}
 
 
-	public Type getComponentType()
-	{
-		return Type.fromComponentId(mComponentId);
-	}
+//	public Type getComponentType()
+//	{
+//		return Type.fromComponentId(mComponentId);
+//	}
 
 
 	@Override

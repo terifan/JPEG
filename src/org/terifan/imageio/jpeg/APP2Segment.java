@@ -50,7 +50,14 @@ public class APP2Segment extends Segment
 				byte[] buffer = new byte[length - 2 - ICC_PROFILE.length() - 1];
 				aBitStream.read(buffer);
 
-				mICCProfile = ICC_Profile.getInstance(new ByteArrayInputStream(buffer));
+				try
+				{
+					mICCProfile = ICC_Profile.getInstance(new ByteArrayInputStream(buffer));
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace(System.out);
+				}
 				break;
 			default:
 				aBitStream.skipBytes(length - mType.length() - 1);
@@ -85,7 +92,7 @@ public class APP2Segment extends Segment
 		switch (mType)
 		{
 			case ICC_PROFILE:
-				aLog.println("ICC_PROFILE");
+				aLog.println("  ICC_PROFILE");
 				break;
 			default:
 				aLog.println("Unsupported APP2 extension - %s", mType);

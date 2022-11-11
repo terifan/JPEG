@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public class FixedThreadExecutor
+public class FixedThreadExecutor implements AutoCloseable
 {
 	private ExecutorService mExecutorService;
 
@@ -26,22 +26,21 @@ public class FixedThreadExecutor
 	}
 
 
-	public synchronized void shutdown()
+	@Override
+	public void close()
 	{
-		if (mExecutorService != null)
+		try
 		{
-			try
+			ExecutorService e = mExecutorService;
+			mExecutorService = null;
+			if (e != null)
 			{
-				mExecutorService.shutdown();
-				mExecutorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+				e.shutdown();
+				e.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 			}
-			catch (InterruptedException e)
-			{
-			}
-			finally
-			{
-				mExecutorService = null;
-			}
+		}
+		catch (InterruptedException e)
+		{
 		}
 	}
 }

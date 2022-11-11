@@ -87,12 +87,13 @@ public class JPEGImageReaderImpl
 					aJPEG.mDQTSegment.decode(aInput).print(aJPEG, aLog);
 					break;
 				case DHT: // Huffman Table
+					if (aJPEG.mDHTSegment == null) aJPEG.mDHTSegment = new DHTSegment();
 					aJPEG.mDHTSegment.decode(aInput).print(aJPEG, aLog);
 					break;
 				case DAC: // Arithmetic Table
+					if (aJPEG.mDACSegment == null) aJPEG.mDACSegment = new DACSegment();
 					aJPEG.mDACSegment.decode(aInput).print(aJPEG, aLog);
 					break;
-				case SOF1: // Huffman extended
 				case SOF3: // Lossless, Huffman
 				case SOF5: // Differential sequential, Huffman
 				case SOF6: // Differential progressive, Huffman
@@ -101,21 +102,22 @@ public class JPEGImageReaderImpl
 				case SOF13: // Differential sequential, arithmetic
 				case SOF14: // Differential progressive, arithmetic
 				case SOF15: // Differential lossless, arithmetic
-					throw new IOException("Unsupported compression");
+					throw new IOException("Unsupported compression: " + marker.name());
 				case SOF0: // Huffman
+				case SOF1: // Huffman extended
 				case SOF2: // Huffman progressive
 				case SOF9: // Arithmetic
 				case SOF10: // Arithmetic progressive
 					CompressionType compression = CompressionType.decode(marker);
 
-					if (compression.isArithmetic())
-					{
-						aJPEG.mDACSegment = new DACSegment();
-					}
-					else
-					{
-						aJPEG.mDHTSegment = new DHTSegment();
-					}
+//					if (compression.isArithmetic())
+//					{
+//						aJPEG.mDACSegment = new DACSegment();
+//					}
+//					else
+//					{
+//						aJPEG.mDHTSegment = new DHTSegment();
+//					}
 
 					SOFSegment sof = aJPEG.mSOFSegment.decode(aInput).setCompressionType(compression).print(aJPEG, aLog);
 
@@ -152,7 +154,7 @@ public class JPEGImageReaderImpl
 
 					progressionLevel++;
 
-					mExecutorService.shutdown();
+					mExecutorService.close();
 
 					break;
 				case DRI: // Restart marker

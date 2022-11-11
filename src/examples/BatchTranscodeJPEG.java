@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.stream.Collectors;
 import javax.swing.JFileChooser;
 import org.terifan.imageio.jpeg.CompressionType;
+import org.terifan.imageio.jpeg.FixedThreadExecutor;
 
 
 /**
@@ -43,9 +44,6 @@ public class BatchTranscodeJPEG
 
 			int[] outputSizes = new int[columnCount];
 			int[] inputSizes = new int[columnCount];
-			int[] diffSizes = new int[columnCount];
-
-			ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 			for (Path file : Files.walk(chooser.getSelectedFile().toPath(), 10).filter(e -> e.toString().matches("(?i).*jpg")).limit(10_000).collect(Collectors.toList()))
 			{
@@ -55,17 +53,43 @@ public class BatchTranscodeJPEG
 
 					System.out.printf("%9d ", input.length);
 
+					String[] result = new String[columnCount];
+
+					try ( FixedThreadExecutor exe = new FixedThreadExecutor(1f))
+					{
+						for (int i = 0; i < columnCount; i++)
+						{
+							int _i = i;
+
+							exe.submit(() ->
+							{
+								try
+								{
+									ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+									new JPEGImageIO().setCompressionType(CompressionType.values()[_i]).transcode(input, output);
+
+									result[_i] = String.format("[%9d %5.1f%% %9d]  ", output.size(), output.size() * 100.0 / input.length, output.size() - input.length);
+
+									inputSizes[_i] += input.length;
+									outputSizes[_i] += output.size();
+								}
+								catch (Exception e)
+								{
+									result[_i] = "\033[0;31m" + e.toString() + "\033[0m -- ";
+								}
+							});
+						}
+					}
+
 					for (int i = 0; i < columnCount; i++)
 					{
-						new JPEGImageIO().setCompressionType(CompressionType.values()[i]).transcode(input, output);
+						System.out.print(result[i]);
 
-						System.out.printf("[%9d %5.1f%% %9d]  ", output.size(), output.size() * 100.0 / input.length, output.size() - input.length);
-
-						inputSizes[i] += input.length;
-						outputSizes[i] += output.size();
-						diffSizes[i] += output.size() - input.length;
-
-						output.reset();
+						if (result[i].contains("\033[0;31m"))
+						{
+							break;
+						}
 					}
 
 					System.out.printf("%s%n", file);
@@ -86,7 +110,7 @@ public class BatchTranscodeJPEG
 			System.out.printf("%9s ", "");
 			for (int i = 0; i < columnCount; i++)
 			{
-				System.out.printf("[%9d %5.1f%% %9d]  ", outputSizes[i], outputSizes[i] * 100.0 / inputSizes[i], diffSizes[i]);
+				System.out.printf("[%9d %5.1f%% %9d]  ", outputSizes[i], outputSizes[i] * 100.0 / inputSizes[i], outputSizes[i] - inputSizes[i]);
 			}
 			System.out.println();
 		}

@@ -89,7 +89,8 @@ public class SOSSegment extends Segment
 
 		for (int i = 0; i < mScanBlockCount; i++)
 		{
-			aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentIds[i]).name());
+//			aLog.println("  component %s", ComponentInfo.Type.fromComponentId(mComponentIds[i]).name());
+			aLog.println("  component %s", mComponentIds[i]);
 			aLog.println("    dc-table=%d, ac-table=%d", mTableDC[i], mTableAC[i]);
 		}
 
@@ -142,7 +143,8 @@ public class SOSSegment extends Segment
 		mMCUBlockCount = 0;
 		for (int scanComponentIndex = 0; scanComponentIndex < mScanBlockCount; scanComponentIndex++)
 		{
-			ComponentInfo comp = aJPEG.mSOFSegment.getComponentById(getComponentIdByIndex(scanComponentIndex));
+			int n = getComponentIdByIndex(scanComponentIndex);
+			ComponentInfo comp = aJPEG.mSOFSegment.getComponentById(n);
 			mMCUBlockCount += comp.getHorSampleFactor() * comp.getVerSampleFactor();
 		}
 

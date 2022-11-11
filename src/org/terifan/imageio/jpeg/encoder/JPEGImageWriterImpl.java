@@ -223,6 +223,7 @@ public class JPEGImageWriterImpl
 
 			int[] id = new int[params[0].length];
 			for (int i = 0; i < params[0].length; i++)
+//			for (int i = 0; i < aJPEG.mSOFSegment.getComponents().length; i++)
 			{
 				id[i] = aJPEG.mSOFSegment.getComponents()[params[0][i]].getComponentId();
 			}
