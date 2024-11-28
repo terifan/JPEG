@@ -179,4 +179,52 @@ public class Exif
 		}
 		return null;
 	}
+
+
+	public boolean add(ExifEntry aExifEntry)
+	{
+		if (mTables.isEmpty())
+		{
+			ExifTable table = new ExifTable();
+			addTable(table);
+			table.set(aExifEntry);
+			return true;
+		}
+
+		boolean found = false;
+		for (ExifTable table : mTables)
+		{
+			ExifEntry entry = table.get(aExifEntry.getTag());
+			if (entry != null)
+			{
+				table.set(aExifEntry);
+			}
+		}
+		if (!found)
+		{
+			mTables.get(mTables.size() - 1).set(aExifEntry);
+		}
+		return !found;
+	}
+
+
+	public ExifEntry get(ExifTag aTag)
+	{
+		for (ExifTable table : mTables)
+		{
+			ExifEntry entry = table.get(aTag);
+			if (entry != null)
+			{
+				return entry;
+			}
+		}
+		return null;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return mTables.toString();
+	}
 }

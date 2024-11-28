@@ -5,9 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.terifan.imageio.jpeg.JPEGConstants;
 import org.terifan.imageio.jpeg.SegmentMarker;
 
 
@@ -19,11 +19,20 @@ public class JPEGExif
 
 
 	/**
-	 * Extract Exif data from a JPEG image.
+	 * Parses an JPEG image extracting metadata entries. Only the beginning of stream up until the image body is parsed.
 	 */
 	public static Exif extract(byte [] aImageData) throws IOException
 	{
-		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(aImageData));
+		return extract(new ByteArrayInputStream(aImageData));
+	}
+
+
+	/**
+	 * Parses an JPEG image extracting metadata entries. Only the beginning of stream up until the image body is parsed.
+	 */
+	public static Exif extract(InputStream aImageData) throws IOException
+	{
+		DataInputStream dis = new DataInputStream(aImageData);
 
 		if (dis.readShort() != (short)SegmentMarker.SOI.CODE)
 		{

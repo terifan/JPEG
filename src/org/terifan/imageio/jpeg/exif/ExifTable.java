@@ -62,7 +62,7 @@ public class ExifTable
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aTag)
+			if (entry.getTag().equals(aTag))
 			{
 				return entry;
 			}
@@ -72,11 +72,11 @@ public class ExifTable
 	}
 
 
-	public ExifTable add(ExifEntry aEntry)
+	public ExifTable set(ExifEntry aEntry)
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aEntry.getTag())
+			if (entry.getTag().equals(aEntry.getTag()))
 			{
 				mEntries.remove(entry);
 				break;
@@ -91,7 +91,7 @@ public class ExifTable
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aTag)
+			if (entry.getTag().equals(aTag))
 			{
 				return (T)entry.getValue();
 			}
@@ -105,7 +105,7 @@ public class ExifTable
 	{
 		for (ExifEntry entry : mEntries)
 		{
-			if (entry.getTag() == aTag)
+			if (entry.getTag().equals(aTag))
 			{
 				return entry.getValue().toString();
 			}
@@ -155,12 +155,12 @@ public class ExifTable
 		{
 			try
 			{
-				int tag = aReader.readInt16();
+				int code = aReader.readInt16();
 				int formatIndex = aReader.readInt16();
 				int length = aReader.readInt32();
 				int value = aReader.readInt32();
 
-				if (tag == ExifTag.PADDING.CODE) // ignore padding
+				if (code == ExifTag.PADDING.code) // ignore padding
 				{
 					if (VERBOSE)
 					{
@@ -169,7 +169,7 @@ public class ExifTable
 					continue;
 				}
 
-				readEntry(formatIndex, length, value, aReader, tag, startOffset, entryIndex, aExifData);
+				readEntry(formatIndex, length, value, aReader, code, startOffset, entryIndex, aExifData);
 			}
 			catch (DataAccessException e)
 			{
@@ -262,14 +262,14 @@ public class ExifTable
 
 		if (VERBOSE)
 		{
-			System.out.printf("%4d %4d %04X %4d %4d %30s [%11s] = %s%n", aStartOffset + 12 * aEntryIndex, aReader.capacity(), aTag, aFormatIndex, aLength, ExifTag.valueOf(aTag), aValue, output);
+			System.out.printf("%4d %4d %04X %4d %4d %30s [%11s] = %s%n", aStartOffset + 12 * aEntryIndex, aReader.capacity(), aTag, aFormatIndex, aLength, aTag, aValue, output);
 		}
 
 		if (output != null)
 		{
-			add(new ExifEntry(format, aTag, output));
+			set(new ExifEntry(ExifTag.valueOf(aTag, format), output));
 
-			if (aTag == ExifTag.ExifOffset.CODE)
+			if (aTag == ExifTag.valueOf("ExifOffset").code)
 			{
 				aReader.position(((Number)output).intValue());
 
@@ -278,16 +278,16 @@ public class ExifTable
 				mTables.add(table);
 			}
 
-			if (aTag == ExifTag.ThumbJpegIFOffset.CODE || aTag == ExifTag.ThumbJpegIFByteCount.CODE)
+			if (aTag == ExifTag.valueOf("ThumbJpegIFOffset").code || aTag == ExifTag.valueOf("ThumbJpegIFByteCount").code)
 			{
-				ExifEntry ofsEntry = get(ExifTag.ThumbJpegIFOffset);
-				ExifEntry lenEntry = get(ExifTag.ThumbJpegIFByteCount);
+				ExifEntry ofsEntry = get(ExifTag.valueOf("ThumbJpegIFOffset"));
+				ExifEntry lenEntry = get(ExifTag.valueOf("ThumbJpegIFByteCount"));
 
 				if (ofsEntry != null && lenEntry != null)
 				{
-					if (ofsEntry.getValue() instanceof byte[])
+					if (ofsEntry.getValue() instanceof byte[] v)
 					{
-						mThumbData = (byte[])ofsEntry.getValue();
+						mThumbData = v;
 					}
 					else
 					{
@@ -312,8 +312,8 @@ public class ExifTable
 	{
 		for (int i = mEntries.size(); --i >= 0;)
 		{
-			int code = mEntries.get(i).getCode();
-			if (code == ExifTag.ExifOffset.CODE || code == ExifTag.ThumbJpegIFOffset.CODE || code == ExifTag.ThumbJpegIFByteCount.CODE)
+			int code = mEntries.get(i).getTag().code;
+			if (code == ExifTag.valueOf("ExifOffset").code || code == ExifTag.valueOf("ThumbJpegIFOffset").code || code == ExifTag.valueOf("ThumbJpegIFByteCount").code)
 			{
 				mEntries.remove(i);
 			}
@@ -323,8 +323,8 @@ public class ExifTable
 
 		if (mThumbData != null)
 		{
-			thumbOffsetEntry = new ExifEntry(ExifTag.ThumbJpegIFOffset, 0);
-			mEntries.add(new ExifEntry(ExifTag.ThumbJpegIFByteCount, mThumbData.length));
+			thumbOffsetEntry = new ExifEntry(ExifTag.valueOf("ThumbJpegIFOffset"), 0);
+			mEntries.add(new ExifEntry(ExifTag.valueOf("ThumbJpegIFByteCount"), mThumbData.length));
 			mEntries.add(thumbOffsetEntry);
 		}
 
@@ -355,10 +355,10 @@ public class ExifTable
 				System.out.println("\t" + entry);
 			}
 
-			aWriter.writeInt16(entry.getCode());
-			aWriter.writeInt16(entry.getFormat().ordinal());
+			aWriter.writeInt16(entry.getTag().code);
+			aWriter.writeInt16(entry.getTag().format.ordinal());
 
-			switch (entry.getFormat())
+			switch (entry.getTag().format)
 			{
 				case ULONG:
 				{
@@ -375,9 +375,9 @@ public class ExifTable
 				case UBYTE:
 				{
 					char[] s;
-					if (entry.getValue() instanceof char[])
+					if (entry.getValue() instanceof char[] v)
 					{
-						s = (char[])entry.getValue();
+						s = v;
 					}
 					else
 					{
@@ -440,9 +440,9 @@ public class ExifTable
 				case UNDEFINED:
 				{
 					byte [] chunk;
-					if (entry.getValue() instanceof byte[])
+					if (entry.getValue() instanceof byte[] v)
 					{
-						chunk = (byte[])entry.getValue();
+						chunk = v;
 					}
 					else
 					{
@@ -489,7 +489,7 @@ public class ExifTable
 		aWriter.position(tablePointerOffset);
 		for (ExifTable table : mTables)
 		{
-			aWriter.writeInt16(ExifTag.ExifOffset.CODE);
+			aWriter.writeInt16(ExifTag.valueOf("ExifOffset").code);
 			aWriter.writeInt16(ExifFormat.ULONG.ordinal());
 			aWriter.writeInt32(1);
 			aWriter.writeInt32(table.mContentOffset);
@@ -537,7 +537,7 @@ public class ExifTable
 
 		if (VERBOSE)
 		{
-			System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.capacity(), ExifTag.valueOf(aTag), aTag);
+			System.out.printf("  ERROR: Buffer overflow found: attempt to read at offset %d +%s, capacity %d, tag \"%s\" (0x%04x)%n", aOffset, aLength, aReader.capacity(), aTag, aTag);
 		}
 
 		return false;

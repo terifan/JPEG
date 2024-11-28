@@ -1,144 +1,233 @@
 package org.terifan.imageio.jpeg.exif;
 
-import static org.terifan.imageio.jpeg.exif.ExifFormat.RATIONAL;
+import java.util.Collection;
+import java.util.HashMap;
 import static org.terifan.imageio.jpeg.exif.ExifFormat.UBYTE;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.ULONG;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.UNDEFINED;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.URATIONAL;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.USHORT;
-import static org.terifan.imageio.jpeg.exif.ExifFormat.ASCII;
 
 
-public enum ExifTag
+public class ExifTag
 {
-	// Tags used by IFD0 (main image)
-	ImageWidth(0x0100, USHORT),
-	ImageHeight(0x0101, USHORT),
-	ImageDescription(0x010e, ASCII),
-	Orientation(0x0112, USHORT),
-	Make(0x010f, ASCII),
-	Model(0x0110, ASCII),
-	XResolution(0x011A, URATIONAL),
-	YResolution(0x011B, URATIONAL),
-	ResolutionUnit(0x0128, USHORT),
-	Software(0x0131, ASCII),
-	DateTime(0x0132, UBYTE),
-	WhitePoint(0x013e, URATIONAL),
-	PrimaryChromaticities(0x013f, URATIONAL),
-	YCbCrCoefficients(0x0211, URATIONAL),
-	YCbCrPositioning(0x0213, USHORT),
-	ReferenceBlackWhite(0x0214, URATIONAL),
-	Copyright(0x8298, ASCII),
-	ExifOffset(0x8769, ULONG),
-	GpsOffset(0x8825, ULONG),
-	GPSDOP(0x000B, RATIONAL),
+	private final static String TABLE =
+		"""
+		ImageWidth, 0100, USHORT
+		ImageHeight, 0101, USHORT
+		ImageDescription, 010e, ASCII
+		Orientation, 0112, USHORT
+		Make, 010f, ASCII
+		Model, 0110, ASCII
+		XResolution, 011A, URATIONAL
+		YResolution, 011B, URATIONAL
+		ResolutionUnit, 0128, USHORT
+		Software, 0131, ASCII
+		DateTime, 0132, UBYTE
+		Artist, 013b, ASCII
+		WhitePoint, 013e, URATIONAL
+		PrimaryChromaticities, 013f, URATIONAL
+		YCbCrCoefficients, 0211, URATIONAL
+		YCbCrPositioning, 0213, USHORT
+		ReferenceBlackWhite, 0214, URATIONAL
+		Copyright, 8298, ASCII
+		ExifOffset, 8769, ULONG
+		GpsOffset, 8825, ULONG
+		GPSDOP, 000B, RATIONAL
 
-	// Tags used by Exif SubIFD
-	ExposureTime(0x829a, URATIONAL),
-	FNumber(0x829d, URATIONAL),
-	ExposureProgram(0x8822, USHORT),
-	ISOSpeedRatings(0x8827, USHORT),
-	ExifVersion(0x9000, ULONG),
-	DateTimeOriginal(0x9003, UBYTE),
-	DateTimeDigitized(0x9004, UBYTE),
-	ComponentConfiguration(0x9101, UNDEFINED),
-	CompressedBitsPerPixel(0x9102, URATIONAL),
-	ShutterSpeedValue(0x9201, RATIONAL),
-	ApertureValue(0x9202, URATIONAL),
-	BrightnessValue(0x9203, RATIONAL),
-	ExposureBiasValue(0x9204, RATIONAL),
-	MaxApertureValue(0x9205, URATIONAL),
-	SubjectDistance(0x9206, RATIONAL),
-	MeteringMode(0x9207, USHORT),
-	LightSource(0x9208, USHORT),
-	Flash(0x9209, USHORT),
-	FocalLength(0x920a, URATIONAL),
-	MakerNote(0x927c, UNDEFINED),
-	UserComment(0x9286, UNDEFINED),
-	FlashPixVersion(0xa000, UNDEFINED),
-	ColorSpace(0xa001, USHORT),
-	ExifImageWidth(0xa002, USHORT),
-	ExifImageHeight(0xa003, USHORT),
-	RelatedSoundFile(0xa004, ASCII),
-	ExifInteroperabilityOffset(0xa005, ULONG),
-	FocalPlaneXResolution(0xa20e, URATIONAL),
-	FocalPlaneYResolution(0xa20f, URATIONAL),
-	FocalPlaneResolutionUnit(0xa210, USHORT),
-	SensingMethod(0xa217, USHORT),
-	FileSource(0xa300, UNDEFINED),
-	SceneType(0xa301, UNDEFINED),
+		ExposureTime, 829a, URATIONAL
+		FNumber, 829d, URATIONAL
+		ExposureProgram, 8822, USHORT
+		ISOSpeedRatings, 8827, USHORT
+		ExifVersion, 9000, ULONG
+		DateTimeOriginal, 9003, UBYTE
+		DateTimeDigitized, 9004, UBYTE
+		ComponentConfiguration, 9101, UNDEFINED
+		CompressedBitsPerPixel, 9102, URATIONAL
+		ShutterSpeedValue, 9201, RATIONAL
+		ApertureValue, 9202, URATIONAL
+		BrightnessValue, 9203, RATIONAL
+		ExposureBiasValue, 9204, RATIONAL
+		MaxApertureValue, 9205, URATIONAL
+		SubjectDistance, 9206, RATIONAL
+		MeteringMode, 9207, USHORT
+		LightSource, 9208, USHORT
+		Flash, 9209, USHORT
+		FocalLength, 920a, URATIONAL
+		MakerNote, 927c, UNDEFINED
+		UserComment, 9286, UNDEFINED
+		FlashPixVersion, a000, UNDEFINED
+		ColorSpace, a001, USHORT
+		ExifImageWidth, a002, USHORT
+		ExifImageHeight, a003, USHORT
+		RelatedSoundFile, a004, ASCII
+		ExifInteroperabilityOffset, a005, ULONG
+		FocalPlaneXResolution, a20e, URATIONAL
+		FocalPlaneYResolution, a20f, URATIONAL
+		FocalPlaneResolutionUnit, a210, USHORT
+		SensingMethod, a217, USHORT
+		FileSource, a300, UNDEFINED
+		SceneType, a301, UNDEFINED
 
-	// Tags used by IFD1 (thumbnail image)
-	ThumbWidth(0x0100, USHORT),
-	ThumbHeight(0x0101, USHORT),
-	ThumbBitsPerSample(0x0102, USHORT),
-	ThumbCompression(0x0103, USHORT),
-	ThumbPhotometricInterpretation(0x0106, USHORT),
-	ThumbStripOffsets(0x0111, USHORT),
-	ThumbSamplesPerPixel(0x0115, USHORT),
-	ThumbRowsPerStrip(0x0116, USHORT),
-	ThumbStripByteConunts(0x0117, USHORT),
-	ThumbXResolution(0x011a, URATIONAL),
-	ThumbYResolution(0x011b, URATIONAL),
-	ThumbPlanarConfiguration(0x011c, USHORT),
-	ThumbResolutionUnit(0x0128, USHORT),
-	ThumbJpegIFOffset(0x0201, ULONG),
-	ThumbJpegIFByteCount(0x0202, ULONG),
-	ThumbYCbCrCoefficients(0x0211, URATIONAL),
-	ThumbYCbCrSubSampling(0x0212, USHORT),
-	ThumbYCbCrPositioning(0x0213, USHORT),
-	ThumbReferenceBlackWhite(0x0214, URATIONAL),
+		ThumbWidth, 0100, USHORT
+		ThumbHeight, 0101, USHORT
+		ThumbBitsPerSample, 0102, USHORT
+		ThumbCompression, 0103, USHORT
+		ThumbPhotometricInterpretation, 0106, USHORT
+		ThumbStripOffsets, 0111, USHORT
+		ThumbSamplesPerPixel, 0115, USHORT
+		ThumbRowsPerStrip, 0116, USHORT
+		ThumbStripByteConunts, 0117, USHORT
+		ThumbXResolution, 011a, URATIONAL
+		ThumbYResolution, 011b, URATIONAL
+		ThumbPlanarConfiguration, 011c, USHORT
+		ThumbResolutionUnit, 0128, USHORT
+		ThumbJpegIFOffset, 0201, ULONG
+		ThumbJpegIFByteCount, 0202, ULONG
+		ThumbYCbCrCoefficients, 0211, URATIONAL
+		ThumbYCbCrSubSampling, 0212, USHORT
+		ThumbYCbCrPositioning, 0213, USHORT
+		ThumbReferenceBlackWhite, 0214, URATIONAL
 
-	RatingNumber(0x4746, USHORT),
-	RatingPercent(0x4749, USHORT),
-	ImageNumber(0x9211, ULONG),
-	_Title(0x9C9B, UBYTE),
-	ImageUniqueID(0xA420, ASCII),
-	SubSecTime(0x9290, ASCII),
-	SubSecTimeOriginal(0x9291, ASCII),
-	SubSecTimeDigitized(0x9292, ASCII),
+		RatingNumber, 4746, USHORT
+		RatingPercent, 4749, USHORT
+		ImageNumber, 9211, ULONG
+		_Title, 9C9B, UBYTE
+		ImageUniqueID, A420, ASCII
+		SubSecTime, 9290, ASCII
+		SubSecTimeOriginal, 9291, ASCII
+		SubSecTimeDigitized, 9292, ASCII
 
-	Comment(0x9C9c, UBYTE),
-	Author(0x9C9d, UBYTE),
-	Tags(0x9c9e, UBYTE),
-	Subject(0x9c9f, UBYTE),
+		Comment, 9C9c, UBYTE
+		Author, 9C9d, UBYTE
+		Tags, 9c9e, UBYTE
+		Subject, 9c9f, UBYTE
 
-	CustomImageProcessing(0xA401, USHORT),
-	ExposureMode(0xA402, USHORT),
-	WhiteBalance(0xA403, USHORT),
-	DigitalZoomRatio(0xA404, RATIONAL),
-	FocalLengthIn35mmFilm(0xA405, USHORT),
-	SceneCaptureType(0xA406, USHORT),
-	GainControl(0xA407, RATIONAL),
-	Contrast(0xA408, USHORT),
-	Saturation(0xA409, USHORT),
-	Sharpness(0xA40A, USHORT),
-	DeviceSettingDescription(0xA40B, UNDEFINED),
-	SubjectDistanceRange(0xA40C0, USHORT),
+		CustomImageProcessing, A401, USHORT
+		ExposureMode, A402, USHORT
+		WhiteBalance, A403, USHORT
+		DigitalZoomRatio, A404, RATIONAL
+		FocalLengthIn35mmFilm, A405, USHORT
+		SceneCaptureType, A406, USHORT
+		GainControl, A407, RATIONAL
+		Contrast, A408, USHORT
+		Saturation, A409, USHORT
+		Sharpness, A40A, USHORT
+		DeviceSettingDescription, A40B, UNDEFINED
+		SubjectDistanceRange, A40C0, USHORT""";
 
-	PADDING(0xea1c, UBYTE)
-	;
+	public final static ExifTag PADDING = new ExifTag("Padding", 0xea1c, UBYTE);
 
-	public final int CODE;
-	public final ExifFormat mFormat;
+	private final static HashMap<Integer, ExifTag> mTags = new HashMap<>();
 
 
-	private ExifTag(int aCode, ExifFormat aFormat)
+	public final String name;
+	public final int code;
+	public final ExifFormat format;
+
+
+	private ExifTag(String aName, int aCode, ExifFormat aFormat)
 	{
-		CODE = aCode;
-		mFormat = aFormat;
+		name = aName;
+		code = aCode;
+		format = aFormat;
 	}
 
 
-	static ExifTag valueOf(int aCode)
+	public Collection<ExifTag> values()
 	{
-		for (ExifTag tag : values())
+		install();
+		return mTags.values();
+	}
+
+
+	public static ExifTag valueOf(String aName)
+	{
+		if ("padding".equalsIgnoreCase(aName))
 		{
-			if (tag.CODE == aCode)
+			return PADDING;
+		}
+		install();
+		for (ExifTag tag : mTags.values())
+		{
+			if (tag.name.equalsIgnoreCase(aName))
 			{
 				return tag;
 			}
 		}
+
 		return null;
+	}
+
+
+	public static ExifTag valueOf(int aCode, ExifFormat aFormat)
+	{
+		if (aCode == PADDING.code && PADDING.format == aFormat)
+		{
+			return PADDING;
+		}
+		if (mTags.isEmpty())
+		{
+			install();
+		}
+		ExifTag tmp = mTags.get(aCode);
+		if (tmp != null && tmp.format == aFormat)
+		{
+			return tmp;
+		}
+		if (tmp != null)
+		{
+			return new ExifTag(tmp.name, aCode, aFormat);
+		}
+
+		return new ExifTag("Unknown" + aCode, aCode, aFormat);
+	}
+
+
+	@Override
+	public int hashCode()
+	{
+		return Integer.hashCode(code);
+	}
+
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+		{
+			return true;
+		}
+		if (obj == null)
+		{
+			return false;
+		}
+		if (obj instanceof ExifTag other)
+		{
+			return this.code == other.code;
+		}
+		return false;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return name;
+	}
+
+
+	private static synchronized void install()
+	{
+		if (mTags.isEmpty())
+		{
+			for (String s : TABLE.split("\n"))
+			{
+				if (!s.isBlank())
+				{
+					String[] fields = s.split(",");
+					String name = fields[0].trim();
+					int code = Integer.parseInt(fields[1].trim(), 16);
+					ExifFormat format = ExifFormat.valueOf(fields[2].trim());
+					mTags.put(code, new ExifTag(name, code, format));
+				}
+			}
+		}
 	}
 }
