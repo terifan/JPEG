@@ -1,8 +1,6 @@
 package examples;
 
-import examples.res.R;
 import java.io.File;
-import java.net.URL;
 import org.terifan.imageio.jpeg.CompressionType;
 import org.terifan.imageio.jpeg.JPEGImageIO;
 
@@ -13,14 +11,17 @@ public class TranscodeJPEGDemo
 	{
 		try
 		{
-//			URL input = R.class.getResource("Swallowtail.jpg");
-			File input = new File("D:\\Pictures\\Roliga bilder\\baby.jpg");
+			String filename = "4k-3840-x-2160-wallpapers-themefoxx (113).jpg";
 
-			File output1 = new File("d:\\Swallowtail-arithmetic.jpg");
-			File output2 = new File("d:\\Swallowtail-arithmetic-progressive.jpg");
-			File output3 = new File("d:\\Swallowtail-huffman.jpg");
-			File output4 = new File("d:\\Swallowtail-huffman-optimized.jpg");
-			File output5 = new File("d:\\Swallowtail-huffman-progressive.jpg");
+			File input = new File("D:\\Home\\Pictures\\Wallpapers\\" + filename);
+
+			File dest = new File("D:\\data\\");
+
+			File output1 = new File(dest, "jpg-ari\\" + filename);
+			File output2 = new File(dest, "jpg-ari-prog\\" + filename);
+			File output3 = new File(dest, "jpg-huff\\" + filename);
+			File output4 = new File(dest, "jpg-huff-opt\\" + filename);
+			File output5 = new File(dest, "jpg-huff-prog\\" + filename);
 
 			new JPEGImageIO().setLog(System.out).setCompressionType(CompressionType.Arithmetic).transcode(input, output1);
 			new JPEGImageIO().setCompressionType(CompressionType.ArithmeticProgressive).transcode(input, output2);
